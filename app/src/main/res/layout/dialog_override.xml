@@ -1,0 +1,137 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#ffffffff">
+
+    <ImageView
+        android:id="@+id/dialog_conflict_header"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@color/colorPrimaryDark"
+        android:gravity="center"
+        android:minWidth="240dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_menu_delete"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/dialog_conflict_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dialog_conflict_header"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_horizontal"
+        android:text="Exists!"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_header" />
+
+    <ViewStub
+        android:id="@+id/dialog_conflict_item"
+        android:inflatedId="@+id/dialog_conflict_item"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_text" />
+
+    <TextView
+        android:id="@+id/dialog_conflict_text_relations"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_horizontal"
+        android:text="Relations"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_item" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/dialog_conflict_relationlist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_text_relations" />
+
+    <TextView
+        android:id="@+id/dialog_conflict_question"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_horizontal"
+        android:text="Confirm"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_relationlist" />
+
+    <TextView
+        android:id="@+id/dialog_conflict_warning"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_horizontal"
+        android:text="Warning"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_question" />
+
+    <Button
+        android:id="@+id/dialog_conflict_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dialog_conflict_text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/black"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="Cancel"
+        android:textColor="#ffffffff"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.16"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_warning" />
+
+    <Button
+        android:id="@+id/dialog_conflict_override"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dialog_conflict_text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/holo_red_light"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="Override"
+        android:textColor="#ffffffff"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.84"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_warning" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
