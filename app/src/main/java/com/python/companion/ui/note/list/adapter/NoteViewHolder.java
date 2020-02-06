@@ -1,4 +1,4 @@
-package com.python.companion.ui.note;
+package com.python.companion.ui.note.list.adapter;
 
 import android.view.View;
 import android.widget.TextView;
@@ -18,6 +18,7 @@ public class NoteViewHolder extends ViewHolder<Note> {
 
     public NoteViewHolder(@NonNull View itemView, InternalClickListener clickListener) {
         super(itemView);
+        this.clickListener = clickListener;
         Name = itemView.findViewById(R.id.item_note_name);
         Date = itemView.findViewById(R.id.item_note_date);
         setupClicks();
@@ -33,6 +34,6 @@ public class NoteViewHolder extends ViewHolder<Note> {
     @Override
     public void set(Note note) {
         Name.setText(note.getName());
-        Date.setText(note.getDate());
+//        Date.setText(note.getDate());
     }
 }
