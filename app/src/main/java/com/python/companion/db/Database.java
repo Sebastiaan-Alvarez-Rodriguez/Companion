@@ -32,12 +32,4 @@ public abstract class Database extends RoomDatabase {
         }
         return INSTANCE;
     }
-
-    /**
-     * Rebuilds database
-     * @param context context to recreate database
-     */
-    public static void rebuildDatabase(final Context context) {
-        INSTANCE = Room.databaseBuilder(context.getApplicationContext(), Database.class, DB_NAME).build();
-    }
 }

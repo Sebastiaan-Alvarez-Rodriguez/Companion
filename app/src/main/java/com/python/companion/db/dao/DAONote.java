@@ -23,6 +23,9 @@ public interface DAONote {
     @Query("UPDATE Note SET content = :content WHERE name = :name")
     void update(String name, String content);
 
+    @Query("UPDATE Note SET name = :name, content = :content WHERE name = :prevName")
+    void update(String prevName, String name, String content);
+
     @Query("SELECT * FROM Note")
     LiveData<List<Note>> getAllLive();
 

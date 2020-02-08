@@ -29,6 +29,27 @@ public class NoteQuery {
         });
     }
 
+    public void update(String prevName, String name, String content, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.update(prevName, name, content);
+            listener.onResult(null);
+        });
+    }
+
+    public void delete(String name, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.delete(new Note(name, ""));
+            listener.onResult(null);
+        });
+    }
+
+    public void getContent(String name, ResultListener<String> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            Note note = daoNote.get(name);
+            listener.onResult(note == null ? null : note.getContent());
+        });
+    }
+
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name) == null));
     }

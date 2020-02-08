@@ -1,20 +1,66 @@
 <resources>
 
+    <!--https://medium.com/@joannekao/android-working-with-themes-and-styles-18cde717f4d-->
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!--Main colors-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/colorWindowBackground</item>
+
+        <!--Text-->
+        <item name="android:textColorPrimary">@color/colorTextPrimary</item>
+        <item name="android:textColorSecondary">@color/colorTextSecondary</item>
+        <item name="android:textColorTertiary">@color/colorTextTertiary</item>
+        <item name="android:textColorLink">@color/colorURL</item>
+        <item name="android:textColorHint">@color/colorTextHint</item>
+        <item name="android:textColorPrimaryInverse">@color/colorTextPrimaryInverse</item>
+        <item name="android:textColorSecondaryInverse">@color/colorTextSecondaryInverse</item>
+        <item name="android:textColorTertiaryInverse">@color/colorTextTertiaryInverse</item>
+        <item name="android:textColorLinkInverse">@color/colorURLInverse</item>
+        <item name="android:textColorHintInverse">@color/colorTextHintInverse</item>
+        <!--SearchView-->
+        <item name="colorControlNormal">@color/colorPrimary</item>
+        <item name="searchViewStyle">@style/SearchView</item>
+
+        <!--ImageButtons-->
+        <item name="imageButtonStyle">@style/ImageButton</item>
+
+        <!--text menu items in toolbars-->
+        <item name="actionMenuTextColor">@color/colorWindowBackground</item>
+        <item name="actionBarStyle">@style/Toolbar</item>
+        <item name="toolbarStyle">@style/Toolbar</item>
+
     </style>
 
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionModeOverlay">true</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+    </style>
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light">
+    </style>
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="Toolbar" parent="Widget.AppCompat.Toolbar">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="titleTextAppearance">@style/Toolbar.TextAppearance</item>
+    </style>
+    <style name="Toolbar.TextAppearance" parent="Widget.AppCompat.Toolbar">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/colorWindowBackground</item>
+    </style>
+
+
+    <style name="SearchView" parent="Widget.AppCompat.SearchView">
+        <item name="iconifiedByDefault">false</item>
+    </style>
+
+    <style name="ImageButton" parent="android:Widget.Material.ImageButton">
+        <item name="android:background">@color/colorWindowBackground</item>
+    </style>
 </resources>

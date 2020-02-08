@@ -13,8 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.python.companion.R;
+import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
-import com.python.companion.ui.note.activity.NoteActivity;
+import com.python.companion.ui.note.activity.edit.NoteEditActivity;
+import com.python.companion.ui.note.activity.NoteViewActivity;
 import com.python.companion.ui.note.list.NoteSearcher;
 import com.python.companion.ui.note.list.adapter.NoteAdapterAction;
 import com.python.companion.ui.templates.Fragment;
@@ -40,12 +42,12 @@ import java.util.List;
 // https://github.com/signalapp/Signal-Android/issues/5534
 public class NoteFragment extends Fragment<Note> implements ActionListener<Note> {
 
-    private HomeViewModel homeViewModel;
+    private NoteViewModel noteViewModel;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+        noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
     }
 
     @Override
@@ -77,7 +79,7 @@ public class NoteFragment extends Fragment<Note> implements ActionListener<Note>
         RecyclerView list = view.findViewById(R.id.list);
 
         adapter = new NoteAdapterAction(this);
-        homeViewModel.getNotes().observe(this, adapter);
+        noteViewModel.getNotes().observe(this, adapter);
 
         list.setAdapter(adapter);
         list.setLayoutManager(new LinearLayoutManager(view.getContext()));
@@ -86,7 +88,21 @@ public class NoteFragment extends Fragment<Note> implements ActionListener<Note>
 
     @Override
     public void onClick(Note note) {
-        Log.i("Clicked item", "Note name: "+note.getName());
+        final String name = note.getName();
+        Log.i("Clicked item", "Note name: "+name);
+        final NoteQuery noteQuery = new NoteQuery(getContext());
+        noteQuery.getContent(name, content -> {
+            Intent intent = new Intent(getContext(), NoteViewActivity.class);
+            intent.putExtra("name", name);
+            intent.putExtra("content", content);
+            startActivity(intent);
+        });
+
+    }
+
+    @Override
+    public boolean onLongClick(Note note) {
+        return super.onLongClick(note);
     }
 
     @Override
@@ -95,7 +111,7 @@ public class NoteFragment extends Fragment<Note> implements ActionListener<Note>
         Log.i("NoteFragment", "Cliked add");
         if (!actionMode) {
             add.setOnClickListener(v -> {
-                Intent intent = new Intent(getContext(), NoteActivity.class);
+                Intent intent = new Intent(getContext(), NoteEditActivity.class);
                 startActivityForResult(intent, REQ_ADD);
 //              Sample normal
 //                final Markwon markwon = Markwon.create(getContext());// parse markdown and create styled text
