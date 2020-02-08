@@ -5,6 +5,7 @@ import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.python.companion.R;
 import com.python.companion.db.entity.Note;
@@ -16,7 +17,7 @@ public class NoteViewHolder extends ViewHolder<Note> {
 
     private TextView Name, Date;
 
-    public NoteViewHolder(@NonNull View itemView, InternalClickListener clickListener) {
+    public NoteViewHolder(@NonNull View itemView, @Nullable InternalClickListener clickListener) {
         super(itemView);
         this.clickListener = clickListener;
         Name = itemView.findViewById(R.id.item_note_name);

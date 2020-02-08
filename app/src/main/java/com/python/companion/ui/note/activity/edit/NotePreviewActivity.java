@@ -18,6 +18,10 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.db.entity.Note;
+import com.python.companion.ui.note.list.adapter.NoteViewHolder;
+import com.python.companion.ui.templates.dialog.Dialog;
+import com.python.companion.ui.templates.dialog.DialogOverrideListener;
 
 import io.noties.markwon.Markwon;
 import io.noties.markwon.ext.latex.JLatexMathPlugin;
@@ -95,18 +99,18 @@ public class NotePreviewActivity extends AppCompatActivity {
             checkEdit();
         else
             checkNew();
-        //TODO: Create edit support
     }
 
     private void checkNew() {
         Log.i("Save", "Checking new mode");
         NoteQuery noteQuery = new NoteQuery(this);
-        noteQuery.isUnique(noteName, unique -> {
-            if (unique) {
+        noteQuery.isUniqueInstanced(noteName, other -> {
+            if (other == null) {
                 Log.i("Save", "New & unique. Inserting...");
                 insertNew();
             } else {
-                //TODO: show override dialog
+                Log.i("Save", "New & conflict. Dialog...");
+                showOverrideDialog(other, this::updateExisting);
             }
         });
     }
@@ -120,13 +124,13 @@ public class NotePreviewActivity extends AppCompatActivity {
             updateExisting();
         } else {
             NoteQuery noteQuery = new NoteQuery(this);
-            noteQuery.isUnique(noteName, unique -> {
-                if (unique) {
+            noteQuery.isUniqueInstanced(noteName, other -> {
+                if (other == null) {
                     Log.i("Save", "Edit & name changed ("+prevNoteName+"->"+noteName+") & unique. Updating...");
                     updateExisting();
                 } else {
                     Log.i("Save", "Edit & name changed ("+prevNoteName+"->"+noteName+") & conflict. Dialog...");
-                    //TODO: show override dialog
+                    showOverrideDialog(other, () -> noteQuery.delete(other.getName(), v -> updateExisting()));
                 }
             });
         }
@@ -139,7 +143,25 @@ public class NotePreviewActivity extends AppCompatActivity {
 
     private void updateExisting() {
         NoteQuery noteQuery = new NoteQuery(this);
-        noteQuery.update(prevNoteName, noteName, noteContent, v -> finishSuccess());
+        if (editMode) //update-conflict situation
+            noteQuery.update(prevNoteName, noteName, noteContent, v -> finishSuccess());
+        else //new-conflict situation (no prevNoteName available)
+            noteQuery.update(noteName, noteContent, v -> finishSuccess());
+    }
+
+    private void showOverrideDialog(Note conflicting, DialogOverrideListener overrideListener) {
+        Dialog dialog = new Dialog.Builder(this)
+                .setExistsText("Note name already exists!")
+                .setQuestionText("Do you want to override existing note?")
+                .setWarningText("Warning: Overriden notes cannot be restored")
+                .setOverrideListener(overrideListener)
+                .setViewLayout(NoteViewHolder.layoutResource)
+                .setItemInflateListener(view -> {
+                    NoteViewHolder tmp = new NoteViewHolder(view, null);
+                    tmp.set(conflicting);
+                })
+                .build();
+        runOnUiThread(dialog::showDialog);
     }
 
     @Override

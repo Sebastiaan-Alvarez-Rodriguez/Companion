@@ -53,4 +53,10 @@ public class NoteQuery {
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name) == null));
     }
+
+    public void isUniqueInstanced(String name, ResultListener<Note> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
+    }
+
+
 }

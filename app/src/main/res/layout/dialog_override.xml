@@ -1,5 +1,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -25,7 +26,7 @@
         android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
         android:gravity="center_horizontal"
-        android:text="Exists!"
+        tools:text="Note already exists!"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -44,31 +45,6 @@
         app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_text" />
 
     <TextView
-        android:id="@+id/dialog_conflict_text_relations"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="16dp"
-        android:gravity="center_horizontal"
-        android:text="Relations"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_item" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/dialog_conflict_relationlist"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_text_relations" />
-
-    <TextView
         android:id="@+id/dialog_conflict_question"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -76,11 +52,11 @@
         android:layout_marginTop="32dp"
         android:layout_marginEnd="16dp"
         android:gravity="center_horizontal"
-        android:text="Confirm"
+        tools:text="Do you want to override existing note?"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_relationlist" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_item" />
 
     <TextView
         android:id="@+id/dialog_conflict_warning"
@@ -90,11 +66,11 @@
         android:layout_marginTop="4dp"
         android:layout_marginEnd="16dp"
         android:gravity="center_horizontal"
-        android:text="Warning"
-        android:textSize="18sp"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_question" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_conflict_question"
+        tools:text="Warning: Overriden notes cannot be restored" />
 
     <Button
         android:id="@+id/dialog_conflict_cancel"
