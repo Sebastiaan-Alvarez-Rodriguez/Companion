@@ -1,4 +1,4 @@
-package com.python.companion.ui.note.activity.edit;
+package com.python.companion.ui.note.activity.edit.note;
 
 import android.content.Intent;
 import android.graphics.PorterDuff;
@@ -143,10 +143,10 @@ public class NotePreviewActivity extends AppCompatActivity {
 
     private void updateExisting() {
         NoteQuery noteQuery = new NoteQuery(this);
-        if (editMode) //update-conflict situation
-            noteQuery.update(prevNoteName, noteName, noteContent, v -> finishSuccess());
+        if (editMode) //updateContent-conflict situation
+            noteQuery.updateContent(prevNoteName, noteName, noteContent, v -> finishSuccess());
         else //new-conflict situation (no prevNoteName available)
-            noteQuery.update(noteName, noteContent, v -> finishSuccess());
+            noteQuery.updateContent(noteName, noteContent, v -> finishSuccess());
     }
 
     private void showOverrideDialog(Note conflicting, DialogAcceptListener overrideListener) {
@@ -186,7 +186,7 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.preview, menu);
+        getMenuInflater().inflate(R.menu.activity_preview, menu);
         return true;
     }
 }

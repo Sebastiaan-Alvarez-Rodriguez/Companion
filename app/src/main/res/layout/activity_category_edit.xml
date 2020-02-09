@@ -1,9 +1,42 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_category_edit_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/activity_category_edit_toolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:minHeight="?actionBarSize"
+        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <include
+        android:id="@+id/activity_category_edit_current"
+        layout="@layout/item_category"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_toolbar" />
+
+    <TextView
+        android:id="@+id/activity_category_edit_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Please pick a category"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_current" />
 
     <ImageView
         android:id="@+id/activity_category_edit_add_new"
@@ -14,32 +47,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/activity_category_edit_new"
         app:srcCompat="@drawable/ic_add" />
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/activity_category_edit_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:minHeight="?actionBarSize"
-        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/activity_category_edit_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="16dp"
-        android:gravity="center_horizontal"
-        android:text="Please choose a category"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_toolbar" />
 
     <TextView
         android:id="@+id/activity_category_edit_color"
@@ -63,9 +70,9 @@
         android:inputType="textPersonName"
         app:layout_constraintEnd_toStartOf="@+id/activity_category_edit_add_new"
         app:layout_constraintStart_toEndOf="@+id/activity_category_edit_color"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_text" />
+        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_list" />
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.python.companion.util.ContextMenuRecyclerView
         android:id="@+id/activity_category_edit_list"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -74,25 +81,7 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_new" />
-
-    <Button
-        android:id="@+id/activity_category_edit_done"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/activity_category_edit_text"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:background="@color/colorWindowBackground"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="Done"
-        android:textColor="@color/colorPrimary"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_list"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_text" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

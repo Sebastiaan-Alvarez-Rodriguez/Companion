@@ -16,7 +16,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
-import com.python.companion.ui.note.activity.edit.NoteEditActivity;
+import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
 import com.python.companion.ui.note.activity.edit.category.CategoryEditActivity;
 
 import io.noties.markwon.Markwon;
@@ -105,8 +105,7 @@ public class NoteViewActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.view, menu);
-
+        getMenuInflater().inflate(R.menu.activity_view, menu);
         return true;
     }
 

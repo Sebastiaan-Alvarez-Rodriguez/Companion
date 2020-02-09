@@ -1,4 +1,4 @@
-package com.python.companion.ui.note.activity.edit;
+package com.python.companion.ui.note.activity.edit.note;
 
 import android.content.Intent;
 import android.os.Bundle;

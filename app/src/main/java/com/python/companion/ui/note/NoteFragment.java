@@ -16,7 +16,7 @@ import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
 import com.python.companion.ui.note.activity.NoteViewActivity;
-import com.python.companion.ui.note.activity.edit.NoteEditActivity;
+import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
 import com.python.companion.ui.note.list.NoteSearcher;
 import com.python.companion.ui.note.list.adapter.NoteAdapterAction;
 import com.python.companion.ui.templates.Fragment;

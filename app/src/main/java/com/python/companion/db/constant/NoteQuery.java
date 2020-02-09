@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAONote;
+import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
 
 import java.util.Collection;
@@ -23,16 +24,23 @@ public class NoteQuery {
         });
     }
 
-    public void update(String name, String content, ResultListener<Void> listener) {
+    public void updateContent(String name, String content, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            daoNote.update(name, content);
+            daoNote.updateContent(name, content);
             listener.onResult(null);
         });
     }
 
-    public void update(String prevName, String name, String content, ResultListener<Void> listener) {
+    public void updateContent(String prevName, String name, String content, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            daoNote.update(prevName, name, content);
+            daoNote.updateContent(prevName, name, content);
+            listener.onResult(null);
+        });
+    }
+
+    public void updateCategory(String name, Category category, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.updateCategory(name, category.getCategoryName(), category.getCategoryColor());
             listener.onResult(null);
         });
     }

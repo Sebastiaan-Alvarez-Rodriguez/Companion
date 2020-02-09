@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_category_context_edit"
+        android:icon="@drawable/ic_menu_edit"
+        app:iconTint="@color/colorPrimary"
+        app:iconTintMode="src_in"
+        android:title="Edit" />
+</menu>
