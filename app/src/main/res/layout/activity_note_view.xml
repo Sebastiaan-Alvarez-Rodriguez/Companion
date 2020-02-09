@@ -12,7 +12,7 @@
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/activity_note_view_toolbar"
+            android:id="@+id/activity_category_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"

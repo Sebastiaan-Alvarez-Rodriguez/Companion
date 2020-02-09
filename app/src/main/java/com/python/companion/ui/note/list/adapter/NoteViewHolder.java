@@ -15,13 +15,14 @@ import com.python.companion.ui.templates.adapter.ViewHolder;
 public class NoteViewHolder extends ViewHolder<Note> {
     public static final @LayoutRes int layoutResource = R.layout.item_note;
 
-    private TextView Name, Date;
+    private TextView name, date, category;
 
     public NoteViewHolder(@NonNull View itemView, @Nullable InternalClickListener clickListener) {
         super(itemView);
         this.clickListener = clickListener;
-        Name = itemView.findViewById(R.id.item_note_name);
-        Date = itemView.findViewById(R.id.item_note_date);
+        name = itemView.findViewById(R.id.item_note_name);
+        date = itemView.findViewById(R.id.item_note_date);
+        category = itemView.findViewById(R.id.item_note_category);
         setupClicks();
     }
 
@@ -34,7 +35,8 @@ public class NoteViewHolder extends ViewHolder<Note> {
 
     @Override
     public void set(Note note) {
-        Name.setText(note.getName());
-//        Date.setText(note.getDate());
+        name.setText(note.getName());
+        date.setText(note.getModified().toString());
+        category.setBackgroundColor(note.getCategory().getCategoryColor());
     }
 }

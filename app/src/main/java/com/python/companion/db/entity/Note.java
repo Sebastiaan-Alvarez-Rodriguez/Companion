@@ -3,21 +3,33 @@ package com.python.companion.db.entity;
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.room.Embedded;
 import androidx.room.Entity;
+
+import com.python.companion.R;
+
+import java.time.Instant;
 
 /*
  * Class representing a note
  */
 @SuppressWarnings("unused")
-//@Entity(indices = {@Index(value = {"name"}, unique = true)})
 @Entity(primaryKeys = {"name"})
 public class Note {
     private @NonNull String name, content;
 
+    @Embedded
+    private Category category;
+
+    private Instant modified;
+
     public Note(@NonNull String name, @NonNull String content) {
         this.name = name;
         this.content = content;
+        this.category = new Category("Default", R.color.colorPrimary);
+        modified = Instant.now();
     }
+
     /**
      * Function to get associated name
      * @return instance name
@@ -50,6 +62,36 @@ public class Note {
      */
     public void setContent(@NonNull String content) {
         this.content = content;
+    }
+
+    /**
+     * Function to get note category
+     */
+    public Category getCategory() {
+        return category;
+    }
+
+    /**
+     * Function to set note category
+     * @param category New category
+     */
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    /**
+     * Function to get note last modification date
+     */
+    public Instant getModified() {
+        return modified;
+    }
+
+    /**
+     * Function to set modified date and time
+     * @param modified New date and time
+     */
+    public void setModified(Instant modified) {
+        this.modified = modified;
     }
 
     /**

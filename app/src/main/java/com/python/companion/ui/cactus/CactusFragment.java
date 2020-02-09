@@ -1,4 +1,4 @@
-package com.python.companion.ui.gallery;
+package com.python.companion.ui.cactus;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,17 +14,17 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.python.companion.R;
 
-public class GalleryFragment extends Fragment {
+public class CactusFragment extends Fragment {
 
-    private GalleryViewModel galleryViewModel;
+    private CactusViewModel cactusViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        galleryViewModel =
-                ViewModelProviders.of(this).get(GalleryViewModel.class);
+        cactusViewModel =
+                ViewModelProviders.of(this).get(CactusViewModel.class);
         View root = inflater.inflate(R.layout.fragment_gallery, container, false);
         final TextView textView = root.findViewById(R.id.text_gallery);
-        galleryViewModel.getText().observe(this, new Observer<String>() {
+        cactusViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);

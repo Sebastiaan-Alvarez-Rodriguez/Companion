@@ -5,17 +5,23 @@ import android.content.Context;
 
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
 
+import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.dao.DAONote;
+import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.db.typeconverters.DateConverter;
 
-@androidx.room.Database(entities = {Note.class}, version = 1, exportSchema = false)
+@androidx.room.Database(entities = {Note.class, Category.class}, version = 1, exportSchema = false)
+@TypeConverters({DateConverter.class})
 public abstract class Database extends RoomDatabase {
 
     private static volatile Database INSTANCE;
     public static final String DB_NAME = "app.db";
 
     public abstract DAONote getDAONote();
+    public abstract DAOCategory getDAOCategory();
 
     /**
      * Singleton instance getter

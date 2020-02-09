@@ -1,4 +1,4 @@
-package com.python.companion.ui.templates.dialog;
+package com.python.companion.ui.note.override;
 
 import android.view.View;
 

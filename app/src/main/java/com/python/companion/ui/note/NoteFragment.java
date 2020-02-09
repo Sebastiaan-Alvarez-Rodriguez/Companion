@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
-import com.python.companion.ui.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.note.activity.NoteViewActivity;
+import com.python.companion.ui.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.note.list.NoteSearcher;
 import com.python.companion.ui.note.list.adapter.NoteAdapterAction;
 import com.python.companion.ui.templates.Fragment;
@@ -40,6 +40,11 @@ import java.util.List;
 //    https://noties.io/Markwon/
 //    https://github.com/noties/Markwon/blob/master/sample/src/main/java/io/noties/markwon/sample/latex/LatexActivity.java
 // https://github.com/signalapp/Signal-Android/issues/5534
+
+
+// Color picking: https://github.com/martin-stone/hsv-alpha-color-picker-android
+// Now for menu redesign
+//    https://stackoverflow.com/questions/21329132/android-custom-dropdown-popup-menu
 public class NoteFragment extends Fragment<Note> implements ActionListener<Note> {
 
     private NoteViewModel noteViewModel;
@@ -106,22 +111,26 @@ public class NoteFragment extends Fragment<Note> implements ActionListener<Note>
     }
 
     @Override
-    protected void prepareAdd(View view, boolean actionMode) {
-        super.prepareAdd(view, actionMode);
-        Log.i("NoteFragment", "Cliked add");
-        if (!actionMode) {
-            add.setOnClickListener(v -> {
-                Intent intent = new Intent(getContext(), NoteEditActivity.class);
-                startActivityForResult(intent, REQ_ADD);
-//              Sample normal
-//                final Markwon markwon = Markwon.create(getContext());// parse markdown and create styled text
-//                final Spanned markdown = markwon.toMarkdown("**Hi there!** How *are you*?");// use it
-//                Toast.makeText(getContext(), markdown, Toast.LENGTH_LONG).show();
-//              Sample latex
-//                final Markwon markwon = Markwon.builder(getContext()).usePlugin(JLatexMathPlugin.create(10)).build();
-//                final Spanned markdown = markwon.toMarkdown("$$x^2\\text{a \\rightarrow a}$$");// use it
-//                Toast.makeText(getContext(), markdown, Toast.LENGTH_LONG).show();
-            });
-        }
+    protected void prepareAdd() {
+        super.prepareAdd();
+        add.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), NoteEditActivity.class);
+            startActivityForResult(intent, REQ_ADD);
+        });
+    }
+
+    @Override
+    protected void prepareDelete() {
+        super.prepareDelete();
+        add.setOnClickListener(v -> {
+            final NoteQuery noteQuery = new NoteQuery(getContext());
+            noteQuery.delete(adapter.getSelected(), x -> {});
+        });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        //TODO scroll to new item and highlight it?
     }
 }

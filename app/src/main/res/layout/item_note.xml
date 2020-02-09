@@ -15,7 +15,7 @@
         android:layout_marginEnd="8dp"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/item_note_category"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Sample note" />
 
@@ -28,4 +28,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/item_note_name"
         tools:text="10/03/2020" />
+
+    <TextView
+        android:id="@+id/item_note_category"
+        android:layout_width="4dp"
+        android:layout_height="0dp"
+        tools:background="@color/colorPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

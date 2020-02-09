@@ -17,6 +17,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.ui.note.activity.edit.NoteEditActivity;
+import com.python.companion.ui.note.activity.edit.category.CategoryEditActivity;
 
 import io.noties.markwon.Markwon;
 import io.noties.markwon.ext.latex.JLatexMathPlugin;
@@ -59,7 +60,7 @@ public class NoteViewActivity extends AppCompatActivity {
     }
 
     private void setupActionBar() {
-        Toolbar myToolbar = findViewById(R.id.activity_note_view_toolbar);
+        Toolbar myToolbar = findViewById(R.id.activity_category_toolbar);
         setSupportActionBar(myToolbar);
 
         ActionBar actionbar = getSupportActionBar();
@@ -83,6 +84,11 @@ public class NoteViewActivity extends AppCompatActivity {
             case android.R.id.home:
                 finish();
                 break;
+            case R.id.menu_view_edit_category:
+                intent = new Intent(this, CategoryEditActivity.class);
+                intent.putExtra("name", name);
+                startActivity(intent);
+                break;
             case R.id.menu_view_edit:
                 intent = new Intent(this, NoteEditActivity.class);
                 intent.putExtra("name", name);
@@ -100,13 +106,14 @@ public class NoteViewActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.view, menu);
+
         return true;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_EDIT && resultCode == RESULT_OK)
+        if (requestCode == REQUEST_EDIT && resultCode == RESULT_OK && data != null)
             setContent(data.getStringExtra("content"));
     }
 }

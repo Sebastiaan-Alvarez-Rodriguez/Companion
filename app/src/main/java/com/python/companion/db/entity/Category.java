@@ -1,0 +1,32 @@
+package com.python.companion.db.entity;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+
+@Entity(primaryKeys = {"categoryName"})
+public class Category {
+    private @NonNull String categoryName;
+    private @ColorInt int categoryColor;
+
+    public Category(@NonNull String categoryName, int categoryColor) {
+        this.categoryName = categoryName;
+        this.categoryColor = categoryColor;
+    }
+
+    public @NonNull String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(@NonNull String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public int getCategoryColor() {
+        return categoryColor;
+    }
+
+    public void setCategoryColor(int categoryColor) {
+        this.categoryColor = categoryColor;
+    }
+}

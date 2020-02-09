@@ -1,4 +1,4 @@
-package com.python.companion.ui.templates.dialog;
+package com.python.companion.ui.note.override;
 
 import android.content.Context;
 import android.view.ViewStub;
@@ -8,17 +8,20 @@ import android.widget.TextView;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.python.companion.R;
+import com.python.companion.ui.templates.dialog.DialogCancelListener;
+import com.python.companion.ui.templates.dialog.DialogAcceptListener;
 
 @SuppressWarnings("WeakerAccess")
-public class Dialog {
+public class OverrideDialog {
 
     @SuppressWarnings("unused")
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
-        private DialogOverrideListener dialogOverrideListener = null;
+        private DialogAcceptListener dialogAcceptListener = null;
 
         private String existsString = "", questionString = "", warningString = "";
         private Context context;
@@ -26,7 +29,7 @@ public class Dialog {
         private @LayoutRes int viewLayout = 0;
         private DialogItemInflateListener itemInflateListener = null;
 
-        public Builder(Context context) {
+        public Builder(@NonNull Context context) {
             this.context = context;
         }
 
@@ -35,8 +38,8 @@ public class Dialog {
             return this;
         }
 
-        public Builder setOverrideListener(DialogOverrideListener dialogOverrideListener) {
-            this.dialogOverrideListener = dialogOverrideListener;
+        public Builder setOverrideListener(DialogAcceptListener dialogAcceptListener) {
+            this.dialogAcceptListener = dialogAcceptListener;
             return this;
         }
 
@@ -65,8 +68,8 @@ public class Dialog {
             return this;
         }
 
-        public Dialog build() {
-            return new Dialog(context, dialogCancelListener, dialogOverrideListener, existsString, questionString, warningString, viewLayout, itemInflateListener);
+        public OverrideDialog build() {
+            return new OverrideDialog(context, dialogCancelListener, dialogAcceptListener, existsString, questionString, warningString, viewLayout, itemInflateListener);
         }
     }
 
@@ -78,12 +81,12 @@ public class Dialog {
 
     protected Context context;
     protected @Nullable DialogCancelListener cancelListener;
-    protected @Nullable DialogOverrideListener overrideListener;
+    protected @Nullable DialogAcceptListener overrideListener;
     protected @Nullable DialogItemInflateListener itemInflateListener;
     protected String existsText, questionText, warningText;
     protected @LayoutRes int viewLayout;
 
-    protected Dialog(Context context, @Nullable DialogCancelListener cancelListener, @Nullable DialogOverrideListener overrideListener, String existsText, String questionText, String warningText, @LayoutRes int viewLayout, @Nullable DialogItemInflateListener itemInflateListener) {
+    protected OverrideDialog(@NonNull Context context, @Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @LayoutRes int viewLayout, @Nullable DialogItemInflateListener itemInflateListener) {
         this.context = context;
         this.cancelListener = cancelListener;
         this.overrideListener = overrideListener;
@@ -101,7 +104,7 @@ public class Dialog {
 
         findGlobalViews();
         setText();
-        setupButtons();
+        prepareButtons();
         inflateView();
         dialog.show();
     }
@@ -130,7 +133,7 @@ public class Dialog {
         }
     }
 
-    private void setupButtons() {
+    private void prepareButtons() {
         cancelButton.setOnClickListener(v -> {
             dialog.dismiss();
             if (cancelListener != null) {

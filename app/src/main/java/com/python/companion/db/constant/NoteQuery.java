@@ -6,6 +6,7 @@ import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Note;
 
+import java.util.Collection;
 import java.util.concurrent.Executors;
 
 public class NoteQuery {
@@ -43,6 +44,13 @@ public class NoteQuery {
         });
     }
 
+    public void delete(Collection<Note> notes, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.delete(notes.toArray(new Note[]{}));
+            listener.onResult(null);
+        });
+    }
+
     public void getContent(String name, ResultListener<String> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             Note note = daoNote.get(name);
@@ -57,6 +65,4 @@ public class NoteQuery {
     public void isUniqueInstanced(String name, ResultListener<Note> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
     }
-
-
 }

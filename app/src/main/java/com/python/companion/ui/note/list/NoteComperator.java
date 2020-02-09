@@ -14,7 +14,7 @@ public class NoteComperator extends Comperator<Note> {
     @Override
     public int compare(Note o1, Note o2) {
         if (strategy == Adapter.SortBy.DATE) {
-            return 1; //TODO: Implement date field in note and compare dates
+            return o1.getModified().compareTo(o2.getModified());
         } else {
             return o1.getName().compareTo(o2.getName());
         }

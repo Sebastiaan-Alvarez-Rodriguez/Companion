@@ -20,8 +20,8 @@ import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
 import com.python.companion.ui.note.list.adapter.NoteViewHolder;
-import com.python.companion.ui.templates.dialog.Dialog;
-import com.python.companion.ui.templates.dialog.DialogOverrideListener;
+import com.python.companion.ui.note.override.OverrideDialog;
+import com.python.companion.ui.templates.dialog.DialogAcceptListener;
 
 import io.noties.markwon.Markwon;
 import io.noties.markwon.ext.latex.JLatexMathPlugin;
@@ -69,7 +69,7 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
 
     private void setupActionBar() {
-        Toolbar myToolbar = findViewById(R.id.activity_note_view_toolbar);
+        Toolbar myToolbar = findViewById(R.id.activity_category_toolbar);
         setSupportActionBar(myToolbar);
 
         ActionBar actionbar = getSupportActionBar();
@@ -109,7 +109,7 @@ public class NotePreviewActivity extends AppCompatActivity {
                 Log.i("Save", "New & unique. Inserting...");
                 insertNew();
             } else {
-                Log.i("Save", "New & conflict. Dialog...");
+                Log.i("Save", "New & conflict. CategoryDialog...");
                 showOverrideDialog(other, this::updateExisting);
             }
         });
@@ -129,7 +129,7 @@ public class NotePreviewActivity extends AppCompatActivity {
                     Log.i("Save", "Edit & name changed ("+prevNoteName+"->"+noteName+") & unique. Updating...");
                     updateExisting();
                 } else {
-                    Log.i("Save", "Edit & name changed ("+prevNoteName+"->"+noteName+") & conflict. Dialog...");
+                    Log.i("Save", "Edit & name changed ("+prevNoteName+"->"+noteName+") & conflict. CategoryDialog...");
                     showOverrideDialog(other, () -> noteQuery.delete(other.getName(), v -> updateExisting()));
                 }
             });
@@ -149,8 +149,8 @@ public class NotePreviewActivity extends AppCompatActivity {
             noteQuery.update(noteName, noteContent, v -> finishSuccess());
     }
 
-    private void showOverrideDialog(Note conflicting, DialogOverrideListener overrideListener) {
-        Dialog dialog = new Dialog.Builder(this)
+    private void showOverrideDialog(Note conflicting, DialogAcceptListener overrideListener) {
+        OverrideDialog overrideDialog = new OverrideDialog.Builder(this)
                 .setExistsText("Note name already exists!")
                 .setQuestionText("Do you want to override existing note?")
                 .setWarningText("Warning: Overriden notes cannot be restored")
@@ -161,7 +161,7 @@ public class NotePreviewActivity extends AppCompatActivity {
                     tmp.set(conflicting);
                 })
                 .build();
-        runOnUiThread(dialog::showDialog);
+        runOnUiThread(overrideDialog::showDialog);
     }
 
     @Override

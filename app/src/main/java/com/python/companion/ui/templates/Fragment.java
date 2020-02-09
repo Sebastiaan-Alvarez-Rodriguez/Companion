@@ -2,6 +2,7 @@ package com.python.companion.ui.templates;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,7 +51,7 @@ public abstract class Fragment<T> extends androidx.fragment.app.Fragment impleme
         list = view.findViewById(R.id.list);
         add = view.findViewById(R.id.add);
         prepareList(view);
-        prepareAdd(view, false);
+        prepareAdd();
         prepareSearch();
         prepareSort();
     }
@@ -58,13 +59,20 @@ public abstract class Fragment<T> extends androidx.fragment.app.Fragment impleme
     abstract protected void prepareSearch();
 
     protected void prepareSort() {
-        sort.setOnClickListener(v -> adapter.sort(adapter.getSortStrategy() == Adapter.SortBy.NAME ? Adapter.SortBy.DATE : Adapter.SortBy.NAME));
+        sort.setOnClickListener(v -> {
+            Log.i("Sort", "Sorting now done on "+ (adapter.getSortStrategy() == Adapter.SortBy.NAME ? "DATE" : "NAME"));
+            adapter.sort(adapter.getSortStrategy() == Adapter.SortBy.NAME ? Adapter.SortBy.DATE : Adapter.SortBy.NAME);
+        });
     }
     abstract protected void prepareList(View view);
 
     @CallSuper
-    protected void prepareAdd(View view, boolean actionMode) {
-        add.setImageResource(actionMode ? R.drawable.ic_delete : R.drawable.ic_add);
+    protected void prepareAdd() {
+        add.setImageResource(R.drawable.ic_add);
+    }
+
+    protected void prepareDelete() {
+        add.setImageResource(R.drawable.ic_delete);
     }
 
     @Override
@@ -90,7 +98,10 @@ public abstract class Fragment<T> extends androidx.fragment.app.Fragment impleme
 
     @Override
     public void onActionModeChange(boolean actionMode) {
-        prepareAdd(getView(), actionMode);
+        if (actionMode)
+            prepareDelete();
+        else
+            prepareAdd();
     }
 
 }
