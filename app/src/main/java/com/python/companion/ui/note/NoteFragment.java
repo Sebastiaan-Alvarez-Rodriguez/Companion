@@ -7,23 +7,19 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.mikepenz.fastadapter.FastAdapter;
+import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
-import com.python.companion.db.constant.NoteQuery;
-import com.python.companion.db.entity.Note;
 import com.python.companion.ui.note.activity.NoteViewActivity;
-import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
-import com.python.companion.ui.note.list.NoteSearcher;
-import com.python.companion.ui.note.list.adapter.NoteAdapterAction;
-import com.python.companion.ui.templates.Fragment;
-import com.python.companion.ui.templates.adapter.action.ActionListener;
-import com.python.companion.ui.templates.search.Searcher;
+import com.python.companion.ui.note.adapter.NoteItem;
 
-import java.util.List;
+import java.util.stream.Collectors;
 
 // https://github.com/wasabeef/richeditor-android
 //    https://github.com/wasabeef/richeditor-android/blob/master/sample/src/main/res/layout/activity_main.xml
@@ -45,9 +41,12 @@ import java.util.List;
 // Color picking: https://github.com/martin-stone/hsv-alpha-color-picker-android
 // Now for menu redesign
 //    https://stackoverflow.com/questions/21329132/android-custom-dropdown-popup-menu
-public class NoteFragment extends Fragment<Note> implements ActionListener<Note> {
+public class NoteFragment extends Fragment {
 
     private NoteViewModel noteViewModel;
+    private RecyclerView list;
+    private FastAdapter<NoteItem> fastAdapter;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,77 +55,67 @@ public class NoteFragment extends Fragment<Note> implements ActionListener<Note>
     }
 
     @Override
-    protected void prepareSearch() {
-        search.setOnQueryTextListener(new NoteSearcher(new Searcher.EventListener<Note>() {
-            @NonNull
-            @Override
-            public List<Note> onBeginSearch() {
-                add.setVisibility(View.INVISIBLE);
-                return adapter.getItems();
-            }
-
-            @Override
-            public void onFinishSearch(List<Note> initial) {
-                adapter.replaceAll(initial);
-                add.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onReceiveFilteredContent(List<Note> filtered) {
-                adapter.replaceAll(filtered);
-                list.scrollToPosition(0);
-            }
-        }));
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        findViews(view);
+        prepareList(view);
     }
 
-    @Override
-    protected void prepareList(View view) {
-        RecyclerView list = view.findViewById(R.id.list);
+    private void findViews(View view) {
+        list = view.findViewById(R.id.list);
+    }
 
-        adapter = new NoteAdapterAction(this);
-        noteViewModel.getNotes().observe(this, adapter);
+    private void prepareList(View view) {
+        ItemAdapter<NoteItem> itemAdapter = new ItemAdapter<>();
+        fastAdapter = FastAdapter.with(itemAdapter);
 
-        list.setAdapter(adapter);
+
+        fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, integer) -> {
+            final String name = noteItem.getNote().getName();
+            Log.i("Clicked item", "Note name: "+name);
+//            final NoteQuery noteQuery = new NoteQuery(getContext());
+//            noteQuery.getContent(name, content -> {
+//                Intent intent = new Intent(getContext(), NoteViewActivity.class);
+//                intent.putExtra("name", name);
+//                intent.putExtra("content", content);
+//                startActivity(intent);
+//            });
+            Intent intent = new Intent(getContext(), NoteViewActivity.class);
+            intent.putExtra("name", name);
+            intent.putExtra("content", noteItem.getNote().getContent());
+            startActivity(intent);
+            return true;
+        });
+
+        noteViewModel.getNotes().observe(getViewLifecycleOwner(), notes -> itemAdapter.set(notes.stream().map(note -> {
+            NoteItem item = new NoteItem();
+            item.setNote(note);
+            return item;
+        }).collect(Collectors.toList())));
+
+        list.setAdapter(fastAdapter);
         list.setLayoutManager(new LinearLayoutManager(view.getContext()));
         list.addItemDecoration(new DividerItemDecoration(view.getContext(), LinearLayoutManager.VERTICAL));
     }
 
-    @Override
-    public void onClick(Note note) {
-        final String name = note.getName();
-        Log.i("Clicked item", "Note name: "+name);
-        final NoteQuery noteQuery = new NoteQuery(getContext());
-        noteQuery.getContent(name, content -> {
-            Intent intent = new Intent(getContext(), NoteViewActivity.class);
-            intent.putExtra("name", name);
-            intent.putExtra("content", content);
-            startActivity(intent);
-        });
 
-    }
-
-    @Override
-    public boolean onLongClick(Note note) {
-        return super.onLongClick(note);
-    }
-
-    @Override
-    protected void prepareAdd() {
-        super.prepareAdd();
-        add.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), NoteEditActivity.class);
-            startActivityForResult(intent, REQ_ADD);
-        });
-    }
-
-    @Override
-    protected void prepareDelete() {
-        super.prepareDelete();
-        add.setOnClickListener(v -> {
-            final NoteQuery noteQuery = new NoteQuery(getContext());
-            noteQuery.delete(adapter.getSelected(), x -> {});
-        });
-    }
+//    @Override
+//    protected void prepareAdd() {
+//        super.prepareAdd();
+//        add.setOnClickListener(v -> {
+//            Intent intent = new Intent(getContext(), NoteEditActivity.class);
+//            startActivityForResult(intent, REQ_ADD);
+//        });
+//    }
+//
+//    @Override
+//    protected void prepareDelete() {
+//        super.prepareDelete();
+//        add.setOnClickListener(v -> {
+//            final NoteQuery noteQuery = new NoteQuery(getContext());
+//            noteQuery.delete(adapter.getSelected(), x -> {});
+//        });
+//    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

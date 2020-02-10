@@ -2,6 +2,8 @@ package com.python.companion.db.constant;
 
 import android.content.Context;
 
+import androidx.annotation.ColorInt;
+
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
@@ -38,9 +40,28 @@ public class NoteQuery {
         });
     }
 
+    /**
+     * Update category of 1 item, specified by given name
+     * @param name Note name to receive update
+     * @param category Updated category
+     */
     public void updateCategory(String name, Category category, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             daoNote.updateCategory(name, category.getCategoryName(), category.getCategoryColor());
+            listener.onResult(null);
+        });
+    }
+
+    /**
+     * Update category of *all* items. Use this function if you delete or merge or change entire categories.
+     * In such cases, also don't forget to update the Category table too.
+     * @param prevCategoryName 'old' name of category
+     * @param categoryName new category name
+     * @param color new color
+     */
+    public void updateEntireCategory(String prevCategoryName, String categoryName, @ColorInt int color, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.updateEntireCategory(prevCategoryName, categoryName, color);
             listener.onResult(null);
         });
     }

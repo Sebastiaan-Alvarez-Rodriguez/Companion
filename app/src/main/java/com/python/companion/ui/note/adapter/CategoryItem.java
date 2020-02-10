@@ -1,11 +1,10 @@
-package com.python.companion.ui.category.list.adapter;
+package com.python.companion.ui.note.adapter;
 
 import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
 
-import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
 import com.mikepenz.fastadapter.items.AbstractItem;
 import com.python.companion.R;
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+@SuppressWarnings("WeakerAccess")
 public class CategoryItem extends AbstractItem<ViewHolder> {
     public static final @LayoutRes int layoutResource = R.layout.item_category;
 
@@ -49,7 +49,8 @@ public class CategoryItem extends AbstractItem<ViewHolder> {
         super.bindView(holder, payloads);
     }
 
-    public class CategoryViewHolder extends FastAdapter.ViewHolder<CategoryItem> {
+    @SuppressWarnings("WeakerAccess")
+    public class CategoryViewHolder extends ViewHolder<CategoryItem> {
         private TextView color, name;
 
         public CategoryViewHolder(@NotNull View itemView) {

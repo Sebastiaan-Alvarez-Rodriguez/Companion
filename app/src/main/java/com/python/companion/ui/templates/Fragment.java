@@ -72,7 +72,7 @@ public abstract class Fragment<T> extends androidx.fragment.app.Fragment impleme
     }
 
     protected void prepareDelete() {
-        add.setImageResource(R.drawable.ic_delete);
+        add.setImageResource(R.drawable.ic_menu_delete);
     }
 
     @Override

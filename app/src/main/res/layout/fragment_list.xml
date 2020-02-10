@@ -27,7 +27,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/searchview"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/searchview"
-        app:srcCompat="@drawable/ic_sort_alpha" />
+        app:srcCompat="@drawable/ic_menu_sort_alpha" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"

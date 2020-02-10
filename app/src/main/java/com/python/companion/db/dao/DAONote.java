@@ -31,6 +31,9 @@ public interface DAONote {
     @Query("UPDATE Note SET categoryName = :categoryName, categoryColor = :categoryColor WHERE name = :name")
     void updateCategory(String name, String categoryName, @ColorInt int categoryColor);
 
+    @Query("UPDATE Note SET categoryName = :categoryName, categoryColor = :categoryColor WHERE categoryName = :prevCategoryName")
+    void updateEntireCategory(String prevCategoryName, String categoryName, @ColorInt int categoryColor);
+
     @Query("SELECT * FROM Note")
     LiveData<List<Note>> getAllLive();
 

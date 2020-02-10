@@ -31,7 +31,9 @@ import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
-import com.python.companion.ui.category.list.adapter.CategoryItem;
+import com.python.companion.ui.note.adapter.CategoryItem;
+import com.python.companion.ui.note.dialog.CategoryDeleteDialog;
+import com.python.companion.ui.note.dialog.CategoryUpdateDialog;
 import com.python.companion.util.ContextMenuRecyclerView;
 
 import java.util.stream.Collectors;
@@ -52,7 +54,6 @@ public class CategoryEditActivity extends AppCompatActivity {
 
     private String noteName;
 
-
     private @ColorInt int color;
 
     @Override
@@ -60,7 +61,9 @@ public class CategoryEditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category_edit);
         categoryViewModel = new ViewModelProvider(this).get(CategoryViewModel.class);
-        noteName = getIntent().getStringExtra("name");
+
+        noteName = getIntent().getStringExtra("noteName");
+
         color = ContextCompat.getColor(this, R.color.colorPrimary);
         findViews();
         prepareCurrentCategoryView();
@@ -83,8 +86,13 @@ public class CategoryEditActivity extends AppCompatActivity {
 
     private void prepareCurrentCategoryView() {
         categoryViewModel.getCurrentCategory(noteName).observe(this, category -> {
-            curColorView.setBackgroundColor(category.getCategoryColor());
-            curNameView.setText(category.getCategoryName());
+            if (category != null) {
+                Log.i("Observer", "Category for note "+noteName+" found category: " + category.getCategoryName());
+                curColorView.setBackgroundColor(category.getCategoryColor());
+                curNameView.setText(category.getCategoryName());
+            } else {
+                Log.i("Observer", "Category for note "+noteName+" not found at this time");
+            }
         });
     }
 
@@ -185,9 +193,18 @@ public class CategoryEditActivity extends AppCompatActivity {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         ContextMenuRecyclerView.RecyclerViewContextMenuInfo info = (ContextMenuRecyclerView.RecyclerViewContextMenuInfo) item.getMenuInfo();
+        CategoryItem clicked = fastAdapter.getItem(info.position);
+
         switch (item.getItemId()) {
             case R.id.menu_category_context_edit:
-                Log.i("Context", "Requested edit of item "+fastAdapter.getItem(info.position).getCategory().getCategoryName());
+                CategoryUpdateDialog categoryUpdateDialog = new CategoryUpdateDialog.Builder(this)
+                        .setCategory(clicked.getCategory()).build();
+                categoryUpdateDialog.showDialog(this, getSupportFragmentManager());
+                break;
+            case R.id.menu_category_context_delete:
+                CategoryDeleteDialog categoryDeleteDialog = new CategoryDeleteDialog.Builder(this)
+                        .setCategory(clicked.getCategory()).build();
+                categoryDeleteDialog.showDialog();
                 break;
         }
         return super.onContextItemSelected(item);

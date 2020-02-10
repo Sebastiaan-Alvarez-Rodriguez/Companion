@@ -86,7 +86,7 @@ public class NoteViewActivity extends AppCompatActivity {
                 break;
             case R.id.menu_view_edit_category:
                 intent = new Intent(this, CategoryEditActivity.class);
-                intent.putExtra("name", name);
+                intent.putExtra("noteName", name);
                 startActivity(intent);
                 break;
             case R.id.menu_view_edit:

@@ -19,7 +19,7 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/menu_view_delete"
-        android:icon="@drawable/ic_delete"
+        android:icon="@drawable/ic_menu_delete"
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"
         android:title="Delete"

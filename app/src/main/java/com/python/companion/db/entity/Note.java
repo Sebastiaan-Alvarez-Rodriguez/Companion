@@ -26,7 +26,8 @@ public class Note {
     public Note(@NonNull String name, @NonNull String content) {
         this.name = name;
         this.content = content;
-        this.category = new Category("Default", R.color.colorPrimary);
+
+        this.category = new Category("", R.color.colorPrimary);
         modified = Instant.now();
     }
 

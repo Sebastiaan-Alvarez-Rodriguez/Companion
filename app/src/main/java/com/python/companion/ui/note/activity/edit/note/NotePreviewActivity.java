@@ -19,8 +19,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
-import com.python.companion.ui.note.list.adapter.NoteViewHolder;
-import com.python.companion.ui.note.override.OverrideDialog;
+import com.python.companion.ui.note.dialog.NoteOverrideDialog;
 import com.python.companion.ui.templates.dialog.DialogAcceptListener;
 
 import io.noties.markwon.Markwon;
@@ -150,18 +149,14 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
 
     private void showOverrideDialog(Note conflicting, DialogAcceptListener overrideListener) {
-        OverrideDialog overrideDialog = new OverrideDialog.Builder(this)
+        NoteOverrideDialog noteOverrideDialog = new NoteOverrideDialog.Builder(this)
                 .setExistsText("Note name already exists!")
                 .setQuestionText("Do you want to override existing note?")
                 .setWarningText("Warning: Overriden notes cannot be restored")
+                .setNote(conflicting)
                 .setOverrideListener(overrideListener)
-                .setViewLayout(NoteViewHolder.layoutResource)
-                .setItemInflateListener(view -> {
-                    NoteViewHolder tmp = new NoteViewHolder(view, null);
-                    tmp.set(conflicting);
-                })
                 .build();
-        runOnUiThread(overrideDialog::showDialog);
+        runOnUiThread(noteOverrideDialog::showDialog);
     }
 
     @Override

@@ -48,4 +48,8 @@ public class CategoryQuery {
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoCategory.get(name) == null));
     }
+
+    public void isUniqueInstanced(String name, ResultListener<Category> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoCategory.get(name)));
+    }
 }

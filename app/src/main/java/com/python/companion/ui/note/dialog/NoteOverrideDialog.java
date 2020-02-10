@@ -1,22 +1,21 @@
-package com.python.companion.ui.note.override;
+package com.python.companion.ui.note.dialog;
 
 import android.content.Context;
-import android.view.ViewStub;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.CallSuper;
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.python.companion.R;
-import com.python.companion.ui.templates.dialog.DialogCancelListener;
+import com.python.companion.db.entity.Note;
 import com.python.companion.ui.templates.dialog.DialogAcceptListener;
+import com.python.companion.ui.templates.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
-public class OverrideDialog {
+public class NoteOverrideDialog {
 
     @SuppressWarnings("unused")
     public static class Builder {
@@ -24,10 +23,8 @@ public class OverrideDialog {
         private DialogAcceptListener dialogAcceptListener = null;
 
         private String existsString = "", questionString = "", warningString = "";
+        private Note note;
         private Context context;
-
-        private @LayoutRes int viewLayout = 0;
-        private DialogItemInflateListener itemInflateListener = null;
 
         public Builder(@NonNull Context context) {
             this.context = context;
@@ -58,23 +55,20 @@ public class OverrideDialog {
             return this;
         }
 
-        public Builder setViewLayout(@LayoutRes int resource) {
-            viewLayout = resource;
+        public Builder setNote(Note note) {
+            this.note = note;
             return this;
         }
 
-        public Builder setItemInflateListener(DialogItemInflateListener dialogItemInflateListener) {
-            itemInflateListener = dialogItemInflateListener;
-            return this;
-        }
-
-        public OverrideDialog build() {
-            return new OverrideDialog(context, dialogCancelListener, dialogAcceptListener, existsString, questionString, warningString, viewLayout, itemInflateListener);
+        public NoteOverrideDialog build() {
+            if (note == null)
+                throw new IllegalStateException("Caller must provide Note which will be overriden with builder.setNote(note)");
+            return new NoteOverrideDialog(context, dialogCancelListener, dialogAcceptListener, existsString, questionString, warningString, note);
         }
     }
 
     protected TextView existsView, questionView, warningView;
-    protected ViewStub conflictItem;
+    protected TextView noteNameView, noteDateView, noteCategoryView;
     protected Button cancelButton, overrideButton;
 
     protected android.app.Dialog dialog;
@@ -82,42 +76,43 @@ public class OverrideDialog {
     protected Context context;
     protected @Nullable DialogCancelListener cancelListener;
     protected @Nullable DialogAcceptListener overrideListener;
-    protected @Nullable DialogItemInflateListener itemInflateListener;
     protected String existsText, questionText, warningText;
-    protected @LayoutRes int viewLayout;
+    protected @NonNull Note note;
 
-    protected OverrideDialog(@NonNull Context context, @Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @LayoutRes int viewLayout, @Nullable DialogItemInflateListener itemInflateListener) {
+    protected NoteOverrideDialog(@NonNull Context context, @Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @NonNull Note note) {
         this.context = context;
         this.cancelListener = cancelListener;
         this.overrideListener = overrideListener;
         this.existsText = existsText;
         this.warningText = warningText;
         this.questionText = questionText;
-        this.viewLayout = viewLayout;
-        this.itemInflateListener = itemInflateListener;
+        this.note = note;
     }
 
     public void showDialog() {
         dialog = new android.app.Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_override);
+        dialog.setContentView(R.layout.dialog_note_override);
 
         findGlobalViews();
         setText();
+        setNote();
         prepareButtons();
-        inflateView();
         dialog.show();
     }
 
     @CallSuper
     protected void findGlobalViews() {
-        existsView = dialog.findViewById(R.id.dialog_conflict_text);
-        questionView = dialog.findViewById(R.id.dialog_conflict_question);
-        warningView = dialog.findViewById(R.id.dialog_conflict_warning);
+        existsView = dialog.findViewById(R.id.dialog_note_override_text);
+        questionView = dialog.findViewById(R.id.dialog_note_override_question);
+        warningView = dialog.findViewById(R.id.dialog_note_override_warning);
 
-        conflictItem = dialog.findViewById(R.id.dialog_conflict_item);
-        cancelButton = dialog.findViewById(R.id.dialog_conflict_cancel);
-        overrideButton = dialog.findViewById(R.id.dialog_conflict_override);
+        noteNameView = dialog.findViewById(R.id.item_note_name);
+        noteDateView = dialog.findViewById(R.id.item_note_date);
+        noteCategoryView = dialog.findViewById(R.id.item_note_category);
+
+        cancelButton = dialog.findViewById(R.id.dialog_note_override_cancel);
+        overrideButton = dialog.findViewById(R.id.dialog_note_override_override);
     }
 
     protected void setText() {
@@ -126,11 +121,10 @@ public class OverrideDialog {
         warningView.setText(warningText);
     }
 
-    protected void inflateView() {
-        if (viewLayout != 0 && itemInflateListener != null) {
-            conflictItem.setLayoutResource(viewLayout);
-            itemInflateListener.onDialogItemInflate(conflictItem.inflate());
-        }
+    protected void setNote() {
+        noteNameView.setText(note.getName());
+        noteDateView.setText(note.getModified().toString());
+        noteCategoryView.setBackgroundColor(note.getCategory().getCategoryColor());
     }
 
     private void prepareButtons() {
@@ -143,7 +137,7 @@ public class OverrideDialog {
         overrideButton.setOnClickListener(v -> {
             dialog.dismiss();
             if (overrideListener != null) {
-                overrideListener.onOverride();
+                overrideListener.onAccept();
             }
         });
     }

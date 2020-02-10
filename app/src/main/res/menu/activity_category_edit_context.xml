@@ -8,4 +8,10 @@
         app:iconTint="@color/colorPrimary"
         app:iconTintMode="src_in"
         android:title="Edit" />
+    <item
+        android:id="@+id/menu_category_context_delete"
+        android:icon="@drawable/ic_menu_delete"
+        app:iconTint="@color/colorPrimary"
+        app:iconTintMode="src_in"
+        android:title="Delete" />
 </menu>
