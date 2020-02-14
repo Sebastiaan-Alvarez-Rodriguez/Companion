@@ -86,11 +86,13 @@ public class CategoryEditActivity extends AppCompatActivity {
 
     private void prepareCurrentCategoryView() {
         categoryViewModel.getCurrentCategory(noteName).observe(this, category -> {
-            if (category != null) {
+            if (category != null && category.getCategoryName().length() != 0) {
                 Log.i("Observer", "Category for note "+noteName+" found category: " + category.getCategoryName());
-                curColorView.setBackgroundColor(category.getCategoryColor());
                 curNameView.setText(category.getCategoryName());
+                curColorView.setBackgroundColor(category.getCategoryColor());
             } else {
+                curNameView.setText("<Default>");
+                curColorView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary));
                 Log.i("Observer", "Category for note "+noteName+" not found at this time");
             }
         });

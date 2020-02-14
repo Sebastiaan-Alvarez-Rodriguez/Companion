@@ -3,10 +3,16 @@ package com.python.companion.ui.note;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.view.ActionMode;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -15,27 +21,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
+import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
+import com.mikepenz.fastadapter.helpers.ActionModeHelper;
+import com.mikepenz.fastadapter.select.SelectExtension;
+import com.mikepenz.fastadapter.select.SelectExtensionFactory;
+import com.python.companion.MainActivity;
 import com.python.companion.R;
 import com.python.companion.ui.note.activity.NoteViewActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
 
 import java.util.stream.Collectors;
 
-// https://github.com/wasabeef/richeditor-android
-//    https://github.com/wasabeef/richeditor-android/blob/master/sample/src/main/res/layout/activity_main.xml
-//    https://github.com/wasabeef/richeditor-android/blob/master/sample/src/main/java/jp/wasabeef/sample/MainActivity.java
-
-// https://stackoverflow.com/questions/53414053/bold-and-italics-in-edittext
-// https://stackoverflow.com/questions/14371092/how-to-make-a-specific-text-on-textview-bold/14371107
-
-// https://github.com/federicoiosue/Omni-Notes
-
-
-// Or markdown?
 // https://github.com/noties/Markwon
 //    https://noties.io/Markwon/
 //    https://github.com/noties/Markwon/blob/master/sample/src/main/java/io/noties/markwon/sample/latex/LatexActivity.java
-// https://github.com/signalapp/Signal-Android/issues/5534
 
 
 // Color picking: https://github.com/martin-stone/hsv-alpha-color-picker-android
@@ -46,12 +45,19 @@ public class NoteFragment extends Fragment {
     private NoteViewModel noteViewModel;
     private RecyclerView list;
     private FastAdapter<NoteItem> fastAdapter;
-
+    private SelectExtension<NoteItem> selectionExtension;
+    private ActionModeHelper<NoteItem> actionModeHelper;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_list, container, false);
     }
 
     @Override
@@ -68,34 +74,63 @@ public class NoteFragment extends Fragment {
     private void prepareList(View view) {
         ItemAdapter<NoteItem> itemAdapter = new ItemAdapter<>();
         fastAdapter = FastAdapter.with(itemAdapter);
+        ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
+        list.setAdapter(fastAdapter);
+        list.setLayoutManager(new LinearLayoutManager(view.getContext()));
+        list.addItemDecoration(new DividerItemDecoration(view.getContext(), LinearLayoutManager.VERTICAL));
 
 
-        fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, integer) -> {
-            final String name = noteItem.getNote().getName();
-            Log.i("Clicked item", "Note name: "+name);
-//            final NoteQuery noteQuery = new NoteQuery(getContext());
-//            noteQuery.getContent(name, content -> {
-//                Intent intent = new Intent(getContext(), NoteViewActivity.class);
-//                intent.putExtra("name", name);
-//                intent.putExtra("content", content);
-//                startActivity(intent);
-//            });
-            Intent intent = new Intent(getContext(), NoteViewActivity.class);
-            intent.putExtra("name", name);
-            intent.putExtra("content", noteItem.getNote().getContent());
-            startActivity(intent);
-            return true;
+        selectionExtension = fastAdapter.getOrCreateExtension(SelectExtension.class);
+        assert selectionExtension != null;
+        selectionExtension.setSelectable(true);
+        selectionExtension.setMultiSelect(true);
+        selectionExtension.setSelectOnLongClick(true);
+        selectionExtension.setSelectionListener((item, b) -> {
+            Log.i("Superb", "Selection of item "+item.getNote().getName()+" changed to: "+b);
+//            item.setSelected(b);
         });
+
+//        fastAdapter.addEventHook(new NoteItem.CheckBoxClickEvent());
+
+        fastAdapter.setOnPreClickListener((view12, noteItemIAdapter, noteItem, integer) -> {
+            Log.i("OnPreClick", "Tick: "+actionModeHelper.isActive());
+            Boolean res = actionModeHelper.onClick(noteItem);
+            return res != null ? res : false;
+        });
+
+        fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, position) -> {
+            Log.i("OnClick", "Tick: "+actionModeHelper.isActive());
+            Log.i("OnClick", "SelectedCount: " + selectionExtension.getSelections().size());
+            if (!actionModeHelper.isActive()) {
+                Intent intent = new Intent(getContext(), NoteViewActivity.class);
+                intent.putExtra("name", noteItem.getNote().getName());
+                intent.putExtra("content", noteItem.getNote().getContent());
+                startActivity(intent);
+            } else {
+                fastAdapter.notifyItemChanged(position);
+            }
+            return true; //orig: false
+        });
+
+
+        fastAdapter.setOnPreLongClickListener((view13, noteItemIAdapter, noteItem, position) -> {
+            ActionMode actionMode = actionModeHelper.onLongClick((MainActivity) getActivity(), position);
+            if (actionMode != null) {
+                //we want color our CAB
+                getActivity().findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
+            }
+            //if we have no actionMode we do not consume the event
+            return actionMode != null;
+        });
+
+
+        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.context_note, new ActionBarCallBack());
 
         noteViewModel.getNotes().observe(getViewLifecycleOwner(), notes -> itemAdapter.set(notes.stream().map(note -> {
             NoteItem item = new NoteItem();
             item.setNote(note);
             return item;
         }).collect(Collectors.toList())));
-
-        list.setAdapter(fastAdapter);
-        list.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        list.addItemDecoration(new DividerItemDecoration(view.getContext(), LinearLayoutManager.VERTICAL));
     }
 
 
@@ -121,5 +156,31 @@ public class NoteFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         //TODO scroll to new item and highlight it?
+    }
+
+    static class ActionBarCallBack implements ActionMode.Callback {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            if (item.getItemId() == R.id.menu_context_note_delete)
+                Log.i("Superb", "Clicked on CAB action item!");
+//            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
+            mode.finish();
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+
+        }
     }
 }
