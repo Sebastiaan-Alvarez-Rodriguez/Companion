@@ -27,8 +27,10 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.MainActivity;
 import com.python.companion.R;
+import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.ui.note.activity.NoteViewActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
+import com.python.companion.ui.note.dialog.CategorySetDialog;
 
 import java.util.stream.Collectors;
 
@@ -40,7 +42,7 @@ import java.util.stream.Collectors;
 // Color picking: https://github.com/martin-stone/hsv-alpha-color-picker-android
 // Now for menu redesign
 //    https://stackoverflow.com/questions/21329132/android-custom-dropdown-popup-menu
-public class NoteFragment extends Fragment {
+public class NoteFragment extends Fragment implements ActionMode.Callback {
 
     private NoteViewModel noteViewModel;
     private RecyclerView list;
@@ -124,7 +126,7 @@ public class NoteFragment extends Fragment {
         });
 
 
-        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.context_note, new ActionBarCallBack());
+        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.context_note, this);
 
         noteViewModel.getNotes().observe(getViewLifecycleOwner(), notes -> itemAdapter.set(notes.stream().map(note -> {
             NoteItem item = new NoteItem();
@@ -158,29 +160,34 @@ public class NoteFragment extends Fragment {
         //TODO scroll to new item and highlight it?
     }
 
-    static class ActionBarCallBack implements ActionMode.Callback {
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            if (item.getItemId() == R.id.menu_context_note_delete)
-                Log.i("Superb", "Clicked on CAB action item!");
-//            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
-            mode.finish();
-            return true;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-
-        }
+    @Override
+    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+        return true;
     }
+
+    @Override
+    public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+        return false;
+    }
+
+    @Override
+    public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_context_note_delete:
+                Log.i("CABClick", "Clicked on CAB action item!");
+    //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
+                final NoteQuery noteQuery = new NoteQuery(getContext());
+                noteQuery.delete(selectionExtension.getSelectedItems().stream().map(NoteItem::getNote).collect(Collectors.toList()), x -> {});
+                mode.finish();
+                break;
+            case R.id.menu_context_note_update_category:
+                CategorySetDialog categorySetDialog = new CategorySetDialog.Builder().setFinishListener(mode::finish).build();
+                categorySetDialog.show(getChildFragmentManager(), null); //https://guides.codepath.com/android/using-dialogfragment
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    public void onDestroyActionMode(ActionMode mode) {}
 }
