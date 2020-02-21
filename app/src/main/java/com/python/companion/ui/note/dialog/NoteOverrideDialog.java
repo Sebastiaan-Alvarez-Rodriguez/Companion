@@ -1,13 +1,16 @@
 package com.python.companion.ui.note.dialog;
 
-import android.content.Context;
-import android.view.Window;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.entity.Note;
@@ -15,7 +18,7 @@ import com.python.companion.ui.templates.dialog.DialogAcceptListener;
 import com.python.companion.ui.templates.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
-public class NoteOverrideDialog {
+public class NoteOverrideDialog extends DialogFragment {
 
     @SuppressWarnings("unused")
     public static class Builder {
@@ -24,12 +27,7 @@ public class NoteOverrideDialog {
 
         private String existsString = "", questionString = "", warningString = "";
         private Note note;
-        private Context context;
-
-        public Builder(@NonNull Context context) {
-            this.context = context;
-        }
-
+        
         public Builder setCancelListener(DialogCancelListener dialogCancelListener) {
             this.dialogCancelListener = dialogCancelListener;
             return this;
@@ -63,7 +61,7 @@ public class NoteOverrideDialog {
         public NoteOverrideDialog build() {
             if (note == null)
                 throw new IllegalStateException("Caller must provide Note which will be overriden with builder.setNote(note)");
-            return new NoteOverrideDialog(context, dialogCancelListener, dialogAcceptListener, existsString, questionString, warningString, note);
+            return new NoteOverrideDialog(dialogCancelListener, dialogAcceptListener, existsString, questionString, warningString, note);
         }
     }
 
@@ -71,16 +69,12 @@ public class NoteOverrideDialog {
     protected TextView noteNameView, noteDateView, noteCategoryView;
     protected Button cancelButton, overrideButton;
 
-    protected android.app.Dialog dialog;
-
-    protected Context context;
     protected @Nullable DialogCancelListener cancelListener;
     protected @Nullable DialogAcceptListener overrideListener;
     protected String existsText, questionText, warningText;
     protected @NonNull Note note;
 
-    protected NoteOverrideDialog(@NonNull Context context, @Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @NonNull Note note) {
-        this.context = context;
+    protected NoteOverrideDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @NonNull Note note) {
         this.cancelListener = cancelListener;
         this.overrideListener = overrideListener;
         this.existsText = existsText;
@@ -89,30 +83,33 @@ public class NoteOverrideDialog {
         this.note = note;
     }
 
-    public void showDialog() {
-        dialog = new android.app.Dialog(context);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_note_override);
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.dialog_note_override, container);
+    }
 
-        findGlobalViews();
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        findGlobalViews(view);
         setText();
         setNote();
         prepareButtons();
-        dialog.show();
     }
 
     @CallSuper
-    protected void findGlobalViews() {
-        existsView = dialog.findViewById(R.id.dialog_note_override_text);
-        questionView = dialog.findViewById(R.id.dialog_note_override_question);
-        warningView = dialog.findViewById(R.id.dialog_note_override_warning);
+    protected void findGlobalViews(View view) {
+        existsView = view.findViewById(R.id.dialog_note_override_text);
+        questionView = view.findViewById(R.id.dialog_note_override_question);
+        warningView = view.findViewById(R.id.dialog_note_override_warning);
 
-        noteNameView = dialog.findViewById(R.id.item_note_name);
-        noteDateView = dialog.findViewById(R.id.item_note_date);
-        noteCategoryView = dialog.findViewById(R.id.item_note_category);
+        noteNameView = view.findViewById(R.id.item_note_name);
+        noteDateView = view.findViewById(R.id.item_note_date);
+        noteCategoryView = view.findViewById(R.id.item_note_category);
 
-        cancelButton = dialog.findViewById(R.id.dialog_note_override_cancel);
-        overrideButton = dialog.findViewById(R.id.dialog_note_override_override);
+        cancelButton = view.findViewById(R.id.dialog_note_override_cancel);
+        overrideButton = view.findViewById(R.id.dialog_note_override_override);
     }
 
     protected void setText() {
@@ -129,16 +126,16 @@ public class NoteOverrideDialog {
 
     private void prepareButtons() {
         cancelButton.setOnClickListener(v -> {
-            dialog.dismiss();
             if (cancelListener != null) {
                 cancelListener.onCancel();
             }
+            dismiss();
         });
         overrideButton.setOnClickListener(v -> {
-            dialog.dismiss();
             if (overrideListener != null) {
                 overrideListener.onAccept();
             }
+            dismiss();
         });
     }
 }

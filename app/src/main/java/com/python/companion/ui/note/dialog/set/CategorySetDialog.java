@@ -1,4 +1,4 @@
-package com.python.companion.ui.note.dialog;
+package com.python.companion.ui.note.dialog.set;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

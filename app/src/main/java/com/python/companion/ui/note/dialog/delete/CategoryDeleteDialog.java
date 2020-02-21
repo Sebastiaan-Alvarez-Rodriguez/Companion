@@ -1,7 +1,10 @@
-package com.python.companion.ui.note.dialog;
+package com.python.companion.ui.note.dialog.delete;
 
 import android.content.Context;
-import android.view.Window;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -10,6 +13,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
@@ -19,21 +23,14 @@ import com.python.companion.ui.templates.dialog.DialogAcceptListener;
 import com.python.companion.ui.templates.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
-public class CategoryDeleteDialog {
+public class CategoryDeleteDialog extends DialogFragment {
 
     @SuppressWarnings("unused")
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
         private DialogAcceptListener dialogAcceptListener = null;
 
-        private Context context;
-
         private Category category = null;
-
-
-        public Builder(@NonNull Context context) {
-            this.context = context;
-        }
 
         public Builder setCancelListener(DialogCancelListener dialogCancelListener) {
             this.dialogCancelListener = dialogCancelListener;
@@ -53,11 +50,9 @@ public class CategoryDeleteDialog {
         public CategoryDeleteDialog build() {
             if (category == null)
                 throw new IllegalStateException("Category must be provided by caller with builder.setCategory(category)");
-            return new CategoryDeleteDialog(context, dialogCancelListener, dialogAcceptListener, category);
+            return new CategoryDeleteDialog(dialogCancelListener, dialogAcceptListener, category);
         }
     }
-
-    protected android.app.Dialog dialog;
 
     protected Button cancelButton, deleteButton;
     protected TextView categoryNameView, categoryColorView;
@@ -67,29 +62,32 @@ public class CategoryDeleteDialog {
     protected @Nullable DialogAcceptListener acceptListener;
     final protected Category category;
 
-    protected CategoryDeleteDialog(@NonNull Context context, @Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener, @NonNull Category category) {
-        this.context = context;
+    protected CategoryDeleteDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener, @NonNull Category category) {
         this.cancelListener = cancelListener;
         this.acceptListener = acceptListener;
         this.category = category;
     }
 
-    public void showDialog() {
-        dialog = new android.app.Dialog(context);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_category_delete);
-        findGlobalViews();
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.dialog_category_delete, container);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        findGlobalViews(view);
         setCategory();
         setupClicks();
-        dialog.show();
     }
 
     @CallSuper
-    protected void findGlobalViews() {
-        categoryNameView = dialog.findViewById(R.id.item_category_name);
-        categoryColorView =  dialog.findViewById(R.id.item_category_color);
-        cancelButton = dialog.findViewById(R.id.dialog_category_delete_cancel);
-        deleteButton = dialog.findViewById(R.id.dialog_category_delete_accept);
+    protected void findGlobalViews(View view) {
+        categoryNameView = view.findViewById(R.id.item_category_name);
+        categoryColorView =  view.findViewById(R.id.item_category_color);
+        cancelButton = view.findViewById(R.id.dialog_category_delete_cancel);
+        deleteButton = view.findViewById(R.id.dialog_category_delete_accept);
     }
 
     protected void setCategory() {
@@ -101,20 +99,20 @@ public class CategoryDeleteDialog {
         cancelButton.setOnClickListener(v -> {
             if (cancelListener != null)
                 cancelListener.onCancel();
-            dialog.dismiss();
+            dismiss();
         });
         deleteButton.setOnClickListener(v -> {
-            NoteQuery noteQuery = new NoteQuery(context);
+            NoteQuery noteQuery = new NoteQuery(getContext());
             String defaultName = "";
-            @ColorInt int defaultColor = ContextCompat.getColor(context, R.color.colorPrimary);
+            @ColorInt int defaultColor = ContextCompat.getColor(getContext(), R.color.colorPrimary);
             noteQuery.updateEntireCategory(category.getCategoryName(), defaultName, defaultColor, x -> {});
 
-            CategoryQuery categoryQuery = new CategoryQuery(context);
+            CategoryQuery categoryQuery = new CategoryQuery(getContext());
             categoryQuery.delete(category.getCategoryName(), x -> {});
 
             if (acceptListener != null)
                 acceptListener.onAccept();
-            dialog.dismiss();
+            dismiss();
         });
     }
 

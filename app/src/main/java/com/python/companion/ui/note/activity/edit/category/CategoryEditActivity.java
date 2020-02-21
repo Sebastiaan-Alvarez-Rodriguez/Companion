@@ -32,8 +32,8 @@ import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.ui.note.adapter.CategoryItem;
-import com.python.companion.ui.note.dialog.CategoryDeleteDialog;
-import com.python.companion.ui.note.dialog.CategoryUpdateDialog;
+import com.python.companion.ui.note.dialog.delete.CategoryDeleteDialog;
+import com.python.companion.ui.note.dialog.update.CategoryUpdateDialog;
 import com.python.companion.util.ContextMenuRecyclerView;
 
 import java.util.stream.Collectors;
@@ -199,14 +199,14 @@ public class CategoryEditActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
             case R.id.menu_note_context_category_edit:
-                CategoryUpdateDialog categoryUpdateDialog = new CategoryUpdateDialog.Builder(this)
+                CategoryUpdateDialog categoryUpdateDialog = new CategoryUpdateDialog.Builder()
                         .setCategory(clicked.getCategory()).build();
-                categoryUpdateDialog.showDialog(this, getSupportFragmentManager());
+                categoryUpdateDialog.show(getSupportFragmentManager(), null);
                 break;
             case R.id.menu_note_context_category_delete:
-                CategoryDeleteDialog categoryDeleteDialog = new CategoryDeleteDialog.Builder(this)
+                CategoryDeleteDialog categoryDeleteDialog = new CategoryDeleteDialog.Builder()
                         .setCategory(clicked.getCategory()).build();
-                categoryDeleteDialog.showDialog();
+                categoryDeleteDialog.show(getSupportFragmentManager(), null);
                 break;
         }
         return super.onContextItemSelected(item);

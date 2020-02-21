@@ -149,14 +149,14 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
 
     private void showOverrideDialog(Note conflicting, DialogAcceptListener overrideListener) {
-        NoteOverrideDialog noteOverrideDialog = new NoteOverrideDialog.Builder(this)
+        NoteOverrideDialog noteOverrideDialog = new NoteOverrideDialog.Builder()
                 .setExistsText("Note name already exists!")
                 .setQuestionText("Do you want to override existing note?")
                 .setWarningText("Warning: Overriden notes cannot be restored")
                 .setNote(conflicting)
                 .setOverrideListener(overrideListener)
                 .build();
-        runOnUiThread(noteOverrideDialog::showDialog);
+        runOnUiThread(() -> noteOverrideDialog.show(getSupportFragmentManager(), null));
     }
 
     @Override

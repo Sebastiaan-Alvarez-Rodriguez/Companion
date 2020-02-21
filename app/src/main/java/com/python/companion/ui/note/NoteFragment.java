@@ -26,6 +26,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
+import com.mikepenz.fastadapter.diff.DiffCallback;
+import com.mikepenz.fastadapter.diff.FastAdapterDiffUtil;
 import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.helpers.ActionModeHelper;
 import com.mikepenz.fastadapter.listeners.ItemFilterListener;
@@ -35,11 +37,12 @@ import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.MainActivity;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.db.entity.Note;
 import com.python.companion.ui.note.activity.NoteViewActivity;
 import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
 import com.python.companion.ui.note.adapter.NoteSortHandler;
-import com.python.companion.ui.note.dialog.CategorySetDialog;
+import com.python.companion.ui.note.dialog.set.CategorySetDialog;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -108,10 +111,11 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     }
 
     private void prepareList(View view) {
-        ComparableItemListImpl<NoteItem> itemList = new ComparableItemListImpl<>(null);
+        ComparableItemListImpl<NoteItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
 
+        // General adapter stuff and multi-selection
         ItemAdapter<NoteItem> itemAdapter = new ItemAdapter<>(itemList);
-        sortHandler = new NoteSortHandler.Builder().setStrategy(NoteSortHandler.SORT_ALPHA).setItemList(itemList).build();
+        sortHandler = new NoteSortHandler.Builder().setItemList(itemList).build();
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
         list.setAdapter(fastAdapter);
@@ -123,12 +127,8 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         selectionExtension.setSelectable(true);
         selectionExtension.setMultiSelect(true);
         selectionExtension.setSelectOnLongClick(true);
-        selectionExtension.setSelectionListener((item, b) -> {
-            Log.i("Superb", "Selection of item " + item.getNote().getName() + " changed to: " + b);
-//            item.setSelected(b);
-        });
 
-        fastAdapter.setOnPreClickListener((view12, noteItemIAdapter, noteItem, integer) -> {
+        fastAdapter.setOnPreClickListener((view1, noteItemIAdapter, noteItem, integer) -> {
             Log.i("OnPreClick", "Tick: " + actionModeHelper.isActive());
             Boolean res = actionModeHelper.onClick(noteItem);
             return res != null ? res : false;
@@ -148,8 +148,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             return true;
         });
 
-
-        fastAdapter.setOnPreLongClickListener((view13, noteItemIAdapter, noteItem, position) -> {
+        fastAdapter.setOnPreLongClickListener((view1, noteItemIAdapter, noteItem, position) -> {
             ActionMode actionMode = actionModeHelper.onLongClick((MainActivity) getActivity(), position);
             if (actionMode != null)
                 getActivity().findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
@@ -159,23 +158,46 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
         actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_note_action, this);
 
-        noteViewModel.getNotes().observe(getViewLifecycleOwner(), notes -> itemAdapter.set(notes.stream().map(note -> {
-            NoteItem item = new NoteItem();
-            item.setNote(note);
-            return item;
-        }).collect(Collectors.toList())));
+        // Updating data
+        noteViewModel.getNotes().observe(getViewLifecycleOwner(), notes -> {
+            List<NoteItem> newlist = notes.stream().map(note -> {
+                NoteItem item = new NoteItem();
+                item.setNote(note);
+                return item;
+            }).collect(Collectors.toList());
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<NoteItem>() {
+                @Override
+                public boolean areItemsTheSame(NoteItem oldItem, NoteItem newItem) {
+                    return oldItem.getNote().getName().equals(newItem.getNote().getName());
+                }
 
+                @Override
+                public boolean areContentsTheSame(NoteItem oldItem, NoteItem newItem) {
+                    Note oldNote = oldItem.getNote(), newNote = newItem.getNote();
+                    return oldNote.getModified().equals(newNote.getModified()) && oldNote.getCategory().getCategoryColor() == newNote.getCategory().getCategoryColor();
+                }
+
+                @Nullable
+                @Override
+                public Object getChangePayload(NoteItem oldItem, int oldPosition, NoteItem newItem, int newPosition) {
+                    Note oldNote = oldItem.getNote(), newNote = newItem.getNote();
+                    if (!oldNote.getModified().equals(newNote.getModified()))
+                        return newNote.getModified();
+                    else
+                        return newNote.getCategory().getCategoryColor();
+                }
+            });
+
+        });
         // Filtering
         itemAdapter.getItemFilter().setFilterPredicate((noteItem, charSequence) -> noteItem.getNote().getName().toLowerCase().contains(charSequence.toString().toLowerCase()));
         itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<NoteItem>() {
             @Override
-            public void itemsFiltered(@org.jetbrains.annotations.Nullable CharSequence charSequence, @org.jetbrains.annotations.Nullable List<? extends NoteItem> list) {
-
+            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends NoteItem> list) {
             }
 
             @Override
             public void onReset() {
-
             }
         });
 
@@ -194,25 +216,6 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         });
     }
 
-
-
-//    @Override
-//    protected void prepareAdd() {
-//        super.prepareAdd();
-//        add.setOnClickListener(v -> {
-//            Intent intent = new Intent(getContext(), NoteEditActivity.class);
-//            startActivityForResult(intent, REQ_ADD);
-//        });
-//    }
-//
-//    @Override
-//    protected void prepareDelete() {
-//        super.prepareDelete();
-//        add.setOnClickListener(v -> {
-//            final NoteQuery noteQuery = new NoteQuery(getContext());
-//            noteQuery.delete(adapter.getSelected(), x -> {});
-//        });
-//    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

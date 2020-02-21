@@ -12,12 +12,11 @@ import java.util.Comparator;
 
 @SuppressWarnings("WeakerAccess")
 public class NoteSortHandler {
-    public static final int SORT_NONE = 0;
-    public static final int SORT_ALPHA = 1;
-    public static final int SORT_DATE = 2;
+    public static final int SORT_DATE = 1;
+    public static final int SORT_ALPHA = 2;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({SORT_NONE, SORT_ALPHA, SORT_DATE})
+    @IntDef({SORT_ALPHA, SORT_DATE})
     public @interface SortingStrategy {
     }
 
@@ -29,7 +28,7 @@ public class NoteSortHandler {
         protected @Nullable ComparableItemListImpl<NoteItem> itemList;
 
         public Builder() {
-            strategy = SORT_NONE;
+            strategy = SORT_DATE;
         }
 
         public Builder setStrategy(int strategy) {
@@ -68,13 +67,12 @@ public class NoteSortHandler {
     @Nullable
     public Comparator<NoteItem> getComparator() {
         switch (strategy) {
+
             case SORT_ALPHA:
                 return new NoteAlphaComperator();
             case SORT_DATE:
-                return new NoteDateComperator();
-            case SORT_NONE:
             default:
-                return null;
+                return new NoteDateComperator();
         }
     }
 

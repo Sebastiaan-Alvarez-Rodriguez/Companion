@@ -2,6 +2,7 @@ package com.python.companion.db.entity;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Entity;
 
 @Entity(primaryKeys = {"categoryName"})
@@ -28,5 +29,13 @@ public class Category {
 
     public void setCategoryColor(int categoryColor) {
         this.categoryColor = categoryColor;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (!(obj instanceof Category))
+            return false;
+        Category other = (Category) obj;
+        return this.categoryName.equals(other.getCategoryName()) && this.categoryColor == other.getCategoryColor();
     }
 }
