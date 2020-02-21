@@ -4,6 +4,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
+import androidx.core.content.ContextCompat;
 
 import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
 import com.mikepenz.fastadapter.items.AbstractItem;
@@ -47,6 +48,10 @@ public class CategoryItem extends AbstractItem<ViewHolder> {
     @Override
     public void bindView(@NotNull ViewHolder holder, @NotNull List<Object> payloads) {
         super.bindView(holder, payloads);
+        if (isSelected())
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
+        else
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorWindowBackground));
     }
 
     @SuppressWarnings("WeakerAccess")

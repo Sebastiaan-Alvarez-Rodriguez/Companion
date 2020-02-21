@@ -198,12 +198,12 @@ public class CategoryEditActivity extends AppCompatActivity {
         CategoryItem clicked = fastAdapter.getItem(info.position);
 
         switch (item.getItemId()) {
-            case R.id.menu_category_context_edit:
+            case R.id.menu_note_context_category_edit:
                 CategoryUpdateDialog categoryUpdateDialog = new CategoryUpdateDialog.Builder(this)
                         .setCategory(clicked.getCategory()).build();
                 categoryUpdateDialog.showDialog(this, getSupportFragmentManager());
                 break;
-            case R.id.menu_category_context_delete:
+            case R.id.menu_note_context_category_delete:
                 CategoryDeleteDialog categoryDeleteDialog = new CategoryDeleteDialog.Builder(this)
                         .setCategory(clicked.getCategory()).build();
                 categoryDeleteDialog.showDialog();

@@ -23,7 +23,9 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
+import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.ui.note.adapter.CategoryItem;
+import com.python.companion.ui.note.adapter.NoteItem;
 import com.python.companion.ui.templates.dialog.DialogAcceptListener;
 import com.python.companion.ui.templates.dialog.DialogCancelListener;
 
@@ -34,9 +36,14 @@ import java.util.stream.Collectors;
 public class CategorySetDialog extends DialogFragment {
     @SuppressWarnings("unused")
     public static class Builder {
+        private Set<NoteItem> selectedNotes = null;
         private DialogCancelListener dialogCancelListener = null;
         private DialogAcceptListener dialogAcceptListener = null;
 
+        public Builder setSelectedNotes(@NonNull Set<NoteItem> selectedNotes) {
+            this.selectedNotes = selectedNotes;
+            return this;
+        }
 
         public Builder setCancelListener(DialogCancelListener dialogCancelListener) {
             this.dialogCancelListener = dialogCancelListener;
@@ -49,10 +56,13 @@ public class CategorySetDialog extends DialogFragment {
         }
 
         public CategorySetDialog build() {
-            return new CategorySetDialog(dialogCancelListener, dialogAcceptListener);
+            if (selectedNotes == null)
+                throw new IllegalStateException("Setdialog must be constructed with call to setSelectedNotes()");
+            return new CategorySetDialog(dialogCancelListener, dialogAcceptListener, selectedNotes);
         }
     }
 
+    protected Set<NoteItem> selectedNotes;
     protected View layout;
     protected TextView amountView;
     protected Button cancelButton, acceptButton;
@@ -66,9 +76,10 @@ public class CategorySetDialog extends DialogFragment {
     protected @Nullable DialogAcceptListener acceptListener;
 
 
-    protected CategorySetDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener) {
+    protected CategorySetDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener, @NonNull Set<NoteItem> selectedNotes) {
         this.cancelListener = cancelListener;
         this.acceptListener = acceptListener;
+        this.selectedNotes = selectedNotes;
     }
 
     @Nullable
@@ -108,12 +119,15 @@ public class CategorySetDialog extends DialogFragment {
         assert selectionExtension != null;
         selectionExtension.setSelectable(true);
         selectionExtension.setMultiSelect(false);
-        selectionExtension.setSelectOnLongClick(true);
+        selectionExtension.setSelectOnLongClick(false);
 
         fastAdapter.setOnClickListener((view, categoryItemIAdapter, categoryItem, position) -> {
             selectionExtension.toggleSelection(position);
+            categoryItem.setSelected(!categoryItem.isSelected());
+            fastAdapter.notifyItemChanged(position);
             return true;
         });
+
         viewModel.getCategories().observe(getViewLifecycleOwner(), categories -> itemAdapter.set(categories.stream().map(category -> {
             CategoryItem item = new CategoryItem();
             item.setCategory(category);
@@ -134,8 +148,18 @@ public class CategorySetDialog extends DialogFragment {
                 Snackbar.make(layout, "Please select a category", Snackbar.LENGTH_LONG).show();
             } else {
                 CategoryItem selectedItem = selected.iterator().next();
-
+                //TODO: set category of all selected items to this one
+                NoteQuery noteQuery = new NoteQuery(getContext());
+                noteQuery.updateCategories(selectedNotes.stream().map(noteItem -> noteItem.getNote().getName()).collect(Collectors.toSet()), selectedItem.getCategory(), v2 -> {});
+                if (acceptListener != null)
+                    acceptListener.onAccept();
+                this.dismiss();
             }
         });
+    }
+
+    public @Nullable CategoryItem getSelectedCategory() {
+        Set<CategoryItem> selected = selectionExtension.getSelectedItems();
+        return selected.size() == 0 ? null : selected.iterator().next();
     }
 }

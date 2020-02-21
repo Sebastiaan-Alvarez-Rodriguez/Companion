@@ -5,14 +5,10 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
 import com.mikepenz.fastadapter.items.AbstractItem;
-import com.mikepenz.fastadapter.listeners.ClickEventHook;
 import com.python.companion.R;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
@@ -52,11 +48,6 @@ public class NoteItem extends AbstractItem<ViewHolder> {
     }
 
     @Override
-    public void setSelected(boolean b) {
-        super.setSelected(b);
-    }
-
-    @Override
     public void bindView(@NotNull ViewHolder holder, @NotNull List<Object> payloads) {
         super.bindView(holder, payloads);
         if (isSelected())
@@ -69,14 +60,11 @@ public class NoteItem extends AbstractItem<ViewHolder> {
     public class NoteViewHolder extends ViewHolder<NoteItem> {
         private TextView nameView, dateView, categoryView;
 
-        private View layout;
-
         public NoteViewHolder(@NotNull View itemView) {
             super(itemView);
             nameView = itemView.findViewById(R.id.item_note_name);
             dateView = itemView.findViewById(R.id.item_note_date);
             categoryView = itemView.findViewById(R.id.item_note_category);
-            layout = itemView.findViewById(R.id.item_note_layout);
         }
 
         @Override
@@ -91,21 +79,6 @@ public class NoteItem extends AbstractItem<ViewHolder> {
         @Override
         public void unbindView(@NotNull NoteItem item) {
 
-        }
-    }
-
-    public static class CheckBoxClickEvent extends ClickEventHook<NoteItem> {
-        @Override
-        public View onBind(@NonNull RecyclerView.ViewHolder viewHolder) {
-            if (viewHolder instanceof NoteItem.NoteViewHolder) {
-                return ((NoteViewHolder) viewHolder).layout;
-            }
-            return null;
-        }
-
-        @Override
-        public void onClick(@NonNull View v, int position, @NonNull FastAdapter<NoteItem> fastAdapter, @NonNull NoteItem item) {
-            Log.i("EVENT", "Got code running over here");
         }
     }
 }

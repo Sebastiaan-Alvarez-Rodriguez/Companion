@@ -46,10 +46,10 @@ public abstract class Fragment<T> extends androidx.fragment.app.Fragment impleme
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        search = view.findViewById(R.id.searchview);
-        sort = view.findViewById(R.id.sort_button);
-        list = view.findViewById(R.id.list);
-        add = view.findViewById(R.id.add);
+        search = view.findViewById(R.id.fragment_list_searchview);
+        sort = view.findViewById(R.id.fragment_list_sort);
+        list = view.findViewById(R.id.fragment_list_list);
+        add = view.findViewById(R.id.fragment_list_add);
         prepareList(view);
         prepareAdd();
         prepareSearch();

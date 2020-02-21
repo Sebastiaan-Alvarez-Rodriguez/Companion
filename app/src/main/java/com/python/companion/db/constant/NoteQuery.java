@@ -52,6 +52,12 @@ public class NoteQuery {
         });
     }
 
+    public void updateCategories(Collection<String> names, Category category, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+                daoNote.updateCategories(names, category);
+                listener.onResult(null);
+        });
+    }
     /**
      * Update category of *all* items. Use this function if you delete or merge or change entire categories.
      * In such cases, also don't forget to update the Category table too.

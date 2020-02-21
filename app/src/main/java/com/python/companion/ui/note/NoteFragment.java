@@ -1,17 +1,22 @@
 package com.python.companion.ui.note;
 
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.view.ActionMode;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -23,6 +28,7 @@ import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.helpers.ActionModeHelper;
+import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.MainActivity;
@@ -32,6 +38,7 @@ import com.python.companion.ui.note.activity.NoteViewActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
 import com.python.companion.ui.note.dialog.CategorySetDialog;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 // https://github.com/noties/Markwon
@@ -45,7 +52,11 @@ import java.util.stream.Collectors;
 public class NoteFragment extends Fragment implements ActionMode.Callback {
 
     private NoteViewModel noteViewModel;
+
+    private ImageView sortButton;
     private RecyclerView list;
+    private SearchView searchView;
+
     private FastAdapter<NoteItem> fastAdapter;
     private SelectExtension<NoteItem> selectionExtension;
     private ActionModeHelper<NoteItem> actionModeHelper;
@@ -67,11 +78,21 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         super.onViewCreated(view, savedInstanceState);
         findViews(view);
         prepareList(view);
+        prepareSort();
     }
 
     private void findViews(View view) {
-        list = view.findViewById(R.id.list);
+        sortButton = view.findViewById(R.id.fragment_list_sort);
+        list = view.findViewById(R.id.fragment_list_list);
+        searchView = view.findViewById(R.id.fragment_list_searchview);
+
     }
+
+    private void prepareSort() {
+        registerForContextMenu(sortButton);
+        sortButton.setOnClickListener(v -> sortButton.showContextMenu(sortButton.getX(), sortButton.getY()));
+    }
+
 
     private void prepareList(View view) {
         ItemAdapter<NoteItem> itemAdapter = new ItemAdapter<>();
@@ -83,25 +104,22 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
 
         selectionExtension = fastAdapter.getOrCreateExtension(SelectExtension.class);
-        assert selectionExtension != null;
         selectionExtension.setSelectable(true);
         selectionExtension.setMultiSelect(true);
         selectionExtension.setSelectOnLongClick(true);
         selectionExtension.setSelectionListener((item, b) -> {
-            Log.i("Superb", "Selection of item "+item.getNote().getName()+" changed to: "+b);
+            Log.i("Superb", "Selection of item " + item.getNote().getName() + " changed to: " + b);
 //            item.setSelected(b);
         });
 
-//        fastAdapter.addEventHook(new NoteItem.CheckBoxClickEvent());
-
         fastAdapter.setOnPreClickListener((view12, noteItemIAdapter, noteItem, integer) -> {
-            Log.i("OnPreClick", "Tick: "+actionModeHelper.isActive());
+            Log.i("OnPreClick", "Tick: " + actionModeHelper.isActive());
             Boolean res = actionModeHelper.onClick(noteItem);
             return res != null ? res : false;
         });
 
         fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, position) -> {
-            Log.i("OnClick", "Tick: "+actionModeHelper.isActive());
+            Log.i("OnClick", "Tick: " + actionModeHelper.isActive());
             Log.i("OnClick", "SelectedCount: " + selectionExtension.getSelections().size());
             if (!actionModeHelper.isActive()) {
                 Intent intent = new Intent(getContext(), NoteViewActivity.class);
@@ -111,17 +129,14 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             } else {
                 fastAdapter.notifyItemChanged(position);
             }
-            return true; //orig: false
+            return true;
         });
 
 
         fastAdapter.setOnPreLongClickListener((view13, noteItemIAdapter, noteItem, position) -> {
             ActionMode actionMode = actionModeHelper.onLongClick((MainActivity) getActivity(), position);
-            if (actionMode != null) {
-                //we want color our CAB
+            if (actionMode != null)
                 getActivity().findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
-            }
-            //if we have no actionMode we do not consume the event
             return actionMode != null;
         });
 
@@ -133,7 +148,36 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             item.setNote(note);
             return item;
         }).collect(Collectors.toList())));
+
+        // Filtering
+        itemAdapter.getItemFilter().setFilterPredicate((noteItem, charSequence) -> noteItem.getNote().getName().toLowerCase().contains(charSequence.toString().toLowerCase()));
+        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<NoteItem>() {
+            @Override
+            public void itemsFiltered(@org.jetbrains.annotations.Nullable CharSequence charSequence, @org.jetbrains.annotations.Nullable List<? extends NoteItem> list) {
+
+            }
+
+            @Override
+            public void onReset() {
+
+            }
+        });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                itemAdapter.filter(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String query) {
+                itemAdapter.filter(query);
+                return false;
+            }
+        });
     }
+
 
 
 //    @Override
@@ -153,7 +197,6 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 //            noteQuery.delete(adapter.getSelected(), x -> {});
 //        });
 //    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -161,7 +204,37 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     }
 
     @Override
+    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, ContextMenu.ContextMenuInfo menuInfo) {
+        Log.i("Context", "Inflate");
+        MenuInflater inflater = getActivity().getMenuInflater();
+        inflater.inflate(R.menu.activity_category_edit_context, menu);
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+//        switch (item.getItemId()) {
+//            case R.id.menu_note_context_category_edit:
+//                CategorySetDialog categorySetDialog = new CategorySetDialog.Builder()
+//                .setSelectedNotes(selectionExtension.getSelectedItems()).build();
+//                categorySetDialog.show(getChildFragmentManager(), null);
+//                break;
+//            case R.id.menu_note_context_category_delete:
+//                CategoryDeleteDialog categoryDeleteDialog = new CategoryDeleteDialog.Builder(getContext())
+//                        .setCategory(clicked.getCategory()).build();
+//                categoryDeleteDialog.showDialog();
+//                break;
+//        }
+        Log.i("Context", "Context item selected");
+        return super.onContextItemSelected(item);
+    }
+
+    @Override
     public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+        MenuItem deleteItem = menu.findItem(R.id.menu_context_note_delete);
+        MenuItem categoryItem = menu.findItem(R.id.menu_context_note_update_category);
+        deleteItem.getIcon().setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
+        categoryItem.getIcon().setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
         return true;
     }
 
@@ -174,14 +247,16 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_context_note_delete:
-                Log.i("CABClick", "Clicked on CAB action item!");
-    //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
+                //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
                 final NoteQuery noteQuery = new NoteQuery(getContext());
-                noteQuery.delete(selectionExtension.getSelectedItems().stream().map(NoteItem::getNote).collect(Collectors.toList()), x -> {});
+                noteQuery.delete(selectionExtension.getSelectedItems().stream().map(NoteItem::getNote).collect(Collectors.toList()), x -> {
+                });
                 mode.finish();
                 break;
             case R.id.menu_context_note_update_category:
-                CategorySetDialog categorySetDialog = new CategorySetDialog.Builder().setFinishListener(mode::finish).build();
+                CategorySetDialog categorySetDialog = new CategorySetDialog.Builder()
+                        .setSelectedNotes(selectionExtension.getSelectedItems())
+                        .setFinishListener(mode::finish).build();
                 categorySetDialog.show(getChildFragmentManager(), null); //https://guides.codepath.com/android/using-dialogfragment
                 break;
         }
@@ -189,5 +264,6 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     }
 
     @Override
-    public void onDestroyActionMode(ActionMode mode) {}
+    public void onDestroyActionMode(ActionMode mode) {
+    }
 }

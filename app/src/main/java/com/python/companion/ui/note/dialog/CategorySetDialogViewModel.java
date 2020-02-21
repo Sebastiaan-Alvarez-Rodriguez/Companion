@@ -18,6 +18,7 @@ public class CategorySetDialogViewModel extends AndroidViewModel {
 
     public CategorySetDialogViewModel(@NonNull Application application) {
         super(application);
+        categoryRepository = new CategoryRepository(application);
     }
 
     public LiveData<List<Category>> getCategories() {
