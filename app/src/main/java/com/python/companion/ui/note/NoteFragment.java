@@ -31,11 +31,14 @@ import com.mikepenz.fastadapter.helpers.ActionModeHelper;
 import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
+import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.MainActivity;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.ui.note.activity.NoteViewActivity;
+import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
+import com.python.companion.ui.note.adapter.NoteSortHandler;
 import com.python.companion.ui.note.dialog.CategorySetDialog;
 
 import java.util.List;
@@ -53,13 +56,15 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
     private NoteViewModel noteViewModel;
 
-    private ImageView sortButton;
+    private ImageView sortButton, addButton;
     private RecyclerView list;
     private SearchView searchView;
 
     private FastAdapter<NoteItem> fastAdapter;
     private SelectExtension<NoteItem> selectionExtension;
     private ActionModeHelper<NoteItem> actionModeHelper;
+    private NoteSortHandler sortHandler;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -79,10 +84,12 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         findViews(view);
         prepareList(view);
         prepareSort();
+        prepareAdd();
     }
 
     private void findViews(View view) {
         sortButton = view.findViewById(R.id.fragment_list_sort);
+        addButton = view.findViewById(R.id.fragment_list_add);
         list = view.findViewById(R.id.fragment_list_list);
         searchView = view.findViewById(R.id.fragment_list_searchview);
 
@@ -93,9 +100,18 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         sortButton.setOnClickListener(v -> sortButton.showContextMenu(sortButton.getX(), sortButton.getY()));
     }
 
+    private void prepareAdd() {
+        addButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), NoteEditActivity.class);
+            startActivity(intent);
+        });
+    }
 
     private void prepareList(View view) {
-        ItemAdapter<NoteItem> itemAdapter = new ItemAdapter<>();
+        ComparableItemListImpl<NoteItem> itemList = new ComparableItemListImpl<>(null);
+
+        ItemAdapter<NoteItem> itemAdapter = new ItemAdapter<>(itemList);
+        sortHandler = new NoteSortHandler.Builder().setStrategy(NoteSortHandler.SORT_ALPHA).setItemList(itemList).build();
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
         list.setAdapter(fastAdapter);
@@ -141,7 +157,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         });
 
 
-        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.context_note, this);
+        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_note_action, this);
 
         noteViewModel.getNotes().observe(getViewLifecycleOwner(), notes -> itemAdapter.set(notes.stream().map(note -> {
             NoteItem item = new NoteItem();
@@ -207,25 +223,23 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, ContextMenu.ContextMenuInfo menuInfo) {
         Log.i("Context", "Inflate");
         MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.activity_category_edit_context, menu);
+        inflater.inflate(R.menu.fragment_note_context, menu);
+        MenuItem item = menu.findItem(sortHandler.getSortStrategy() == NoteSortHandler.SORT_ALPHA ? R.id.fragment_note_context_menu_alpha : R.id.fragment_note_context_menu_date);
+        item.setChecked(true);
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
-//        switch (item.getItemId()) {
-//            case R.id.menu_note_context_category_edit:
-//                CategorySetDialog categorySetDialog = new CategorySetDialog.Builder()
-//                .setSelectedNotes(selectionExtension.getSelectedItems()).build();
-//                categorySetDialog.show(getChildFragmentManager(), null);
-//                break;
-//            case R.id.menu_note_context_category_delete:
-//                CategoryDeleteDialog categoryDeleteDialog = new CategoryDeleteDialog.Builder(getContext())
-//                        .setCategory(clicked.getCategory()).build();
-//                categoryDeleteDialog.showDialog();
-//                break;
-//        }
-        Log.i("Context", "Context item selected");
+        switch (item.getItemId()) {
+            case R.id.fragment_note_context_menu_alpha:
+                sortHandler.setSortStrategy(NoteSortHandler.SORT_ALPHA);
+                break;
+            case R.id.fragment_note_context_menu_date:
+                sortHandler.setSortStrategy(NoteSortHandler.SORT_DATE);
+                break;
+        }
+        item.setChecked(true);
         return super.onContextItemSelected(item);
     }
 
