@@ -192,21 +192,22 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             }
 
             @Override
-            public void onReset() {//TODO: Bug: Set sorting to alpha. Type 'oof' in searchview. Set sorting to date. Press back arrow on searchview. Sort mode says date, is alpha.
+            public void onReset() {
             }
         });
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                itemAdapter.filter(query);
+                itemAdapter.getItemFilter().filterItems(query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String query) {
-                itemAdapter.filter(query);
-                return false;
+                itemAdapter.getItemFilter().filterItems(query);
+                sortHandler.forceReSort();
+                return true;
             }
         });
     }
@@ -220,11 +221,19 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.fragment_note, menu);
-        MenuItem item = menu.findItem(sortHandler.getSortStrategy() == NoteSortHandler.SORT_ALPHA ? R.id.fragment_note_menu_sort_alpha : R.id.fragment_note_menu_sort_date);
-        item.setChecked(true);
         searchView = (SearchView) menu.findItem(R.id.fragment_note_menu_search).getActionView();
         setListFiltering();
         super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        sortHandler.getSortStrategy().observe(this, integer -> {
+            Log.i("Obs", "Someone changed sorting strategy to: "+integer);
+            MenuItem item = menu.findItem(integer == NoteSortHandler.SORT_ALPHA ? R.id.fragment_note_menu_sort_alpha : R.id.fragment_note_menu_sort_date);
+            item.setChecked(true);
+        });
+        super.onPrepareOptionsMenu(menu);
     }
 
     @Override

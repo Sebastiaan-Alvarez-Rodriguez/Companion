@@ -3,6 +3,8 @@ package com.python.companion.ui.note.adapter;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 
@@ -20,8 +22,9 @@ public class NoteSortHandler {
     public @interface SortingStrategy {
     }
 
-    protected @SortingStrategy int strategy;
+    protected @NonNull MutableLiveData<Integer> strategy;
     protected ComparableItemListImpl<NoteItem> itemList;
+    protected SuperComparator comparator;
 
     public static class Builder {
         protected @SortingStrategy int strategy;
@@ -50,30 +53,37 @@ public class NoteSortHandler {
 
 
     protected NoteSortHandler(@SortingStrategy int strategy, ComparableItemListImpl<NoteItem> itemList) {
-        this.strategy = strategy;
+        this.strategy = new MutableLiveData<>(strategy);
         this.itemList = itemList;
+        comparator = new SuperComparator(strategy);
     }
 
+
+
     public void setSortStrategy(@SortingStrategy int strategy) {
-        if (this.strategy != strategy) {
-            this.strategy = strategy;
+        if (this.strategy.getValue() != strategy) {
+            this.strategy.setValue(strategy);
+            comparator.setStrategy(strategy);
             resort();
         }
     }
 
-    public @SortingStrategy int getSortStrategy() {
+    public void forceReSort() {
+        resort();
+    }
+    public LiveData<Integer> getSortStrategy() {
         return strategy;
     }
     @Nullable
     public Comparator<NoteItem> getComparator() {
-        switch (strategy) {
-
-            case SORT_ALPHA:
-                return new NoteAlphaComperator();
-            case SORT_DATE:
-            default:
-                return new NoteDateComperator();
-        }
+//        switch (strategy.getValue()) {
+//            case SORT_ALPHA:
+//                return new NoteAlphaComperator();
+//            case SORT_DATE:
+//            default:
+//                return new NoteDateComperator();
+//        }
+        return comparator;
     }
 
     /**
@@ -96,6 +106,26 @@ public class NoteSortHandler {
         @Override
         public int compare(NoteItem o1, NoteItem o2) {
             return o1.getNote().getModified().compareTo(o2.getNote().getModified());
+        }
+    }
+
+    protected static class SuperComparator implements  Comparator<NoteItem> {
+        protected @SortingStrategy int strategy;
+
+        public SuperComparator(@SortingStrategy int strategy) {
+            this.strategy = strategy;
+        }
+
+        public void setStrategy(@SortingStrategy int strategy) {
+            this.strategy = strategy;
+        }
+
+        @Override
+        public int compare(NoteItem o1, NoteItem o2) {
+            if (strategy == SORT_DATE)
+                return o1.getNote().getModified().compareTo(o2.getNote().getModified());
+            else
+                return o1.getNote().getName().compareTo(o2.getNote().getName());
         }
     }
 }
