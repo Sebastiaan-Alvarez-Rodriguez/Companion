@@ -1,6 +1,5 @@
 package com.python.companion.ui.note.adapter;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -69,7 +68,6 @@ public class NoteItem extends AbstractItem<ViewHolder> {
 
         @Override
         public void bindView(@NotNull NoteItem item, @NotNull List<Object> list) {
-            Log.i("BIND", "Item "+item.getNote().getName()+" is binding (selected="+isSelected()+")");
             nameView.setText(item.getNote().getName());
             dateView.setText(item.getNote().getModified().toString());
             Category category = item.getNote().getCategory();

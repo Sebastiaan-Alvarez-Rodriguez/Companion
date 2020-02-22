@@ -192,7 +192,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             }
 
             @Override
-            public void onReset() {
+            public void onReset() {//TODO: Bug: Set sorting to alpha. Type 'oof' in searchview. Set sorting to date. Press back arrow on searchview. Sort mode says date, is alpha.
             }
         });
 
