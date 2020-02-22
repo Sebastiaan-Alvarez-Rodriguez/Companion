@@ -3,10 +3,29 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_fragment_delete"
-        android:icon="@drawable/ic_menu_delete"
-        android:iconTint="@color/colorWindowBackground"
-        android:iconTintMode="src_in"
-        android:title="Item"
-        app:showAsAction="always" />
+        android:id="@+id/fragment_note_menu_search"
+        android:title="Search"
+        android:icon="@drawable/ic_menu_search"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+    <item
+        android:id="@+id/fragment_note_menu_sort"
+        android:title="Sort"
+        android:icon="@drawable/ic_menu_sort"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        app:showAsAction="always">
+        <menu>
+        <group android:checkableBehavior="single" >
+            <item
+                android:id="@+id/fragment_note_menu_sort_alpha"
+                android:title="Alpha" />
+            <item
+                android:id="@+id/fragment_note_menu_sort_date"
+                android:title="Date" />
+        </group>
+        </menu>
+    </item>
 </menu>

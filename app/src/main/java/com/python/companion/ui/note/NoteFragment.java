@@ -1,17 +1,14 @@
 package com.python.companion.ui.note;
 
 import android.content.Intent;
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +21,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.mikepenz.fastadapter.diff.DiffCallback;
@@ -59,10 +57,11 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
     private NoteViewModel noteViewModel;
 
-    private ImageView sortButton, addButton;
     private RecyclerView list;
     private SearchView searchView;
+    private FloatingActionButton fab;
 
+    private ItemAdapter<NoteItem> itemAdapter;
     private FastAdapter<NoteItem> fastAdapter;
     private SelectExtension<NoteItem> selectionExtension;
     private ActionModeHelper<NoteItem> actionModeHelper;
@@ -72,6 +71,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
     }
 
@@ -85,26 +85,18 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         findViews(view);
-        prepareList(view);
-        prepareSort();
         prepareAdd();
+        prepareList(view);
     }
 
     private void findViews(View view) {
-        sortButton = view.findViewById(R.id.fragment_list_sort);
-        addButton = view.findViewById(R.id.fragment_list_add);
         list = view.findViewById(R.id.fragment_list_list);
-        searchView = view.findViewById(R.id.fragment_list_searchview);
-
+        fab = view.findViewById(R.id.fragment_list_add);
     }
 
-    private void prepareSort() {
-        registerForContextMenu(sortButton);
-        sortButton.setOnClickListener(v -> sortButton.showContextMenu(sortButton.getX(), sortButton.getY()));
-    }
 
     private void prepareAdd() {
-        addButton.setOnClickListener(v -> {
+        fab.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), NoteEditActivity.class);
             startActivity(intent);
         });
@@ -113,8 +105,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     private void prepareList(View view) {
         ComparableItemListImpl<NoteItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
 
-        // General adapter stuff and multi-selection
-        ItemAdapter<NoteItem> itemAdapter = new ItemAdapter<>(itemList);
+        itemAdapter = new ItemAdapter<>(itemList);
         sortHandler = new NoteSortHandler.Builder().setItemList(itemList).build();
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
@@ -157,8 +148,10 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
 
         actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_note_action, this);
+        setListUpdates();
+    }
 
-        // Updating data
+    private void setListUpdates() {
         noteViewModel.getNotes().observe(getViewLifecycleOwner(), notes -> {
             List<NoteItem> newlist = notes.stream().map(note -> {
                 NoteItem item = new NoteItem();
@@ -189,7 +182,9 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             });
 
         });
-        // Filtering
+    }
+
+    private void setListFiltering() {
         itemAdapter.getItemFilter().setFilterPredicate((noteItem, charSequence) -> noteItem.getNote().getName().toLowerCase().contains(charSequence.toString().toLowerCase()));
         itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<NoteItem>() {
             @Override
@@ -223,35 +218,33 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     }
 
     @Override
-    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, ContextMenu.ContextMenuInfo menuInfo) {
-        Log.i("Context", "Inflate");
-        MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.fragment_note_context, menu);
-        MenuItem item = menu.findItem(sortHandler.getSortStrategy() == NoteSortHandler.SORT_ALPHA ? R.id.fragment_note_context_menu_alpha : R.id.fragment_note_context_menu_date);
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.fragment_note, menu);
+        MenuItem item = menu.findItem(sortHandler.getSortStrategy() == NoteSortHandler.SORT_ALPHA ? R.id.fragment_note_menu_sort_alpha : R.id.fragment_note_menu_sort_date);
         item.setChecked(true);
-        super.onCreateContextMenu(menu, v, menuInfo);
+        searchView = (SearchView) menu.findItem(R.id.fragment_note_menu_search).getActionView();
+        setListFiltering();
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
-    public boolean onContextItemSelected(@NonNull MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
         switch (item.getItemId()) {
-            case R.id.fragment_note_context_menu_alpha:
+            case R.id.fragment_note_menu_sort_alpha:
                 sortHandler.setSortStrategy(NoteSortHandler.SORT_ALPHA);
+                item.setChecked(true);
                 break;
-            case R.id.fragment_note_context_menu_date:
+            case R.id.fragment_note_menu_sort_date:
                 sortHandler.setSortStrategy(NoteSortHandler.SORT_DATE);
+                item.setChecked(true);
                 break;
         }
-        item.setChecked(true);
-        return super.onContextItemSelected(item);
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
     public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-        MenuItem deleteItem = menu.findItem(R.id.menu_context_note_delete);
-        MenuItem categoryItem = menu.findItem(R.id.menu_context_note_update_category);
-        deleteItem.getIcon().setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
-        categoryItem.getIcon().setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
         return true;
     }
 
@@ -274,7 +267,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 CategorySetDialog categorySetDialog = new CategorySetDialog.Builder()
                         .setSelectedNotes(selectionExtension.getSelectedItems())
                         .setFinishListener(mode::finish).build();
-                categorySetDialog.show(getChildFragmentManager(), null); //https://guides.codepath.com/android/using-dialogfragment
+                categorySetDialog.show(getChildFragmentManager(), null);
                 break;
         }
         return true;

@@ -5,16 +5,16 @@
     <item
         android:id="@+id/menu_context_note_update_category"
         android:icon="@drawable/ic_menu_category"
-        android:iconTint="@color/colorWindowBackground"
-        android:iconTintMode="src_in"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
         android:title="Update Category"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/menu_context_note_delete"
         android:icon="@drawable/ic_menu_delete"
-        android:iconTint="@color/colorWindowBackground"
-        android:iconTintMode="src_in"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
         android:title="Delete"
         app:showAsAction="always" />
 </menu>

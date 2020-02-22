@@ -6,52 +6,31 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true">
 
-    <androidx.appcompat.widget.SearchView
-        android:id="@+id/fragment_list_searchview"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:textSize="24sp"
-        app:layout_constraintEnd_toStartOf="@+id/fragment_list_add"
-        app:layout_constraintStart_toEndOf="@+id/fragment_list_sort"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/fragment_list_sort"
-        style="@style/AppTheme"
-        android:layout_width="40dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/fragment_list_searchview"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/fragment_list_searchview"
-        app:srcCompat="@drawable/ic_menu_sort"/>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/fragment_list_list"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fragment_list_searchview"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fragment_list_add"
-        android:layout_width="40dp"
-        android:layout_height="0dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/fragment_list_sort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/fragment_list_sort"
-        app:layout_constraintVertical_bias="0.0"
-        app:srcCompat="@drawable/ic_add" />
+        app:srcCompat="@drawable/ic_add"
+        android:tint="@color/colorWindowBackground"
+        android:backgroundTint="@color/colorPrimary"
+        android:backgroundTintMode="src_in"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
