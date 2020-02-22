@@ -26,6 +26,12 @@ public class NoteQuery {
         });
     }
 
+    public void update(Note... notes) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.update(notes);
+        });
+    }
+
     public void updateContent(String name, String content, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             daoNote.updateContent(name, content);
@@ -93,6 +99,9 @@ public class NoteQuery {
         });
     }
 
+    public void get(String name, ResultListener<Note> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
+    }
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name) == null));
     }

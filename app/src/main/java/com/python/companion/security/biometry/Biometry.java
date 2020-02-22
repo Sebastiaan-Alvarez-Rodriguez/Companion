@@ -1,4 +1,4 @@
-package com.python.companion.security.Biometry;
+package com.python.companion.security.biometry;
 
 import android.content.Context;
 import android.hardware.biometrics.BiometricPrompt;

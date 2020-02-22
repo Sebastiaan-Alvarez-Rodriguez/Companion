@@ -22,7 +22,7 @@ public class Note {
     private Category category;
 
     private boolean secure;
-    private String iv;
+    private byte[] iv;
 
     private Instant modified;
 
@@ -32,7 +32,7 @@ public class Note {
 
         this.category = new Category("", R.color.colorPrimary);
         this.secure = false;
-        this.iv = "";
+        this.iv = null;
 
         modified = Instant.now();
     }
@@ -104,7 +104,7 @@ public class Note {
     /**
      * @return current Initialization Vector for block chain cipher encryption schemes
      */
-    public String getIv() {
+    public byte[] getIv() {
         return iv;
     }
 
@@ -113,7 +113,7 @@ public class Note {
      * Note that storing initialization vectors (and salts) is no security breach
      * @param iv New iv
      */
-    public void setIv(String iv) {
+    public void setIv(byte[] iv) {
         this.iv = iv;
     }
 

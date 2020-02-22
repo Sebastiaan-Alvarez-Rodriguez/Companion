@@ -10,7 +10,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.python.companion.R;
-import com.python.companion.db.constant.NoteQuery;
 
 public class NoteEditActivity extends AppCompatActivity {
     private static final int REQUEST_PREVIEW = 1;
@@ -30,13 +29,9 @@ public class NoteEditActivity extends AppCompatActivity {
         editMode = inputIntent.hasExtra("name");
         if (editMode) {
             prevName = inputIntent.getStringExtra("name");
+            String content = inputIntent.getStringExtra("content");
             noteName.setText(prevName);
-            NoteQuery noteQuery = new NoteQuery(this);
-            noteContent.setEnabled(false);
-            noteQuery.getContent(prevName, content -> {
-                noteContent.setText(content);
-                noteContent.setEnabled(true);
-            });
+            noteContent.setText(content);
         }
         setupClicks();
     }

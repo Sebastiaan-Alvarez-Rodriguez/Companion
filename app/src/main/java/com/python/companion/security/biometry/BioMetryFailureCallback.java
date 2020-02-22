@@ -1,4 +1,4 @@
-package com.python.companion.security.Biometry;
+package com.python.companion.security.biometry;
 
 public interface BioMetryFailureCallback {
     void onFailure();

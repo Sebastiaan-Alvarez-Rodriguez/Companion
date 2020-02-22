@@ -2,7 +2,6 @@ package com.python.companion.ui.note;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,9 +35,8 @@ import com.python.companion.MainActivity;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.DecryptedCallback;
 import com.python.companion.security.Guard;
-import com.python.companion.ui.note.activity.NoteViewActivity;
+import com.python.companion.ui.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
 import com.python.companion.ui.note.adapter.NoteSortHandler;
@@ -69,15 +67,12 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     private ActionModeHelper<NoteItem> actionModeHelper;
     private NoteSortHandler sortHandler;
 
-    private Guard guard;
-
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
-        guard = new Guard();
     }
 
     @Nullable
@@ -124,18 +119,14 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         selectionExtension.setSelectOnLongClick(true);
 
         fastAdapter.setOnPreClickListener((view1, noteItemIAdapter, noteItem, integer) -> {
-            Log.i("OnPreClick", "Tick: " + actionModeHelper.isActive());
             Boolean res = actionModeHelper.onClick(noteItem);
             return res != null ? res : false;
         });
 
         fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, position) -> {
-            Log.i("OnClick", "Tick: " + actionModeHelper.isActive());
-            Log.i("OnClick", "SelectedCount: " + selectionExtension.getSelections().size());
             if (!actionModeHelper.isActive()) {
-
                 if (noteItem.getNote().isSecure()) {
-                    guard.decryptKeystore(noteItem.getNote().getContent(), noteItem.getNote().getIv(), noteItem.getNote().getName(), getContext(), (DecryptedCallback) plaintext -> {
+                    Guard.decryptKeystore(noteItem.getNote().getContent(), noteItem.getNote().getIv(), noteItem.getNote().getName(), getContext(), plaintext -> {
                         Intent intent = new Intent(getContext(), NoteViewActivity.class);
                         intent.putExtra("name", noteItem.getNote().getName());
                         intent.putExtra("content", plaintext);
@@ -181,7 +172,9 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 @Override
                 public boolean areContentsTheSame(NoteItem oldItem, NoteItem newItem) {
                     Note oldNote = oldItem.getNote(), newNote = newItem.getNote();
-                    return oldNote.getModified().equals(newNote.getModified()) && oldNote.getCategory().getCategoryColor() == newNote.getCategory().getCategoryColor();
+                    return oldNote.getModified().equals(newNote.getModified())
+                            && oldNote.getCategory().getCategoryColor() == newNote.getCategory().getCategoryColor()
+                            && oldNote.isSecure() == newNote.isSecure();
                 }
 
                 @Nullable
@@ -237,17 +230,11 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         inflater.inflate(R.menu.fragment_note, menu);
         searchView = (SearchView) menu.findItem(R.id.fragment_note_menu_search).getActionView();
         setListFiltering();
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(@NonNull Menu menu) {
         sortHandler.getSortStrategy().observe(this, integer -> {
-            Log.i("Obs", "Someone changed sorting strategy to: "+integer);
             MenuItem item = menu.findItem(integer == NoteSortHandler.SORT_ALPHA ? R.id.fragment_note_menu_sort_alpha : R.id.fragment_note_menu_sort_date);
             item.setChecked(true);
         });
-        super.onPrepareOptionsMenu(menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override

@@ -4,14 +4,19 @@ import android.content.Context;
 import android.hardware.biometrics.BiometricPrompt;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.util.Base64;
 import android.util.Log;
 
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.python.companion.security.Biometry.Biometry;
+import com.python.companion.security.biometry.Biometry;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
@@ -22,7 +27,6 @@ import java.security.SecureRandom;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -38,28 +42,33 @@ import javax.crypto.spec.SecretKeySpec;
 
 // https://www.raywenderlich.com/778533-encryption-tutorial-for-android-getting-started
 public class Guard {
+    public static final int OK = 0;
+    public static final int NO_BIOMETRICS = 1;
+    public static final int OTHER_PROBLEM = 5;
 
-    public void encryptKeystore(@NonNull String data, @NonNull String alias, Context context, @NonNull EncryptedCallback callback) {
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({OK, NO_BIOMETRICS, OTHER_PROBLEM})
+    public @interface GuardException {
+    }
+
+    public static void encryptKeystore(@NonNull String data, @NonNull String alias, Context context, @NonNull EncryptedCallback callback) {
         BiometricPrompt.CryptoObject obj = new BiometricPrompt.CryptoObject(getEncCipher(alias));
         Biometry bio = new Biometry.Builder().setSuccessCallback(authorizedCryptoObject -> {
             try {
                 Cipher cipher = authorizedCryptoObject.getCipher();
                 byte[] iv = cipher.getIV();
-                byte[] encrypted = cipher.doFinal(Base64.getDecoder().decode(data));
+                byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
 
-                Log.i("TEST", "Encrypted: '"+ Base64.getEncoder().encodeToString(encrypted) +"'");
-
-                callback.onFinish(Base64.getEncoder().encodeToString(encrypted), Base64.getEncoder().encodeToString(iv));
+                callback.onFinish(Base64.encodeToString(encrypted, Base64.DEFAULT), iv);
             } catch (BadPaddingException | IllegalBlockSizeException e) {
                 Log.i("BIO", "Weird exception: ", e);
                 e.printStackTrace();
             }
         }).build(context, obj);
         bio.authorize();
-
     }
 
-    private @Nullable Cipher getEncCipher(@NonNull String alias) {
+    private static @Nullable Cipher getEncCipher(@NonNull String alias) {
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
@@ -78,16 +87,13 @@ public class Guard {
         return null;
     }
 
-    public void decryptKeystore(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, Context context, @NonNull DecryptedCallback callback) {
+    public static void decryptKeystore(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, Context context, @NonNull DecryptedCallback callback) {
         BiometricPrompt.CryptoObject obj = new BiometricPrompt.CryptoObject(getDecCipher(iv, alias));
         Biometry bio = new Biometry.Builder().setSuccessCallback(authorizedCryptoObject -> {
             try {
                 Cipher cipher = authorizedCryptoObject.getCipher();
-                byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(data));
-
-                Log.i("TEST", "Decrypted: '"+ Base64.getEncoder().encodeToString(decrypted)+"'");
-
-                callback.onFinish(Base64.getEncoder().encodeToString(decrypted));
+                byte[] decrypted = cipher.doFinal(Base64.decode(data, Base64.DEFAULT));
+                callback.onFinish(new String(decrypted, StandardCharsets.UTF_8));
             } catch (BadPaddingException | IllegalBlockSizeException e) {
                 Log.i("BIO", "Weird exception: ", e);
                 e.printStackTrace();
@@ -96,11 +102,7 @@ public class Guard {
         bio.authorize();
     }
 
-    public void decryptKeystore(@NonNull String data, @NonNull String iv, @NonNull String alias, Context context, @NonNull DecryptedCallback callback) {
-        decryptKeystore(data, Base64.getDecoder().decode(iv), alias, context, callback);
-    }
-
-    public @Nullable Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) {
+    private static @Nullable Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) {
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
@@ -118,7 +120,7 @@ public class Guard {
         return null;
     }
 
-    private void generatePasswordBasedAESAndroidKeystore(@NonNull String alias) {
+    public static int generatePasswordBasedAESAndroidKeystore(@NonNull String alias) {
         try {
             KeyGenerator k = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
             KeyGenParameterSpec keyGenParameterSpec =
@@ -133,10 +135,15 @@ public class Guard {
                             .build();
             k.init(keyGenParameterSpec);
             SecretKey key = k.generateKey();
+            return OK;
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            // Invalid algorithm (only possible if OS does not support AES or GCM) or no AndroidKeyStore
             Log.i("GENKEYSTORE", "Problem in Keygenerator.getInstance()", e);
+            return OTHER_PROBLEM;
         } catch (InvalidAlgorithmParameterException e) {
+            // User has no fingerprint enrolled
             Log.i("GENKEYSTORE", "Problem in Keygenerator.init()", e);
+            return NO_BIOMETRICS;
         }
     }
 

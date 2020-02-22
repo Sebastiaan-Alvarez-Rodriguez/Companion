@@ -6,14 +6,14 @@
     android:orientation="vertical">
 
     <ImageView
-        android:id="@+id/dialog_note_override_header"
+        android:id="@+id/dialog_note_lock_header"
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:background="@color/colorPrimaryDark"
         android:gravity="center"
         android:minWidth="240dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_menu_delete"
+        android:src="@drawable/ic_lock_outline"
         android:tint="@color/colorWindowBackground"
         android:tintMode="src_in"
         app:layout_constraintEnd_toEndOf="parent"
@@ -21,10 +21,10 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/dialog_note_override_text"
+        android:id="@+id/dialog_note_lock_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/dialog_note_override_header"
+        android:layout_below="@+id/dialog_note_lock_header"
         android:layout_centerHorizontal="true"
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
@@ -33,23 +33,11 @@
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_note_override_header"
-        tools:text="Note already exists" />
-
-    <include
-        android:id="@+id/dialog_note_override_item"
-        layout="@layout/item_note"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_note_override_text" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_note_lock_header"
+        tools:text="Unlock note?" />
 
     <TextView
-        android:id="@+id/dialog_note_override_question"
+        android:id="@+id/dialog_note_lock_question"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -59,11 +47,11 @@
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_note_override_item"
-        tools:text="Do you want to override existing note?" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_note_lock_text"
+        tools:text="Do you want to unlock this note?" />
 
     <TextView
-        android:id="@+id/dialog_note_override_warning"
+        android:id="@+id/dialog_note_lock_warning"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -73,14 +61,14 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_note_override_question"
-        tools:text="Warning: Overriden notes cannot be restored" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_note_lock_question"
+        tools:text="Warning: No authentication is required to view unlocked notes" />
 
     <Button
-        android:id="@+id/dialog_note_override_cancel"
+        android:id="@+id/dialog_note_lock_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/dialog_note_override_text"
+        android:layout_below="@+id/dialog_note_lock_text"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
@@ -92,25 +80,25 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.16"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_note_override_warning" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_note_lock_warning" />
 
     <Button
-        android:id="@+id/dialog_note_override_override"
+        android:id="@+id/dialog_note_lock_accept"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/dialog_note_override_text"
+        android:layout_below="@+id/dialog_note_lock_text"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
-        android:background="@android:color/holo_red_light"
+        android:background="@android:color/holo_blue_bright"
         android:gravity="center_vertical|center_horizontal"
-        android:text="Override"
+        tools:text="Unlock"
         android:textColor="#ffffffff"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.84"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_note_override_warning" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_note_lock_warning" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

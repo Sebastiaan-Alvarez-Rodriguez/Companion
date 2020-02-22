@@ -7,6 +7,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Transaction;
+import androidx.room.Update;
 
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
@@ -19,6 +20,8 @@ import java.util.List;
 public abstract class DAONote {
     @Insert
     public abstract void insert(Note... notes);
+    @Update
+    public abstract void update(Note... notes);
     @Delete
     public abstract void delete(Note... notes);
 //    @Query("DELETE FROM Note WHERE name IN(:names)")

@@ -136,6 +136,10 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
 
     private void insertNew() {
+        //TODO: Support encryption (even though note is just created). Make option in 'editActivity, pass boolean to here 'encrypt'
+        // Then, fire NoteConverter.makeNoteSecure()
+        // Lastly, update makeNoteSecure such that it does a upsert instead of update
+        //TODO: Don't forget about decryption?
         NoteQuery noteQuery = new NoteQuery(this);
         noteQuery.insert(noteName, noteContent, v -> finishSuccess());
     }
@@ -181,7 +185,7 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_preview, menu);
+        getMenuInflater().inflate(R.menu.activity_note_preview, menu);
         return true;
     }
 }
