@@ -1,6 +1,7 @@
 package com.python.companion.ui.note.adapter;
 
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
@@ -59,11 +60,14 @@ public class NoteItem extends AbstractItem<ViewHolder> {
     public class NoteViewHolder extends ViewHolder<NoteItem> {
         private TextView nameView, dateView, categoryView;
 
+        private ImageView lockedView;
+
         public NoteViewHolder(@NotNull View itemView) {
             super(itemView);
             nameView = itemView.findViewById(R.id.item_note_name);
             dateView = itemView.findViewById(R.id.item_note_date);
             categoryView = itemView.findViewById(R.id.item_note_category);
+            lockedView = itemView.findViewById(R.id.item_note_lock);
         }
 
         @Override
@@ -72,6 +76,7 @@ public class NoteItem extends AbstractItem<ViewHolder> {
             dateView.setText(item.getNote().getModified().toString());
             Category category = item.getNote().getCategory();
             categoryView.setBackgroundColor((category.getCategoryName().length() != 0) ? category.getCategoryColor() : ContextCompat.getColor(nameView.getContext(), R.color.colorPrimary));
+            lockedView.setVisibility(item.getNote().isSecure() ? View.VISIBLE : View.INVISIBLE);
         }
 
         @Override

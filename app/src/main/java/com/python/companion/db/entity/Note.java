@@ -21,6 +21,9 @@ public class Note {
     @Embedded
     private Category category;
 
+    private boolean secure;
+    private String iv;
+
     private Instant modified;
 
     public Note(@NonNull String name, @NonNull String content) {
@@ -28,6 +31,9 @@ public class Note {
         this.content = content;
 
         this.category = new Category("", R.color.colorPrimary);
+        this.secure = false;
+        this.iv = "";
+
         modified = Instant.now();
     }
 
@@ -79,6 +85,38 @@ public class Note {
     public void setCategory(Category category) {
         this.category = category;
     }
+
+    /**
+     * @return current security status
+     */
+    public boolean isSecure() {
+        return secure;
+    }
+    /**
+     * Function to set note security. Note that setting security to 'none',
+     * while it actually is secure will make you lose note content forever, and possibly generates crashes
+     * @param secure New security state
+     */
+    public void setSecure(boolean secure) {
+        this.secure = secure;
+    }
+
+    /**
+     * @return current Initialization Vector for block chain cipher encryption schemes
+     */
+    public String getIv() {
+        return iv;
+    }
+
+    /**
+     * Sets Initialization Vector for block chain cipher encryption schemes.
+     * Note that storing initialization vectors (and salts) is no security breach
+     * @param iv New iv
+     */
+    public void setIv(String iv) {
+        this.iv = iv;
+    }
+
 
     /**
      * Function to get note last modification date

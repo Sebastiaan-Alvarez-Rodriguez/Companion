@@ -36,6 +36,8 @@ import com.python.companion.MainActivity;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
+import com.python.companion.security.DecryptedCallback;
+import com.python.companion.security.Guard;
 import com.python.companion.ui.note.activity.NoteViewActivity;
 import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
@@ -67,12 +69,15 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     private ActionModeHelper<NoteItem> actionModeHelper;
     private NoteSortHandler sortHandler;
 
+    private Guard guard;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
+        guard = new Guard();
     }
 
     @Nullable
@@ -93,7 +98,6 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         list = view.findViewById(R.id.fragment_list_list);
         fab = view.findViewById(R.id.fragment_list_add);
     }
-
 
     private void prepareAdd() {
         fab.setOnClickListener(v -> {
@@ -129,10 +133,20 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             Log.i("OnClick", "Tick: " + actionModeHelper.isActive());
             Log.i("OnClick", "SelectedCount: " + selectionExtension.getSelections().size());
             if (!actionModeHelper.isActive()) {
-                Intent intent = new Intent(getContext(), NoteViewActivity.class);
-                intent.putExtra("name", noteItem.getNote().getName());
-                intent.putExtra("content", noteItem.getNote().getContent());
-                startActivity(intent);
+
+                if (noteItem.getNote().isSecure()) {
+                    guard.decryptKeystore(noteItem.getNote().getContent(), noteItem.getNote().getIv(), noteItem.getNote().getName(), getContext(), (DecryptedCallback) plaintext -> {
+                        Intent intent = new Intent(getContext(), NoteViewActivity.class);
+                        intent.putExtra("name", noteItem.getNote().getName());
+                        intent.putExtra("content", plaintext);
+                        startActivity(intent);
+                    });
+                } else {
+                    Intent intent = new Intent(getContext(), NoteViewActivity.class);
+                    intent.putExtra("name", noteItem.getNote().getName());
+                    intent.putExtra("content", noteItem.getNote().getContent());
+                    startActivity(intent);
+                }
             } else {
                 fastAdapter.notifyItemChanged(position);
             }

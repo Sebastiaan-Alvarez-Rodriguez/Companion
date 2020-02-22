@@ -3,6 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/menu_view_lock"
+        android:icon="@drawable/ic_lock_outline"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        android:title="Security"
+        app:showAsAction="always"/>
+
+    <item
         android:id="@+id/menu_view_edit_category"
         android:icon="@drawable/ic_menu_category"
         app:iconTint="@color/colorWindowBackground"

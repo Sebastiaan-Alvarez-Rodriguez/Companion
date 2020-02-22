@@ -84,6 +84,10 @@ public class NoteViewActivity extends AppCompatActivity {
             case android.R.id.home:
                 finish();
                 break;
+
+            case R.id.menu_view_lock:
+                //TODO: Are you sure you wish to (un)lock? (in dialog?) (snackbar afterwards)
+                break;
             case R.id.menu_view_edit_category:
                 intent = new Intent(this, CategoryEditActivity.class);
                 intent.putExtra("noteName", name);
