@@ -16,9 +16,11 @@ import java.util.Comparator;
 public class NoteSortHandler {
     public static final int SORT_DATE = 1;
     public static final int SORT_ALPHA = 2;
+    public static final int SORT_CATEGORY = 3;
+    public static final int SORT_LOCKED = 4;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({SORT_ALPHA, SORT_DATE})
+    @IntDef({SORT_ALPHA, SORT_DATE, SORT_CATEGORY, SORT_LOCKED})
     public @interface SortingStrategy {
     }
 

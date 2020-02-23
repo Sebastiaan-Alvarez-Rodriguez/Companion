@@ -11,6 +11,7 @@ import androidx.room.Update;
 
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.ui.note.NoteType;
 
 import java.util.Collection;
 import java.util.List;
@@ -43,10 +44,11 @@ public abstract class DAONote {
             updateCategory(name, category.getCategoryName(), category.getCategoryColor());
     }
 
-
     @Query("UPDATE Note SET categoryName = :categoryName, categoryColor = :categoryColor WHERE categoryName = :prevCategoryName")
     public abstract void updateEntireCategory(String prevCategoryName, String categoryName, @ColorInt int categoryColor);
 
+    @Query("UPDATE Note SET type = :type WHERE name = :name")
+    public abstract void updateType(String name, @NoteType.Type int type);
 
     @Query("SELECT * FROM Note")
     public abstract LiveData<List<Note>> getAllLive();

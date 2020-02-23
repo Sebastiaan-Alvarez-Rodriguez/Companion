@@ -7,6 +7,7 @@ import androidx.room.Embedded;
 import androidx.room.Entity;
 
 import com.python.companion.R;
+import com.python.companion.ui.note.NoteType;
 
 import java.time.Instant;
 
@@ -26,6 +27,8 @@ public class Note {
 
     private Instant modified;
 
+    private @NoteType.Type int type;
+
     public Note(@NonNull String name, @NonNull String content) {
         this.name = name;
         this.content = content;
@@ -35,6 +38,7 @@ public class Note {
         this.iv = null;
 
         modified = Instant.now();
+        type = NoteType.TYPE_NORMAL;
     }
 
     /**
@@ -134,10 +138,27 @@ public class Note {
     }
 
     /**
+     * @return content type to render
+     */
+    public int getType() {
+        return type;
+    }
+
+    /**
+     * Sets content type to render.
+     * @param type new type
+     */
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    /**
      * Function to compare an object to this supplier on equality
      * @param obj the object to be compared to this supplier
      * @return true if there is equality, false on inequality or if the object is not a supplier
      */
+
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == this)

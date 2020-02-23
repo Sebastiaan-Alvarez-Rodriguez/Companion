@@ -15,7 +15,7 @@ import androidx.fragment.app.DialogFragment;
 import com.python.companion.R;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.Guard;
-import com.python.companion.security.converter.NoteConverter;
+import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.note.dialog.ErrorDialog;
 import com.python.companion.ui.templates.dialog.DialogAcceptListener;
 import com.python.companion.ui.templates.dialog.DialogCancelListener;

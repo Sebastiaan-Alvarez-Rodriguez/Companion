@@ -19,17 +19,43 @@
         app:showAsAction="always"/>
 
     <item
-        android:id="@+id/menu_view_edit"
-        android:icon="@drawable/ic_menu_edit"
+        android:id="@+id/menu_note_view_type"
+        android:icon="@drawable/ic_menu_note"
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"
         android:title="Edit"
-        app:showAsAction="always" />
+        app:showAsAction="always">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/menu_note_view_type_normal"
+                    android:icon="@drawable/ic_menu_note"
+                    app:iconTint="@color/colorWindowBackground"
+                    app:iconTintMode="src_in"
+                    android:title="Text"
+                    app:showAsAction="always"/>
+                <item
+                    android:id="@+id/menu_note_view_type_markdown"
+                    android:icon="@drawable/ic_menu_md"
+                    app:iconTint="@color/colorWindowBackground"
+                    app:iconTintMode="src_in"
+                    android:title="Markdown"
+                    app:showAsAction="always"/>
+                <item
+                    android:id="@+id/menu_note_view_type_latex"
+                    android:icon="@drawable/ic_menu_latex"
+                    app:iconTint="@color/colorWindowBackground"
+                    app:iconTintMode="src_in"
+                    android:title="Latex"
+                    app:showAsAction="always"/>
+            </group>
+        </menu>
+    </item>
     <item
-        android:id="@+id/menu_view_delete"
+        android:id="@+id/menu_note_view_delete"
         android:icon="@drawable/ic_menu_delete"
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"
         android:title="Delete"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 </menu>

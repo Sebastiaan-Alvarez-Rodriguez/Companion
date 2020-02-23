@@ -8,6 +8,7 @@ import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.ui.note.NoteType;
 
 import java.util.Collection;
 import java.util.concurrent.Executors;
@@ -64,6 +65,7 @@ public class NoteQuery {
                 listener.onResult(null);
         });
     }
+
     /**
      * Update category of *all* items. Use this function if you delete or merge or change entire categories.
      * In such cases, also don't forget to update the Category table too.
@@ -74,6 +76,13 @@ public class NoteQuery {
     public void updateEntireCategory(String prevCategoryName, String categoryName, @ColorInt int color, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             daoNote.updateEntireCategory(prevCategoryName, categoryName, color);
+            listener.onResult(null);
+        });
+    }
+
+    public void updateType(String name, @NoteType.Type int type, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.updateType(name, type);
             listener.onResult(null);
         });
     }
