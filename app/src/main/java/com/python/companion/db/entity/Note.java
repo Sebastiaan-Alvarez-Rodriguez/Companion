@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Embedded;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 
 import com.python.companion.R;
 import com.python.companion.ui.note.NoteType;
@@ -29,6 +30,17 @@ public class Note {
 
     private @NoteType.Type int type;
 
+    public Note(@NonNull String name, @NonNull String content, Category category, boolean secure, byte[] iv, int type) {
+        this.name = name;
+        this.content = content;
+        this.category = category;
+        this.secure = secure;
+        this.iv = iv;
+        this.modified = Instant.now();
+        this.type = type;
+    }
+
+    @Ignore
     public Note(@NonNull String name, @NonNull String content) {
         this.name = name;
         this.content = content;

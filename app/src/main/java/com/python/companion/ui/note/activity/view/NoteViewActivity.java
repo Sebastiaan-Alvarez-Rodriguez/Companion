@@ -5,10 +5,12 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Spanned;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +22,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.db.entity.Category;
 import com.python.companion.ui.note.NoteType;
 import com.python.companion.ui.note.activity.edit.category.CategoryEditActivity;
 import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
@@ -29,13 +32,20 @@ import io.noties.markwon.Markwon;
 import io.noties.markwon.ext.latex.JLatexMathPlugin;
 
 public class NoteViewActivity extends AppCompatActivity {
-    private static final int REQUEST_EDIT = 1;
+    private static final int REQ_EDIT = 1;
+    private static final int REQ_CATEGORY_EDIT = 2;
     private TextView contentView;
     private FloatingActionButton editButton;
 
-    private String name;
-    private String content;
-    private @NoteType.Type int type;
+    private String curName;
+    private String curContent;
+    private Category curCategory;
+    private @NoteType.Type int curType;
+    private boolean curSecure;
+
+    private MenuItem lockItem;
+    private MenuItem categoryItem;
+    private MenuItem typeItem;
 
     private NoteViewViewModel model;
 
@@ -46,12 +56,13 @@ public class NoteViewActivity extends AppCompatActivity {
         model = new ViewModelProvider(this).get(NoteViewViewModel.class);
 
         Intent intent = getIntent();
-        name = intent.getStringExtra("name");
-        content = intent.getStringExtra("content");
-        type = intent.getIntExtra("type", NoteType.TYPE_NORMAL);
+        curName = intent.getStringExtra("name");
+        curContent = intent.getStringExtra("content");
+        curCategory = null;
+        curType = -1;
+        curSecure = true;
         findViews();
         setupButton();
-        setContent(content, type);
         setupActionBar();
     }
 
@@ -63,9 +74,9 @@ public class NoteViewActivity extends AppCompatActivity {
     private void setupButton() {
         editButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, NoteEditActivity.class);
-            intent.putExtra("name", name);
-            intent.putExtra("content", content);
-            startActivityForResult(intent, REQUEST_EDIT);
+            intent.putExtra("name", curName);
+            intent.putExtra("content", curContent);
+            startActivityForResult(intent, REQ_EDIT);
         });
     }
 
@@ -89,11 +100,6 @@ public class NoteViewActivity extends AppCompatActivity {
         }
     }
 
-    private void refreshContentWithType(@NoteType.Type int type) {
-        this.type = type;
-        setContent(content, type);
-    }
-
     private void setupActionBar() {
         Toolbar myToolbar = findViewById(R.id.activity_note_view_toolbar);
         setSupportActionBar(myToolbar);
@@ -107,7 +113,7 @@ public class NoteViewActivity extends AppCompatActivity {
                 icon.setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
                 myToolbar.setNavigationIcon(icon);
             }
-            actionbar.setTitle(name);
+            actionbar.setTitle(curName);
         }
     }
 
@@ -119,9 +125,12 @@ public class NoteViewActivity extends AppCompatActivity {
                 break;
             case R.id.menu_note_view_lock: {
                 NoteQuery noteQuery = new NoteQuery(this);
-                noteQuery.get(name, note -> {
+                noteQuery.get(curName, note -> {
                     LockDialog dialog = new LockDialog.Builder()
-                            .setAcceptListener(() -> Snackbar.make(contentView, "Successfully changed lock status!", Snackbar.LENGTH_LONG).show())
+                            .setAcceptListener(noteSecured -> {
+                                noteQuery.update(noteSecured, v -> {});
+                                Snackbar.make(contentView, "Successfully changed lock status!", Snackbar.LENGTH_LONG).show();
+                            })
                             .setNote(note)
                             .build();
                     runOnUiThread(() -> dialog.show(getSupportFragmentManager(), null));
@@ -130,29 +139,34 @@ public class NoteViewActivity extends AppCompatActivity {
             }
             case R.id.menu_note_view_edit_category: {
                 Intent intent = new Intent(this, CategoryEditActivity.class);
-                intent.putExtra("noteName", name);
-                startActivity(intent);
-                break;
-            }
-            case R.id.menu_note_view_type_normal: {
-                NoteQuery noteQuery = new NoteQuery(this);
-                noteQuery.updateType(name, NoteType.TYPE_NORMAL, v -> refreshContentWithType(NoteType.TYPE_NORMAL));
-                break;
-            }
-            case R.id.menu_note_view_type_markdown: {
-                NoteQuery noteQuery = new NoteQuery(this);
-                noteQuery.updateType(name, NoteType.TYPE_MARKDOWN, v -> refreshContentWithType(NoteType.TYPE_MARKDOWN));
-                break;
-            }
-            case R.id.menu_note_view_type_latex: {
-                NoteQuery noteQuery = new NoteQuery(this);
-                noteQuery.updateType(name, NoteType.TYPE_MARKDOWN_LATEX, v -> refreshContentWithType(NoteType.TYPE_MARKDOWN_LATEX));
+                if (curCategory != null) {
+                    intent.putExtra("categoryName", curCategory.getCategoryName());
+                    intent.putExtra("categoryColor", curCategory.getCategoryColor());
+                }
+                startActivityForResult(intent, REQ_CATEGORY_EDIT);
                 break;
             }
             case R.id.menu_note_view_delete: {
+                    NoteQuery noteQuery = new NoteQuery(this);
+                    noteQuery.delete(curName, v -> finish());
+                    break;
+                }
+            default: {
                 NoteQuery noteQuery = new NoteQuery(this);
-                noteQuery.delete(name, v -> finish());
-                break;
+                @NoteType.Type int type;
+                switch (item.getItemId()) {
+                    case R.id.menu_note_view_type_markdown:
+                        type = NoteType.TYPE_MARKDOWN;
+                        break;
+                    case R.id.menu_note_view_type_latex:
+                        type = NoteType.TYPE_MARKDOWN_LATEX;
+                        break;
+                    default:
+                        type = NoteType.TYPE_NORMAL;
+                        break;
+                }
+                noteQuery.updateType(curName, type, v -> {});
+                item.setChecked(true);
             }
         }
         return super.onOptionsItemSelected(item);
@@ -161,20 +175,38 @@ public class NoteViewActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_note_view, menu);
-        MenuItem lock = menu.findItem(R.id.menu_note_view_lock);
-        MenuItem category = menu.findItem(R.id.menu_note_view_edit_category);
-        MenuItem type = menu.findItem(R.id.menu_note_view_type);
-        model.getNote(name).observe(this, note -> {
-            lock.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+        lockItem = menu.findItem(R.id.menu_note_view_lock);
+        categoryItem = menu.findItem(R.id.menu_note_view_edit_category);
+        typeItem = menu.findItem(R.id.menu_note_view_type);
 
-            int categoryColor = note.getCategory().getCategoryName().length() == 0 ? getColor(R.color.colorPrimary) : note.getCategory().getCategoryColor();
+        model.getNote(curName).observe(this, note -> update(note.getName(), note.getContent(), note.getCategory(), note.getType(), note.isSecure()));
+        return true;
+    }
+
+    private void update(@NonNull String name, @NonNull String content, @NonNull Category category, @NoteType.Type int type, boolean secure) {
+        curName = name;
+        if (!content.equals(curContent)) {
+            curContent = content;
+            if (type == curType)
+                setContent(curContent, curType);
+        }
+        if (category != curCategory) {
+            int categoryColor = category.getCategoryName().length() == 0 ? getColor(R.color.colorPrimary) : category.getCategoryColor();
             double diff = ColorUtils.calculateContrast(categoryColor, getColor(R.color.colorPrimary));
-            if (diff < 1.3)
+            Log.e("ViewActivity", "Diff: "+diff);
+            if (Math.abs(diff) < 1.1) {
+                Log.e("ViewActivity", "Diff too low: "+diff);
                 categoryColor = getColor(R.color.colorWindowBackground);
-            category.getIcon().setColorFilter(categoryColor, PorterDuff.Mode.SRC_IN);
+            }
+            categoryItem.getIcon().setColorFilter(categoryColor, PorterDuff.Mode.SRC_IN);
+            curCategory = category;
+        }
 
+        if (type != curType) {
+            setContent(curContent, type);
+            curType = type;
             Drawable d;
-            switch (note.getType()) {
+            switch (type) {
                 case NoteType.TYPE_NORMAL:
                     d = getDrawable(R.drawable.ic_menu_note);
                     break;
@@ -182,18 +214,28 @@ public class NoteViewActivity extends AppCompatActivity {
                     d = getDrawable(R.drawable.ic_menu_md);
                     break;
                 case NoteType.TYPE_MARKDOWN_LATEX:
-                    default:
+                default:
                     d = getDrawable(R.drawable.ic_menu_latex);
             }
-            type.setIcon(d);
-        });
-        return true;
+            typeItem.setIcon(d);
+            //TODO: Also set check mark on correct item
+            //TODO: Also set check mark on optionMenu creation
+        }
+
+        if (secure != curSecure) {
+            lockItem.setIcon(getDrawable(secure ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+            curSecure = secure;
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == REQ_EDIT && resultCode == RESULT_OK && data != null) {
+            update(curName, data.getStringExtra("content"), curCategory, curType, curSecure);
+        } else if (requestCode == REQ_CATEGORY_EDIT && resultCode == RESULT_OK && data != null) {
+            NoteQuery noteQuery = new NoteQuery(this);
+            noteQuery.updateCategory(curName, new Category(data.getStringExtra("categoryName"), data.getIntExtra("categoryColor", -1)), v -> {});
+        }
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_EDIT && resultCode == RESULT_OK && data != null)
-            setContent(data.getStringExtra("content"), type);
     }
 }

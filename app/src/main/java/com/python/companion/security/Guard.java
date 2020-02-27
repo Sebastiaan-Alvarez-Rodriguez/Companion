@@ -68,25 +68,6 @@ public class Guard {
         bio.authorize();
     }
 
-    private static @Nullable Cipher getEncCipher(@NonNull String alias) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-            Log.i("ENCKEYSTORE", "Contains alias: "+keyStore.containsAlias(alias));
-            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
-            SecretKey key = secretKeyEntry.getSecretKey();
-
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-//            IvParameterSpec ivParameterSpec = generateCBCIV();
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            return cipher;
-        } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException e) {
-            Log.i("ENCKEYSTORE", "Some exception occured: ", e);
-//            e.printStackTrace();
-        }
-        return null;
-    }
-
     public static void decryptKeystore(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, Context context, @NonNull DecryptedCallback callback) {
         BiometricPrompt.CryptoObject obj = new BiometricPrompt.CryptoObject(getDecCipher(iv, alias));
         Biometry bio = new Biometry.Builder().setSuccessCallback(authorizedCryptoObject -> {
@@ -102,25 +83,7 @@ public class Guard {
         bio.authorize();
     }
 
-    private static @Nullable Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-
-            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
-            SecretKey key = secretKeyEntry.getSecretKey();
-            //TODO get IV here
-
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
-            return cipher;
-        } catch (KeyStoreException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | IOException e) {
-            Log.i("DECKEYSTORE", "Some exception occured: ", e);
-        }
-        return null;
-    }
-
-    public static int generatePasswordBasedAESAndroidKeystore(@NonNull String alias) {
+    public static int generateAESAndroidKeystore(@NonNull String alias) {
         try {
             KeyGenerator k = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
             KeyGenParameterSpec keyGenParameterSpec =
@@ -145,6 +108,43 @@ public class Guard {
             Log.i("GENKEYSTORE", "Problem in Keygenerator.init()", e);
             return NO_BIOMETRICS;
         }
+    }
+
+    private static @Nullable Cipher getEncCipher(@NonNull String alias) {
+        try {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            Log.i("ENCKEYSTORE", "Contains alias: "+keyStore.containsAlias(alias));
+            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
+            SecretKey key = secretKeyEntry.getSecretKey();
+
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+//            IvParameterSpec ivParameterSpec = generateCBCIV();
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            return cipher;
+        } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException e) {
+            Log.i("ENCKEYSTORE", "Some exception occured: ", e);
+//            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static @Nullable Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) {
+        try {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+
+            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
+            SecretKey key = secretKeyEntry.getSecretKey();
+            //TODO get IV here
+
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
+            return cipher;
+        } catch (KeyStoreException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | IOException e) {
+            Log.i("DECKEYSTORE", "Some exception occured: ", e);
+        }
+        return null;
     }
 
 

@@ -22,7 +22,7 @@ import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
 import com.python.companion.ui.note.dialog.merge.CategoryMergeDialog;
-import com.python.companion.ui.templates.dialog.DialogAcceptListener;
+import com.python.companion.ui.templates.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.templates.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
@@ -30,7 +30,7 @@ public class CategoryUpdateDialog extends DialogFragment {
     @SuppressWarnings("unused")
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
-        private DialogAcceptListener dialogAcceptListener = null;
+        private DialogAcceptValueListener<Category> dialogAcceptListener = null;
 
         private Category category = null;
 
@@ -40,7 +40,7 @@ public class CategoryUpdateDialog extends DialogFragment {
             return this;
         }
 
-        public Builder setFinishListener(DialogAcceptListener dialogAcceptListener) {
+        public Builder setFinishListener(DialogAcceptValueListener<Category> dialogAcceptListener) {
             this.dialogAcceptListener = dialogAcceptListener;
             return this;
         }
@@ -63,11 +63,11 @@ public class CategoryUpdateDialog extends DialogFragment {
 
 
     protected @Nullable DialogCancelListener cancelListener;
-    protected @Nullable DialogAcceptListener acceptListener;
+    protected @Nullable DialogAcceptValueListener<Category> acceptListener;
     protected @NonNull Category category;
 
 
-    protected CategoryUpdateDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener, @NonNull Category category) {
+    protected CategoryUpdateDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptValueListener<Category> acceptListener, @NonNull Category category) {
         this.cancelListener = cancelListener;
         this.acceptListener = acceptListener;
         this.category = category;
@@ -138,7 +138,7 @@ public class CategoryUpdateDialog extends DialogFragment {
                     NoteQuery noteQuery = new NoteQuery(getContext());
                     noteQuery.updateEntireCategory(prevName, name, color, x -> {});
                     if (acceptListener != null)
-                        acceptListener.onAccept();
+                        acceptListener.onAccept(new Category(name, color));
                     dismiss();
                 } else { // Name changed. Unique?
                     CategoryQuery categoryQuery = new CategoryQuery(getContext());
@@ -148,14 +148,14 @@ public class CategoryUpdateDialog extends DialogFragment {
                             NoteQuery noteQuery = new NoteQuery(getContext());
                             noteQuery.updateEntireCategory(prevName, name, color, x -> {});
                             if (acceptListener != null)
-                                acceptListener.onAccept();
+                                acceptListener.onAccept(new Category(name, color));
                             dismiss();
                         } else { // Name changed & conflict
 //                            getActivity().runOnUiThread(() -> { //First: passed calling activity here
                             CategoryMergeDialog categoryMergeDialog = new CategoryMergeDialog.Builder()
                                     .setFinishListener(() -> {
                                         if (acceptListener != null)
-                                            acceptListener.onAccept();
+                                            acceptListener.onAccept(new Category(name, color));
                                         dismiss();
                                     })
                                     .setOldCategory(category)

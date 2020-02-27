@@ -17,23 +17,25 @@ import com.python.companion.db.entity.Note;
 import com.python.companion.security.Guard;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.note.dialog.ErrorDialog;
-import com.python.companion.ui.templates.dialog.DialogAcceptListener;
+import com.python.companion.ui.templates.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.templates.dialog.DialogCancelListener;
 
+@SuppressWarnings("WeakerAccess")
 public class LockDialog extends DialogFragment {
     
+    @SuppressWarnings("unused")
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
-        private DialogAcceptListener dialogAcceptListener = null;
+        private DialogAcceptValueListener<Note> dialogAcceptListener = null;
         
         private Note note;
 
-        public Builder setCancelListener(DialogCancelListener dialogCancelListener) {
+        public Builder setCancelListener(@NonNull DialogCancelListener dialogCancelListener) {
             this.dialogCancelListener = dialogCancelListener;
             return this;
         }
 
-        public Builder setAcceptListener(DialogAcceptListener dialogAcceptListener) {
+        public Builder setAcceptListener(@NonNull DialogAcceptValueListener<Note> dialogAcceptListener) {
             this.dialogAcceptListener = dialogAcceptListener;
             return this;
         }
@@ -46,6 +48,8 @@ public class LockDialog extends DialogFragment {
         public LockDialog build() {
             if (note == null)
                 throw new IllegalStateException("Caller must provide Note which will be locked/unlocked with builder.setNote(note)");
+            else if (dialogAcceptListener == null)
+                throw new IllegalStateException("Caller must provide accept callback!");
             return new LockDialog(dialogCancelListener, dialogAcceptListener, note);
         }
     }
@@ -54,10 +58,10 @@ public class LockDialog extends DialogFragment {
     protected Button cancelButton, acceptButton;
 
     protected @Nullable DialogCancelListener cancelListener;
-    protected @Nullable DialogAcceptListener acceptListener;
+    protected @NonNull DialogAcceptValueListener<Note> acceptListener;
     protected @NonNull Note note;
 
-    protected LockDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener, @NonNull Note note) {
+    protected LockDialog(@Nullable DialogCancelListener cancelListener, @NonNull DialogAcceptValueListener<Note> acceptListener, @NonNull Note note) {
         this.cancelListener = cancelListener;
         this.acceptListener = acceptListener;
         this.note = note;
@@ -83,7 +87,6 @@ public class LockDialog extends DialogFragment {
         questionView = view.findViewById(R.id.dialog_note_lock_question);
         warningView = view.findViewById(R.id.dialog_note_lock_warning);
 
-
         cancelButton = view.findViewById(R.id.dialog_note_lock_cancel);
         acceptButton = view.findViewById(R.id.dialog_note_lock_accept);
     }
@@ -101,18 +104,15 @@ public class LockDialog extends DialogFragment {
 
     private void prepareButtons() {
         cancelButton.setOnClickListener(v -> {
-            if (cancelListener != null) {
+            if (cancelListener != null)
                 cancelListener.onCancel();
-            }
             dismiss();
         });
         acceptButton.setOnClickListener(v -> {
             if (note.isSecure())
                 NoteConverter.makeNoteInsecure(getContext(), note, exception -> {
-                }, () -> {
-                    if (acceptListener != null) {
-                        acceptListener.onAccept();
-                    }
+                }, note -> {
+                    acceptListener.onAccept(note);
                     dismiss();
                 });
             else
@@ -135,10 +135,8 @@ public class LockDialog extends DialogFragment {
                             break;
                     }
                     errorDialog.show(getChildFragmentManager(), null);
-                }, () -> {
-                    if (acceptListener != null) {
-                        acceptListener.onAccept();
-                    }
+                }, note -> {
+                    acceptListener.onAccept(note);
                     dismiss();
                 });
         });

@@ -66,7 +66,7 @@ public class CategoryMergeDialog extends DialogFragment {
     protected @Nullable DialogAcceptListener acceptListener;
     final protected Category oldCategory, newCategory;
 
-    protected CategoryMergeDialog( @Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener, @NonNull Category oldCategory, @NonNull Category newCategory) {
+    protected CategoryMergeDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener acceptListener, @NonNull Category oldCategory, @NonNull Category newCategory) {
         this.cancelListener = cancelListener;
         this.acceptListener = acceptListener;
         this.oldCategory = oldCategory;

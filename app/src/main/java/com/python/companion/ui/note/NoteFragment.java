@@ -1,6 +1,8 @@
 package com.python.companion.ui.note;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -9,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.view.ActionMode;
@@ -36,8 +39,8 @@ import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.Guard;
-import com.python.companion.ui.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.note.activity.edit.note.NoteEditActivity;
+import com.python.companion.ui.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.note.adapter.NoteItem;
 import com.python.companion.ui.note.adapter.NoteSortHandler;
 import com.python.companion.ui.note.dialog.set.CategorySetDialog;
@@ -105,7 +108,10 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         ComparableItemListImpl<NoteItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
 
         itemAdapter = new ItemAdapter<>(itemList);
-        sortHandler = new NoteSortHandler.Builder().setItemList(itemList).build();
+        sortHandler = new NoteSortHandler.Builder()
+                .setStrategy(getContext().getSharedPreferences(getString(R.string.note_preferences), Context.MODE_PRIVATE).getInt("noteSort", NoteSortHandler.SORT_DATE))
+                .setItemList(itemList)
+                .build();
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
         list.setAdapter(fastAdapter);
@@ -220,36 +226,54 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        //TODO scroll to new item and highlight it?
-    }
-
-    @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.fragment_note, menu);
         searchView = (SearchView) menu.findItem(R.id.fragment_note_menu_search).getActionView();
         setListFiltering();
-        sortHandler.getSortStrategy().observe(this, integer -> {
-            MenuItem item = menu.findItem(integer == NoteSortHandler.SORT_ALPHA ? R.id.fragment_note_menu_sort_alpha : R.id.fragment_note_menu_sort_date);
-            item.setChecked(true);
-        });
+
+        @IdRes int id;
+        switch (getContext().getSharedPreferences(getString(R.string.note_preferences), Context.MODE_PRIVATE).getInt("noteSort", NoteSortHandler.SORT_DATE)) {
+            case NoteSortHandler.SORT_ALPHA:
+                id = R.id.fragment_note_menu_sort_alpha;
+                break;
+            case NoteSortHandler.SORT_CATEGORY:
+                id = R.id.fragment_note_menu_sort_category;
+                break;
+            case NoteSortHandler.SORT_LOCK:
+                id = R.id.fragment_note_menu_sort_lock;
+                break;
+            case NoteSortHandler.SORT_DATE:
+            default:
+                id = R.id.fragment_note_menu_sort_date;
+        }
+        MenuItem item = menu.findItem(id);
+        item.setChecked(true);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
+        @NoteSortHandler.SortingStrategy int strategy;
         switch (item.getItemId()) {
             case R.id.fragment_note_menu_sort_alpha:
-                sortHandler.setSortStrategy(NoteSortHandler.SORT_ALPHA);
-                item.setChecked(true);
+                strategy = NoteSortHandler.SORT_ALPHA;
+                break;
+            case R.id.fragment_note_menu_sort_category:
+                strategy = NoteSortHandler.SORT_CATEGORY;
+                break;
+            case R.id.fragment_note_menu_sort_lock:
+                strategy = NoteSortHandler.SORT_LOCK;
                 break;
             case R.id.fragment_note_menu_sort_date:
-                sortHandler.setSortStrategy(NoteSortHandler.SORT_DATE);
-                item.setChecked(true);
+                strategy = NoteSortHandler.SORT_DATE;
                 break;
+            default:
+                return super.onOptionsItemSelected(item);
         }
+        sortHandler.setSortStrategy(strategy);
+        item.setChecked(true);
+        SharedPreferences.Editor editor = getContext().getSharedPreferences(getString(R.string.note_preferences), Context.MODE_PRIVATE).edit();
+        editor.putInt("noteSort", strategy).apply();
         return super.onOptionsItemSelected(item);
     }
 

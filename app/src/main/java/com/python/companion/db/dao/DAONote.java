@@ -25,11 +25,12 @@ public abstract class DAONote {
     public abstract void update(Note... notes);
     @Delete
     public abstract void delete(Note... notes);
-//    @Query("DELETE FROM Note WHERE name IN(:names)")
-//    void delete(String... names);
 
-    @Query("UPDATE Note SET content = :content WHERE name = :name")
-    public abstract void updateContent(String name, String content);
+    @Transaction
+    public void replace(String name, Note note) {
+        delete(new Note(name, ""));
+        insert(note);
+    }
 
     @Query("UPDATE Note SET name = :name, content = :content WHERE name = :prevName")
     public abstract void updateContent(String prevName, String name, String content);

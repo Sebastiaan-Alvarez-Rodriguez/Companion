@@ -1,5 +1,6 @@
 package com.python.companion.ui.note.activity.edit.category;
 
+import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -30,7 +31,7 @@ import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
-import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.db.entity.Category;
 import com.python.companion.ui.note.adapter.CategoryItem;
 import com.python.companion.ui.note.dialog.delete.CategoryDeleteDialog;
 import com.python.companion.ui.note.dialog.update.CategoryUpdateDialog;
@@ -39,7 +40,6 @@ import com.python.companion.util.ContextMenuRecyclerView;
 import java.util.stream.Collectors;
 
 public class CategoryEditActivity extends AppCompatActivity {
-
     private View layout;
     private TextView colorView;
     private EditText newCategoryName;
@@ -52,9 +52,8 @@ public class CategoryEditActivity extends AppCompatActivity {
 
     private CategoryViewModel categoryViewModel;
 
-    private String noteName;
-
-    private @ColorInt int color;
+    private String categoryName;
+    private @ColorInt int categoryColor;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,11 +61,17 @@ public class CategoryEditActivity extends AppCompatActivity {
         setContentView(R.layout.activity_category_edit);
         categoryViewModel = new ViewModelProvider(this).get(CategoryViewModel.class);
 
-        noteName = getIntent().getStringExtra("noteName");
+        Intent intent = getIntent();
+        if (intent.hasExtra("categoryName") && intent.getStringExtra("categoryName").length() != 0) {
+            categoryName = intent.getStringExtra("categoryName");
+            categoryColor = intent.getIntExtra("categoryColor", -1);
+        } else {
+            categoryName = "<default>";
+            categoryColor = ContextCompat.getColor(this, R.color.colorPrimary);
+        }
 
-        color = ContextCompat.getColor(this, R.color.colorPrimary);
         findViews();
-        prepareCurrentCategoryView();
+        updateCurrentCategoryView();
         prepareList();
 
         setupClicks();
@@ -84,18 +89,9 @@ public class CategoryEditActivity extends AppCompatActivity {
         curNameView = findViewById(R.id.item_category_name);
     }
 
-    private void prepareCurrentCategoryView() {
-        categoryViewModel.getCurrentCategory(noteName).observe(this, category -> {
-            if (category != null && category.getCategoryName().length() != 0) {
-                Log.i("Observer", "Category for note "+noteName+" found category: " + category.getCategoryName());
-                curNameView.setText(category.getCategoryName());
-                curColorView.setBackgroundColor(category.getCategoryColor());
-            } else {
-                curNameView.setText("<Default>");
-                curColorView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary));
-                Log.i("Observer", "Category for note "+noteName+" not found at this time");
-            }
-        });
+    private void updateCurrentCategoryView() {
+        curNameView.setText(categoryName);
+        curColorView.setBackgroundColor(categoryColor);
     }
 
     private void prepareList() {
@@ -106,8 +102,10 @@ public class CategoryEditActivity extends AppCompatActivity {
 
         fastAdapter.setOnClickListener((view, categoryItemIAdapter, categoryItem, pos) -> {
             Log.i("Clicked", "You clicked on cat "+categoryItem.getCategory().getCategoryName());
-            NoteQuery noteQuery = new NoteQuery(this);
-            noteQuery.updateCategory(noteName, categoryItem.getCategory(), v -> {});
+            Category category = categoryItem.getCategory();
+            categoryName = category.getCategoryName();
+            categoryColor = category.getCategoryColor();
+            updateCurrentCategoryView();
             return true;
         });
 
@@ -132,20 +130,19 @@ public class CategoryEditActivity extends AppCompatActivity {
             } else {
                 CategoryQuery categoryQuery = new CategoryQuery(this);
                 categoryQuery.isUnique(newName, unique -> {
-                    if (unique) {
-                        categoryQuery.insert(newName, color, x -> {});
-                    } else {
+                    if (unique)
+                        categoryQuery.insert(newName, categoryColor, x -> {});
+                    else
                         Snackbar.make(layout, "Category already exists", Snackbar.LENGTH_LONG).show();
-                    }
                 });
             }
         });
         colorView.setOnClickListener(v -> {
-            ColorPickerDialog dialog = ColorPickerDialog.newBuilder().setShowAlphaSlider(false).setColor(color).create();
+            ColorPickerDialog dialog = ColorPickerDialog.newBuilder().setShowAlphaSlider(false).setColor(categoryColor).create();
             dialog.setColorPickerDialogListener(new ColorPickerDialogListener() {
                 @Override
                 public void onColorSelected(int dialogId, int c) {
-                    color = c;
+                    categoryColor = c;
                     colorView.setBackgroundColor(c);
                 }
 
@@ -181,7 +178,7 @@ public class CategoryEditActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home)
-            finish();
+            onFinish();
         return super.onOptionsItemSelected(item);
     }
 
@@ -200,15 +197,44 @@ public class CategoryEditActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.menu_note_context_category_edit:
                 CategoryUpdateDialog categoryUpdateDialog = new CategoryUpdateDialog.Builder()
-                        .setCategory(clicked.getCategory()).build();
+                        .setCategory(clicked.getCategory())
+                        .setFinishListener(category -> {
+                            if (clicked.getCategory().getCategoryName().equals(categoryName)) {
+                                categoryName = category.getCategoryName();
+                                categoryColor = category.getCategoryColor();
+                                updateCurrentCategoryView();
+                            }
+                        }).build();
                 categoryUpdateDialog.show(getSupportFragmentManager(), null);
                 break;
             case R.id.menu_note_context_category_delete:
                 CategoryDeleteDialog categoryDeleteDialog = new CategoryDeleteDialog.Builder()
-                        .setCategory(clicked.getCategory()).build();
+                        .setCategory(clicked.getCategory())
+                        .setFinishListener(() -> {
+                            if (clicked.getCategory().getCategoryName().equals(categoryName)) {
+                                categoryName = "<default>";
+                                categoryColor = ContextCompat.getColor(this, R.color.colorPrimary);
+                                updateCurrentCategoryView();
+                            }
+                        }).build();
                 categoryDeleteDialog.show(getSupportFragmentManager(), null);
                 break;
         }
         return super.onContextItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        onFinish();
+        super.onBackPressed();
+    }
+
+    private void onFinish() {
+        Log.e("CatEdit", "Back has been pressed");
+        Intent data = new Intent();
+        data.putExtra("categoryName", categoryName);
+        data.putExtra("categoryColor", categoryColor);
+        setResult(RESULT_OK, data);
+        finish();
     }
 }

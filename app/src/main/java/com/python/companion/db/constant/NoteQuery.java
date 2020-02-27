@@ -27,22 +27,22 @@ public class NoteQuery {
         });
     }
 
-    public void update(Note... notes) {
+    public void insert(Note... notes) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            daoNote.update(notes);
+            daoNote.insert(notes);
         });
     }
 
-    public void updateContent(String name, String content, ResultListener<Void> listener) {
+    public void update(Note note, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            daoNote.updateContent(name, content);
+            daoNote.update(note);
             listener.onResult(null);
         });
     }
 
-    public void updateContent(String prevName, String name, String content, ResultListener<Void> listener) {
+    public void replace(String prevName, Note note, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            daoNote.updateContent(prevName, name, content);
+            daoNote.replace(prevName, note);
             listener.onResult(null);
         });
     }
@@ -59,6 +59,9 @@ public class NoteQuery {
         });
     }
 
+    /**
+     * Set category of multiple notes to 1 specific category at once
+     */
     public void updateCategories(Collection<String> names, Category category, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
                 daoNote.updateCategories(names, category);
@@ -101,12 +104,12 @@ public class NoteQuery {
         });
     }
 
-    public void getContent(String name, ResultListener<String> listener) {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            Note note = daoNote.get(name);
-            listener.onResult(note == null ? null : note.getContent());
-        });
-    }
+//    public void getContent(String name, ResultListener<String> listener) {
+//        Executors.newSingleThreadExecutor().execute(() -> {
+//            Note note = daoNote.get(name);
+//            listener.onResult(note == null ? null : note.getContent());
+//        });
+//    }
 
     public void get(String name, ResultListener<Note> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));

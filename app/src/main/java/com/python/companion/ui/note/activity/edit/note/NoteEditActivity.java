@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.python.companion.R;
+import com.python.companion.ui.note.activity.view.NotePreviewActivity;
 
 public class NoteEditActivity extends AppCompatActivity {
     private static final int REQUEST_PREVIEW = 1;

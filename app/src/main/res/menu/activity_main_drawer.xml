@@ -10,7 +10,7 @@
             android:title="@string/menu_home"/>
         <item
             android:id="@+id/nav_cactus"
-            android:icon="@drawable/ic_cactus_0"
+            android:icon="@drawable/ic_cactus_2"
             android:title="Cactus" />
         <item
             android:id="@+id/nav_tools"

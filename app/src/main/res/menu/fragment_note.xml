@@ -25,6 +25,12 @@
             <item
                 android:id="@+id/fragment_note_menu_sort_date"
                 android:title="Date" />
+            <item
+                android:id="@+id/fragment_note_menu_sort_category"
+                android:title="Category" />
+            <item
+                android:id="@+id/fragment_note_menu_sort_lock"
+                android:title="Lock state" />
         </group>
         </menu>
     </item>

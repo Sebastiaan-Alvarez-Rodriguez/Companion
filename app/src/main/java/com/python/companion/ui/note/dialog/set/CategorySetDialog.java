@@ -148,7 +148,6 @@ public class CategorySetDialog extends DialogFragment {
                 Snackbar.make(layout, "Please select a category", Snackbar.LENGTH_LONG).show();
             } else {
                 CategoryItem selectedItem = selected.iterator().next();
-                //TODO: set category of all selected items to this one
                 NoteQuery noteQuery = new NoteQuery(getContext());
                 noteQuery.updateCategories(selectedNotes.stream().map(noteItem -> noteItem.getNote().getName()).collect(Collectors.toSet()), selectedItem.getCategory(), v2 -> {});
                 if (acceptListener != null)
@@ -156,10 +155,5 @@ public class CategorySetDialog extends DialogFragment {
                 this.dismiss();
             }
         });
-    }
-
-    public @Nullable CategoryItem getSelectedCategory() {
-        Set<CategoryItem> selected = selectionExtension.getSelectedItems();
-        return selected.size() == 0 ? null : selected.iterator().next();
     }
 }
