@@ -23,6 +23,7 @@ import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.notes.category.activity.CategoryEditActivity;
 import com.python.companion.ui.notes.note.NoteType;
 import com.python.companion.ui.notes.note.dialog.LockDialog;
@@ -57,7 +58,7 @@ public class NotePreviewActivity extends AppCompatActivity {
     private String curName, curContent, prevName;
     private Category curCategory;
     private @NoteType.Type int curType;
-    private boolean curSecure;
+    private boolean curSecure, prevSecure;
     private ActionBar actionbar;
 
     private boolean editMode;
@@ -188,13 +189,23 @@ public class NotePreviewActivity extends AppCompatActivity {
     private void updateExisting() {
         final NoteQuery noteQuery = new NoteQuery(this);
         if (editMode) { //updateContent-conflict situation
-            if (curSecure) {
+            if (!prevSecure && curSecure) { // Note was not secure, now secure
                 LockDialog dialog = new LockDialog.Builder()
                         .setAcceptListener(note -> noteQuery.replace(prevName, note, v -> finishSuccess()))
                         .setNote(new Note(curName, curContent, curCategory, false, null, curType))
                         .build();
                 dialog.show(getSupportFragmentManager(), null);
-            } else {
+            } else if (curSecure) { // Note was secure, now secure
+                //TODO below: Should display errordialog if problems occur
+                NoteConverter.makeNoteSecure(this, new Note(curName, curContent, curCategory, false, null, curType), exception -> {}, note -> noteQuery.replace(prevName, note, v -> finishSuccess()));
+            } else if (prevSecure && !curSecure) { // Note was secure, now not secure
+                LockDialog dialog = new LockDialog.Builder()
+                        .setAcceptListener(note -> noteQuery.replace(prevName, note, v -> finishSuccess()))
+                        .setNote(new Note(curName, curContent, curCategory, false, null, curType))
+                        .doAction(false)
+                        .build();
+                dialog.show(getSupportFragmentManager(), null);
+            } else { // Note was not secure, now not secure
                 noteQuery.replace(prevName, new Note(curName, curContent, curCategory, false, null, curType), v -> finishSuccess());
             }
         } else { //new-conflict situation (no prevNoteName available)
@@ -263,15 +274,14 @@ public class NotePreviewActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         editMode = intent.hasExtra("prevName");
-        if (editMode)
+        if (editMode) {
             prevName = intent.getStringExtra("prevName");
-
-        if (!editMode) {
-            curCategory = new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary));
-            update(intent.getStringExtra("name"), intent.getStringExtra("content"), curCategory, curSecure, curType);
-        } else {
+            prevSecure = intent.getBooleanExtra("secure", false);
             Category tmp = new Category(intent.getStringExtra("categoryName"), intent.getIntExtra("categoryColor", -1));
             update(intent.getStringExtra("name"), intent.getStringExtra("content"), tmp, intent.getBooleanExtra("secure", false), intent.getIntExtra("type", NoteType.TYPE_NORMAL));
+        } else {
+            curCategory = new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary));
+            update(intent.getStringExtra("name"), intent.getStringExtra("content"), curCategory, curSecure, curType);
         }
         return true;
     }

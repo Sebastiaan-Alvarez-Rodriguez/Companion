@@ -25,10 +25,18 @@ public class LockDialog extends DialogFragment {
     
     @SuppressWarnings("unused")
     public static class Builder {
-        private DialogCancelListener dialogCancelListener = null;
+        private DialogCancelListener dialogCancelListener;
         private DialogAcceptValueListener<Note> dialogAcceptListener = null;
         
         private Note note;
+        private boolean doAction;
+
+        public Builder() {
+            dialogCancelListener = null;
+            dialogAcceptListener = null;
+            note = null;
+            doAction = true;
+        }
 
         public Builder setCancelListener(@NonNull DialogCancelListener dialogCancelListener) {
             this.dialogCancelListener = dialogCancelListener;
@@ -45,12 +53,17 @@ public class LockDialog extends DialogFragment {
             return this;
         }
 
+        public Builder doAction(boolean doAction) {
+            this.doAction = doAction;
+            return this;
+        }
+
         public LockDialog build() {
             if (note == null)
                 throw new IllegalStateException("Caller must provide Note which will be locked/unlocked with builder.setNote(note)");
             else if (dialogAcceptListener == null)
                 throw new IllegalStateException("Caller must provide accept callback!");
-            return new LockDialog(dialogCancelListener, dialogAcceptListener, note);
+            return new LockDialog(dialogCancelListener, dialogAcceptListener, note, doAction);
         }
     }
 
@@ -60,11 +73,13 @@ public class LockDialog extends DialogFragment {
     protected @Nullable DialogCancelListener cancelListener;
     protected @NonNull DialogAcceptValueListener<Note> acceptListener;
     protected @NonNull Note note;
+    protected boolean doAction;
 
-    protected LockDialog(@Nullable DialogCancelListener cancelListener, @NonNull DialogAcceptValueListener<Note> acceptListener, @NonNull Note note) {
+    protected LockDialog(@Nullable DialogCancelListener cancelListener, @NonNull DialogAcceptValueListener<Note> acceptListener, @NonNull Note note, boolean doAction) {
         this.cancelListener = cancelListener;
         this.acceptListener = acceptListener;
         this.note = note;
+        this.doAction = doAction;
     }
 
     @Nullable
@@ -109,36 +124,47 @@ public class LockDialog extends DialogFragment {
             dismiss();
         });
         acceptButton.setOnClickListener(v -> {
-            if (note.isSecure())
-                NoteConverter.makeNoteInsecure(getContext(), note, exception -> {
-                }, note -> {
+            if (note.isSecure()) {
+                if (doAction) {
+                    NoteConverter.makeNoteInsecure(getContext(), note, exception -> {
+                    }, note -> {
+                        acceptListener.onAccept(note);
+                        dismiss();
+                    });
+                } else {
                     acceptListener.onAccept(note);
                     dismiss();
-                });
-            else
-                NoteConverter.makeNoteSecure(getContext(), note, exception -> {
-                    ErrorDialog errorDialog;
-                    switch (exception) {
-                        case Guard.NO_BIOMETRICS:
-                            errorDialog = new ErrorDialog.Builder()
-                                    .setSubtitle("No biometrics registered")
-                                    .setProblem("Problem: You have not enrolled any fingerprints, which is required to lock notes")
-                                    .setSolution("Solution: Go to Settings > Security > Fingerprint, and enroll a fingerprint")
-                                    .build();
-                            break;
-                        case Guard.OTHER_PROBLEM:
-                        default:
-                            errorDialog = new ErrorDialog.Builder()
-                                    .setSubtitle("An unknown error occured")
-                                    .setProblem("We do not know what happened. Please remember this error code: <"+exception+">. Let us know you encoutered it, and what you did with this note")
-                                    .build();
-                            break;
-                    }
-                    errorDialog.show(getChildFragmentManager(), null);
-                }, note -> {
+                }
+            } else {
+                if (doAction) {
+                    NoteConverter.makeNoteSecure(getContext(), note, exception -> {
+                        ErrorDialog errorDialog;
+                        switch (exception) {
+                            case Guard.NO_BIOMETRICS:
+                                errorDialog = new ErrorDialog.Builder()
+                                        .setSubtitle("No biometrics registered")
+                                        .setProblem("Problem: You have not enrolled any fingerprints, which is required to lock notes")
+                                        .setSolution("Solution: Go to Settings > Security > Fingerprint, and enroll a fingerprint")
+                                        .build();
+                                break;
+                            case Guard.OTHER_PROBLEM:
+                            default:
+                                errorDialog = new ErrorDialog.Builder()
+                                        .setSubtitle("An unknown error occured")
+                                        .setProblem("We do not know what happened. Please remember this error code: <" + exception + ">. Let us know you encoutered it, and what you did with this note")
+                                        .build();
+                                break;
+                        }
+                        errorDialog.show(getChildFragmentManager(), null);
+                    }, note -> {
+                        acceptListener.onAccept(note);
+                        dismiss();
+                    });
+                } else {
                     acceptListener.onAccept(note);
                     dismiss();
-                });
+                }
+            }
         });
     }
 }

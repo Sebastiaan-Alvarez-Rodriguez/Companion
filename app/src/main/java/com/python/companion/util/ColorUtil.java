@@ -16,6 +16,7 @@ public class ColorUtil {
     }
 
 
+    // https://github.com/colour-science/colour/blob/develop/colour/difference/delta_e.py
     private static double deltaECMC(double L1, double a1, double b1, double L2, double a2, double b2, double lightness, double chroma) {
         double c1 = Math.sqrt(Math.pow(a1, 2) + Math.pow(b1, 2)),
                 c2 = Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)),
