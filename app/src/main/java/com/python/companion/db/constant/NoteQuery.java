@@ -8,7 +8,7 @@ import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
-import com.python.companion.ui.note.NoteType;
+import com.python.companion.ui.notes.note.NoteType;
 
 import java.util.Collection;
 import java.util.concurrent.Executors;

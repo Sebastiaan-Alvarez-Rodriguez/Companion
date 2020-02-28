@@ -11,7 +11,7 @@ import androidx.room.Update;
 
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
-import com.python.companion.ui.note.NoteType;
+import com.python.companion.ui.notes.note.NoteType;
 
 import java.util.Collection;
 import java.util.List;

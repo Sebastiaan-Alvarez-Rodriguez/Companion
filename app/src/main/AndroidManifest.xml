@@ -22,10 +22,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.note.activity.edit.note.NoteEditActivity" />
-        <activity android:name=".ui.note.activity.view.NoteViewActivity" />
-        <activity android:name=".ui.note.activity.view.NotePreviewActivity" />
-        <activity android:name=".ui.note.activity.edit.category.CategoryEditActivity" />
+        <activity android:name=".ui.notes.note.activity.edit.NoteEditActivity" />
+        <activity android:name=".ui.notes.note.activity.view.NoteViewActivity" />
+        <activity android:name=".ui.notes.note.activity.view.NotePreviewActivity" />
+        <activity android:name=".ui.notes.category.activity.CategoryEditActivity" />
     </application>
 
 </manifest>

@@ -8,7 +8,7 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 
 import com.python.companion.R;
-import com.python.companion.ui.note.NoteType;
+import com.python.companion.ui.notes.note.NoteType;
 
 import java.time.Instant;
 
