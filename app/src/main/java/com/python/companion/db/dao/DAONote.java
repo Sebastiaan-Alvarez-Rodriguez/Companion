@@ -57,6 +57,9 @@ public abstract class DAONote {
     @Query("SELECT * FROM Note WHERE name = :name")
     public abstract Note get(String name);
 
+    @Query("SELECT * FROM Note")
+    public abstract List<Note> getAll();
+
 //    @Query("SELECT isSecure, iv FROM Note WHERE name = :name")
 //    public abstract Security getSecurity(String name);
 

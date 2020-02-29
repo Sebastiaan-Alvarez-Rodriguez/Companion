@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -26,6 +26,7 @@
         <activity android:name=".ui.notes.note.activity.view.NoteViewActivity" />
         <activity android:name=".ui.notes.note.activity.view.NotePreviewActivity" />
         <activity android:name=".ui.notes.category.activity.CategoryEditActivity" />
+        <activity android:name=".ui.notes.note.activity.settings.NoteSettingsActivity" />
     </application>
 
 </manifest>

@@ -45,4 +45,6 @@ dependencies {
     implementation 'com.mikepenz:fastadapter-extensions-utils:5.0.0-a03'
     implementation 'com.mikepenz:fastadapter-extensions-diff:5.0.0-a03'
 //    implementation 'com.mikepenz:fastadapter-extensions-selections:5.0.0-a03'
+
+    implementation 'org.msgpack:msgpack-core:0.8.2'
 }

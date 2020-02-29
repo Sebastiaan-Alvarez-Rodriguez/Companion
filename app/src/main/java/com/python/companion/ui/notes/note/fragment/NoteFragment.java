@@ -34,11 +34,12 @@ import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
-import com.python.companion.MainActivity;
+import com.python.companion.ui.MainActivity;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.Guard;
+import com.python.companion.ui.notes.note.activity.settings.NoteSettingsActivity;
 import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
@@ -267,6 +268,9 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             case R.id.fragment_note_menu_sort_date:
                 strategy = NoteSortHandler.SORT_DATE;
                 break;
+            case R.id.fragment_note_menu_settings:
+                Intent intent = new Intent(getContext(), NoteSettingsActivity.class);
+                startActivity(intent);
             default:
                 return super.onOptionsItemSelected(item);
         }

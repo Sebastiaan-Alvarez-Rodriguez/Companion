@@ -8,6 +8,7 @@ import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.entity.Category;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class CategoryQuery {
@@ -21,6 +22,12 @@ public class CategoryQuery {
         Executors.newSingleThreadExecutor().execute(() -> {
             daoCategory.insert(new Category(name, color));
             listener.onResult(null);
+        });
+    }
+
+    public void insert(Category... categories) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoCategory.insert(categories);
         });
     }
 
@@ -45,6 +52,11 @@ public class CategoryQuery {
         });
     }
 
+    public void getAll(ResultListener<List<Category>> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            listener.onResult(daoCategory.getAll());
+        });
+    }
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoCategory.get(name) == null));
     }

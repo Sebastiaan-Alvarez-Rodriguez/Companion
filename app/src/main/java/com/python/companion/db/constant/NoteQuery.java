@@ -11,6 +11,7 @@ import com.python.companion.db.entity.Note;
 import com.python.companion.ui.notes.note.NoteType;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class NoteQuery {
@@ -114,6 +115,11 @@ public class NoteQuery {
     public void get(String name, ResultListener<Note> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
     }
+
+    public void getAll(ResultListener<List<Note>> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.getAll()));
+    }
+
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name) == null));
     }

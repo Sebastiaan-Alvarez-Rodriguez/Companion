@@ -1,4 +1,4 @@
-package com.python.companion;
+package com.python.companion.ui;
 
 import android.os.Bundle;
 
@@ -11,6 +11,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
+import com.python.companion.R;
 
 public class MainActivity extends AppCompatActivity {
 
