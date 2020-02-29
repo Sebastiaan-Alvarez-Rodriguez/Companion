@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.text.Spanned;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,9 +28,7 @@ import com.python.companion.ui.notes.note.NoteType;
 import com.python.companion.ui.notes.note.dialog.LockDialog;
 import com.python.companion.ui.notes.note.dialog.NoteOverrideDialog;
 import com.python.companion.ui.templates.dialog.DialogAcceptListener;
-
-import io.noties.markwon.Markwon;
-import io.noties.markwon.ext.latex.JLatexMathPlugin;
+import com.python.companion.util.RenderUtil;
 
 /**
  * Expected from caller for new note:
@@ -88,23 +85,7 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
 
     private void setContent(@NonNull String content, @NoteType.Type int type) {
-        switch (type) {
-            case NoteType.TYPE_NORMAL: {
-                contentView.setText(curContent);
-                break;
-            }
-            case NoteType.TYPE_MARKDOWN: {
-                final Markwon markwon = Markwon.create(this);
-                final Spanned markdown = markwon.toMarkdown(content);
-                contentView.setText(markdown);
-                break;
-            }
-            case NoteType.TYPE_MARKDOWN_LATEX: {
-                final Markwon markwon = Markwon.builder(this).usePlugin(JLatexMathPlugin.create(10)).build();
-                final Spanned markdown = markwon.toMarkdown(content);
-                contentView.setText(markdown);
-            }
-        }
+        RenderUtil.render(contentView, content, type);
     }
 
     private void setupActionBar() {

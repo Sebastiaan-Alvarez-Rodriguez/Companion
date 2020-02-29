@@ -29,8 +29,7 @@
             android:id="@+id/activity_note_view_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autoLink="web"
-            tools:text="This is some sample. In reality, we would encounter normal text, markdown and latex code here" />
+            tools:text="This is some sample. In reality, we would encounter normal text, markdown and latex code here"/>
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

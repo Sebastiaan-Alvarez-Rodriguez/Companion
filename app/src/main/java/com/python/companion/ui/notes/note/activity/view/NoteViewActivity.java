@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.text.Spanned;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,9 +26,7 @@ import com.python.companion.ui.notes.note.NoteType;
 import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.notes.note.dialog.LockDialog;
 import com.python.companion.util.ColorUtil;
-
-import io.noties.markwon.Markwon;
-import io.noties.markwon.ext.latex.JLatexMathPlugin;
+import com.python.companion.util.RenderUtil;
 
 public class NoteViewActivity extends AppCompatActivity {
     private static final int REQ_EDIT = 1;
@@ -84,23 +81,7 @@ public class NoteViewActivity extends AppCompatActivity {
     }
 
     private void setContent(String content, @NoteType.Type int type) {
-        switch (type) {
-            case NoteType.TYPE_NORMAL: {
-                contentView.setText(content);
-                break;
-            }
-            case NoteType.TYPE_MARKDOWN: {
-                final Markwon markwon = Markwon.create(this);
-                final Spanned markdown = markwon.toMarkdown(content);
-                contentView.setText(markdown);
-                break;
-            }
-            case NoteType.TYPE_MARKDOWN_LATEX: {
-                final Markwon markwon = Markwon.builder(this).usePlugin(JLatexMathPlugin.create(10)).build();
-                final Spanned markdown = markwon.toMarkdown(content);
-                contentView.setText(markdown);
-            }
-        }
+        RenderUtil.render(contentView, content, type);
     }
 
     private void setupActionBar() {
@@ -154,6 +135,8 @@ public class NoteViewActivity extends AppCompatActivity {
                     noteQuery.delete(curName, v -> finish());
                     break;
                 }
+            case R.id.menu_note_view_type:
+                break;
             default: {
                 NoteQuery noteQuery = new NoteQuery(this);
                 @NoteType.Type int type;
