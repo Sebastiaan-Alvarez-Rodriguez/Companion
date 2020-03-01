@@ -76,12 +76,14 @@ public class ImportUtil {
             List<Note> notes = new ArrayList<>(total);
             int prevSecure = unpacker.unpackInt();
 
-            int complete = 0, failed = 0;
+            int secureFailed = 0;
 
             int pos = 0;
+
             if (reSecure) {
                 if (importInterface != null)
                     importInterface.onStartEncryptNotes(prevSecure);
+
                 for (; pos < prevSecure; ++pos) {
                     try {
                         Note tmp = importNote(unpacker);
@@ -91,13 +93,14 @@ public class ImportUtil {
                                 importInterface.onNoteEncryptProcessed(notes.size(), prevSecure);
                         });
                     } catch (IOException e) {
-                        ++failed;
+                        ++secureFailed;
                     }
-                    if (importInterface != null)
-                        importInterface.onNoteProcessed(complete, failed, total);
                 }
             }
+            int complete = reSecure ? prevSecure - secureFailed : 0, failed = 0;
 
+            if (importInterface != null)
+                importInterface.onStartImportNotes(complete, total);
             for (; pos < total; ++pos) {
                 try {
                     notes.add(importNote(unpacker));
@@ -111,7 +114,8 @@ public class ImportUtil {
 
             noteQuery.insert(notes.toArray(new Note[]{}));
 
-
+            if (importInterface != null)
+                importInterface.onImportComplete(complete, failed, total);
         } catch (IOException e) { // we only get here if we can somehow not unpack: Most likely can't open file
             Log.e("Import", "Cannot open file or something: ", e);
         } catch (MessageInsufficientBufferException e) {
@@ -119,11 +123,11 @@ public class ImportUtil {
         }
     }
 
-    public static void importDatabase(@NonNull Context context, @NonNull Uri location, @Nullable ImportInterface importInterface) {
+    public static void importDatabase(@NonNull Context context, @NonNull Uri location, boolean reSecure, @Nullable ImportInterface importInterface) {
         ContentResolver contentResolver = context.getContentResolver();
         try (InputStream inStream = contentResolver.openInputStream(location)){
             MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(inStream);
-            importNotes(context, unpacker, false, importInterface);
+            importNotes(context, unpacker, reSecure, importInterface);
             importCategories(context, unpacker, importInterface);
         } catch (IOException e) { //We get here if we cannot open file
 
