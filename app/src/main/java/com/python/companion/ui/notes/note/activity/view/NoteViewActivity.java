@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -152,7 +151,7 @@ public class NoteViewActivity extends AppCompatActivity {
                         break;
                 }
                 noteQuery.updateType(curName, type, v -> {});
-                item.setChecked(true);
+                item.setChecked(true); //TODO: Redundant call?
             }
         }
         return super.onOptionsItemSelected(item);
@@ -182,11 +181,9 @@ public class NoteViewActivity extends AppCompatActivity {
         if (category != curCategory) {
             int categoryColor = category.getCategoryName().length() == 0 ? getColor(R.color.colorPrimary) : category.getCategoryColor();
             double diff = ColorUtil.computeDiff(categoryColor, getColor(R.color.colorPrimary));
-            Log.e("ViewActivity", "Diff: "+diff);
-            if (Math.abs(diff) < 4.0) {
-                Log.e("ViewActivity", "Diff too low: "+diff);
+            if (Math.abs(diff) < 4.0)
                 categoryColor = getColor(R.color.colorWindowBackground);
-            }
+
             categoryItem.getIcon().setColorFilter(categoryColor, PorterDuff.Mode.SRC_IN);
             curCategory = category;
         }

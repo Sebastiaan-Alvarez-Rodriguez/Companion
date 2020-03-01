@@ -182,7 +182,7 @@ public class NotePreviewActivity extends AppCompatActivity {
             } else if (prevSecure && !curSecure) { // Note was secure, now not secure
                 LockDialog dialog = new LockDialog.Builder()
                         .setAcceptListener(note -> noteQuery.replace(prevName, note, v -> finishSuccess()))
-                        .setNote(new Note(curName, curContent, curCategory, false, null, curType))
+                        .setNote(new Note(curName, curContent, curCategory, true, null, curType))
                         .doAction(false)
                         .build();
                 dialog.show(getSupportFragmentManager(), null);
@@ -227,21 +227,27 @@ public class NotePreviewActivity extends AppCompatActivity {
                 }
                 startActivityForResult(intent, REQ_CATEGORY_EDIT);
                 break;
-            case R.id.menu_note_preview_type_normal:
-                update(curName, curContent, curCategory, curSecure, NoteType.TYPE_NORMAL);
-                break;
-            case R.id.menu_note_preview_type_markdown:
-                update(curName, curContent, curCategory, curSecure, NoteType.TYPE_MARKDOWN);
-                break;
-            case R.id.menu_note_preview_type_latex:
-                update(curName, curContent, curCategory, curSecure, NoteType.TYPE_MARKDOWN_LATEX);
-                break;
             case R.id.menu_note_preview_lock:
                 update(curName, curContent, curCategory, !curSecure, curType);
                 break;
             case R.id.menu_note_preview_save:
                 save();
                 break;
+            case R.id.menu_note_preview_type:
+                break;
+            default:
+                switch (item.getItemId()) {
+                    case R.id.menu_note_preview_type_normal:
+                        update(curName, curContent, curCategory, curSecure, NoteType.TYPE_NORMAL);
+                        break;
+                    case R.id.menu_note_preview_type_markdown:
+                        update(curName, curContent, curCategory, curSecure, NoteType.TYPE_MARKDOWN);
+                        break;
+                    case R.id.menu_note_preview_type_latex:
+                        update(curName, curContent, curCategory, curSecure, NoteType.TYPE_MARKDOWN_LATEX);
+                        break;
+                }
+                item.setChecked(true);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -260,10 +266,20 @@ public class NotePreviewActivity extends AppCompatActivity {
             prevSecure = intent.getBooleanExtra("secure", false);
             Category tmp = new Category(intent.getStringExtra("categoryName"), intent.getIntExtra("categoryColor", -1));
             update(intent.getStringExtra("name"), intent.getStringExtra("content"), tmp, intent.getBooleanExtra("secure", false), intent.getIntExtra("type", NoteType.TYPE_NORMAL));
+            switch (intent.getIntExtra("type", NoteType.TYPE_NORMAL)) {
+                case NoteType.TYPE_NORMAL:
+                    menu.findItem(R.id.menu_note_preview_type_normal).setChecked(true); break;
+                case NoteType.TYPE_MARKDOWN:
+                    menu.findItem(R.id.menu_note_preview_type_markdown).setChecked(true); break;
+                case NoteType.TYPE_MARKDOWN_LATEX:
+                    menu.findItem(R.id.menu_note_preview_type_latex).setChecked(true); break;
+            }
         } else {
             curCategory = new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary));
             update(intent.getStringExtra("name"), intent.getStringExtra("content"), curCategory, curSecure, curType);
+            menu.findItem(R.id.menu_note_preview_type_normal).setChecked(true);
         }
+        lockItem.setIcon(getDrawable(curSecure ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
         return true;
     }
 
@@ -325,7 +341,6 @@ public class NotePreviewActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQ_CATEGORY_EDIT && resultCode == RESULT_OK && data != null) {
-            Log.i("Preview", "Received intent from category edit");
             Category tmp = new Category(data.getStringExtra("categoryName"), data.getIntExtra("categoryColor", -1));
             update(curName, curContent, tmp, curSecure, curType);
         }

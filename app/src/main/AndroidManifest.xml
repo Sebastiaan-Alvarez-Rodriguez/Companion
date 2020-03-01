@@ -28,6 +28,7 @@
         <activity android:name=".ui.notes.category.activity.CategoryEditActivity" />
         <activity android:name=".ui.notes.note.activity.settings.NoteSettingsActivity" />
         <activity android:name=".ui.notes.note.activity.settings.port.ImportActivity" />
+        <activity android:name=".ui.notes.note.activity.settings.port.ExportActivity" />
     </application>
 
 </manifest>

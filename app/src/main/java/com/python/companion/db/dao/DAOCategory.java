@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import com.python.companion.db.entity.Category;
@@ -15,14 +16,14 @@ import java.util.List;
 public interface DAOCategory {
     @Insert
     void insert(Category... categories);
-    @Delete
-    void delete(Category... categories);
-
     @Query("UPDATE Category SET categoryColor = :categoryColor WHERE categoryName = :categoryName")
     void update(String categoryName, @ColorInt int categoryColor);
-
     @Query("UPDATE Category SET categoryName = :categoryName, categoryColor = :categoryColor WHERE categoryName = :prevName")
     void update(String prevName, String categoryName, @ColorInt int categoryColor);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsert(Category... categories);
+    @Delete
+    void delete(Category... categories);
 
     @Query("SELECT * FROM Category")
     List<Category> getAll();

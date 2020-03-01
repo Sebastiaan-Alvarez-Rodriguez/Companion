@@ -36,9 +36,10 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toStartOf="@+id/activity_port_bar1_state"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
             android:id="@+id/activity_port_bar1_state"
@@ -67,6 +68,7 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toStartOf="@+id/activity_port_bar2_state"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -113,6 +115,7 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toStartOf="@+id/activity_port_bar3_state"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -127,6 +130,17 @@
             tools:text="10/12" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+    <CheckBox
+        android:id="@+id/activity_port_check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        tools:text="Skip encrypted files"
+        app:layout_constraintBottom_toTopOf="@+id/activity_port_start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <Button
         android:id="@+id/activity_port_start"
         android:layout_width="wrap_content"
@@ -135,16 +149,7 @@
         android:text="Start"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <CheckBox
-        android:id="@+id/activity_port_check"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
-        android:text="Skip encrypted files"
-        app:layout_constraintBottom_toTopOf="@+id/activity_port_start"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
+        app:layout_constraintStart_toStartOf="parent"
+        android:background="@color/colorWindowBackground"
+        android:textColor="@color/colorPrimary"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.python.companion.ui.notes.note.activity.settings.port;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -19,11 +20,13 @@ public abstract class PortActivity extends AppCompatActivity {
     protected CheckBox check;
     protected Button start;
 
+    protected Uri location;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_port);
         findGlobalViews();
+        location = getIntent().getParcelableExtra("uri");
     }
 
     protected void findGlobalViews() {
@@ -35,9 +38,9 @@ public abstract class PortActivity extends AppCompatActivity {
         bar2 = barView2.findViewById(R.id.activity_port_bar2);
         bar3 = barView3.findViewById(R.id.activity_port_bar3);
 
-        barState1 = barState1.findViewById(R.id.activity_port_bar1_state);
-        barState2 = barState2.findViewById(R.id.activity_port_bar2_state);
-        barState3 = barState3.findViewById(R.id.activity_port_bar3_state);
+        barState1 = barView1.findViewById(R.id.activity_port_bar1_state);
+        barState2 = barView2.findViewById(R.id.activity_port_bar2_state);
+        barState3 = barView3.findViewById(R.id.activity_port_bar3_state);
 
         infoView = findViewById(R.id.activity_port_info);
         warningView = findViewById(R.id.activity_port_warning);

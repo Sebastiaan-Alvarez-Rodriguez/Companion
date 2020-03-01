@@ -27,8 +27,6 @@ public class NoteConverter {
             note.setContent(encrypted);
             note.setIv(iv);
             note.setSecure(true);
-//            NoteQuery noteQuery = new NoteQuery(context);
-//            noteQuery.update(note);//TODO: Make upsert, to allow for new notes to be made secure... Or better yet, make it not insert anything
             successCallback.onSuccess(note);
         });
     }
@@ -37,13 +35,12 @@ public class NoteConverter {
         makeNoteInsecure(context, note, null, successCallback);
     }
 
+    //TODO: make use of exceptionCallback
     public static void makeNoteInsecure(@NonNull Context context, @NonNull Note note, @Nullable ExceptionCallback exceptionCallback, @NonNull SuccessCallback successCallback) {
         Guard.decryptKeystore(note.getContent(), note.getIv(), note.getName(), context, plaintext -> {
             note.setContent(plaintext);
             note.setIv(null);
             note.setSecure(false);
-//            NoteQuery noteQuery = new NoteQuery(context);
-//            noteQuery.update(note);
             successCallback.onSuccess(note);
         });
     }

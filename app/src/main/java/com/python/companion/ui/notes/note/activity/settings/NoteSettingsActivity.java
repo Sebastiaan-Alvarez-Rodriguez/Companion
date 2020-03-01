@@ -5,6 +5,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -14,8 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.python.companion.R;
-import com.python.companion.util.export.ExportUtil;
-import com.python.companion.util.jnport.ImportUtil;
+import com.python.companion.ui.notes.note.activity.settings.port.ExportActivity;
+import com.python.companion.ui.notes.note.activity.settings.port.ImportActivity;
 
 public class NoteSettingsActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_EXPORT = 1;
@@ -39,9 +40,13 @@ public class NoteSettingsActivity extends AppCompatActivity {
 
     private void setupClicks() {
         importView.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            Intent finalIntent = Intent.createChooser(intent, "Select file to import from");
+            startActivityForResult(finalIntent, REQUEST_CODE_IMPORT);
         });
         exportView.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             Intent finalIntent = Intent.createChooser(intent, "Select location to export to");
             startActivityForResult(finalIntent, REQUEST_CODE_EXPORT);
@@ -68,11 +73,15 @@ public class NoteSettingsActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_EXPORT && resultCode == RESULT_OK && data != null) {
             Uri userChosenUri = data.getData();
             assert userChosenUri != null;
-            ExportUtil.exportDatabase(this, userChosenUri, null);
+            Intent intent = new Intent(this, ExportActivity.class);
+            intent.putExtra("uri", userChosenUri);
+            startActivity(intent);
         } else if (requestCode == REQUEST_CODE_IMPORT && resultCode == RESULT_OK && data != null) {
             Uri userChosenUri = data.getData();
             assert userChosenUri != null;
-            ImportUtil.importDatabase(this, userChosenUri, null);
+            Intent intent = new Intent(this, ImportActivity.class);
+            intent.putExtra("uri", userChosenUri);
+            startActivity(intent);
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

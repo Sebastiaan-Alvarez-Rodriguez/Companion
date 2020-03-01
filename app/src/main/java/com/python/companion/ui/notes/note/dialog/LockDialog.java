@@ -132,6 +132,7 @@ public class LockDialog extends DialogFragment {
                         dismiss();
                     });
                 } else {
+                    note.setSecure(false);
                     acceptListener.onAccept(note);
                     dismiss();
                 }
@@ -161,6 +162,7 @@ public class LockDialog extends DialogFragment {
                         dismiss();
                     });
                 } else {
+                    note.setSecure(true);
                     acceptListener.onAccept(note);
                     dismiss();
                 }

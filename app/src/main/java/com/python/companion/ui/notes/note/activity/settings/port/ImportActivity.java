@@ -1,6 +1,5 @@
 package com.python.companion.ui.notes.note.activity.settings.port;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 
@@ -24,58 +23,69 @@ public class ImportActivity extends PortActivity implements ImportInterface {
             check.setEnabled(false);
             start.setEnabled(false);
             reSecure = check.isChecked();
-            Uri location = getIntent().getData();
-            assert location != null;
             ImportUtil.importDatabase(this, location, reSecure, this);
         });
 
-        check.setOnCheckedChangeListener((buttonView, isChecked) -> barView1.setVisibility(isChecked ? View.VISIBLE : View.INVISIBLE));
+        check.setOnCheckedChangeListener((buttonView, isChecked) -> barView2.setVisibility(isChecked ? View.VISIBLE : View.INVISIBLE));
     }
 
     @Override
-    public void onStartEncryptNotes(int amount) {
-        infoView.setText("We now re-secure previously secured notes. Please provide your fingerprint for each of the "+amount+ "items. (This is inconvenient, but we use a different cryptographic key for every note for high security, and every key needs authentication)");
-        barState1.setText("0/"+amount);
-        bar1.setMax(amount);
-    }
-
-    @Override
-    public void onNoteEncryptProcessed(int complete, int amount) {
-        barState1.setText(complete+"/"+amount);
-        if (complete == amount)
-            infoView.setText("");
-        bar1.setProgress(complete, true);
-    }
-
-    @Override
-    public void onStartImportNotes(int complete, int amount) {
-        infoView.setText(reSecure ? "Processing remaining notes..." : "Processing notes...");
-        barState2.setText(complete+"/"+amount);
-        bar2.setMin(complete);
-        bar2.setMax(amount);
+    public void onStartImportNotes(int amount) {
+        runOnUiThread(() -> {
+            infoView.setText("Processing notes...");
+            barState1.setText("0/" + amount);
+            bar1.setMax(amount);
+        });
     }
 
     @Override
     public void onNoteProcessed(int complete, int failed, int amount) {
-        barState2.setText(complete+"/"+amount);
-        bar2.setProgress(complete, true);
+        runOnUiThread(() -> {
+            barState1.setText(complete + "/" + amount);
+            bar1.setProgress(complete, true);
+        });
+    }
+
+    @Override
+    public void onStartEncryptNotes(int amount) {
+        runOnUiThread(() -> {
+            infoView.setText("We now re-secure previously secured notes. Please provide your fingerprint for each of the " + amount + "items. (This is inconvenient, but we use a different cryptographic key for every note for high security, and every key needs authentication)");
+            barState2.setText("0/" + amount);
+            bar2.setMax(amount);
+        });
+    }
+
+    @Override
+    public void onNoteEncryptProcessed(int complete, int amount) {
+        runOnUiThread(() -> {
+            barState2.setText(complete + "/" + amount);
+            if (complete == amount)
+                infoView.setText("");
+            bar2.setProgress(complete, true);
+        });
     }
 
     @Override
     public void onStartImportCategories(int amount) {
-        infoView.setText("Processing categories...");
-        barState3.setText("0/"+amount);
-        bar3.setMax(amount);
+        runOnUiThread(() -> {
+            infoView.setText("Processing categories...");
+            barState3.setText("0/" + amount);
+            bar3.setMax(amount);
+        });
     }
 
     @Override
     public void onCategoryProcessed(int complete, int failed, int amount) {
-        barState3.setText(complete+"/"+amount);
-        bar3.setProgress(complete, true);
+        runOnUiThread(() -> {
+            barState3.setText(complete + "/" + amount);
+            bar3.setProgress(complete, true);
+        });
     }
 
     @Override
-    public void onImportComplete(int complete, int failed, int amount) {
-        finish();
+    public void onImportComplete() {
+        runOnUiThread(() -> {
+//        finish();
+        });
     }
 }
