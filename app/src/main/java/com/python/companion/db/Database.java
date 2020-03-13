@@ -10,11 +10,13 @@ import androidx.room.TypeConverters;
 import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
+import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
 import com.python.companion.db.typeconverters.DateConverter;
+import com.python.companion.db.typeconverters.DurationConverter;
 
-@androidx.room.Database(entities = {Note.class, Category.class}, version = 1, exportSchema = false)
-@TypeConverters({DateConverter.class})
+@androidx.room.Database(entities = {Note.class, Category.class, Measurement.class}, version = 1, exportSchema = false)
+@TypeConverters({DateConverter.class, DurationConverter.class})
 public abstract class Database extends RoomDatabase {
 
     private static volatile Database INSTANCE;
