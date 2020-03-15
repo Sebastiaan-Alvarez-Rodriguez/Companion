@@ -8,6 +8,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.python.companion.db.dao.DAOCategory;
+import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Measurement;
@@ -24,6 +25,7 @@ public abstract class Database extends RoomDatabase {
 
     public abstract DAONote getDAONote();
     public abstract DAOCategory getDAOCategory();
+    public abstract DAOMeasurement getDAOMeasurement();
 
     /**
      * Singleton instance getter

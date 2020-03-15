@@ -3,15 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_fragment_note_action_update_category"
-        android:icon="@drawable/ic_menu_category"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
-        android:title="Update Category"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/menu_fragment_note_action_delete"
+        android:id="@+id/menu_fragment_cactus_action_delete"
         android:icon="@drawable/ic_menu_delete"
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"

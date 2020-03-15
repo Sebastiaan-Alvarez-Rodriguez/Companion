@@ -131,7 +131,6 @@ public class CategoryUpdateDialog extends DialogFragment {
                 nameEditText.setError("Please fill in a category name");
             } else {
                 if (prevName.equals(name)) { //Unchanged name. Can safely update color
-                    Log.i("Context", "Change complete. No conflict");
                     CategoryQuery categoryQuery = new CategoryQuery(getContext());
                     categoryQuery.update(prevName, color, x -> {});
                     NoteQuery noteQuery = new NoteQuery(getContext());
@@ -150,7 +149,6 @@ public class CategoryUpdateDialog extends DialogFragment {
                                 acceptListener.onAccept(new Category(name, color));
                             dismiss();
                         } else { // Name changed & conflict
-//                            getActivity().runOnUiThread(() -> { //First: passed calling activity here
                             CategoryMergeDialog categoryMergeDialog = new CategoryMergeDialog.Builder()
                                     .setFinishListener(() -> {
                                         if (acceptListener != null)
@@ -161,7 +159,6 @@ public class CategoryUpdateDialog extends DialogFragment {
                                     .setNewCategory(other)
                                     .build();
                             categoryMergeDialog.show(getChildFragmentManager(), null);
-//                            });
                         }
                     });
                 }

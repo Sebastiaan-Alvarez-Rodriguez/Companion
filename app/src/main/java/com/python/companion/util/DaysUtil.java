@@ -11,7 +11,7 @@ import java.time.temporal.TemporalUnit;
 
 public class DaysUtil {
     public static <T extends TemporalUnit> long timeTogether(T unit, Context context) throws DateTimeException {
-        SharedPreferences preferences = context.getSharedPreferences(context.getString(R.string.date_preferences), Context.MODE_PRIVATE);
+        SharedPreferences preferences = context.getSharedPreferences(context.getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
         if (!preferences.contains("date_together"))
             throw new DateTimeException("User did not set date!");
         String together = preferences.getString("date_together", "");

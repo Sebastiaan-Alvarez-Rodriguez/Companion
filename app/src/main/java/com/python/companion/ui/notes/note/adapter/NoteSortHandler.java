@@ -16,21 +16,22 @@ import java.util.Comparator;
 
 @SuppressWarnings("WeakerAccess")
 public class NoteSortHandler {
-    public static final int SORT_DATE = 1;
-    public static final int SORT_ALPHA = 2;
-    public static final int SORT_CATEGORY = 3;
-    public static final int SORT_LOCK = 4;
+    public static final int SORT_DATE = 0;
+    public static final int SORT_ALPHA = 1;
+    public static final int SORT_CATEGORY = 2;
+    public static final int SORT_LOCK = 3;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({SORT_ALPHA, SORT_DATE, SORT_CATEGORY, SORT_LOCK})
-    public @interface SortingStrategy {
+    public @interface NoteSortStrategy {
     }
 
     protected @NonNull MutableLiveData<Integer> strategy;
     protected ComparableItemListImpl<NoteItem> itemList;
 
     public static class Builder {
-        protected @SortingStrategy int strategy;
+        protected @NoteSortStrategy
+        int strategy;
         protected @Nullable ComparableItemListImpl<NoteItem> itemList;
 
         public Builder() {
@@ -55,7 +56,7 @@ public class NoteSortHandler {
     }
 
 
-    protected NoteSortHandler(@SortingStrategy int strategy, ComparableItemListImpl<NoteItem> itemList) {
+    protected NoteSortHandler(@NoteSortStrategy int strategy, ComparableItemListImpl<NoteItem> itemList) {
         Log.e("NotesortHandler", "Created with strategy: "+strategy);
         this.strategy = new MutableLiveData<>(strategy);
         this.itemList = itemList;
@@ -64,7 +65,7 @@ public class NoteSortHandler {
 
 
 
-    public void setSortStrategy(@SortingStrategy int strategy) {
+    public void setSortStrategy(@NoteSortStrategy int strategy) {
         Log.e("NotesortHandler", "Someone set strategy to: "+strategy);
         if (this.strategy.getValue() != strategy) {
             this.strategy.setValue(strategy);
@@ -123,7 +124,7 @@ public class NoteSortHandler {
     protected static class NoteLockComperator implements Comparator<NoteItem> {
         @Override
         public int compare(NoteItem o1, NoteItem o2) {
-            return Boolean.compare(o1.getNote().isSecure(), o2.getNote().isSecure());
+            return (o1.getNote().isSecure() == o2.getNote().isSecure()) ? 0 : (o1.getNote().isSecure() ? -1 : 1);
         }
     }
 }

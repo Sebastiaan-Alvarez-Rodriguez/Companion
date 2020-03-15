@@ -254,7 +254,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        @NoteSortHandler.SortingStrategy int strategy;
+        @NoteSortHandler.NoteSortStrategy int strategy;
         switch (item.getItemId()) {
             case R.id.fragment_note_menu_sort_alpha:
                 strategy = NoteSortHandler.SORT_ALPHA;
@@ -294,14 +294,14 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     @Override
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_context_note_delete:
+            case R.id.menu_fragment_note_action_delete:
                 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
                 final NoteQuery noteQuery = new NoteQuery(getContext());
                 noteQuery.delete(selectionExtension.getSelectedItems().stream().map(NoteItem::getNote).collect(Collectors.toList()), x -> {
                 });
                 mode.finish();
                 break;
-            case R.id.menu_context_note_update_category:
+            case R.id.menu_fragment_note_action_update_category:
                 CategorySetDialog categorySetDialog = new CategorySetDialog.Builder()
                         .setSelectedNotes(selectionExtension.getSelectedItems())
                         .setFinishListener(mode::finish).build();

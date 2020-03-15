@@ -8,23 +8,33 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 
-@Entity(primaryKeys = {"name"})
+@Entity(primaryKeys = {"namePlural"})
 public class Measurement implements TemporalUnit {
-    private @NonNull String name;
+    private @NonNull String nameSingular, namePlural;
     private Duration duration;
 
-    public Measurement(@NonNull String name, @NonNull Duration duration) {
-        this.name = name;
+    public Measurement(@NonNull String nameSingular , @NonNull String namePlural, @NonNull Duration duration) {
+        this.nameSingular = nameSingular;
+        this.namePlural = namePlural;
         this.duration = duration;
     }
 
     @NonNull
-    public String getName() {
-        return name;
+    public String getNameSingular() {
+        return nameSingular;
     }
 
-    public void setName(@NonNull String name) {
-        this.name = name;
+    public void setNameSingular(@NonNull String nameSingular) {
+        this.nameSingular = nameSingular;
+    }
+
+    @NonNull
+    public String getNamePlural() {
+        return namePlural;
+    }
+
+    public void setNamePlural(@NonNull String namePlural) {
+        this.namePlural = namePlural;
     }
 
     @Override
@@ -64,5 +74,11 @@ public class Measurement implements TemporalUnit {
 
     public int compareTo(TemporalUnit other) {
         return this.duration.compareTo(other.getDuration());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return namePlural;
     }
 }

@@ -2,11 +2,12 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/item_measurement_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/item_date_amount"
+        android:id="@+id/item_measurement_amount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="12345"
@@ -15,7 +16,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/item_date_measurement"
+        android:id="@+id/item_measurement_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Days"

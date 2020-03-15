@@ -57,7 +57,7 @@ public class NoteItem extends AbstractItem<ViewHolder> {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public class NoteViewHolder extends ViewHolder<NoteItem> {
+    public static class NoteViewHolder extends ViewHolder<NoteItem> {
         private TextView nameView, dateView, categoryView;
 
         private ImageView lockedView;

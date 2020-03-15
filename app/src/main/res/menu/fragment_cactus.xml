@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/fragment_cactus_menu_search"
+        android:title="Search"
+        android:icon="@drawable/ic_menu_search"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+    <item
+        android:id="@+id/fragment_cactus_menu_sort"
+        android:title="Sort"
+        android:icon="@drawable/ic_menu_sort"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        app:showAsAction="always">
+        <menu>
+            <group android:checkableBehavior="single" >
+                <item
+                    android:id="@+id/fragment_cactus_menu_sort_alpha"
+                    android:title="Alpha" />
+                <item
+                    android:id="@+id/fragment_cactus_menu_sort_duration"
+                    android:title="Date" />
+                <item
+                    android:id="@+id/fragment_cactus_menu_sort_category"
+                    android:title="Category" />
+                <item
+                    android:id="@+id/fragment_cactus_menu_sort_lock"
+                    android:title="Lock state" />
+            </group>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/fragment_cactus_menu_settings"
+        android:title="cactus settings"
+        app:showAsAction="never"/>
+</menu>

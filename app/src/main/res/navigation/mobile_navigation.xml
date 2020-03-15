@@ -13,7 +13,7 @@
 
     <fragment
         android:id="@+id/nav_cactus"
-        android:name="com.python.companion.ui.cactus.CactusFragment"
+        android:name="com.python.companion.ui.cactus.fragment.CactusFragment"
         android:label="@string/menu_cactus"
         tools:layout="@layout/fragment_cactus" />
 
