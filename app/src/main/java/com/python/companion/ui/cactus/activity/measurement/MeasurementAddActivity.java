@@ -62,6 +62,7 @@ public class MeasurementAddActivity extends AppCompatActivity {
 
     private void setupList() {
         ItemAdapter<MeasurementItem> itemAdapter = new ItemAdapter<>();
+
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
         list.setAdapter(fastAdapter);

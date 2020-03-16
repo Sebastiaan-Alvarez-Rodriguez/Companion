@@ -1,13 +1,18 @@
-package com.python.companion.ui.cactus.requestor.resolver;
+package com.python.companion.util.measurement;
 
 import androidx.annotation.NonNull;
+
+import com.python.companion.db.entity.Measurement;
+import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
-public class DistanceResolver {
+public class MeasurementUtil {
     /**
      * @return amount of integer units passed since date together
      */
@@ -101,5 +106,22 @@ public class DistanceResolver {
     }
     public static LocalDate intertwineIntervalFuture(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull Collection<TemporalUnit> others) {
         return intertwineIntervalFuture(unit, together, others, 1);
+    }
+
+    /**
+     * @param selectable Sets whether the default items are selectable (should probably be <code>false</code> if user gets 'delete selected' option
+     * @return An <code>ItemAdapter</code> containing default measurements: Days, Months, Years, as defined by {@link ChronoUnit}
+     */
+    public static List<MeasurementItem> getDefaultMeasurements(boolean selectable) {
+        ChronoUnit[] regulars = {ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
+        String[] singulars = {"Day", "Month", "Year"};
+        ArrayList<MeasurementItem> list = new ArrayList<>(3);
+        for (int x = 0; x < regulars.length; ++x) {
+            MeasurementItem m = new MeasurementItem();
+            m.setSelectable(selectable);
+            m.setMeasurement(new Measurement(singulars[x], regulars[x].toString(), regulars[x].getDuration()));
+            list.add(m);
+        }
+        return list;
     }
 }

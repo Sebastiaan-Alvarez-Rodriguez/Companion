@@ -5,8 +5,8 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.python.companion.util.export.ExportInterface;
-import com.python.companion.util.export.ExportUtil;
+import com.python.companion.util.migration.export.ExportInterface;
+import com.python.companion.util.migration.export.ExportUtil;
 
 public class ExportActivity extends PortActivity implements ExportInterface {
     private boolean skipSecure;

@@ -1,4 +1,4 @@
-package com.python.companion.util.export;
+package com.python.companion.util.migration.export;
 
 public interface ExportInterface {
     void onStartDecryptNotes(int amount);

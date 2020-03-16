@@ -6,11 +6,10 @@ import android.text.util.Linkify;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.python.companion.ui.notes.note.NoteType;
-import com.python.companion.util.threadpool.ProbableThreadPoolExecutor;
-import com.python.companion.util.threadpool.ThreadExceptionListener;
+
+import java.util.concurrent.Executors;
 
 import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.Markwon;
@@ -31,35 +30,24 @@ public class RenderUtil {
                 });
     }
 
-    private static Markwon.Builder getStandardLatexMDRenderer(Context context, float textSize, @Nullable ThreadExceptionListener exceptionListener) {
+    private static Markwon.Builder getStandardLatexMDRenderer(Context context, float textSize) {
         return getStandardMDRenderer(context)
                 .usePlugin(JLatexMathPlugin.create(textSize, builder -> builder
                         .align(JLatexMathDrawable.ALIGN_CENTER)
                         .fitCanvas(true)
-//                                .padding(4)
-                        // @since 4.0.0 - change to provider
                         .backgroundProvider(() -> new ColorDrawable(0))
-                // @since 4.0.0 - optional, by default cached-thread-pool will be used
-                //TODO: Catch wrong latex throws:
-                // org.scilab.forge.jlatexmath.ParseException: Problem with command \ at position 0:31
-                //    Unknown symbol or command or predefined TeXFormula: 'ket'
-                // Thrown inside cachedThreadPool
-                .executorService(new ProbableThreadPoolExecutor(exceptionListener))));
+                .executorService(Executors.newCachedThreadPool())));
     }
 
     private static Markwon getMDRenderer(Context context) {
         return getStandardMDRenderer(context).build();
     }
 
-    private static Markwon getLatexMDRenderer(Context context, float textSize, @Nullable ThreadExceptionListener exceptionListener) {
-        return getStandardLatexMDRenderer(context, textSize, exceptionListener).build();
+    private static Markwon getLatexMDRenderer(Context context, float textSize) {
+        return getStandardLatexMDRenderer(context, textSize).build();
     }
 
     public static void render(@NonNull TextView view, @NonNull String text, @NoteType.Type int type) {
-        render(view, text, type, null);
-    }
-
-    public static void render(@NonNull TextView view, @NonNull String text, @NoteType.Type int type, @Nullable ThreadExceptionListener exceptionListener) {
         if (type == NoteType.TYPE_NORMAL) {
             view.setText(text);
             return;
@@ -71,7 +59,7 @@ public class RenderUtil {
                 renderer = getMDRenderer(view.getContext());
                 break;
             default: case NoteType.TYPE_MARKDOWN_LATEX:
-                renderer = getLatexMDRenderer(view.getContext(), 50, exceptionListener);
+                renderer = getLatexMDRenderer(view.getContext(), 50);
         }
         renderer.setMarkdown(view, text);
     }

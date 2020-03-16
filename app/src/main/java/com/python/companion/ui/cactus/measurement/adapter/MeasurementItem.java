@@ -59,7 +59,7 @@ public class MeasurementItem extends AbstractItem<ViewHolder> {
         @Override
         public void bindView(@NotNull MeasurementItem item, @NotNull List<Object> list) {
 
-            nameView.setText(item.getMeasurement().getNameSingular());
+            nameView.setText(item.getMeasurement().getNamePlural());
         }
 
         @Override

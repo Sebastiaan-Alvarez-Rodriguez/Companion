@@ -5,8 +5,8 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.python.companion.util.jnport.ImportInterface;
-import com.python.companion.util.jnport.ImportUtil;
+import com.python.companion.util.migration.jnport.ImportInterface;
+import com.python.companion.util.migration.jnport.ImportUtil;
 
 public class ImportActivity extends PortActivity implements ImportInterface {
     private boolean reSecure;

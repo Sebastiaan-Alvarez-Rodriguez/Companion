@@ -1,4 +1,4 @@
-package com.python.companion.util.jnport;
+package com.python.companion.util.migration.jnport;
 
 public interface ImportInterface {
     void onStartImportNotes(int amount);

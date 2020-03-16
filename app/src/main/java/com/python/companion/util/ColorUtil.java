@@ -4,8 +4,6 @@ import androidx.annotation.ColorInt;
 import androidx.core.graphics.ColorUtils;
 
 public class ColorUtil {
-    //TODO: create own color distance function based on: https://en.wikipedia.org/wiki/Color_difference
-    // OR: create line around icon?
 
     /**
      * Call when wanting to use {@link #deltaECMC(double, double, double, double, double, double, double, double)} with
@@ -22,9 +20,9 @@ public class ColorUtil {
                 c2 = Math.sqrt(Math.pow(a2, 2) + Math.pow(b2, 2)),
                 s1 = L1 < 16 ? 0.511 : (0.040975 * L1) / (1 + 0.01765 * L1),
                 sc = 0.0638 * c1 / (1 + 0.0131 * c1) + 0.638,
-                h1 = Math.toDegrees(Math.atan2(b1, a1) % 360), //Mogelijk b1 en a1 omdraaien
+                h1 = Math.toDegrees(Math.atan2(b1, a1) % 360),
                 t = (h1 >= 164 && h1 <= 345) ? 0.56 + Math.abs(0.2 * Math.cos(Math.toRadians(h1+168))) : 0.36 + Math.abs(0.4 * Math.cos(Math.toRadians(h1+35))),
-                c4 = Math.pow(c1, 4), //c1 * c1 * c1 * c1,
+                c4 = Math.pow(c1, 4),
                 f = Math.sqrt(c4 / (c4 + 1900)),
                 sh = sc * (f * t + 1 - f),
                 deltaL = L1 - L2,

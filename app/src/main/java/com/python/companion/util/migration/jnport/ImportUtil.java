@@ -1,4 +1,4 @@
-package com.python.companion.util.jnport;
+package com.python.companion.util.migration.jnport;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 
-import static com.python.companion.util.export.ExportUtil.header;
+import static com.python.companion.util.migration.export.ExportUtil.header;
 
 public class ImportUtil {
     private static Category importCategory(@NonNull MessageUnpacker unpacker) throws IOException {

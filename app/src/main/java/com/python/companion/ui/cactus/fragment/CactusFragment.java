@@ -42,6 +42,7 @@ import com.python.companion.ui.MainActivity;
 import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
 import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
 import com.python.companion.ui.cactus.measurement.adapter.MeasurementSortHandler;
+import com.python.companion.util.measurement.MeasurementUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -93,14 +94,15 @@ public class CactusFragment extends Fragment implements ActionMode.Callback {
 
     private void prepareList(View view) {
         ComparableItemListImpl<MeasurementItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
-
         itemAdapter = new ItemAdapter<>(itemList);
+        fastAdapter = FastAdapter.with(itemAdapter);
+
         sortHandler = new MeasurementSortHandler.Builder()
                 .setStrategy(getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", MeasurementSortHandler.SORT_DURATION))
                 .setItemList(itemList)
                 .build();
-        fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
+        //        MeasurementUtil.setDefaultMeasurements(headerAdapter);
         list.setAdapter(fastAdapter);
         list.setLayoutManager(new LinearLayoutManager(view.getContext()));
         list.addItemDecoration(new DividerItemDecoration(view.getContext(), LinearLayoutManager.VERTICAL));
@@ -142,12 +144,16 @@ public class CactusFragment extends Fragment implements ActionMode.Callback {
 
     private void setListUpdates() {
         viewModel.getMeasurements().observe(getViewLifecycleOwner(), Measurements -> {
+            List<MeasurementItem> defaultList = MeasurementUtil.getDefaultMeasurements(false);
+
             List<MeasurementItem> newlist = Measurements.stream().map(Measurement -> {
                 MeasurementItem item = new MeasurementItem();
                 item.setMeasurement(Measurement);
                 return item;
             }).collect(Collectors.toList());
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<MeasurementItem>() {
+
+            defaultList.addAll(newlist);
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, defaultList, new DiffCallback<MeasurementItem>() {
                 @Override
                 public boolean areItemsTheSame(MeasurementItem oldItem, MeasurementItem newItem) {
                     return oldItem.getMeasurement().getNameSingular().equals(newItem.getMeasurement().getNameSingular());
@@ -168,7 +174,6 @@ public class CactusFragment extends Fragment implements ActionMode.Callback {
                         return newMeasurement.getDuration();
                 }
             });
-
         });
     }
 
