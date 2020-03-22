@@ -24,13 +24,7 @@
                     android:title="Alpha" />
                 <item
                     android:id="@+id/fragment_cactus_menu_sort_duration"
-                    android:title="Date" />
-                <item
-                    android:id="@+id/fragment_cactus_menu_sort_category"
-                    android:title="Category" />
-                <item
-                    android:id="@+id/fragment_cactus_menu_sort_lock"
-                    android:title="Lock state" />
+                    android:title="Duration" />
             </group>
         </menu>
     </item>

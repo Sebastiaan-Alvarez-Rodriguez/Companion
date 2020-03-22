@@ -39,7 +39,7 @@ import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.Guard;
-import com.python.companion.ui.notes.note.activity.settings.NoteSettingsActivity;
+import com.python.companion.ui.general.settings.SettingsActivity;
 import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
@@ -269,7 +269,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 strategy = NoteSortHandler.SORT_DATE;
                 break;
             case R.id.fragment_note_menu_settings:
-                Intent intent = new Intent(getContext(), NoteSettingsActivity.class);
+                Intent intent = new Intent(getContext(), SettingsActivity.class);
                 startActivity(intent);
             default:
                 return super.onOptionsItemSelected(item);

@@ -1,4 +1,4 @@
-package com.python.companion.util;
+package com.python.companion.ui.general.recyclerview;
 
 import android.content.Context;
 import android.util.AttributeSet;

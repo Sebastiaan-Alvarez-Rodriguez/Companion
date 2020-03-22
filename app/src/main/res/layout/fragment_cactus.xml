@@ -4,30 +4,106 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fragment_cactus_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/background_desert">
 
-    <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/fragment_cactus_quote"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/colorWindowBackground"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_cactus_cactus"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.84000003"
-        app:srcCompat="@drawable/ic_cactus_outline_3" />
+        app:layout_constraintVertical_bias="0.0"
+        tools:text="This is some long sentence to test whether everything aligns nicely or not, and to check maximal string length" />
+
 
     <TextView
-        android:id="@+id/textView"
-        android:layout_width="0dp"
+        android:id="@+id/fragment_cactus_years"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="16dp"
-        android:text="I am in development. Please stand by while I grow!"
-        android:textAlignment="center"
+        android:text="22"
+        android:textColor="@color/colorWindowBackground"
         android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_text0"
+        app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_text0"
+        app:layout_constraintHorizontal_bias="0.22"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_text0" />
+
+    <TextView
+        android:id="@+id/fragment_cactus_text0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="8dp"
+        android:text="years"
+        android:textColor="@color/colorWindowBackground"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_cactus"
+        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_cactus" />
+
+    <TextView
+        android:id="@+id/fragment_cactus_months"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWindowBackground"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_text1"
+        app:layout_constraintEnd_toEndOf="@+id/fragment_cactus_years"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/fragment_cactus_years"
+        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_text1"
+        tools:text="11" />
+
+    <TextView
+        android:id="@+id/fragment_cactus_text1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="months"
+        android:textColor="@color/colorWindowBackground"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_cactus"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_cactus_text0" />
+
+    <TextView
+        android:id="@+id/fragment_cactus_days"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorWindowBackground"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_text2"
+        app:layout_constraintEnd_toEndOf="@+id/fragment_cactus_years"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/fragment_cactus_years"
+        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_text2"
+        tools:text="31" />
+
+    <TextView
+        android:id="@+id/fragment_cactus_text2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="days"
+        android:textColor="@color/colorWindowBackground"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_cactus"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_cactus_text1" />
+
+    <ImageView
+        android:id="@+id/fragment_cactus_cactus"
+        android:layout_width="256dp"
+        android:layout_height="442dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_cactus_companion" />
 </androidx.constraintlayout.widget.ConstraintLayout>

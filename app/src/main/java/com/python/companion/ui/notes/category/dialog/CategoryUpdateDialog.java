@@ -1,7 +1,6 @@
 package com.python.companion.ui.notes.category.dialog;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +20,8 @@ import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
-import com.python.companion.ui.templates.dialog.DialogAcceptValueListener;
-import com.python.companion.ui.templates.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
+import com.python.companion.ui.general.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
 public class CategoryUpdateDialog extends DialogFragment {

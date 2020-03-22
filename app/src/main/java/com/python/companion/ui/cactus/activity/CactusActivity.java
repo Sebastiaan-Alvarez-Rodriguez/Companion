@@ -17,8 +17,8 @@ import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
 import com.python.companion.ui.cactus.fragment.CactusViewModel;
-import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
-import com.python.companion.ui.cactus.measurement.adapter.MeasurementSortHandler;
+import com.python.companion.ui.cactus.measurement.adapter.CactusItem;
+import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
 
 public class CactusActivity extends AppCompatActivity {
     private RecyclerView list;
@@ -26,10 +26,10 @@ public class CactusActivity extends AppCompatActivity {
     private FloatingActionButton fab;
     private BottomAppBar bar;
 
-    private ItemAdapter<MeasurementItem> itemAdapter;
-    private FastAdapter<MeasurementItem> fastAdapter;
+    private ItemAdapter<CactusItem> itemAdapter;
+    private FastAdapter<CactusItem> fastAdapter;
 
-    private MeasurementSortHandler sortHandler;
+    private CactusSortHandler sortHandler;
 
     private CactusViewModel viewModel;
 

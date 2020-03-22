@@ -1,11 +1,10 @@
-package com.python.companion.ui.notes.note.activity.settings;
+package com.python.companion.ui.general.settings;
 
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -14,28 +13,34 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
-import com.python.companion.ui.notes.note.activity.settings.port.ExportActivity;
-import com.python.companion.ui.notes.note.activity.settings.port.ImportActivity;
+import com.python.companion.ui.cactus.dialog.TogetherDialog;
+import com.python.companion.ui.general.settings.port.ExportActivity;
+import com.python.companion.ui.general.settings.port.ImportActivity;
 
-public class NoteSettingsActivity extends AppCompatActivity {
+import java.time.LocalDate;
+
+public class SettingsActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_EXPORT = 1;
     private static final int REQUEST_CODE_IMPORT = 2;
 
-    private View importView, exportView;
+    private View settingsView, importView, exportView, dateView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_note_settings);
+        setContentView(R.layout.activity_settings);
         findGlobalViews();
         setupClicks();
         setupActionBar();
     }
 
     private void findGlobalViews() {
-        importView = findViewById(R.id.activity_note_settings_import);
-        exportView = findViewById(R.id.activity_note_settings_export);
+        settingsView = findViewById(R.id.activity_settings_layout);
+        importView = findViewById(R.id.activity_settings_import);
+        exportView = findViewById(R.id.activity_settings_export);
+        dateView = findViewById(R.id.activity_settings_date);
     }
 
     private void setupClicks() {
@@ -51,10 +56,16 @@ public class NoteSettingsActivity extends AppCompatActivity {
             Intent finalIntent = Intent.createChooser(intent, "Select location to export to");
             startActivityForResult(finalIntent, REQUEST_CODE_EXPORT);
         });
+        dateView.setOnClickListener(v -> {
+            TogetherDialog dialog = new TogetherDialog.Builder()
+                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.measurement_preferences), MODE_PRIVATE).getString(getString(R.string.measurement_key_together),"2018-11-08")))
+                    .setFinishListener(() -> Snackbar.make(settingsView, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
+            dialog.show(getSupportFragmentManager(), null);
+        });
     }
 
     private void setupActionBar() {
-        Toolbar myToolbar = findViewById(R.id.activity_note_settings_toolbar);
+        Toolbar myToolbar = findViewById(R.id.activity_settings_toolbar);
         setSupportActionBar(myToolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {

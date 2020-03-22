@@ -7,6 +7,7 @@ import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -17,9 +18,13 @@ public class MeasurementQuery {
         daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
     }
 
-    public void insert(String nameSingular, String namePlural, Duration duration, ResultListener<Void> listener) {
+    public void insert(String nameSingular, String namePlural, Duration duration, ChronoUnit cornerstone) {
+        Executors.newSingleThreadExecutor().execute(() -> daoMeasurement.insert(new Measurement(nameSingular, namePlural, duration, cornerstone)));
+    }
+    public void insert(String nameSingular, String namePlural, Duration duration, ChronoUnit cornerstone, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            daoMeasurement.insert(new Measurement(nameSingular, namePlural, duration));
+            insert(nameSingular, namePlural, duration, cornerstone);
+            listener.onResult(null);
         });
     }
 

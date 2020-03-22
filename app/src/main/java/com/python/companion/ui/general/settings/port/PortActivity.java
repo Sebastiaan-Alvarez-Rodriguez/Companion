@@ -1,4 +1,4 @@
-package com.python.companion.ui.notes.note.activity.settings.port;
+package com.python.companion.ui.general.settings.port;
 
 import android.net.Uri;
 import android.os.Bundle;

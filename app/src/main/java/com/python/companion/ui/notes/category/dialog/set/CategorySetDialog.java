@@ -26,8 +26,8 @@ import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.ui.notes.category.adapter.CategoryItem;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
-import com.python.companion.ui.templates.dialog.DialogAcceptListener;
-import com.python.companion.ui.templates.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.DialogAcceptListener;
+import com.python.companion.ui.general.dialog.DialogCancelListener;
 
 import java.util.Set;
 import java.util.stream.Collectors;

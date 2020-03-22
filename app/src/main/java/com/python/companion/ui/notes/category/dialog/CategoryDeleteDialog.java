@@ -19,8 +19,8 @@ import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
-import com.python.companion.ui.templates.dialog.DialogAcceptListener;
-import com.python.companion.ui.templates.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.DialogAcceptListener;
+import com.python.companion.ui.general.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
 public class CategoryDeleteDialog extends DialogFragment {

@@ -7,12 +7,12 @@ import java.time.temporal.ChronoUnit;
 
 public class DurationConverter {
     @TypeConverter
-    public static Duration durationFromSeconds(Long value) {
-        return value == null ? null : Duration.of(value, ChronoUnit.SECONDS);
+    public static Duration durationFromDays(Long value) {
+        return value == null ? null : Duration.of(value, ChronoUnit.DAYS);
     }
 
     @TypeConverter
-    public static Long durationToSeconds(Duration duration) {
-        return duration.getSeconds();
+    public static Long durationToDays(Duration duration) {
+        return duration.toDays();
     }
 }

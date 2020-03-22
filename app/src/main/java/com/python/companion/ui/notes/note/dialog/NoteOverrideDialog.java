@@ -14,8 +14,8 @@ import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.entity.Note;
-import com.python.companion.ui.templates.dialog.DialogAcceptListener;
-import com.python.companion.ui.templates.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.DialogAcceptListener;
+import com.python.companion.ui.general.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
 public class NoteOverrideDialog extends DialogFragment {

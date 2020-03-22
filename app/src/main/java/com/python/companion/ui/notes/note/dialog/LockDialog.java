@@ -16,9 +16,9 @@ import com.python.companion.R;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.Guard;
 import com.python.companion.security.converters.NoteConverter;
-import com.python.companion.ui.templates.dialog.ErrorDialog;
-import com.python.companion.ui.templates.dialog.DialogAcceptValueListener;
-import com.python.companion.ui.templates.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.ErrorDialog;
+import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
+import com.python.companion.ui.general.dialog.DialogCancelListener;
 
 @SuppressWarnings("WeakerAccess")
 public class LockDialog extends DialogFragment {

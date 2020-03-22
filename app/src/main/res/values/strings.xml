@@ -11,5 +11,7 @@
     <string name="menu_send">Send</string>
 
     <string name="note_preferences">NotePrefs</string>
+
     <string name="measurement_preferences">DatePrefs</string>
+    <string name="measurement_key_together">together</string>
 </resources>

@@ -10,9 +10,10 @@ import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.time.LocalDate;
 import java.util.Comparator;
 
-public class MeasurementSortHandler {
+public class CactusSortHandler {
     public static final int SORT_DURATION = 0;
     public static final int SORT_ALPHA = 1;
 
@@ -21,11 +22,11 @@ public class MeasurementSortHandler {
     public @interface MeasurementSortStrategy {}
 
     protected @NonNull MutableLiveData<Integer> strategy;
-    protected ComparableItemListImpl<MeasurementItem> itemList;
+    protected ComparableItemListImpl<CactusItem> itemList;
 
     public static class Builder {
         protected @MeasurementSortStrategy int strategy;
-        protected @Nullable ComparableItemListImpl<MeasurementItem> itemList;
+        protected @Nullable ComparableItemListImpl<CactusItem> itemList;
 
         public Builder() {
             strategy = SORT_DURATION;
@@ -36,20 +37,20 @@ public class MeasurementSortHandler {
             return this;
         }
 
-        public Builder setItemList(@NonNull ComparableItemListImpl<MeasurementItem> itemList) {
+        public Builder setItemList(@NonNull ComparableItemListImpl<CactusItem> itemList) {
             this.itemList = itemList;
             return this;
         }
 
-        public MeasurementSortHandler build() {
+        public CactusSortHandler build() {
             if (itemList == null)
                 throw new IllegalStateException("ItemList must be set");
-            return new MeasurementSortHandler(strategy, itemList);
+            return new CactusSortHandler(strategy, itemList);
         }
     }
 
 
-    protected MeasurementSortHandler(@MeasurementSortStrategy int strategy, ComparableItemListImpl<MeasurementItem> itemList) {
+    protected CactusSortHandler(@MeasurementSortStrategy int strategy, ComparableItemListImpl<CactusItem> itemList) {
         this.strategy = new MutableLiveData<>(strategy);
         this.itemList = itemList;
         resort();
@@ -67,12 +68,13 @@ public class MeasurementSortHandler {
     public void forceReSort() {
         resort();
     }
+
     public LiveData<Integer> getSortStrategy() {
         return strategy;
     }
 
     @Nullable
-    public Comparator<MeasurementItem> getComparator() {
+    public Comparator<CactusItem> getComparator() {
         switch (strategy.getValue()) {
             case SORT_ALPHA:
                 return new MeasurementAlphaComperator();
@@ -89,17 +91,19 @@ public class MeasurementSortHandler {
         itemList.withComparator(getComparator());
     }
 
-    protected static class MeasurementAlphaComperator implements Comparator<MeasurementItem> {
+    protected static class MeasurementAlphaComperator implements Comparator<CactusItem> {
         @Override
-        public int compare(MeasurementItem o1, MeasurementItem o2) {
-            return o1.getMeasurement().getNameSingular().compareTo(o2.getMeasurement().getNameSingular());
+        public int compare(CactusItem o1, CactusItem o2) {
+            return o1.getDisplayMeasurement().compareTo(o2.getDisplayMeasurement());
         }
     }
 
-    protected static class MeasurementDateComperator implements Comparator<MeasurementItem> {
+    protected static class MeasurementDateComperator implements Comparator<CactusItem> {
         @Override
-        public int compare(MeasurementItem o1, MeasurementItem o2) {
-            return o1.getMeasurement().getDuration().compareTo(o2.getMeasurement().getDuration());
+        public int compare(CactusItem o1, CactusItem o2) {
+            if (o1.isValDistance())
+                return Long.compare(Long.parseLong(o1.getDisplayValue()), Long.parseLong(o2.getDisplayValue()));
+            return LocalDate.parse(o1.getDisplayValue()).compareTo(LocalDate.parse(o2.getDisplayValue()));
         }
     }
 }

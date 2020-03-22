@@ -26,14 +26,16 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
+import com.python.companion.util.measurement.MeasurementUtil;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MeasurementAddActivity extends AppCompatActivity {
     private EditText singular, plural, amount;
-    private RecyclerView list; //TODO: Add chronoUnit day, month, year to items by default in DB
+    private RecyclerView list;
     private View layout;
 
     private MeasurementAddViewModel viewmodel;
@@ -83,11 +85,11 @@ public class MeasurementAddActivity extends AppCompatActivity {
             return true;
         });
 
-        viewmodel.getMeasurements().observe(this, categories -> itemAdapter.set(categories.stream().map(measurement -> {
-            MeasurementItem item = new MeasurementItem();
-            item.setMeasurement(measurement);
-            return item;
-        }).collect(Collectors.toList())));
+        viewmodel.getMeasurements().observe(this, measurements -> {
+            List<MeasurementItem> items = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItem::new).collect(Collectors.toList());
+            items.addAll(measurements.stream().map(MeasurementItem::new).collect(Collectors.toList()));
+            itemAdapter.set(items);
+        });
     }
 
     private void setupActionBar() {
@@ -136,14 +138,18 @@ public class MeasurementAddActivity extends AppCompatActivity {
             if (checkInput()) {
                 String nameSingular = singular.getText().toString(), namePlural = plural.getText().toString(), amountText = amount.getText().toString();
                 long amt = Long.parseLong(amountText);
+
                 MeasurementItem selected = selectionExtension.getSelectedItems().iterator().next();
+
                 Duration d = selected.getMeasurement().getDuration().multipliedBy(amt);
                 MeasurementQuery measurementQuery = new MeasurementQuery(this);
                 measurementQuery.isUnique(namePlural, unique -> {
-                    if (unique)
-                        measurementQuery.insert(nameSingular, namePlural, d, v -> {});
-                    else
+                    if (unique) {
+                        measurementQuery.insert(nameSingular, namePlural, d, selected.getMeasurement().getCornerstoneType());
+                        finish();
+                    } else {
                         Snackbar.make(layout, "Measurement with same plural name already exists", Snackbar.LENGTH_LONG).show();
+                    }
                 });
             }
         }

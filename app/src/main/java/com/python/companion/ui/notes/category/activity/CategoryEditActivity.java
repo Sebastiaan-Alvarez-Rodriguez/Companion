@@ -35,7 +35,7 @@ import com.python.companion.db.entity.Category;
 import com.python.companion.ui.notes.category.adapter.CategoryItem;
 import com.python.companion.ui.notes.category.dialog.CategoryDeleteDialog;
 import com.python.companion.ui.notes.category.dialog.CategoryUpdateDialog;
-import com.python.companion.util.ContextMenuRecyclerView;
+import com.python.companion.ui.general.recyclerview.ContextMenuRecyclerView;
 
 import java.util.stream.Collectors;
 

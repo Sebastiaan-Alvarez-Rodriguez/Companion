@@ -1,4 +1,4 @@
-package com.python.companion.ui.cactus.requestor;
+package com.python.companion.ui.cactus.type;
 
 import androidx.annotation.NonNull;
 

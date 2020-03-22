@@ -3,7 +3,6 @@ package com.python.companion.util.measurement;
 import androidx.annotation.NonNull;
 
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -109,19 +108,14 @@ public class MeasurementUtil {
     }
 
     /**
-     * @param selectable Sets whether the default items are selectable (should probably be <code>false</code> if user gets 'delete selected' option
      * @return An <code>ItemAdapter</code> containing default measurements: Days, Months, Years, as defined by {@link ChronoUnit}
      */
-    public static List<MeasurementItem> getDefaultMeasurements(boolean selectable) {
+    public static List<Measurement> getDefaultMeasurements() {
         ChronoUnit[] regulars = {ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
         String[] singulars = {"Day", "Month", "Year"};
-        ArrayList<MeasurementItem> list = new ArrayList<>(3);
-        for (int x = 0; x < regulars.length; ++x) {
-            MeasurementItem m = new MeasurementItem();
-            m.setSelectable(selectable);
-            m.setMeasurement(new Measurement(singulars[x], regulars[x].toString(), regulars[x].getDuration()));
-            list.add(m);
-        }
+        ArrayList<Measurement> list = new ArrayList<>(3);
+        for (int x = 0; x < regulars.length; ++x)
+            list.add(new Measurement(singulars[x], regulars[x].toString(), regulars[x].getDuration(), regulars[x]));
         return list;
     }
 }

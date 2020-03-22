@@ -27,7 +27,7 @@ import com.python.companion.ui.notes.category.activity.CategoryEditActivity;
 import com.python.companion.ui.notes.note.NoteType;
 import com.python.companion.ui.notes.note.dialog.LockDialog;
 import com.python.companion.ui.notes.note.dialog.NoteOverrideDialog;
-import com.python.companion.ui.templates.dialog.DialogAcceptListener;
+import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.util.RenderUtil;
 
 /**
