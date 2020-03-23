@@ -95,9 +95,7 @@ public class MeasurementAddActivity extends AppCompatActivity {
     private void setupActionBar() {
         Toolbar myToolbar = findViewById(R.id.activity_measurement_add_toolbar);
         setSupportActionBar(myToolbar);
-
         ActionBar actionbar = getSupportActionBar();
-
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
             Drawable icon = myToolbar.getNavigationIcon();
@@ -134,24 +132,29 @@ public class MeasurementAddActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_measurement_add_save) {
-            if (checkInput()) {
-                String nameSingular = singular.getText().toString(), namePlural = plural.getText().toString(), amountText = amount.getText().toString();
-                long amt = Long.parseLong(amountText);
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
+            case R.id.menu_measurement_add_save:
+                if (checkInput()) {
+                    String nameSingular = singular.getText().toString(), namePlural = plural.getText().toString(), amountText = amount.getText().toString();
+                    long amt = Long.parseLong(amountText);
 
-                MeasurementItem selected = selectionExtension.getSelectedItems().iterator().next();
+                    MeasurementItem selected = selectionExtension.getSelectedItems().iterator().next();
 
-                Duration d = selected.getMeasurement().getDuration().multipliedBy(amt);
-                MeasurementQuery measurementQuery = new MeasurementQuery(this);
-                measurementQuery.isUnique(namePlural, unique -> {
-                    if (unique) {
-                        measurementQuery.insert(nameSingular, namePlural, d, selected.getMeasurement().getCornerstoneType());
-                        finish();
-                    } else {
-                        Snackbar.make(layout, "Measurement with same plural name already exists", Snackbar.LENGTH_LONG).show();
-                    }
-                });
-            }
+                    Duration d = selected.getMeasurement().getDuration().multipliedBy(amt);
+                    MeasurementQuery measurementQuery = new MeasurementQuery(this);
+                    measurementQuery.isUnique(namePlural, unique -> {
+                        if (unique) {
+                            measurementQuery.insert(nameSingular, namePlural, d, selected.getMeasurement().getCornerstoneType());
+                            finish();
+                        } else {
+                            Snackbar.make(layout, "Measurement with same plural name already exists", Snackbar.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                break;
         }
         return super.onOptionsItemSelected(item);
     }

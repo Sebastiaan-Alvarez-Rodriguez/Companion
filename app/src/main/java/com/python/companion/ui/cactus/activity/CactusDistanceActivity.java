@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -33,14 +32,21 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.db.constant.MeasurementQuery;
+import com.python.companion.db.entity.Measurement;
 import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
 import com.python.companion.ui.cactus.fragment.CactusViewModel;
 import com.python.companion.ui.cactus.measurement.adapter.CactusItem;
 import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
+import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
+import com.python.companion.ui.cactus.type.RequestType;
 import com.python.companion.util.measurement.MeasurementUtil;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CactusDistanceActivity extends AppCompatActivity implements ActionMode.Callback {
@@ -56,11 +62,19 @@ public class CactusDistanceActivity extends AppCompatActivity implements ActionM
 
     private CactusViewModel viewModel;
 
+    private RequestType requestType;
+    private List<TemporalUnit> others;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_list);
         viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
+        requestType = RequestType.valueOf(getIntent().getStringExtra("type"));
+        if (requestType == RequestType.FUTURE_INTERTWINED) {
+            ArrayList<MeasurementItem> items = getIntent().getParcelableArrayListExtra("chosen");
+            others = items.stream().map((Function<MeasurementItem, TemporalUnit>) MeasurementItem::getMeasurement).collect(Collectors.toList());
+        }
         findViews();
         prepareAdd();
         prepareList();
@@ -124,20 +138,27 @@ public class CactusDistanceActivity extends AppCompatActivity implements ActionM
 
 
         actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_cactus_action, this);
-        try {
-            setListUpdates();
-        } catch (Exception e) {
-            Log.e("Cactus", e.toString());
+
+        setListUpdates();
+    }
+
+
+    private long computeDistance(RequestType type, Measurement measurement, LocalDate together) {
+        switch (type) {
+            case FUTURE_INTERTWINED:
+                return ChronoUnit.DAYS.between(LocalDate.now(), MeasurementUtil.futureIntertwinedInterval(measurement, together, others));
+            default:
+            case FUTURE:
+                return ChronoUnit.DAYS.between(LocalDate.now(), MeasurementUtil.futureInterval(measurement, together));
         }
     }
 
     private void setListUpdates() {
-        Log.e("Cactus", "Computation starts soon");
         SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
         LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
 
         List<CactusItem> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(measurement -> {
-            long distance = MeasurementUtil.distanceCurrent(measurement, together);
+            long distance = computeDistance(requestType, measurement, together);
             return new CactusItem(measurement, String.valueOf(distance), distance == 1 ? measurement.getNameSingular() : measurement.getNamePlural(), true);
         }).collect(Collectors.toList());
         for (CactusItem x : defaultList)
@@ -145,7 +166,7 @@ public class CactusDistanceActivity extends AppCompatActivity implements ActionM
 
         viewModel.getMeasurements().observe(this, measurements -> {
             List<CactusItem> newlist = measurements.stream().map(measurement -> {
-                long distance = MeasurementUtil.distanceCurrent(measurement, together);
+                long distance = computeDistance(requestType, measurement, together);
                 return new CactusItem(measurement, String.valueOf(distance), distance == 1 ? measurement.getNameSingular() : measurement.getNamePlural(), true);
             }).collect(Collectors.toList());
 

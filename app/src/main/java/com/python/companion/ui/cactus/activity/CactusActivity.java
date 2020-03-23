@@ -1,145 +1,88 @@
 package com.python.companion.ui.cactus.activity;
 
+import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Button;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
 
-import com.google.android.material.bottomappbar.BottomAppBar;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.mikepenz.fastadapter.FastAdapter;
-import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
-import com.python.companion.ui.cactus.fragment.CactusViewModel;
-import com.python.companion.ui.cactus.measurement.adapter.CactusItem;
-import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
+import com.python.companion.ui.cactus.activity.measurement.MeasurementSelectActivity;
+import com.python.companion.ui.cactus.type.RequestType;
 
 public class CactusActivity extends AppCompatActivity {
-    private RecyclerView list;
-    private SearchView searchView;
-    private FloatingActionButton fab;
-    private BottomAppBar bar;
+    private static final int REQ_SHARED = 0;
 
-    private ItemAdapter<CactusItem> itemAdapter;
-    private FastAdapter<CactusItem> fastAdapter;
-
-    private CactusSortHandler sortHandler;
-
-    private CactusViewModel viewModel;
-
+    private Button jubileumButton;
+    private Button sharedButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cactus);
-        viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
-
         findGlobalViews();
+        setupClicks();
         setupActionBar();
-
     }
 
     private void findGlobalViews() {
-        list = findViewById(R.id.activity_cactus_measurements);
-        bar = findViewById(R.id.activity_cactus_bottombar);
+        jubileumButton = findViewById(R.id.activity_cactus_next);
+        sharedButton = findViewById(R.id.activity_cactus_next_shared);
+    }
+
+    private void setupClicks() {
+        jubileumButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, CactusDistanceActivity.class);
+            intent.putExtra("type", RequestType.FUTURE.name());
+            startActivity(intent);
+        });
+
+        sharedButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MeasurementSelectActivity.class);
+            startActivityForResult(intent, REQ_SHARED);
+        });
     }
 
     private void setupActionBar() {
-        setSupportActionBar(bar);
+        Toolbar myToolbar = findViewById(R.id.activity_cactus_toolbar);
+        setSupportActionBar(myToolbar);
+
         ActionBar actionbar = getSupportActionBar();
 
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = bar.getNavigationIcon();
+            Drawable icon = myToolbar.getNavigationIcon();
             if (icon != null) {
                 icon.setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
-                bar.setNavigationIcon(icon);
+                myToolbar.setNavigationIcon(icon);
             }
         }
     }
-//
-//    private void prepareList(View view) {
-//        ComparableItemListImpl<MeasurementItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
-//
-//        itemAdapter = new ItemAdapter<>(itemList);
-//        sortHandler = new MeasurementSortHandler.Builder()
-//                .setStrategy(getContext().getSharedPreferences(getString(R.string.note_preferences), Context.MODE_PRIVATE).getInt("noteSort", MeasurementSortHandler.SORT_DURATION))
-//                .setItemList(itemList)
-//                .build();
-//        fastAdapter = FastAdapter.with(itemAdapter);
-//        ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
-//        list.setAdapter(fastAdapter);
-//        list.setLayoutManager(new LinearLayoutManager(view.getContext()));
-//        list.addItemDecoration(new DividerItemDecoration(view.getContext(), LinearLayoutManager.VERTICAL));
-//
-//
-//        selectionExtension = fastAdapter.getOrCreateExtension(SelectExtension.class);
-//        selectionExtension.setSelectable(true);
-//        selectionExtension.setMultiSelect(true);
-//        selectionExtension.setSelectOnLongClick(true);
-//
-//        fastAdapter.setOnPreClickListener((view1, noteItemIAdapter, noteItem, integer) -> {
-//            Boolean res = actionModeHelper.onClick(noteItem);
-//            return res != null ? res : false;
-//        });
-//
-//        fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, position) -> {
-//            if (!actionModeHelper.isActive()) {
-//                if (noteItem.getNote().isSecure()) {
-//                    Guard.decryptKeystore(noteItem.getNote().getContent(), noteItem.getNote().getIv(), noteItem.getNote().getName(), getContext(), plaintext -> {
-//                        Intent intent = new Intent(getContext(), NoteViewActivity.class);
-//                        intent.putExtra("name", noteItem.getNote().getName());
-//                        intent.putExtra("content", plaintext);
-//                        startActivity(intent);
-//                    });
-//                } else {
-//                    Intent intent = new Intent(getContext(), NoteViewActivity.class);
-//                    intent.putExtra("name", noteItem.getNote().getName());
-//                    intent.putExtra("content", noteItem.getNote().getContent());
-//                    startActivity(intent);
-//                }
-//            } else {
-//                fastAdapter.notifyItemChanged(position);
-//            }
-//            return true;
-//        });
-//
-//        fastAdapter.setOnPreLongClickListener((view1, noteItemIAdapter, noteItem, position) -> {
-//            ActionMode actionMode = actionModeHelper.onLongClick((MainActivity) getActivity(), position);
-//            if (actionMode != null)
-//                getActivity().findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
-//            return actionMode != null;
-//        });
-//
-//
-//        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_note_action, this);
-//        setListUpdates();
-//    }
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()) {
-//            case android.R.id.home:
-//                finish();
-//                break;
-//            case R.id.activity_cactus_menu_search:
-//                break;
-//            case R.id.activity_cactus_menu_sort:
-//                break;
-//            case R.id.activity_cactus_menu_settings:
-//                break;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
-//
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.fragment_cactus, menu); //https://material.io/develop/android/components/bottom-app-bar/
-//        return true;
-//    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == REQ_SHARED && resultCode == RESULT_OK && data != null) {
+            Intent intent = new Intent(this, CactusDistanceActivity.class);
+            intent.putExtra("type", RequestType.FUTURE_INTERTWINED.name());
+            intent.putParcelableArrayListExtra("chosen", data.getParcelableArrayListExtra("chosen"));
+            startActivity(intent);
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 }

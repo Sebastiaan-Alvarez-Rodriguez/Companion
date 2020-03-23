@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,6 +35,7 @@ import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
+import com.python.companion.db.entity.Measurement;
 import com.python.companion.ui.MainActivity;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
@@ -45,7 +47,12 @@ import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
 import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
 import com.python.companion.ui.notes.category.dialog.set.CategorySetDialog;
+import com.python.companion.util.measurement.MeasurementUtil;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,6 +110,10 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             Intent intent = new Intent(getContext(), NoteEditActivity.class);
             startActivity(intent);
         });
+        SharedPreferences preferences = getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+        LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
+        Log.e("CacNote", "Amount of days between month and 42days: "+ MeasurementUtil.futureIntertwinedInterval(ChronoUnit.MONTHS, together, Collections.singletonList(new Measurement("42Day", "42Days", Duration.ofDays(42), ChronoUnit.DAYS))));
+
     }
 
     private void prepareList(View view) {

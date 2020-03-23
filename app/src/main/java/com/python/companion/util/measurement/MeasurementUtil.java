@@ -74,7 +74,7 @@ public class MeasurementUtil {
      *                 0 computes last interval. -1 computes interval before that, etcetera
      * @return next interval intertwined with given other units
      */
-    public static LocalDate intertwineIntervalFuture(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull Collection<TemporalUnit> others, long interval) {
+    public static LocalDate futureIntertwinedInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull Collection<TemporalUnit> others, long interval) {
         //TODO: Guaranteed possibility. Between 2 numbers: (A*B)/gcd works
         // 06 / 20 -> 06*10=60=3*20 (gcd=2, interval computation=06*20/02=60)
         // 07 / 21 -> 03*07=21=1*21 (gcd=7, interval computation=07*21/07=21)
@@ -89,6 +89,7 @@ public class MeasurementUtil {
         // 06 / 20 / 30 -> 06*20/2=60. To add 30: determine 60 / 30. 30 / 60 -> 30*60/30=60<-new interval
         // 06 / 20 / 32 -> 06*20/2=60. To add 32: determine 60 / 32. 32 / 60 -> 32*60/4=480<-new interval
 
+        //TODO: This does not work accurately if we have unit==month or month-based or one of the others is month or month-based
         long distance = unit.getDuration().toDays();
         for (TemporalUnit other : others) {
             long dist_other = other.getDuration().toDays();
@@ -103,8 +104,8 @@ public class MeasurementUtil {
 
         return returndate.plus(distance*(interval-1), ChronoUnit.DAYS);
     }
-    public static LocalDate intertwineIntervalFuture(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull Collection<TemporalUnit> others) {
-        return intertwineIntervalFuture(unit, together, others, 1);
+    public static LocalDate futureIntertwinedInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull Collection<TemporalUnit> others) {
+        return futureIntertwinedInterval(unit, together, others, 1);
     }
 
     /**

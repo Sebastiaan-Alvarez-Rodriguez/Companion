@@ -80,7 +80,7 @@ public class Measurement implements TemporalUnit {
     @SuppressWarnings("unchecked")
     @Override
     public <R extends Temporal> R addTo(R temporal, long amount) {
-        return (R) temporal.plus(amount, this);
+        return (R) temporal.plus((amount*duration.toDays())/cornerstoneType.getDuration().toDays(), cornerstoneType);
     }
 
 //    /**

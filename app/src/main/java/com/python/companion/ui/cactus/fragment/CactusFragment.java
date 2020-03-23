@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.python.companion.R;
-import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
+import com.python.companion.ui.cactus.activity.CactusActivity;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -44,6 +44,7 @@ public class CactusFragment extends Fragment {
         findViews(view);
         prepareAdd();
         updateStats(true);
+        setQuote();
     }
 
     private void findViews(View view) {
@@ -56,7 +57,7 @@ public class CactusFragment extends Fragment {
 
     private void prepareAdd() {
         cactusView.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), MeasurementAddActivity.class);
+            Intent intent = new Intent(getContext(), CactusActivity.class);
             startActivity(intent);
         });
     }
@@ -70,8 +71,15 @@ public class CactusFragment extends Fragment {
         if (!force && now.equals(this.now))
             return;
         this.now = now;
-        yearView.setText(String.valueOf(ChronoUnit.YEARS.between(together, this.now)));
-        monthView.setText(String.valueOf(ChronoUnit.MONTHS.between(together, this.now)%12));
-        dayView.setText(String.valueOf(ChronoUnit.DAYS.between(together, this.now)));//TODO: Should fix to cumulative distance
+        long years = ChronoUnit.YEARS.between(together, this.now),
+                months = ChronoUnit.MONTHS.between(together.plus(years, ChronoUnit.YEARS), this.now),
+                days = ChronoUnit.DAYS.between(together.plus(months+12*years, ChronoUnit.MONTHS), this.now);
+        yearView.setText(String.valueOf(years));
+        monthView.setText(String.valueOf(months));
+        dayView.setText(String.valueOf(days));
+    }
+
+    private void setQuote() {
+        quoteView.setText("Rule 10 Greed is eternal!");
     }
 }
