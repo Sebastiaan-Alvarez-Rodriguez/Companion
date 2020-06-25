@@ -112,7 +112,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         });
         SharedPreferences preferences = getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
         LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
-        Log.e("CacNote", "Amount of days between month and 42days: "+ MeasurementUtil.futureIntertwinedInterval(ChronoUnit.MONTHS, together, Collections.singletonList(new Measurement("42Day", "42Days", Duration.ofDays(42), ChronoUnit.DAYS))));
+        Log.e("NoteFragment", "Amount of days between month and 42days: "+ MeasurementUtil.futureIntertwinedInterval(new Measurement("MMM", "MMMs", ChronoUnit.YEARS.getDuration(), ChronoUnit.YEARS), together, Collections.singletonList(new Measurement("42Day", "42Days", Duration.ofDays(42), ChronoUnit.DAYS)), 2));
 
     }
 

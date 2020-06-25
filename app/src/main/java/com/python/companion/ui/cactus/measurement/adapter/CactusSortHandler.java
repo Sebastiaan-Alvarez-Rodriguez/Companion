@@ -7,10 +7,10 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
+import com.python.companion.ui.cactus.measurement.adapter.item.CactusItem;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.time.LocalDate;
 import java.util.Comparator;
 
 public class CactusSortHandler {
@@ -101,9 +101,7 @@ public class CactusSortHandler {
     protected static class MeasurementDateComperator implements Comparator<CactusItem> {
         @Override
         public int compare(CactusItem o1, CactusItem o2) {
-            if (o1.isValDistance())
-                return Long.compare(Long.parseLong(o1.getDisplayValue()), Long.parseLong(o2.getDisplayValue()));
-            return LocalDate.parse(o1.getDisplayValue()).compareTo(LocalDate.parse(o2.getDisplayValue()));
+            return Long.compare(Long.parseLong(o1.getDisplayValue()), Long.parseLong(o2.getDisplayValue()));
         }
     }
 }

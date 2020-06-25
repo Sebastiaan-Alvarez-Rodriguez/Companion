@@ -1,22 +1,35 @@
 package com.python.companion.util.measurement;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import com.python.companion.db.entity.Measurement;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MeasurementUtil {
-    /**
-     * @return amount of integer units passed since date together
-     */
+    /** @return amount of integer units passed since date together */
     public static long distanceCurrent(@NonNull TemporalUnit unit, @NonNull LocalDate together) {
         return unit.between(together, LocalDate.now());
+    }
+
+    /** @return amount of integer units between present moment and given date*/
+    public static long computeDistance(@NonNull TemporalUnit unit, @NonNull LocalDate date) {
+        return unit.between(LocalDate.now(), date);
+    }
+
+    /** Wrapper for {@link #computeDistance(TemporalUnit, LocalDate)} to return distance in days */
+    public static long computeDistance(@NonNull LocalDate date) {
+        return computeDistance(ChronoUnit.DAYS, date);
     }
 
     /**
@@ -51,60 +64,86 @@ public class MeasurementUtil {
         return a << shift;
     }
 
-    private static long gcd_euler_recursive(long a, long b) {
-        if (b != 0)
-            return gcd_euler_recursive(b, a % b);
-        else
-            return a;
+    /**
+     * Computes distance between shared intervals for given measurements of same type
+     * Note: Only pass measurements of same type!
+     * Note: Returned amount of days is estimation in case of variable length temporal units such as months, years etc
+     * @return distance in days between each shared interval of given measurements
+     */
+    private static long getIntertwinedDistance(Measurement first, Measurement... measurements) {
+        long distance = first.getDuration().toDays();
+        for (TemporalUnit other : measurements) {
+            long dist_other = other.getDuration().toDays();
+            distance = (distance*dist_other/gcd_binary(distance, dist_other));
+        }
+        return distance;
     }
 
-    private static long gcd_euler(long a, long b) {
-        while (b != 0) {
-            long tmp = a;
-            long tmp2 = b;
-            a = tmp2;
-            b = tmp % tmp2;
+    private static boolean onInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull LocalDate date) {
+        return unit.between(together, date.minus(1, ChronoUnit.DAYS)) + 1 == unit.between(together, date);
+    }
+    /**
+     * @param others Other temporal units to compute intertwined integer interval for
+     * @param interval intervals to look ahead. Default is 1. Only > 1 allowed.
+     * @return next interval intertwined with given other units
+     */
+    @WorkerThread
+    public static LocalDate futureIntertwinedInterval(@NonNull Measurement unit, @NonNull LocalDate together, @NonNull List<Measurement> others, long interval) {
+        ArrayList<Measurement> all = new ArrayList<>(others);
+        all.add(unit);
+
+        List<Measurement> dayBased = all.parallelStream().filter(measurement -> measurement.getCornerstoneType() == ChronoUnit.DAYS).collect(Collectors.toList());
+        List<Measurement> monthBased = all.parallelStream().filter(measurement -> measurement.getCornerstoneType() == ChronoUnit.MONTHS).collect(Collectors.toList());
+        List<Measurement> yearBased = all.parallelStream().filter(measurement -> measurement.getCornerstoneType() == ChronoUnit.YEARS).collect(Collectors.toList());
+
+        @Nullable Measurement dayJumpAmount = null, monthJumpAmount = null, yearJumpAmount = null;
+        if (dayBased.size() > 0) {
+            Measurement one = dayBased.get(dayBased.size() - 1);
+            dayBased.remove(dayBased.size() - 1);
+            dayJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, dayBased.toArray(new Measurement[]{}))), ChronoUnit.DAYS);
         }
-        return a;
+        if (monthBased.size() > 0) {
+            Measurement one = monthBased.get(monthBased.size() - 1);
+            monthBased.remove(monthBased.size() - 1);
+            monthJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, monthBased.toArray(new Measurement[]{}))), ChronoUnit.MONTHS);
+        }
+        if (yearBased.size() > 0) {
+            Measurement one = yearBased.get(yearBased.size() - 1);
+            yearBased.remove(yearBased.size() - 1);
+            yearJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, yearBased.toArray(new Measurement[]{}))), ChronoUnit.YEARS);
+        }
+
+        Measurement largest = unit;
+        for (Measurement m : all)
+            if (m.compareTo(largest) > 0)
+                largest = m;
+
+        for (Measurement m : all)
+            Log.e("MeasurementUtil", "Measurement: "+m.getNamePlural());
+        Log.e("MeasurementUtil", "Largest: "+largest.getNamePlural());
+        if (dayJumpAmount != null)
+            Log.e("MeasurementUtil", "Working with shared day based length: "+dayJumpAmount.getDuration().toDays()+" days");
+        if (monthJumpAmount != null)
+            Log.e("MeasurementUtil", "Working with shared month based length: "+monthJumpAmount.getDuration().toDays()/ChronoUnit.MONTHS.getDuration().toDays()+" months");
+        if (yearJumpAmount != null)
+            Log.e("MeasurementUtil", "Working with shared year based length: "+yearJumpAmount.getDuration().toDays()/ChronoUnit.YEARS.getDuration().toDays()+" years");
+
+        LocalDate answer = largest.addTo(together, largest.between(together, LocalDate.now()));
+        for (long x = 1; x <= interval; ++x) {
+            answer = largest.addTo(answer, 1);
+            while ((dayJumpAmount != null && !onInterval(dayJumpAmount, together, answer))
+                    || (monthJumpAmount != null && !onInterval(monthJumpAmount, together, answer))
+                    || (yearJumpAmount != null && !onInterval(yearJumpAmount, together, answer)))
+                answer = largest.addTo(answer, 1);
+        }
+        return answer;
     }
 
     /**
      * @param others Other temporal units to compute intertwined integer interval for
-     * @param interval intervals to look ahead. Default is 1. Zero and negative values allowed.
-     *                 0 computes last interval. -1 computes interval before that, etcetera
      * @return next interval intertwined with given other units
      */
-    public static LocalDate futureIntertwinedInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull Collection<TemporalUnit> others, long interval) {
-        //TODO: Guaranteed possibility. Between 2 numbers: (A*B)/gcd works
-        // 06 / 20 -> 06*10=60=3*20 (gcd=2, interval computation=06*20/02=60)
-        // 07 / 21 -> 03*07=21=1*21 (gcd=7, interval computation=07*21/07=21)
-        // 21 / 22 -> 22*21=462=21*22 (co-prime, gcd=1)
-        // Any 2 integers A and B share intervals, at most at A*B, and at least at (A*B)/gcd
-        // 06 / 07 / 09 -> 06*07/1=42. 06*09/3=54/3=18. 07*09/1=63. Together: gcd=min(1,3,1)=1. computation=06*07*09/1=378
-        // 06 / 12 / 24 -> 06*12/6=12. 06*24/6=4. 12*24/12=2. Together: gcd=min(6, 6, 12)=6. computation=...=24
-        // 06 / 12 / 24 -> 06*12/6=12. To add 24: determine 12 / 24. 12 / 24 -> 12*24/12=24<-new interval
-        // 06 / 12 / 25 -> 06*12/6=12. To add 25: determine 12 / 25. 12 / 25 -> 12*25/1=300<-new interval
-        // 06 / 12 / 26 -> 06*12/6=12. To add 26: determine 12 / 26. 12 / 26 -> 12*26/2=156<-new interval
-        // 06 / 12 / 27 -> 06*12/6=12. To add 27: determine 12 / 27. 12 / 27 -> 12*27/3=108<-new interval
-        // 06 / 20 / 30 -> 06*20/2=60. To add 30: determine 60 / 30. 30 / 60 -> 30*60/30=60<-new interval
-        // 06 / 20 / 32 -> 06*20/2=60. To add 32: determine 60 / 32. 32 / 60 -> 32*60/4=480<-new interval
-
-        //TODO: This does not work accurately if we have unit==month or month-based or one of the others is month or month-based
-        long distance = unit.getDuration().toDays();
-        for (TemporalUnit other : others) {
-            long dist_other = other.getDuration().toDays();
-            distance = (distance*dist_other/gcd_binary(distance, dist_other));
-        }
-        // Here, we know the distance between every intertwined integer interval
-        LocalDate returndate = together;
-        LocalDate now = LocalDate.now();
-        while (returndate.isBefore(now))
-            returndate = returndate.plus(distance, ChronoUnit.DAYS);
-        // We progressed to the first interval target after present moment.
-
-        return returndate.plus(distance*(interval-1), ChronoUnit.DAYS);
-    }
-    public static LocalDate futureIntertwinedInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull Collection<TemporalUnit> others) {
+    public static LocalDate futureIntertwinedInterval(@NonNull Measurement unit, @NonNull LocalDate together, @NonNull List<Measurement> others) {
         return futureIntertwinedInterval(unit, together, others, 1);
     }
 

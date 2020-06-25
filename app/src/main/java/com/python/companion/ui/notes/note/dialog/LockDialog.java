@@ -1,6 +1,7 @@
 package com.python.companion.ui.notes.note.dialog;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -156,8 +157,10 @@ public class LockDialog extends DialogFragment {
                                         .build();
                                 break;
                         }
+                        Log.e("Lockdialog", "We had an exception");
                         errorDialog.show(getChildFragmentManager(), null);
                     }, note -> {
+                        Log.e("Lockdialog", "Note is now secure");
                         acceptListener.onAccept(note);
                         dismiss();
                     });

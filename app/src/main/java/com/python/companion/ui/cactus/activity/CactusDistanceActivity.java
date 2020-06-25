@@ -13,40 +13,24 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
-import com.mikepenz.fastadapter.diff.DiffCallback;
-import com.mikepenz.fastadapter.diff.FastAdapterDiffUtil;
-import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.helpers.ActionModeHelper;
 import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtension;
-import com.mikepenz.fastadapter.select.SelectExtensionFactory;
-import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
 import com.python.companion.ui.cactus.fragment.CactusViewModel;
-import com.python.companion.ui.cactus.measurement.adapter.CactusItem;
 import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
-import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
-import com.python.companion.ui.cactus.type.RequestType;
-import com.python.companion.util.measurement.MeasurementUtil;
+import com.python.companion.ui.cactus.measurement.adapter.item.CactusItem;
+import com.python.companion.ui.cactus.type.Type;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CactusDistanceActivity extends AppCompatActivity implements ActionMode.Callback {
@@ -62,22 +46,22 @@ public class CactusDistanceActivity extends AppCompatActivity implements ActionM
 
     private CactusViewModel viewModel;
 
-    private RequestType requestType;
-    private List<TemporalUnit> others;
+    private Type requestType;
+    private List<Measurement> others;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fragment_list);
-        viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
-        requestType = RequestType.valueOf(getIntent().getStringExtra("type"));
-        if (requestType == RequestType.FUTURE_INTERTWINED) {
-            ArrayList<MeasurementItem> items = getIntent().getParcelableArrayListExtra("chosen");
-            others = items.stream().map((Function<MeasurementItem, TemporalUnit>) MeasurementItem::getMeasurement).collect(Collectors.toList());
-        }
-        findViews();
-        prepareAdd();
-        prepareList();
+//        setContentView(R.layout.fragment_list);
+//        viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
+//        requestType = Type.valueOf(getIntent().getStringExtra("type"));
+//        if (requestType == Type.FUTURE_INTERTWINED) {
+//            ArrayList<MeasurementItem> items = getIntent().getParcelableArrayListExtra("chosen");
+//            others = items.stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList());
+//        }
+//        findViews();
+//        prepareAdd();
+//        prepareList();
     }
 
     private void findViews() {
@@ -92,104 +76,104 @@ public class CactusDistanceActivity extends AppCompatActivity implements ActionM
         });
     }
 
-    private void prepareList() {
-        ComparableItemListImpl<CactusItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
-        itemAdapter = new ItemAdapter<>(itemList);
-        fastAdapter = FastAdapter.with(itemAdapter);
+//    private void prepareList() {
+//        ComparableItemListImpl<CactusItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
+//        itemAdapter = new ItemAdapter<>(itemList);
+//        fastAdapter = FastAdapter.with(itemAdapter);
+//
+//        sortHandler = new CactusSortHandler.Builder()
+//                .setStrategy(getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", CactusSortHandler.SORT_DURATION))
+//                .setItemList(itemList)
+//                .build();
+//        ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
+//        list.setAdapter(fastAdapter);
+//        list.setLayoutManager(new LinearLayoutManager(this));
+//        list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+//
+//
+//        selectionExtension = fastAdapter.getOrCreateExtension(SelectExtension.class);
+//        selectionExtension.setSelectable(true);
+//        selectionExtension.setMultiSelect(true);
+//        selectionExtension.setSelectOnLongClick(true);
+//
+//        fastAdapter.setOnPreClickListener((view1, MeasurementItemIAdapter, MeasurementItem, integer) -> {
+//            Boolean res = actionModeHelper.onClick(MeasurementItem);
+//            return res != null ? res : false;
+//        });
+//
+//        fastAdapter.setOnClickListener((view1, MeasurementItemIAdapter, MeasurementItem, position) -> {
+//            if (!actionModeHelper.isActive()) {
+////                    Intent intent = new Intent(getContext(), MeasurementViewActivity.class);
+////                    intent.putExtra("name", MeasurementItem.getMeasurement().getName());
+////                    intent.putExtra("duration", MeasurementItem.getMeasurement().getDuration());
+////                    startActivity(intent);
+//            } else {
+//                fastAdapter.notifyItemChanged(position);
+//            }
+//            return true;
+//        });
+//
+//        fastAdapter.setOnPreLongClickListener((view1, MeasurementItemIAdapter, MeasurementItem, position) -> {
+//            ActionMode actionMode = actionModeHelper.onLongClick(this, position);
+//            if (actionMode != null)
+//                findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary));
+//            return actionMode != null;
+//        });
+//
+//
+//        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_cactus_action, this);
+//
+//        setListUpdates();
+//    }
 
-        sortHandler = new CactusSortHandler.Builder()
-                .setStrategy(getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", CactusSortHandler.SORT_DURATION))
-                .setItemList(itemList)
-                .build();
-        ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
-        list.setAdapter(fastAdapter);
-        list.setLayoutManager(new LinearLayoutManager(this));
-        list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
 
+//    private long computeDistance(Type type, Measurement measurement, LocalDate together) {
+//        switch (type) {
+//            case FUTURE_INTERTWINED:
+//                return ChronoUnit.DAYS.between(LocalDate.now(), MeasurementUtil.futureIntertwinedInterval(measurement, together, others));
+//            default:
+//            case FUTURE:
+//                return ChronoUnit.DAYS.between(LocalDate.now(), MeasurementUtil.futureInterval(measurement, together));
+//        }
+//    }
 
-        selectionExtension = fastAdapter.getOrCreateExtension(SelectExtension.class);
-        selectionExtension.setSelectable(true);
-        selectionExtension.setMultiSelect(true);
-        selectionExtension.setSelectOnLongClick(true);
-
-        fastAdapter.setOnPreClickListener((view1, MeasurementItemIAdapter, MeasurementItem, integer) -> {
-            Boolean res = actionModeHelper.onClick(MeasurementItem);
-            return res != null ? res : false;
-        });
-
-        fastAdapter.setOnClickListener((view1, MeasurementItemIAdapter, MeasurementItem, position) -> {
-            if (!actionModeHelper.isActive()) {
-//                    Intent intent = new Intent(getContext(), MeasurementViewActivity.class);
-//                    intent.putExtra("name", MeasurementItem.getMeasurement().getName());
-//                    intent.putExtra("duration", MeasurementItem.getMeasurement().getDuration());
-//                    startActivity(intent);
-            } else {
-                fastAdapter.notifyItemChanged(position);
-            }
-            return true;
-        });
-
-        fastAdapter.setOnPreLongClickListener((view1, MeasurementItemIAdapter, MeasurementItem, position) -> {
-            ActionMode actionMode = actionModeHelper.onLongClick(this, position);
-            if (actionMode != null)
-                findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary));
-            return actionMode != null;
-        });
-
-
-        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_cactus_action, this);
-
-        setListUpdates();
-    }
-
-
-    private long computeDistance(RequestType type, Measurement measurement, LocalDate together) {
-        switch (type) {
-            case FUTURE_INTERTWINED:
-                return ChronoUnit.DAYS.between(LocalDate.now(), MeasurementUtil.futureIntertwinedInterval(measurement, together, others));
-            default:
-            case FUTURE:
-                return ChronoUnit.DAYS.between(LocalDate.now(), MeasurementUtil.futureInterval(measurement, together));
-        }
-    }
-
-    private void setListUpdates() {
-        SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
-        LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
-
-        List<CactusItem> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(measurement -> {
-            long distance = computeDistance(requestType, measurement, together);
-            return new CactusItem(measurement, String.valueOf(distance), distance == 1 ? measurement.getNameSingular() : measurement.getNamePlural(), true);
-        }).collect(Collectors.toList());
-        for (CactusItem x : defaultList)
-            x.setSelectable(false);
-
-        viewModel.getMeasurements().observe(this, measurements -> {
-            List<CactusItem> newlist = measurements.stream().map(measurement -> {
-                long distance = computeDistance(requestType, measurement, together);
-                return new CactusItem(measurement, String.valueOf(distance), distance == 1 ? measurement.getNameSingular() : measurement.getNamePlural(), true);
-            }).collect(Collectors.toList());
-
-            newlist.addAll(defaultList);
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<CactusItem>() {
-                @Override
-                public boolean areItemsTheSame(CactusItem oldItem, CactusItem newItem) {
-                    return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());
-                }
-
-                @Override
-                public boolean areContentsTheSame(CactusItem oldItem, CactusItem newItem) {
-                    return oldItem.getDisplayValue().equals(newItem.getDisplayValue()) && oldItem.getDisplayMeasurement().equals(newItem.getDisplayMeasurement());
-                }
-
-                @Nullable
-                @Override
-                public Object getChangePayload(CactusItem oldItem, int oldPosition, CactusItem newItem, int newPosition) {
-                    return oldItem.getDisplayValue().equals(newItem.getDisplayValue()) ? newItem.getDisplayMeasurement() : newItem.getDisplayValue();
-                }
-            });
-        });
-    }
+//    private void setListUpdates() {
+//        SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+//        LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
+//
+//        List<CactusItem> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(measurement -> {
+//            long distance = computeDistance(requestType, measurement, together);
+//            return new CactusItem(measurement, String.valueOf(distance), distance == 1 ? measurement.getNameSingular() : measurement.getNamePlural(), true);
+//        }).collect(Collectors.toList());
+//        for (CactusItem x : defaultList)
+//            x.setSelectable(false);
+//
+//        viewModel.getMeasurements().observe(this, measurements -> {
+//            List<CactusItem> newlist = measurements.stream().map(measurement -> {
+//                long distance = computeDistance(requestType, measurement, together);
+//                return new CactusItem(measurement, String.valueOf(distance), distance == 1 ? measurement.getNameSingular() : measurement.getNamePlural(), true);
+//            }).collect(Collectors.toList());
+//
+//            newlist.addAll(defaultList);
+//            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<CactusItem>() {
+//                @Override
+//                public boolean areItemsTheSame(CactusItem oldItem, CactusItem newItem) {
+//                    return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());
+//                }
+//
+//                @Override
+//                public boolean areContentsTheSame(CactusItem oldItem, CactusItem newItem) {
+//                    return oldItem.getDisplayValue().equals(newItem.getDisplayValue()) && oldItem.getDisplayMeasurement().equals(newItem.getDisplayMeasurement());
+//                }
+//
+//                @Nullable
+//                @Override
+//                public Object getChangePayload(CactusItem oldItem, int oldPosition, CactusItem newItem, int newPosition) {
+//                    return oldItem.getDisplayValue().equals(newItem.getDisplayValue()) ? newItem.getDisplayMeasurement() : newItem.getDisplayValue();
+//                }
+//            });
+//        });
+//    }
 
     private void setListFiltering() {
         itemAdapter.getItemFilter().setFilterPredicate((MeasurementItem, charSequence) -> MeasurementItem.getMeasurement().getNameSingular().toLowerCase().contains(charSequence.toString().toLowerCase()));

@@ -1,21 +1,16 @@
 package com.python.companion.security;
 
 import android.content.Context;
-import android.hardware.biometrics.BiometricPrompt;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
 
-import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.python.companion.security.biometry.Biometry;
+import androidx.core.util.Pair;
+import androidx.fragment.app.FragmentManager;
 
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -23,10 +18,9 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -34,159 +28,219 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 // https://www.raywenderlich.com/778533-encryption-tutorial-for-android-getting-started
-public class Guard {
-    public static final int OK = 0;
-    public static final int NO_BIOMETRICS = 1;
-    public static final int OTHER_PROBLEM = 5;
 
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({OK, NO_BIOMETRICS, OTHER_PROBLEM})
-    public @interface GuardException {
+// put/get password from android keystore
+// https://www.programcreek.com/java-api-examples/?code=opensecuritycontroller/osc-core/osc-core-master/osc-server/src/main/java/org/osc/core/broker/util/crypto/KeyStoreProvider.java
+
+public abstract class Guard {
+    protected boolean validated = false;
+
+    protected abstract void validate(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull ValidateCallback validateCallback);
+
+    /**
+     * Public call to handle encryption once
+     * @see Guard#encryptInternal(String, String, EncryptedCallback)
+     * @param data Data to encrypt
+     * @param alias Name we stored a key under
+     * @param callback Called when encryption had success
+     */
+    public void encrypt(@NonNull String data, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback) {
+        if (!this.validated) {
+            validate(fragmentManager, context, new ValidateCallback() {
+                @Override
+                public void onSuccess() {
+                    encryptInternal(data, alias, callback);
+                }
+
+                @Override
+                public void onFailure() {
+                    callback.onFailure();
+                }
+            });
+        } else {
+            encryptInternal(data, alias, callback);
+        }
     }
 
-    public static void encryptKeystore(@NonNull String data, @NonNull String alias, Context context, @NonNull EncryptedCallback callback) {
-        BiometricPrompt.CryptoObject obj = new BiometricPrompt.CryptoObject(getEncCipher(alias));
-        Biometry bio = new Biometry.Builder().setSuccessCallback(authorizedCryptoObject -> {
+    /**
+     * Public call to handle decryption once
+     * @see Guard#decryptInternal(String, byte[], String, DecryptedCallback)
+     * @param data Data to decrypt
+     * @param iv Initialization Vector (IV) we got in the callback while encrypting ({@link Guard#encrypt(String, String, FragmentManager, Context, EncryptedCallback)}
+     * @param alias Name we stored key under
+     * @param callback Called when decryption had success
+     */
+    public void decrypt(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback) {
+        if (!this.validated) {
+            validate(fragmentManager, context, new ValidateCallback() {
+                @Override
+                public void onSuccess() {
+                    decryptInternal(data, iv, alias, callback);
+                }
+
+                @Override
+                public void onFailure() {
+                    callback.onFailure();
+                }
+            });
+        } else {
+            decryptInternal(data, iv, alias, callback);
+        }
+    }
+
+    /**
+     * Encrypt given string using key in Android KeyStore with given alias, and return content in a {@link EncryptedCallback}
+     */
+    @SuppressWarnings("ConstantConditions")
+    private void encryptInternal(@NonNull String data, @NonNull String alias, @NonNull EncryptedCallback callback) {
+        try {
+            Pair<String, byte[]> encrypted = enc(data, alias);
+            callback.onFinish(encrypted.first, encrypted.second);
+        } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException | BadPaddingException | IllegalBlockSizeException e) {
+            Log.e("encrypt", "Exception: ", e);
+            callback.onFailure();
+        }
+    }
+
+    /**
+     * Encrypts multiple data objects at once
+     * @see Guard#encryptInternal(String, String, EncryptedCallback)
+     */
+    @SuppressWarnings("ConstantConditions")
+    protected void encryptInternal(@NonNull List<String> datas, @NonNull List<String> aliases, @NonNull EncryptedCallback callback) {
+        if (datas.size() != aliases.size())
+            throw new RuntimeException("Data length is "+datas.size()+", aliases length is "+aliases.size()+", but should have same length!");
+        for (int x = 0; x < datas.size(); ++x) {
             try {
-                Cipher cipher = authorizedCryptoObject.getCipher();
-                byte[] iv = cipher.getIV();
-                byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-
-                callback.onFinish(Base64.encodeToString(encrypted, Base64.DEFAULT), iv);
-            } catch (BadPaddingException | IllegalBlockSizeException e) {
-                Log.i("BIO", "Weird exception: ", e);
-                e.printStackTrace();
+            Pair<String, byte[]> encrypted = enc(datas.get(x), aliases.get(x));
+            callback.onFinish(encrypted.first, encrypted.second);
+            } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException | BadPaddingException | IllegalBlockSizeException e) {
+                Log.e("encrypt", "Exception: ", e);
+                callback.onFailure();
             }
-        }).build(context, obj);
-        bio.authorize();
+        }
     }
 
-    public static void decryptKeystore(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, Context context, @NonNull DecryptedCallback callback) {
-        BiometricPrompt.CryptoObject obj = new BiometricPrompt.CryptoObject(getDecCipher(iv, alias));
-        Biometry bio = new Biometry.Builder().setSuccessCallback(authorizedCryptoObject -> {
+    /**
+     * Decrypt given String using key in Android KeyStore with given alias, and return content in a {@link DecryptedCallback}
+     */
+    protected void decryptInternal(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull DecryptedCallback callback) {
+        try {
+            callback.onFinish(dec(data, iv, alias));
+        } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
+            Log.e("decrypt", "Exception: ", e);
+            callback.onFailure();
+        }
+    }
+
+    /**
+     * Decrypts multiple data objects at once
+     * @see Guard#decryptInternal(String, byte[], String, DecryptedCallback)
+     */
+    protected void decryptInternal(@NonNull List<String> datas, @NonNull List<byte[]> ivs, @NonNull List<String> aliases, @NonNull DecryptedCallback callback) {
+        if (datas.size() != ivs.size() || datas.size() != aliases.size())
+            throw new RuntimeException("Data length is "+datas.size()+", ivs length is "+ivs.size()+", aliases length is "+aliases.size()+", but all should have same length!");
+        for (int x = 0; x < datas.size(); ++x) {
             try {
-                Cipher cipher = authorizedCryptoObject.getCipher();
-                byte[] decrypted = cipher.doFinal(Base64.decode(data, Base64.DEFAULT));
-                callback.onFinish(new String(decrypted, StandardCharsets.UTF_8));
-            } catch (BadPaddingException | IllegalBlockSizeException e) {
-                Log.i("BIO", "Weird exception: ", e);
-                e.printStackTrace();
+                callback.onFinish(dec(datas.get(x), ivs.get(x), aliases.get(x)));
+            } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
+                Log.e("decrypt", "Exception: ", e);
+                callback.onFailure();
             }
-        }).build(context, obj);
-        bio.authorize();
+        }
+    }
+    
+    /**
+     * Encrypt given string using key in Android KeyStore with given alias, and return content in a {@link EncryptedCallback}
+     * @return Pair of encrypted string, iv
+     */
+    private Pair<String, byte[]> enc(@NonNull String data, @NonNull String alias) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, NoSuchPaddingException, InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException {
+        if (!this.validated)
+            throw new RuntimeException("Cannot perform operation: Not authenticated");
+        Cipher cipher = getEncCipher(alias);
+        byte[] iv = cipher.getIV();
+        byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return new Pair<>(Base64.encodeToString(encrypted, Base64.DEFAULT), iv);
+    }
+    
+    /**
+     * Decrypt given String using key in Android KeyStore with given alias, and return content in a {@link DecryptedCallback}
+     * @return decrypted string
+     */
+    private String dec(@NonNull String data, @NonNull byte[] iv, @NonNull String alias) throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, KeyStoreException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnrecoverableEntryException, IOException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = getDecCipher(iv, alias);
+        byte[] decrypted = cipher.doFinal(Base64.decode(data, Base64.DEFAULT));
+        return new String(decrypted, StandardCharsets.UTF_8);
+    }
+    
+    /**
+     * Gets cipher object from Android Keystore, which may be used to encrypt a note
+     * @param alias name where key was stored under in Android Keystore
+     * @return cipher object, ready for encryption
+     */
+    private static @NonNull Cipher getEncCipher(@NonNull String alias)  throws InvalidKeyException, UnrecoverableEntryException, NoSuchAlgorithmException, CertificateException, KeyStoreException, NoSuchPaddingException, IOException {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            if (!keyStore.containsAlias(alias))
+                if (!generateAES(alias))
+                    throw new KeyStoreException("Could not create key for alias '"+alias+"'");
+                
+            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
+            SecretKey key = secretKeyEntry.getSecretKey();
+
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            return cipher;
     }
 
-    public static int generateAESAndroidKeystore(@NonNull String alias) {
+    /**
+     * Gets cipher object from Android Keystore, which may be used to decrypt a note
+     * @param iv Initialization Vector (IV) used when encrypting note
+     * @param alias name where key was stored under in Android Keystore
+     * @return cipher object, ready for decryption
+     */
+    private static @NonNull Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, IOException {
+        KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null);
+
+        KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
+        SecretKey key = secretKeyEntry.getSecretKey();
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
+        return cipher;
+    }
+    
+    /**
+     * Generate AES key, and store it under given alias. All keys are stored in Android KeyStore. Overrides keys if alias already exists
+     * @param alias Name to store key under
+     * @return {@code true} on success, {@code false} otherwise
+     */
+    private static boolean generateAES(@NonNull String alias) {
         try {
             KeyGenerator k = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
             KeyGenParameterSpec keyGenParameterSpec =
                     new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
                             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-//                    .setUserAuthenticationValidityDurationSeconds(120)
-                            .setUserAuthenticationValidityDurationSeconds(-1) // Always use fingerprint. Needed for setInvalidatedByBiometricEnrollment()
-                            .setRandomizedEncryptionRequired(true)
-                            .setUserAuthenticationRequired(true) //WARNING: Invalidates keys if fingerprint enrolled/removed, pass changed etc.
-                            .setInvalidatedByBiometricEnrollment(false)
+                            .setRandomizedEncryptionRequired(true) // Enforces randomized encryption
+                            .setUserAuthenticationRequired(false) // Requires user authentication. Invalidates when fingerprint enrolled/removed, pass changed
+                            .setInvalidatedByBiometricEnrollment(false) // States that we do not invalidate key if fingerprint is enrolled
+                            .setUnlockedDeviceRequired(true) // Requires screen to be unlocked to be able to use key
+                            .setIsStrongBoxBacked(true) // Should be backed by encryption hardware
                             .build();
             k.init(keyGenParameterSpec);
-            SecretKey key = k.generateKey();
-            return OK;
+            k.generateKey();
+            return true;
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             // Invalid algorithm (only possible if OS does not support AES or GCM) or no AndroidKeyStore
-            Log.i("GENKEYSTORE", "Problem in Keygenerator.getInstance()", e);
-            return OTHER_PROBLEM;
+            Log.e("generateAES", "Problem in Keygenerator.getInstance()", e);
         } catch (InvalidAlgorithmParameterException e) {
-            // User has no fingerprint enrolled
-            Log.i("GENKEYSTORE", "Problem in Keygenerator.init()", e);
-            return NO_BIOMETRICS;
+            Log.e("generateAES", "Problem in Keygenerator.init()", e);
         }
-    }
-
-    private static @Nullable Cipher getEncCipher(@NonNull String alias) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-            Log.i("ENCKEYSTORE", "Contains alias: "+keyStore.containsAlias(alias));
-            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
-            SecretKey key = secretKeyEntry.getSecretKey();
-
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-//            IvParameterSpec ivParameterSpec = generateCBCIV();
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            return cipher;
-        } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException e) {
-            Log.i("ENCKEYSTORE", "Some exception occured: ", e);
-//            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private static @Nullable Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-
-            KeyStore.SecretKeyEntry secretKeyEntry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, null);
-            SecretKey key = secretKeyEntry.getSecretKey();
-            //TODO get IV here
-
-            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
-            return cipher;
-        } catch (KeyStoreException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | InvalidAlgorithmParameterException | NoSuchPaddingException | IOException e) {
-            Log.i("DECKEYSTORE", "Some exception occured: ", e);
-        }
-        return null;
-    }
-
-
-    public void generatePasswordBasedAES(@NonNull String data, @NonNull String userPassword) {
-        try {
-            SecretKeySpec secretKeySpec = generateSecretAESKey(userPassword.toCharArray());
-            IvParameterSpec ivParameterSpec = generateCBCIV();
-
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
-
-            cipher.doFinal(data.getBytes());
-        } catch (NoSuchAlgorithmException e) {
-            Log.i("PBE", "Exception problem SecretKeyFactory.getInstance(): ", e);
-        } catch (InvalidKeySpecException e) {
-            Log.i("PBE", "Exception problem at secretKeyFactory.generateSecret(): ", e);
-
-        } catch (NoSuchPaddingException e) {
-            Log.i("PBE", "Exception problem at Cipher.getInstance(): ", e);
-        } catch (InvalidAlgorithmParameterException | InvalidKeyException e) {
-            Log.i("PBE", "Exception problem at cipher.init(): ", e);
-        } catch (BadPaddingException | IllegalBlockSizeException e) {
-            Log.i("PBE", "Exception problem at cipher.dofinal(): ", e);
-        }
-    }
-
-    private @NonNull byte[] generateSecureSalt(int length) {
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[length];
-        random.nextBytes(salt);
-        return salt;
-    }
-
-    private SecretKeySpec generateSecretAESKey(@NonNull char[] userPassword) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        PBEKeySpec pbeKeySpec = new PBEKeySpec(userPassword, generateSecureSalt(256), 2048, 256);
-        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        byte[] keyBytes = secretKeyFactory.generateSecret(pbeKeySpec).getEncoded();
-        return new SecretKeySpec(keyBytes, "AES");
-    }
-
-    private IvParameterSpec generateCBCIV() {
-        byte[] iv = generateSecureSalt(16);
-        return new IvParameterSpec(iv);
+        return false;
     }
 }

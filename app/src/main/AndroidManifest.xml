@@ -29,11 +29,11 @@
         <activity android:name=".ui.general.settings.SettingsActivity" />
         <activity android:name=".ui.general.settings.port.ImportActivity" />
         <activity android:name=".ui.general.settings.port.ExportActivity" />
-        <activity android:name=".ui.cactus.activity.CactusActivityOld" />
         <activity android:name=".ui.cactus.activity.measurement.MeasurementAddActivity" />
         <activity android:name=".ui.cactus.activity.CactusDistanceActivity" />
         <activity android:name=".ui.cactus.activity.CactusActivity" />
         <activity android:name=".ui.cactus.activity.measurement.MeasurementSelectActivity" />
+        <activity android:name=".ui.cactus.activity.CactusJubileumActivity" />
     </application>
 
 </manifest>

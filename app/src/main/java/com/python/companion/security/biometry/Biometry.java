@@ -8,15 +8,26 @@ import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.python.companion.security.biometry.callbacks.BioMetryCancelCallback;
+import com.python.companion.security.biometry.callbacks.BioMetryErrorCallback;
+import com.python.companion.security.biometry.callbacks.BioMetryFailureCallback;
+import com.python.companion.security.biometry.callbacks.BioMetryHelpCallback;
+import com.python.companion.security.biometry.callbacks.BioMetrySuccessCallback;
+
 import java.util.concurrent.Executors;
 
 public class Biometry {
     protected Context context;
-    protected @Nullable BioMetryCancelCallback cancelCallback;
-    protected @Nullable BioMetryErrorCallback errorCallback;
-    protected @Nullable BioMetryFailureCallback failureCallback;
-    protected @Nullable BioMetryHelpCallback helpCallback;
-    protected @NonNull BioMetrySuccessCallback successCallback;
+    protected @Nullable
+    BioMetryCancelCallback cancelCallback;
+    protected @Nullable
+    BioMetryErrorCallback errorCallback;
+    protected @Nullable
+    BioMetryFailureCallback failureCallback;
+    protected @Nullable
+    BioMetryHelpCallback helpCallback;
+    protected @NonNull
+    BioMetrySuccessCallback successCallback;
 
     protected BiometricPrompt.CryptoObject cryptoObject;
 
@@ -53,16 +64,13 @@ public class Biometry {
         }
 
         @CheckResult
-        public Biometry build(@NonNull Context context, @NonNull BiometricPrompt.CryptoObject cryptoObject) {
-            if (successCallback == null)
-                throw new IllegalStateException("Must specify a successcallback in order to retrieve authorized cryptoObject result");
-            return new Biometry(context, cryptoObject, cancelCallback, errorCallback, failureCallback, helpCallback, successCallback);
+        public Biometry build(@NonNull Context context) {
+            return new Biometry(context, cancelCallback, errorCallback, failureCallback, helpCallback, successCallback);
         }
     }
 
-    protected Biometry(@NonNull Context context, @NonNull BiometricPrompt.CryptoObject cryptoObject,  @Nullable BioMetryCancelCallback cancelCallback, @Nullable BioMetryErrorCallback errorCallback, @Nullable BioMetryFailureCallback failureCallback, @Nullable BioMetryHelpCallback helpCallback, @NonNull BioMetrySuccessCallback successCallback) {
+    protected Biometry(@NonNull Context context,  @Nullable BioMetryCancelCallback cancelCallback, @Nullable BioMetryErrorCallback errorCallback, @Nullable BioMetryFailureCallback failureCallback, @Nullable BioMetryHelpCallback helpCallback, @NonNull BioMetrySuccessCallback successCallback) {
         this.context = context;
-        this.cryptoObject = cryptoObject;
         this.cancelCallback = cancelCallback;
         this.errorCallback = errorCallback;
         this.failureCallback = failureCallback;
@@ -70,10 +78,11 @@ public class Biometry {
         this.successCallback = successCallback;
     }
 
+    /** Function to begin authorization of user, with default title, description, and subtitle */
     public void authorize() {
         BiometricPrompt bio = new BiometricPrompt.Builder(context)
-                .setDescription("Please login to continue")
                 .setTitle("Guard")
+                .setDescription("Please login to continue")
                 .setSubtitle("Authorization required")
                 .setNegativeButton("Cancel", Executors.newSingleThreadExecutor(), (dialog, which) -> {
                     if (cancelCallback != null)
@@ -98,9 +107,10 @@ public class Biometry {
                     helpCallback.onHelpNeeded(helpString.toString());
             }
 
+
             @Override
             public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
-                successCallback.onSuccess(result.getCryptoObject());
+                successCallback.onSuccess();
             }
         });
     }

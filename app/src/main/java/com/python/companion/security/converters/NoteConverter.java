@@ -3,45 +3,45 @@ package com.python.companion.security.converters;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.ExceptionCallback;
+import com.python.companion.security.DecryptedCallback;
+import com.python.companion.security.EncryptedCallback;
 import com.python.companion.security.Guard;
 
 public class NoteConverter {
+    public static void makeNoteSecure(@NonNull Guard guard, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull Note note, @NonNull ConvertCallback callback) {
+        guard.encrypt(note.getContent(), note.getName(), fragmentManager, context, new EncryptedCallback() {
+            @Override
+            public void onFinish(@NonNull String encrypted, @NonNull byte[] iv) {
+                note.setContent(encrypted);
+                note.setIv(iv);
+                note.setSecure(true);
+                callback.onSuccess(note);
+            }
 
-    public static void makeNoteSecure(@NonNull Context context, @NonNull Note note, @NonNull SuccessCallback successCallback) {
-        makeNoteSecure(context, note, null, successCallback);
-    }
-
-    public static void makeNoteSecure(@NonNull Context context, @NonNull Note note, @Nullable ExceptionCallback exceptionCallback, @NonNull SuccessCallback successCallback) {
-        int tmp = Guard.generateAESAndroidKeystore(note.getName());
-        if (tmp != Guard.OK) {
-            if (exceptionCallback != null)
-                exceptionCallback.onException(tmp);
-            return;
-        }
-
-        Guard.encryptKeystore(note.getContent(), note.getName(), context, (encrypted, iv) -> {
-            note.setContent(encrypted);
-            note.setIv(iv);
-            note.setSecure(true);
-            successCallback.onSuccess(note);
+            @Override
+            public void onFailure() {
+                callback.onFailure();
+            }
         });
     }
 
-    public static void makeNoteInsecure(@NonNull Context context, @NonNull Note note, @NonNull SuccessCallback successCallback) {
-        makeNoteInsecure(context, note, null, successCallback);
-    }
+    public static void makeNoteInsecure(@NonNull Guard guard, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull Note note, @NonNull ConvertCallback callback) {
+        guard.decrypt(note.getContent(), note.getIv(), note.getName(), fragmentManager, context, new DecryptedCallback() {
+            @Override
+            public void onFinish(@NonNull String plaintext) {
+                note.setContent("plaintext");
+                note.setIv(null);
+                note.setSecure(false);
+                callback.onSuccess(note);
+            }
 
-    //TODO: make use of exceptionCallback
-    public static void makeNoteInsecure(@NonNull Context context, @NonNull Note note, @Nullable ExceptionCallback exceptionCallback, @NonNull SuccessCallback successCallback) {
-        Guard.decryptKeystore(note.getContent(), note.getIv(), note.getName(), context, plaintext -> {
-            note.setContent(plaintext);
-            note.setIv(null);
-            note.setSecure(false);
-            successCallback.onSuccess(note);
+            @Override
+            public void onFailure() {
+                callback.onFailure();
+            }
         });
     }
 }

@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 public class CactusFragment extends Fragment {
-    private TextView quoteView, yearView, monthView, dayView;
+    private TextView quoteView, yearView, monthView, dayView, yearTextView, monthTextView, dayTextView;
     private ImageView cactusView;
 
     private LocalDate together, now;
@@ -52,6 +52,9 @@ public class CactusFragment extends Fragment {
         yearView = view.findViewById(R.id.fragment_cactus_years);
         monthView = view.findViewById(R.id.fragment_cactus_months);
         dayView = view.findViewById(R.id.fragment_cactus_days);
+        yearTextView = view.findViewById(R.id.fragment_cactus_years_text);
+        monthTextView = view.findViewById(R.id.fragment_cactus_months_text);
+        dayTextView = view.findViewById(R.id.fragment_cactus_days_text);
         cactusView = view.findViewById(R.id.fragment_cactus_cactus);
     }
 
@@ -77,6 +80,12 @@ public class CactusFragment extends Fragment {
         yearView.setText(String.valueOf(years));
         monthView.setText(String.valueOf(months));
         dayView.setText(String.valueOf(days));
+        if (years == 1)
+            yearTextView.setText("year");
+        if (months == 1)
+            monthTextView.setText("month");
+        if (days == 1)
+            dayTextView.setText("day");
     }
 
     private void setQuote() {

@@ -27,50 +27,6 @@
         app:layout_constraintTop_toBottomOf="@+id/activity_cactus_toolbar"
         android:background="@drawable/background_desert">
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:text="What do you want to know about?"
-            android:textColor="@color/colorWindowBackground"
-            android:textSize="24sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/activity_cactus_next"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/button_rounded"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="Next jubileum"
-            android:textColor="@color/colorPrimary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView" />
-
-        <Button
-            android:id="@+id/activity_cactus_next_shared"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/button_rounded"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="Next shared jubileum"
-            android:textColor="@color/colorPrimary"
-            app:layout_constraintBottom_toTopOf="@+id/activity_cactus_cactus"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/activity_cactus_next"
-            app:layout_constraintVertical_bias="0.0" />
-
         <ImageView
             android:id="@+id/activity_cactus_cactus"
             android:layout_width="256dp"
@@ -78,5 +34,34 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/ic_cactus_companion" />
+
+        <Button
+            android:id="@+id/activity_cactus_jubilea"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/button_rounded"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Jubilea"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/activity_cactus_jubilea_shared"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/button_rounded"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Shared jubilea calclator"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/activity_cactus_jubilea" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

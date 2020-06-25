@@ -31,14 +31,14 @@
         android:text="22"
         android:textColor="@color/colorWindowBackground"
         android:textSize="24sp"
-        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_text0"
-        app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_text0"
+        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_years_text"
+        app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_years_text"
         app:layout_constraintHorizontal_bias="0.22"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_text0" />
+        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_years_text" />
 
     <TextView
-        android:id="@+id/fragment_cactus_text0"
+        android:id="@+id/fragment_cactus_years_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
@@ -55,15 +55,15 @@
         android:layout_height="wrap_content"
         android:textColor="@color/colorWindowBackground"
         android:textSize="24sp"
-        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_text1"
+        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_months_text"
         app:layout_constraintEnd_toEndOf="@+id/fragment_cactus_years"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/fragment_cactus_years"
-        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_text1"
+        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_months_text"
         tools:text="11" />
 
     <TextView
-        android:id="@+id/fragment_cactus_text1"
+        android:id="@+id/fragment_cactus_months_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -72,7 +72,7 @@
         android:textColor="@color/colorWindowBackground"
         android:textSize="24sp"
         app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_cactus"
-        app:layout_constraintTop_toBottomOf="@+id/fragment_cactus_text0" />
+        app:layout_constraintTop_toBottomOf="@+id/fragment_cactus_years_text" />
 
     <TextView
         android:id="@+id/fragment_cactus_days"
@@ -80,15 +80,15 @@
         android:layout_height="wrap_content"
         android:textColor="@color/colorWindowBackground"
         android:textSize="24sp"
-        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_text2"
+        app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_days_text"
         app:layout_constraintEnd_toEndOf="@+id/fragment_cactus_years"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/fragment_cactus_years"
-        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_text2"
+        app:layout_constraintTop_toTopOf="@+id/fragment_cactus_days_text"
         tools:text="31" />
 
     <TextView
-        android:id="@+id/fragment_cactus_text2"
+        android:id="@+id/fragment_cactus_days_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -97,7 +97,7 @@
         android:textColor="@color/colorWindowBackground"
         android:textSize="24sp"
         app:layout_constraintEnd_toStartOf="@+id/fragment_cactus_cactus"
-        app:layout_constraintTop_toBottomOf="@+id/fragment_cactus_text1" />
+        app:layout_constraintTop_toBottomOf="@+id/fragment_cactus_months_text" />
 
     <ImageView
         android:id="@+id/fragment_cactus_cactus"

@@ -14,7 +14,6 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.python.companion.R;
 import com.python.companion.ui.cactus.activity.measurement.MeasurementSelectActivity;
-import com.python.companion.ui.cactus.type.RequestType;
 
 public class CactusActivity extends AppCompatActivity {
     private static final int REQ_SHARED = 0;
@@ -32,14 +31,13 @@ public class CactusActivity extends AppCompatActivity {
     }
 
     private void findGlobalViews() {
-        jubileumButton = findViewById(R.id.activity_cactus_next);
-        sharedButton = findViewById(R.id.activity_cactus_next_shared);
+        jubileumButton = findViewById(R.id.activity_cactus_jubilea);
+        sharedButton = findViewById(R.id.activity_cactus_jubilea_shared);
     }
 
     private void setupClicks() {
         jubileumButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, CactusDistanceActivity.class);
-            intent.putExtra("type", RequestType.FUTURE.name());
+            Intent intent = new Intent(this, CactusJubileumActivity.class);
             startActivity(intent);
         });
 
@@ -78,7 +76,6 @@ public class CactusActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQ_SHARED && resultCode == RESULT_OK && data != null) {
             Intent intent = new Intent(this, CactusDistanceActivity.class);
-            intent.putExtra("type", RequestType.FUTURE_INTERTWINED.name());
             intent.putParcelableArrayListExtra("chosen", data.getParcelableArrayListExtra("chosen"));
             startActivity(intent);
             return;
