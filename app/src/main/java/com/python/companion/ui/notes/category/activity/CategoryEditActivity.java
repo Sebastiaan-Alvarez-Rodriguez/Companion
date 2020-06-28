@@ -1,10 +1,10 @@
 package com.python.companion.ui.notes.category.activity;
 
 import android.content.Intent;
-import android.graphics.PorterDuff;
+import android.graphics.BlendMode;
+import android.graphics.BlendModeColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,17 +25,17 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.jaredrummler.android.colorpicker.ColorPickerDialog;
-import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.entity.Category;
+import com.python.companion.ui.general.recyclerview.ContextMenuRecyclerView;
 import com.python.companion.ui.notes.category.adapter.CategoryItem;
 import com.python.companion.ui.notes.category.dialog.CategoryDeleteDialog;
 import com.python.companion.ui.notes.category.dialog.CategoryUpdateDialog;
-import com.python.companion.ui.general.recyclerview.ContextMenuRecyclerView;
+import com.skydoves.colorpickerview.ColorPickerDialog;
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
 import java.util.stream.Collectors;
 
@@ -101,7 +101,6 @@ public class CategoryEditActivity extends AppCompatActivity {
         registerForContextMenu(list);
 
         fastAdapter.setOnClickListener((view, categoryItemIAdapter, categoryItem, pos) -> {
-            Log.i("Clicked", "You clicked on cat "+categoryItem.getCategory().getCategoryName());
             Category category = categoryItem.getCategory();
             categoryName = category.getCategoryName();
             categoryColor = category.getCategoryColor();
@@ -137,20 +136,16 @@ public class CategoryEditActivity extends AppCompatActivity {
                 });
             }
         });
-        colorView.setOnClickListener(v -> {
-            ColorPickerDialog dialog = ColorPickerDialog.newBuilder().setShowAlphaSlider(false).setColor(categoryColor).create();
-            dialog.setColorPickerDialogListener(new ColorPickerDialogListener() {
-                @Override
-                public void onColorSelected(int dialogId, int c) {
-                    categoryColor = c;
-                    colorView.setBackgroundColor(c);
-                }
-
-                @Override
-                public void onDialogDismissed(int dialogId) {}
-            });
-            dialog.show(getSupportFragmentManager(), null);
-        });
+        colorView.setOnClickListener(v -> new ColorPickerDialog.Builder(this)
+                .setTitle("Pick a color")
+                .setPositiveButton("Pick", (ColorEnvelopeListener) (envelope, fromUser) -> {
+                    categoryColor = envelope.getColor();
+                    colorView.setBackgroundColor(categoryColor);
+                })
+                .setNegativeButton("Cancel", (dialog1, which) -> dialog1.dismiss())
+                .attachAlphaSlideBar(false)
+                .attachBrightnessSlideBar(true)
+                .show());
     }
 
     private void setupActionBar() {
@@ -163,7 +158,7 @@ public class CategoryEditActivity extends AppCompatActivity {
             actionbar.setDisplayHomeAsUpEnabled(true);
             Drawable icon = myToolbar.getNavigationIcon();
             if (icon != null) {
-                icon.setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
+                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
                 myToolbar.setNavigationIcon(icon);
             }
             actionbar.setTitle("Categories");

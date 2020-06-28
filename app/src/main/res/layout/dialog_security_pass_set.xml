@@ -1,9 +1,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="360dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    style="@style/DialogStyle">
 
     <ImageView
         android:id="@+id/dialog_security_pass_set_header"
@@ -48,7 +49,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dialog_security_pass_set_text"
-        tools:text="Please set a new password" />
+        android:text="Please set a new password" />
 
     <EditText
         android:id="@+id/dialog_security_pass_set_pass_one"
@@ -75,7 +76,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dialog_security_pass_set_pass_one"
-        tools:text="Repeat your password" />
+        android:text="Repeat your password" />
 
     <EditText
         android:id="@+id/dialog_security_pass_set_pass_two"
@@ -104,7 +105,7 @@
         app:layout_constraintHorizontal_bias="0.84"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/dialog_security_pass_set_cancel"
-        tools:text="Set" />
+        android:text="Set" />
 
     <Button
         android:id="@+id/dialog_security_pass_set_cancel"

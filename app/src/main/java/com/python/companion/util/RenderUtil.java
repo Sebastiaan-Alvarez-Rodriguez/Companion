@@ -3,51 +3,58 @@ package com.python.companion.util;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.text.util.Linkify;
+import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.ui.notes.note.NoteType;
 
 import java.util.concurrent.Executors;
 
-import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.Markwon;
-import io.noties.markwon.MarkwonConfiguration;
 import io.noties.markwon.ext.latex.JLatexMathPlugin;
+import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import ru.noties.jlatexmath.JLatexMathDrawable;
 
 public class RenderUtil {
     private static Markwon.Builder getStandardMDRenderer(Context context) {
         return Markwon.builder(context)
-                .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS))
-                .usePlugin(new AbstractMarkwonPlugin() {
-                    @Override
-                    public void configureConfiguration(@NonNull MarkwonConfiguration.Builder builder) {
-                        builder.urlProcessor(destination -> !destination.startsWith("http://") && !destination.startsWith("https://") ? "http://"+destination : destination);
-                    }
-                });
+                .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS));
     }
 
-    private static Markwon.Builder getStandardLatexMDRenderer(Context context, float textSize) {
+    private static Markwon.Builder getStandardLatexMDRenderer(View view, Context context, float textSize) {
         return getStandardMDRenderer(context)
-                .usePlugin(JLatexMathPlugin.create(textSize, builder -> builder
-                        .align(JLatexMathDrawable.ALIGN_CENTER)
-                        .fitCanvas(true)
-                        .backgroundProvider(() -> new ColorDrawable(0))
-                .executorService(Executors.newCachedThreadPool())));
+                .usePlugin(MarkwonInlineParserPlugin.create())
+                .usePlugin(JLatexMathPlugin.create(textSize, builder -> {
+                    builder.inlinesEnabled(true);
+                    builder.errorHandler((latex, error) -> {
+                        // Receive error and optionally return drawable to be displayed instead
+                        Snackbar.make(view, "Latex error: "+error.getLocalizedMessage(), Snackbar.LENGTH_INDEFINITE).show();
+                        return null;
+                    });
+                    builder.executorService(Executors.newCachedThreadPool());
+
+                    //Theme stuff
+                    builder.theme().backgroundProvider(() -> new ColorDrawable(0));
+                    builder.theme().blockFitCanvas(true);
+                    builder.theme().blockHorizontalAlignment(JLatexMathDrawable.ALIGN_CENTER);
+                }));
     }
 
     private static Markwon getMDRenderer(Context context) {
         return getStandardMDRenderer(context).build();
     }
 
-    private static Markwon getLatexMDRenderer(Context context, float textSize) {
-        return getStandardLatexMDRenderer(context, textSize).build();
+    private static Markwon getLatexMDRenderer(View view, Context context, float textSize) {
+        return getStandardLatexMDRenderer(view, context, textSize).build();
     }
 
     public static void render(@NonNull TextView view, @NonNull String text, @NoteType.Type int type) {
+        Log.e("Renderer", "Received type: "+type);
         if (type == NoteType.TYPE_NORMAL) {
             view.setText(text);
             return;
@@ -59,7 +66,8 @@ public class RenderUtil {
                 renderer = getMDRenderer(view.getContext());
                 break;
             default: case NoteType.TYPE_MARKDOWN_LATEX:
-                renderer = getLatexMDRenderer(view.getContext(), 50);
+                Log.e("Renderer", "Using latex renderer");
+                renderer = getLatexMDRenderer(view, view.getContext(), view.getTextSize());
         }
         renderer.setMarkdown(view, text);
     }

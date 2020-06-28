@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.mikepenz.fastadapter.diff.DiffCallback;
@@ -35,18 +36,20 @@ import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
-import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.MainActivity;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
+import com.python.companion.security.DecryptedCallback;
 import com.python.companion.security.Guard;
+import com.python.companion.ui.MainActivity;
 import com.python.companion.ui.general.settings.SettingsActivity;
+import com.python.companion.ui.notes.category.dialog.set.CategorySetDialog;
+import com.python.companion.ui.notes.note.NoteContainer;
 import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
 import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
-import com.python.companion.ui.notes.category.dialog.set.CategorySetDialog;
 import com.python.companion.util.measurement.MeasurementUtil;
 
 import java.time.Duration;
@@ -143,17 +146,24 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
         fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, position) -> {
             if (!actionModeHelper.isActive()) {
-                if (noteItem.getNote().isSecure()) {
-                    Guard.decryptKeystore(noteItem.getNote().getContent(), noteItem.getNote().getIv(), noteItem.getNote().getName(), getContext(), plaintext -> {
-                        Intent intent = new Intent(getContext(), NoteViewActivity.class);
-                        intent.putExtra("name", noteItem.getNote().getName());
-                        intent.putExtra("content", plaintext);
-                        startActivity(intent);
+                Note n = noteItem.getNote();
+                Intent intent = new Intent(getContext(), NoteViewActivity.class);
+                if (n.isSecure()) {
+                    Guard.getGuard().decrypt(n.getContent(), n.getIv(), n.getName(), getChildFragmentManager(), getContext(), new DecryptedCallback() {
+                        @Override
+                        public void onFinish(@NonNull String plaintext) {
+//                            intent.putExtra("note", new NoteContainer(new Note(n.getName(), plaintext, n.getCategory(), true, n.getIv(), n.getType())));
+                            intent.putExtra("note", new NoteContainer(n));
+                            intent.putExtra("plaintext", plaintext);
+                            startActivity(intent);
+                        }
+                        @Override
+                        public void onFailure() {
+                            Snackbar.make(list, "Could not unlock note", Snackbar.LENGTH_SHORT).show();
+                        }
                     });
                 } else {
-                    Intent intent = new Intent(getContext(), NoteViewActivity.class);
-                    intent.putExtra("name", noteItem.getNote().getName());
-                    intent.putExtra("content", noteItem.getNote().getContent());
+                    intent.putExtra("note", new NoteContainer(n));
                     startActivity(intent);
                 }
             } else {

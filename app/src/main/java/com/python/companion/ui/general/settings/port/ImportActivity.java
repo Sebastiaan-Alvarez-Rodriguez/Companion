@@ -23,7 +23,7 @@ public class ImportActivity extends PortActivity implements ImportInterface {
             check.setEnabled(false);
             start.setEnabled(false);
             reSecure = check.isChecked();
-            ImportUtil.importDatabase(this, location, reSecure, this);
+            ImportUtil.importDatabase(getSupportFragmentManager(),this, location, reSecure, this);
         });
 
         check.setOnCheckedChangeListener((buttonView, isChecked) -> barView2.setVisibility(isChecked ? View.VISIBLE : View.INVISIBLE));

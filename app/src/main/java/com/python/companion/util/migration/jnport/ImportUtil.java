@@ -8,12 +8,14 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
 
 import org.msgpack.core.MessageFormat;
@@ -38,7 +40,6 @@ public class ImportUtil {
         DAOCategory daoCategory = Database.getDatabase(context).getDAOCategory();
         try {
             if (!unpacker.hasNext() || unpacker.getNextFormat() != MessageFormat.POSFIXINT) {
-                //TODO: Big problem here
                 Log.e("Import", "I did not find an "+MessageFormat.POSFIXINT.toString()+", but got instead a "+  unpacker.getNextFormat().toString());
                 return;
             }
@@ -67,19 +68,21 @@ public class ImportUtil {
     }
 
     private static Note importNote(@NonNull MessageUnpacker unpacker) throws IOException {
-        //TODO: Allow option to make objects secure again (only those which were already secure
         Note tmp = new Note(unpacker.unpackString(), unpacker.unpackString(), new Category(unpacker.unpackString(), unpacker.unpackInt()), false, null, unpacker.unpackInt());
         tmp.setModified(Instant.ofEpochSecond(unpacker.unpackLong()));
         return tmp;
     }
 
     @WorkerThread
-    private static void importNotes(@NonNull Context context, @NonNull MessageUnpacker unpacker, boolean reSecure, @Nullable ImportInterface importInterface) {
+    private static void importNotes(@NonNull FragmentManager manager, @NonNull Context context, @NonNull MessageUnpacker unpacker, boolean reSecure, @Nullable ImportInterface importInterface) {
         DAONote daoNote = Database.getDatabase(context).getDAONote();
 
         try {
             if (!unpacker.hasNext() || unpacker.getNextFormat() != MessageFormat.POSFIXINT) {
-                //TODO: Wrong content
+                if (!unpacker.hasNext())
+                    Log.e("Import", "No more content! Empty file probably");
+                else
+                    Log.e("Import", "No postfixint?");
                 return;
             }
             int total = unpacker.unpackInt();
@@ -87,7 +90,7 @@ public class ImportUtil {
             int prevSecure = unpacker.unpackInt();
 
             if (total < prevSecure) {
-                //TODO: Wrong content
+                Log.e("Import","File states there are "+total+" notes in total, of which "+prevSecure+" were secure");
                 return;
             }
             int complete = 0, failed = 0;
@@ -95,7 +98,32 @@ public class ImportUtil {
 
             if (importInterface != null)
                 importInterface.onStartImportNotes(total);
-            for (int pos = 0; pos < total; ++pos) {
+            for (int x = 0; x < prevSecure; ++x) {
+                try {
+                    notes.add(importNote(unpacker));
+                    ++complete;
+                } catch (IOException e) {
+                    ++failed;
+                }
+            }
+            if (reSecure && prevSecure > 0) {
+                if (importInterface != null)
+                    importInterface.onStartEncryptNotes(prevSecure);
+                List<Integer> tmp = new ArrayList<>(1);
+                tmp.add(0);
+                NoteConverter.batchSecure(manager, context, notes, new ConvertCallback() {
+                    @Override
+                    public void onSuccess(@NonNull Note note) {
+                        notes.set(tmp.get(0), note);
+                        if (importInterface != null)
+                            importInterface.onNoteEncryptProcessed(tmp.get(0)+1, prevSecure);
+                        tmp.set(0, tmp.get(0)+1);
+                    }
+                    @Override
+                    public void onFailure() {}
+                });
+            }
+            for (int x = 0; x < total-prevSecure; ++x) {
                 try {
                     Note tmp = importNote(unpacker);
                     notes.add(tmp);
@@ -107,31 +135,11 @@ public class ImportUtil {
                 if (importInterface != null)
                     importInterface.onNoteProcessed(complete, failed, total);
             }
-
-            if (reSecure) {
-                if (importInterface != null)
-                    importInterface.onStartEncryptNotes(prevSecure);
-
-                for (int x = 0; x < prevSecure; ++x) {
-                    Note tmp = notes.remove(0);
-                    int curSize = notes.size();
-                    NoteConverter.makeNoteSecure(context, tmp, notes::add);
-
-                    while (curSize == notes.size())
-                        Thread.sleep(1000);
-                    if (importInterface != null)
-                        importInterface.onNoteEncryptProcessed(x+1, prevSecure);
-                }
-            }
-
             daoNote.upsert(notes.toArray(new Note[]{}));
-
         } catch (IOException e) { // we only get here if we can somehow not unpack: Most likely can't open file
             Log.e("Import", "Cannot open file or something: ", e);
         } catch (MessageInsufficientBufferException e) {
             Log.e("Import", "Corrupt content probably: ", e);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -145,16 +153,17 @@ public class ImportUtil {
         }
     }
 
-    public static void importDatabase(@NonNull Context context, @NonNull Uri location, boolean reSecure, @Nullable ImportInterface importInterface) {
+    public static void importDatabase(@NonNull FragmentManager manager, @NonNull Context context, @NonNull Uri location, boolean reSecure, @Nullable ImportInterface importInterface) {
         Log.e("Import", "Import start!");
         ContentResolver contentResolver = context.getContentResolver();
         Executors.newSingleThreadExecutor().execute(() -> {
             try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(contentResolver.openInputStream(location))) {
                 if (!checkHeader(unpacker)) {
-                    //TODO: Header mismatch. Got no correct file.
+                    Log.e("Import", "Got a header mismatch!");
+                    return;
                 }
 
-                importNotes(context, unpacker, reSecure, importInterface);
+                importNotes(manager, context, unpacker, reSecure, importInterface);
                 importCategories(context, unpacker, importInterface);
 
                 if (importInterface != null)

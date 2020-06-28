@@ -8,11 +8,13 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
 
 import org.msgpack.core.MessagePack;
@@ -22,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class ExportUtil {
     public static final String header = "If the bytes don't align, then I will be not an export file\0\0\0\0\0";
@@ -37,7 +38,6 @@ public class ExportUtil {
         try {
             packer.packInt(categories.size());
         } catch (IOException e) {
-            //TODO: Big problems here. Stop operations
             Log.e("Export", "Problem packing category size", e);
             return;
         }
@@ -84,40 +84,33 @@ public class ExportUtil {
     }
 
     @WorkerThread
-    private static void exportNotes(@NonNull Context context, @NonNull MessagePacker packer, boolean skipSecure, @Nullable ExportInterface exportInterface) {
-        final List<Note> notes = Database.getDatabase(context).getDAONote().getAll();
-        final List<Note> secureNotes = notes.parallelStream().filter(Note::isSecure).collect(Collectors.toList());
-
+    private static void exportNotes(@NonNull FragmentManager manager, @NonNull Context context, @NonNull MessagePacker packer, boolean skipSecure, @Nullable ExportInterface exportInterface) {
+        final List<Note> insecureNotes = Database.getDatabase(context).getDAONote().getInsecure();
         try {
             if (skipSecure) {
-                int total = notes.size() - secureNotes.size();
-                packer.packInt(total);
+                packer.packInt(insecureNotes.size());
                 packer.packInt(0);
-                doExport(notes.parallelStream().filter(note -> !note.isSecure()).collect(Collectors.toList()), packer, exportInterface);
+                doExport(insecureNotes, packer, exportInterface);
             } else {
-                final List<Note> insecureNotes = notes.parallelStream().filter(note -> !note.isSecure()).collect(Collectors.toList());
-                int total = notes.size();
+                final List<Note> secureNotes = Database.getDatabase(context).getDAONote().getSecure();
+                int total = insecureNotes.size() + secureNotes.size();
                 packer.packInt(total);
                 packer.packInt(secureNotes.size());
 
                 List<Note> decrypted = new ArrayList<>(total);
-
                 if (exportInterface != null)
                     exportInterface.onStartDecryptNotes(secureNotes.size());
 
-                for (Note note : secureNotes) {
-                    //TODO below: Should display errordialog if problems occur
-                    final int curSize = decrypted.size();
-                    NoteConverter.makeNoteInsecure(context, note, exception -> {
-                    }, insecureNote -> {
-                        decrypted.add(insecureNote);
-                        if (exportInterface != null)
-                            exportInterface.onNoteDecryptProcessed(decrypted.size(), secureNotes.size());
-
+                NoteConverter.batchInsecure(manager, context, secureNotes, new ConvertCallback() {
+                        @Override
+                        public void onSuccess(@NonNull Note note) {
+                            decrypted.add(note);
+                            if (exportInterface != null)
+                                exportInterface.onNoteDecryptProcessed(decrypted.size(), secureNotes.size());
+                        }
+                        @Override
+                        public void onFailure() {}
                     });
-                    while (curSize == decrypted.size())
-                        Thread.sleep(1000);
-                }
 
                 decrypted.addAll(insecureNotes);
                 doExport(decrypted, packer, exportInterface);
@@ -125,17 +118,16 @@ public class ExportUtil {
                     exportInterface.onNoteDecryptFinished(decrypted.size());
             }
         } catch (IOException e) {
-            //TODO: Big problems here. Stop operations
             Log.e("Export", "Big problem here ", e);
-        } catch (InterruptedException ignored) {}
+        }
     }
 
-    public static void exportDatabase(@NonNull Context context, @NonNull Uri location, boolean skipSecure, @Nullable ExportInterface exportInterface) {
+    public static void exportDatabase(@NonNull FragmentManager manager, @NonNull Context context, @NonNull Uri location, boolean skipSecure, @Nullable ExportInterface exportInterface) {
         ContentResolver contentResolver = context.getContentResolver();
         Executors.newSingleThreadExecutor().execute(() -> {
             try (MessagePacker packer = MessagePack.newDefaultPacker(contentResolver.openOutputStream(location))) {
                 packer.packString(header);
-                exportNotes(context, packer, skipSecure, exportInterface);
+                exportNotes(manager, context, packer, skipSecure, exportInterface);
                 exportCategories(context, packer, exportInterface);
 
                 if (exportInterface != null)

@@ -12,15 +12,12 @@ import com.python.companion.ui.notes.note.NoteType;
 
 import java.time.Instant;
 
-/*
- * Class representing a note
- */
 @SuppressWarnings("unused")
 @Entity(primaryKeys = {"name"})
 public class Note {
     private @NonNull String name, content;
 
-    @Embedded
+    @Embedded @NonNull
     private Category category;
 
     private boolean secure;
@@ -30,7 +27,7 @@ public class Note {
 
     private @NoteType.Type int type;
 
-    public Note(@NonNull String name, @NonNull String content, Category category, boolean secure, byte[] iv, int type) {
+    public Note(@NonNull String name, @NonNull String content, @NonNull Category category, boolean secure, byte[] iv, int type) {
         this.name = name;
         this.content = content;
         this.category = category;
@@ -45,7 +42,7 @@ public class Note {
         this.name = name;
         this.content = content;
 
-        this.category = new Category("", R.color.colorPrimary);
+        this.category = new Category("<default>", R.color.colorPrimary);
         this.secure = false;
         this.iv = null;
 
@@ -90,7 +87,7 @@ public class Note {
     /**
      * Function to get note category
      */
-    public Category getCategory() {
+    public @NonNull Category getCategory() {
         return category;
     }
 
@@ -98,7 +95,7 @@ public class Note {
      * Function to set note category
      * @param category New category
      */
-    public void setCategory(Category category) {
+    public void setCategory(@NonNull Category category) {
         this.category = category;
     }
 
@@ -120,7 +117,7 @@ public class Note {
     /**
      * @return current Initialization Vector for block chain cipher encryption schemes
      */
-    public byte[] getIv() {
+    public @Nullable byte[] getIv() {
         return iv;
     }
 
@@ -150,7 +147,8 @@ public class Note {
     }
 
     /**
-     * @return content type to render
+     * @return content type to render.
+     * @see NoteType for possible types
      */
     public int getType() {
         return type;

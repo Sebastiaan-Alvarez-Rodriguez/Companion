@@ -23,7 +23,7 @@ public class ExportActivity extends PortActivity implements ExportInterface {
             start.setEnabled(false);
             skipSecure = check.isChecked();
 
-            ExportUtil.exportDatabase(this, location, skipSecure, this);
+            ExportUtil.exportDatabase(getSupportFragmentManager(),this, location, skipSecure, this);
         });
 
         check.setOnCheckedChangeListener((buttonView, isChecked) -> barView1.setVisibility(isChecked ? View.INVISIBLE : View.VISIBLE));

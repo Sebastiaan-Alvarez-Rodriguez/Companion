@@ -49,7 +49,7 @@ public class PassSetDialog extends DialogFragment {
         }
     }
 
-    protected TextView headerView, textView;
+    protected TextView headerTextView, commentView, commentView2;
     protected EditText passOneField, passTwoField;
     protected Button cancelButton, acceptButton;
 
@@ -62,6 +62,12 @@ public class PassSetDialog extends DialogFragment {
         this.acceptListener = acceptListener;
         this.passGuard = guard;
     }
+
+//    @Override
+//    public void onCreate(@Nullable Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        setStyle(DialogFragment.STYLE_NO_TITLE, R.style.DialogStyle);
+//    }
 
     @Nullable
     @Override
@@ -79,8 +85,9 @@ public class PassSetDialog extends DialogFragment {
 
     @CallSuper
     protected void findGlobalViews(View view) {
-        headerView = view.findViewById(R.id.dialog_security_pass_set_header);
-        textView = view.findViewById(R.id.dialog_security_pass_set_comment);
+        headerTextView = view.findViewById(R.id.dialog_security_pass_set_text);
+        commentView = view.findViewById(R.id.dialog_security_pass_set_comment);
+        commentView2 = view.findViewById(R.id.dialog_security_pass_set_comment2);
         passOneField = view.findViewById(R.id.dialog_security_pass_set_pass_one);
         passTwoField = view.findViewById(R.id.dialog_security_pass_set_pass_two);
 
@@ -89,9 +96,10 @@ public class PassSetDialog extends DialogFragment {
     }
 
     protected void setText() {
-        headerView.setText("Security");
-        textView.setText("Stop! Authenticate first.");
-        acceptButton.setText("Authenticate");
+        headerTextView.setText("Security");
+        commentView.setText("Please set a new password");
+        commentView2.setText("Repeat your password");
+        acceptButton.setText("Set");
     }
 
     private void prepareButtons() {

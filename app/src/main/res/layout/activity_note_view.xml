@@ -25,11 +25,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
         <TextView
             android:id="@+id/activity_note_view_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:text="This is some sample. In reality, we would encounter normal text, markdown and latex code here"/>
+            android:textSize="24sp"
+            tools:text="This is some sample. In reality, we would encounter normal text, markdown and latex code here" />
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

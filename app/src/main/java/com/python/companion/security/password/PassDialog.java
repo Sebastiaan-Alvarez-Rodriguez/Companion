@@ -54,7 +54,7 @@ public class PassDialog extends DialogFragment {
         }
     }
 
-    protected TextView headerView, textView;
+    protected TextView headerView, commentView;
     protected EditText passField;
     protected CheckBox stayLoggedBox;
     protected Button cancelButton, acceptButton;
@@ -85,8 +85,8 @@ public class PassDialog extends DialogFragment {
 
     @CallSuper
     protected void findGlobalViews(View view) {
-        headerView = view.findViewById(R.id.dialog_security_pass_header);
-        textView = view.findViewById(R.id.dialog_security_pass_comment);
+        headerView = view.findViewById(R.id.dialog_security_pass_text);
+        commentView = view.findViewById(R.id.dialog_security_pass_comment);
         passField = view.findViewById(R.id.dialog_security_pass_pass);
 
         stayLoggedBox = view.findViewById(R.id.dialog_security_pass_staylogged);
@@ -97,7 +97,7 @@ public class PassDialog extends DialogFragment {
 
     protected void setText() {
         headerView.setText("Security");
-        textView.setText("Stop! Authenticate first.");
+        commentView.setText("Stop! Authenticate first.");
         acceptButton.setText("Authenticate");
     }
 
@@ -117,7 +117,7 @@ public class PassDialog extends DialogFragment {
                 acceptListener.onAccept(stayLoggedBox.isChecked());
                 dismiss();
             } else {
-                textView.setText("Incorrect password. Try again.");
+                commentView.setText("Incorrect password. Try again.");
             }
         });
     }

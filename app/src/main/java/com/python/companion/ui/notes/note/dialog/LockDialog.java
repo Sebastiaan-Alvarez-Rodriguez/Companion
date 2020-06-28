@@ -1,7 +1,6 @@
 package com.python.companion.ui.notes.note.dialog;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,28 +14,23 @@ import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.Guard;
+import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
-import com.python.companion.ui.general.dialog.ErrorDialog;
 import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
 
-@SuppressWarnings("WeakerAccess")
 public class LockDialog extends DialogFragment {
-    
-    @SuppressWarnings("unused")
+
     public static class Builder {
         private DialogCancelListener dialogCancelListener;
-        private DialogAcceptValueListener<Note> dialogAcceptListener = null;
+        private DialogAcceptValueListener<Note> dialogAcceptListener;
         
         private Note note;
-        private boolean doAction;
 
         public Builder() {
             dialogCancelListener = null;
             dialogAcceptListener = null;
             note = null;
-            doAction = true;
         }
 
         public Builder setCancelListener(@NonNull DialogCancelListener dialogCancelListener) {
@@ -54,17 +48,12 @@ public class LockDialog extends DialogFragment {
             return this;
         }
 
-        public Builder doAction(boolean doAction) {
-            this.doAction = doAction;
-            return this;
-        }
-
-        public LockDialog build() {
+        public LockDialog build(boolean lock) {
             if (note == null)
                 throw new IllegalStateException("Caller must provide Note which will be locked/unlocked with builder.setNote(note)");
             else if (dialogAcceptListener == null)
                 throw new IllegalStateException("Caller must provide accept callback!");
-            return new LockDialog(dialogCancelListener, dialogAcceptListener, note, doAction);
+            return new LockDialog(dialogCancelListener, dialogAcceptListener, note, lock);
         }
     }
 
@@ -74,13 +63,13 @@ public class LockDialog extends DialogFragment {
     protected @Nullable DialogCancelListener cancelListener;
     protected @NonNull DialogAcceptValueListener<Note> acceptListener;
     protected @NonNull Note note;
-    protected boolean doAction;
+    protected boolean lock;
 
-    protected LockDialog(@Nullable DialogCancelListener cancelListener, @NonNull DialogAcceptValueListener<Note> acceptListener, @NonNull Note note, boolean doAction) {
+    protected LockDialog(@Nullable DialogCancelListener cancelListener, @NonNull DialogAcceptValueListener<Note> acceptListener, @NonNull Note note, boolean lock) {
         this.cancelListener = cancelListener;
         this.acceptListener = acceptListener;
         this.note = note;
-        this.doAction = doAction;
+        this.lock = lock;
     }
 
     @Nullable
@@ -108,14 +97,10 @@ public class LockDialog extends DialogFragment {
     }
 
     protected void setText() {
-        boolean secure = note.isSecure();
-        titleView.setText(secure ? "Unlock" : "Lock");
-        questionView.setText("Do you want to "+ (secure ? "unlock" : "lock") + " this note?");
-        if (secure)
-            warningView.setText("Warning: No authentication is required to view unlocked notes");
-        else
-            warningView.setText("Locking this note means that you have to authenticate before viewing it");
-        acceptButton.setText(secure ? "Unlock" : "Lock");
+        titleView.setText(lock ? "Lock" : "Unlock");
+        questionView.setText("Do you want to "+ (lock ? "lock" : "unlock") + " this note?");
+        warningView.setText(lock ? "Locking this note means that you have to authenticate before viewing it" : "Warning: No authentication is required to view unlocked notes");
+        acceptButton.setText(lock ? "Lock" : "Unlock");
     }
 
     private void prepareButtons() {
@@ -125,50 +110,26 @@ public class LockDialog extends DialogFragment {
             dismiss();
         });
         acceptButton.setOnClickListener(v -> {
-            if (note.isSecure()) {
-                if (doAction) {
-                    NoteConverter.makeNoteInsecure(getContext(), note, exception -> {
-                    }, note -> {
+            if (lock) {
+                NoteConverter.makeNoteSecure(getChildFragmentManager(), getContext(), note, new ConvertCallback() {
+                    @Override
+                    public void onSuccess(@NonNull Note note) {
                         acceptListener.onAccept(note);
                         dismiss();
-                    });
-                } else {
-                    note.setSecure(false);
-                    acceptListener.onAccept(note);
-                    dismiss();
-                }
+                    }
+                    @Override
+                    public void onFailure() {}
+                });
             } else {
-                if (doAction) {
-                    NoteConverter.makeNoteSecure(getContext(), note, exception -> {
-                        ErrorDialog errorDialog;
-                        switch (exception) {
-                            case Guard.NO_BIOMETRICS:
-                                errorDialog = new ErrorDialog.Builder()
-                                        .setSubtitle("No biometrics registered")
-                                        .setProblem("Problem: You have not enrolled any fingerprints, which is required to lock notes")
-                                        .setSolution("Solution: Go to Settings > Security > Fingerprint, and enroll a fingerprint")
-                                        .build();
-                                break;
-                            case Guard.OTHER_PROBLEM:
-                            default:
-                                errorDialog = new ErrorDialog.Builder()
-                                        .setSubtitle("An unknown error occured")
-                                        .setProblem("We do not know what happened. Please remember this error code: <" + exception + ">. Let us know you encoutered it, and what you did with this note")
-                                        .build();
-                                break;
-                        }
-                        Log.e("Lockdialog", "We had an exception");
-                        errorDialog.show(getChildFragmentManager(), null);
-                    }, note -> {
-                        Log.e("Lockdialog", "Note is now secure");
+                NoteConverter.makeNoteInsecure(getChildFragmentManager(), getContext(), note, new ConvertCallback() {
+                    @Override
+                    public void onSuccess(@NonNull Note note) {
                         acceptListener.onAccept(note);
                         dismiss();
-                    });
-                } else {
-                    note.setSecure(true);
-                    acceptListener.onAccept(note);
-                    dismiss();
-                }
+                    }
+                    @Override
+                    public void onFailure() {}
+                });
             }
         });
     }

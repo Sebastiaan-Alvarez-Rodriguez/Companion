@@ -6,11 +6,17 @@ import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
 
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.core.util.Pair;
 import androidx.fragment.app.FragmentManager;
 
+import com.python.companion.security.biometry.BioGuard;
+import com.python.companion.security.password.PassGuard;
+
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -20,7 +26,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.util.List;
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -36,6 +43,50 @@ import javax.crypto.spec.GCMParameterSpec;
 // https://www.programcreek.com/java-api-examples/?code=opensecuritycontroller/osc-core/osc-core-master/osc-server/src/main/java/org/osc/core/broker/util/crypto/KeyStoreProvider.java
 
 public abstract class Guard {
+    private static final int TYPE_PASSGUARD = 0;
+    private static final int TYPE_BIOGUARD = 1;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({TYPE_PASSGUARD, TYPE_BIOGUARD})
+    public @interface Type {}
+
+    private static volatile Guard INSTANCE;
+    private static volatile @Type int guardtype = TYPE_PASSGUARD;
+
+    /**
+     * Gets guard of specified type. If we currently use another type, we switch instance type and reset validation
+     * @param guardtype Type of guard to return
+     */
+    public static Guard getGuard(@Type int guardtype) {
+        if (INSTANCE == null) {
+            synchronized (Guard.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = guardtype == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
+                    Guard.guardtype = guardtype;
+                }
+            }
+        }
+        if (Guard.guardtype != guardtype) {
+            synchronized (Guard.class) {
+                if (Guard.guardtype != guardtype)
+                    INSTANCE = guardtype == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
+            }
+        }
+        return INSTANCE;
+    }
+
+    /** Gets guard of current type */
+    public static Guard getGuard() {
+        if (INSTANCE == null) {
+            synchronized (Guard.class) {
+                if (INSTANCE == null)
+                    INSTANCE = Guard.guardtype == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
+            }
+        }
+        return INSTANCE;
+    }
+
+
+    protected Guard() {}
     protected boolean validated = false;
 
     protected abstract void validate(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull ValidateCallback validateCallback);
@@ -47,12 +98,18 @@ public abstract class Guard {
      * @param alias Name we stored a key under
      * @param callback Called when encryption had success
      */
-    public void encrypt(@NonNull String data, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback) {
+    public synchronized void encrypt(@NonNull String data, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback) {
         if (!this.validated) {
             validate(fragmentManager, context, new ValidateCallback() {
                 @Override
                 public void onSuccess() {
-                    encryptInternal(data, alias, callback);
+                    synchronized (Guard.class) {
+                        final boolean wasvalidated = Guard.this.validated;
+                        Guard.this.validated = true;
+                        encryptInternal(data, alias, callback);
+                        if (!wasvalidated)
+                            Guard.this.validated = false;
+                    }
                 }
 
                 @Override
@@ -66,6 +123,33 @@ public abstract class Guard {
     }
 
     /**
+     * Public call to handle encryption of multiple items at once. For each item, the callback will be called
+     * @see Guard#encrypt(String, String, FragmentManager, Context, EncryptedCallback)
+     */
+    public synchronized void encrypt(@NonNull Stream<String> datas, @NonNull Stream<String> aliases, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback) {
+        if (!this.validated) {
+            validate(fragmentManager, context, new ValidateCallback() {
+                @Override
+                public void onSuccess() {
+                    synchronized (Guard.class) {
+                        final boolean wasvalidated = Guard.this.validated;
+                        Guard.this.validated = true;
+                        encryptInternal(datas, aliases, callback);
+                        if (!wasvalidated)
+                            Guard.this.validated = false;
+                    }
+                }
+                @Override
+                public void onFailure() {
+                    callback.onFailure();
+                }
+            });
+        } else {
+            encryptInternal(datas, aliases, callback);
+        }
+    }
+
+    /**
      * Public call to handle decryption once
      * @see Guard#decryptInternal(String, byte[], String, DecryptedCallback)
      * @param data Data to decrypt
@@ -73,12 +157,18 @@ public abstract class Guard {
      * @param alias Name we stored key under
      * @param callback Called when decryption had success
      */
-    public void decrypt(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback) {
+    public synchronized void decrypt(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback) {
         if (!this.validated) {
             validate(fragmentManager, context, new ValidateCallback() {
                 @Override
                 public void onSuccess() {
-                    decryptInternal(data, iv, alias, callback);
+                    synchronized (Guard.class) {
+                        final boolean wasvalidated = Guard.this.validated;
+                        Guard.this.validated = true;
+                        decryptInternal(data, iv, alias, callback);
+                        if (!wasvalidated)
+                            Guard.this.validated = false;
+                    }
                 }
 
                 @Override
@@ -92,10 +182,41 @@ public abstract class Guard {
     }
 
     /**
+     * Public call to handle decryption of multiple items at once. For each item, the callback will be called
+     * @see Guard#decrypt(String, byte[], String, FragmentManager, Context, DecryptedCallback)
+     */
+    public synchronized void decrypt(@NonNull Stream<String> datas, @NonNull Stream<byte[]> ivs, @NonNull Stream<String> aliases, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback) {
+        if (!this.validated) {
+            validate(fragmentManager, context, new ValidateCallback() {
+                @Override
+                public void onSuccess() {
+                    synchronized (Guard.class) {
+                        final boolean wasvalidated = Guard.this.validated;
+                        Guard.this.validated = true;
+                        // This would be a major security vulnerability, since a thread could be used to boot other functions while this thread is busy.
+                        // Luckily, every method is synchronized, meaning we have a lock, and only 1 method can be active at any point in time.
+                        // When control reaches this statement, we own the lock. No abuse is possible.
+                        decryptInternal(datas, ivs, aliases, callback);
+                        if (!wasvalidated)
+                            Guard.this.validated = false;
+                    }
+                }
+
+                @Override
+                public void onFailure() {
+                    callback.onFailure();
+                }
+            });
+        } else {
+            decryptInternal(datas, ivs, aliases, callback);
+        }
+    }
+
+    /**
      * Encrypt given string using key in Android KeyStore with given alias, and return content in a {@link EncryptedCallback}
      */
     @SuppressWarnings("ConstantConditions")
-    private void encryptInternal(@NonNull String data, @NonNull String alias, @NonNull EncryptedCallback callback) {
+    private synchronized void encryptInternal(@NonNull String data, @NonNull String alias, @NonNull EncryptedCallback callback) {
         try {
             Pair<String, byte[]> encrypted = enc(data, alias);
             callback.onFinish(encrypted.first, encrypted.second);
@@ -106,17 +227,17 @@ public abstract class Guard {
     }
 
     /**
-     * Encrypts multiple data objects at once
+     * Encrypts multiple data objects at once. Make absolutely sure the streams are of even length.
      * @see Guard#encryptInternal(String, String, EncryptedCallback)
      */
     @SuppressWarnings("ConstantConditions")
-    protected void encryptInternal(@NonNull List<String> datas, @NonNull List<String> aliases, @NonNull EncryptedCallback callback) {
-        if (datas.size() != aliases.size())
-            throw new RuntimeException("Data length is "+datas.size()+", aliases length is "+aliases.size()+", but should have same length!");
-        for (int x = 0; x < datas.size(); ++x) {
+    protected synchronized void encryptInternal(@NonNull Stream<String> datas, @NonNull Stream<String> aliases, @NonNull EncryptedCallback callback) {
+        Iterator<String> dit = datas.iterator();
+        Iterator<String> aliasit = aliases.iterator();
+        while (dit.hasNext()) {
             try {
-            Pair<String, byte[]> encrypted = enc(datas.get(x), aliases.get(x));
-            callback.onFinish(encrypted.first, encrypted.second);
+                Pair<String, byte[]> encrypted = enc(dit.next(), aliasit.next());
+                callback.onFinish(encrypted.first, encrypted.second);
             } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException | BadPaddingException | IllegalBlockSizeException e) {
                 Log.e("encrypt", "Exception: ", e);
                 callback.onFailure();
@@ -127,7 +248,7 @@ public abstract class Guard {
     /**
      * Decrypt given String using key in Android KeyStore with given alias, and return content in a {@link DecryptedCallback}
      */
-    protected void decryptInternal(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull DecryptedCallback callback) {
+    protected synchronized void decryptInternal(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull DecryptedCallback callback) {
         try {
             callback.onFinish(dec(data, iv, alias));
         } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
@@ -137,15 +258,17 @@ public abstract class Guard {
     }
 
     /**
-     * Decrypts multiple data objects at once
+     * Decrypts multiple data objects at once. Make absolutely sure the streams are of even length.
      * @see Guard#decryptInternal(String, byte[], String, DecryptedCallback)
      */
-    protected void decryptInternal(@NonNull List<String> datas, @NonNull List<byte[]> ivs, @NonNull List<String> aliases, @NonNull DecryptedCallback callback) {
-        if (datas.size() != ivs.size() || datas.size() != aliases.size())
-            throw new RuntimeException("Data length is "+datas.size()+", ivs length is "+ivs.size()+", aliases length is "+aliases.size()+", but all should have same length!");
-        for (int x = 0; x < datas.size(); ++x) {
+    protected synchronized void decryptInternal(@NonNull Stream<String> datas, @NonNull Stream<byte[]> ivs, @NonNull Stream<String> aliases, @NonNull DecryptedCallback callback) {
+        Iterator<String> dit = datas.iterator();
+        Iterator<byte[]> ivit = ivs.iterator();
+        Iterator<String> aliasit = aliases.iterator();
+
+        while (dit.hasNext()) {
             try {
-                callback.onFinish(dec(datas.get(x), ivs.get(x), aliases.get(x)));
+                callback.onFinish(dec(dit.next(), ivit.next(), aliasit.next()));
             } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
                 Log.e("decrypt", "Exception: ", e);
                 callback.onFailure();
@@ -157,7 +280,7 @@ public abstract class Guard {
      * Encrypt given string using key in Android KeyStore with given alias, and return content in a {@link EncryptedCallback}
      * @return Pair of encrypted string, iv
      */
-    private Pair<String, byte[]> enc(@NonNull String data, @NonNull String alias) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, NoSuchPaddingException, InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException {
+    private synchronized Pair<String, byte[]> enc(@NonNull String data, @NonNull String alias) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, NoSuchPaddingException, InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException {
         if (!this.validated)
             throw new RuntimeException("Cannot perform operation: Not authenticated");
         Cipher cipher = getEncCipher(alias);
@@ -170,7 +293,9 @@ public abstract class Guard {
      * Decrypt given String using key in Android KeyStore with given alias, and return content in a {@link DecryptedCallback}
      * @return decrypted string
      */
-    private String dec(@NonNull String data, @NonNull byte[] iv, @NonNull String alias) throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, KeyStoreException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnrecoverableEntryException, IOException, BadPaddingException, IllegalBlockSizeException {
+    private synchronized String dec(@NonNull String data, @NonNull byte[] iv, @NonNull String alias) throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, KeyStoreException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnrecoverableEntryException, IOException, BadPaddingException, IllegalBlockSizeException {
+        if (!this.validated)
+            throw new RuntimeException("Cannot perform operation: Not authenticated");
         Cipher cipher = getDecCipher(iv, alias);
         byte[] decrypted = cipher.doFinal(Base64.decode(data, Base64.DEFAULT));
         return new String(decrypted, StandardCharsets.UTF_8);
@@ -181,7 +306,7 @@ public abstract class Guard {
      * @param alias name where key was stored under in Android Keystore
      * @return cipher object, ready for encryption
      */
-    private static @NonNull Cipher getEncCipher(@NonNull String alias)  throws InvalidKeyException, UnrecoverableEntryException, NoSuchAlgorithmException, CertificateException, KeyStoreException, NoSuchPaddingException, IOException {
+    private synchronized static @NonNull Cipher getEncCipher(@NonNull String alias)  throws InvalidKeyException, UnrecoverableEntryException, NoSuchAlgorithmException, CertificateException, KeyStoreException, NoSuchPaddingException, IOException {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
             if (!keyStore.containsAlias(alias))
@@ -202,7 +327,7 @@ public abstract class Guard {
      * @param alias name where key was stored under in Android Keystore
      * @return cipher object, ready for decryption
      */
-    private static @NonNull Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, IOException {
+    private synchronized static @NonNull Cipher getDecCipher(@NonNull byte[] iv, @NonNull String alias) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, CertificateException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, IOException {
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
         keyStore.load(null);
 
@@ -219,7 +344,7 @@ public abstract class Guard {
      * @param alias Name to store key under
      * @return {@code true} on success, {@code false} otherwise
      */
-    private static boolean generateAES(@NonNull String alias) {
+    private synchronized static boolean generateAES(@NonNull String alias) {
         try {
             KeyGenerator k = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
             KeyGenParameterSpec keyGenParameterSpec =
@@ -230,7 +355,6 @@ public abstract class Guard {
                             .setUserAuthenticationRequired(false) // Requires user authentication. Invalidates when fingerprint enrolled/removed, pass changed
                             .setInvalidatedByBiometricEnrollment(false) // States that we do not invalidate key if fingerprint is enrolled
                             .setUnlockedDeviceRequired(true) // Requires screen to be unlocked to be able to use key
-                            .setIsStrongBoxBacked(true) // Should be backed by encryption hardware
                             .build();
             k.init(keyGenParameterSpec);
             k.generateKey();

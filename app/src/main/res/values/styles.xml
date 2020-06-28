@@ -63,4 +63,9 @@
     <style name="ImageButton" parent="android:Widget.Material.ImageButton">
         <item name="android:background">@color/colorWindowBackground</item>
     </style>
+
+    <style name="DialogStyle" parent="AppTheme">
+        <item name="android:windowMinWidthMajor">97%</item>
+        <item name="android:windowMinWidthMinor">97%</item>
+    </style>
 </resources>

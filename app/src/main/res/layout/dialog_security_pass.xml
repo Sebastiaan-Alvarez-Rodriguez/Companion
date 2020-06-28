@@ -1,9 +1,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="360dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    style="@style/DialogStyle">
 
     <ImageView
         android:id="@+id/dialog_security_pass_header"
@@ -11,7 +12,7 @@
         android:layout_height="120dp"
         android:background="@color/colorPrimaryDark"
         android:gravity="center"
-        android:minWidth="240dp"
+        android:minWidth="600dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_lock_outline"
         android:tint="@color/colorWindowBackground"
@@ -81,7 +82,7 @@
         android:layout_centerHorizontal="true"
         android:background="@color/colorPrimaryDark"
         android:gravity="center_vertical|center_horizontal"
-        android:textColor="#ffffffff"
+        android:textColor="@color/colorWindowBackground"
         app:layout_constraintBottom_toBottomOf="@+id/dialog_security_pass_cancel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.84"

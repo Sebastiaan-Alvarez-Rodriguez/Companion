@@ -1,10 +1,10 @@
 package com.python.companion.ui.notes.note.activity.view;
 
 import android.content.Intent;
-import android.graphics.PorterDuff;
+import android.graphics.BlendMode;
+import android.graphics.BlendModeColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -14,71 +14,50 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
-import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.backend.interact.Store;
+import com.python.companion.backend.interact.StoreCallback;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.notes.category.activity.CategoryEditActivity;
+import com.python.companion.ui.notes.note.NoteContainer;
 import com.python.companion.ui.notes.note.NoteType;
-import com.python.companion.ui.notes.note.dialog.LockDialog;
-import com.python.companion.ui.notes.note.dialog.NoteOverrideDialog;
-import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.util.RenderUtil;
 
-/**
- * Expected from caller for new note:
- * 1. name
- * 2. content
- * Expected from caller for editing note:
- * 1. name
- * 2. content
- * 3. categoryName
- * 4. categoryColor
- * 5. secure
- * 6. type
- * 7. prevName (name of note before starting editing)
- */
+import static com.python.companion.ui.notes.note.NoteType.TYPE_MARKDOWN;
+import static com.python.companion.ui.notes.note.NoteType.TYPE_MARKDOWN_LATEX;
+import static com.python.companion.ui.notes.note.NoteType.TYPE_NORMAL;
+
 public class NotePreviewActivity extends AppCompatActivity {
     private static final int REQ_CATEGORY_EDIT = 1;
 
     private TextView contentView;
+    private MenuItem lockItem, categoryItem, typeItem;
 
-    private MenuItem lockItem;
-    private MenuItem categoryItem;
-    private MenuItem typeItem;
+    private Note note;
 
-    private String curName, curContent, prevName;
-    private Category curCategory;
-    private @NoteType.Type int curType;
-    private boolean curSecure, prevSecure;
-    private ActionBar actionbar;
-
+    private String prevName;
     private boolean editMode;
+
+    private ActionBar actionbar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
+        note = ((NoteContainer) intent.getParcelableExtra("note")).getNote();
+        editMode = intent.hasExtra("prevName");
+        if (editMode)
+            prevName = intent.getStringExtra("prevName");
         setContentView(R.layout.activity_note_preview);
-
-        curName = null;
-        curContent = null;
-        curCategory = null;
-        curSecure = false;
-
         findViews();
         setupActionBar();
+        setContent(note.getContent(), note.getType());
     }
 
-    @Override
-    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
-    }
 
     private void findViews() {
         contentView = findViewById(R.id.activity_note_preview_content);
@@ -98,119 +77,66 @@ public class NotePreviewActivity extends AppCompatActivity {
             actionbar.setDisplayHomeAsUpEnabled(true);
             Drawable icon = myToolbar.getNavigationIcon();
             if (icon != null) {
-                icon.setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
+                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
                 myToolbar.setNavigationIcon(icon);
             }
         }
     }
 
     private void save() {
-        if (curName.length() == 0)
+        if (note.getName().length() == 0) {
             Snackbar.make(findViewById(R.id.activity_note_preview_layout), "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
-        else if (editMode)
-            checkEdit();
-        else
-            checkNew();
-    }
-
-    private void checkNew() {
-        Log.i("Save", "Checking new mode");
-        NoteQuery noteQuery = new NoteQuery(this);
-        noteQuery.isUniqueInstanced(curName, other -> {
-            if (other == null) {
-                Log.i("Save", "New & unique. Inserting...");
-                insertNew();
-            } else {
-                Log.i("Save", "New & conflict. CategoryDialog...");
-                showOverrideDialog(other, this::updateExisting);
-            }
-        });
-    }
-
-    private void checkEdit() {
-        Log.i("Save", "Checking edit mode");
-
-        boolean unchangedName = curName.equals(prevName);
-        if (unchangedName) {
-            Log.i("Save", "Edit & name unchanged. Updating...");
-            updateExisting();
         } else {
-            NoteQuery noteQuery = new NoteQuery(this);
-            noteQuery.isUniqueInstanced(curName, other -> {
-                if (other == null) {
-                    Log.i("Save", "Edit & name changed ("+ prevName +"->"+ curName +") & unique. Updating...");
-                    updateExisting();
-                } else {
-                    Log.i("Save", "Edit & name changed ("+ prevName +"->"+ curName +") & conflict. CategoryDialog...");
-                    showOverrideDialog(other, () -> noteQuery.delete(other.getName(), v -> updateExisting()));
-                }
-            });
-        }
-    }
-
-    private void insertNew() {
-        Log.e("Preview", "Store new, name: "+curName+", len(content): "+curContent.length()+", type: "+curType+", category == null: "+(curCategory==null)+"secure: "+curSecure);
-        if (curSecure) {
-            LockDialog dialog = new LockDialog.Builder()
-                    .setAcceptListener(note -> {
-                        NoteQuery noteQuery = new NoteQuery(this);
-                        noteQuery.insert(note);
+            if (editMode)
+                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
+                    @Override
+                    public void onSuccess() {
                         finishSuccess();
-                    })
-                    .setNote(new Note(curName, curContent, curCategory, false, null, curType))
-                    .build();
-            dialog.show(getSupportFragmentManager(), null);
-        } else {
-            NoteQuery noteQuery = new NoteQuery(this);
-            noteQuery.insert(new Note(curName, curContent, curCategory, false, null, curType));
-            finishSuccess();
+                    }
+                    @Override
+                    public void onFailure() {
+
+                    }
+                });
+            else
+                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
+                    @Override
+                    public void onSuccess() {
+                        finishSuccess();
+                    }
+                    @Override
+                    public void onFailure() {
+
+                    }
+                });
         }
     }
 
-    private void updateExisting() {
-        final NoteQuery noteQuery = new NoteQuery(this);
-        if (editMode) { //updateContent-conflict situation
-            if (!prevSecure && curSecure) { // Note was not secure, now secure
-                LockDialog dialog = new LockDialog.Builder()
-                        .setAcceptListener(note -> noteQuery.replace(prevName, note, v -> finishSuccess()))
-                        .setNote(new Note(curName, curContent, curCategory, false, null, curType))
-                        .build();
-                dialog.show(getSupportFragmentManager(), null);
-            } else if (curSecure) { // Note was secure, now secure
-                //TODO below: Should display errordialog if problems occur
-                NoteConverter.makeNoteSecure(this, new Note(curName, curContent, curCategory, false, null, curType), exception -> {}, note -> noteQuery.replace(prevName, note, v -> finishSuccess()));
-            } else if (prevSecure && !curSecure) { // Note was secure, now not secure
-                LockDialog dialog = new LockDialog.Builder()
-                        .setAcceptListener(note -> noteQuery.replace(prevName, note, v -> finishSuccess()))
-                        .setNote(new Note(curName, curContent, curCategory, true, null, curType))
-                        .doAction(false)
-                        .build();
-                dialog.show(getSupportFragmentManager(), null);
-            } else { // Note was not secure, now not secure
-                noteQuery.replace(prevName, new Note(curName, curContent, curCategory, false, null, curType), v -> finishSuccess());
-            }
-        } else { //new-conflict situation (no prevNoteName available)
-            if (curSecure) {
-                LockDialog dialog = new LockDialog.Builder()
-                        .setAcceptListener(note -> noteQuery.update(note, v -> finishSuccess()))
-                        .setNote(new Note(curName, curContent, curCategory, false, null, curType))
-                        .build();
-                dialog.show(getSupportFragmentManager(), null);
-            } else {
-                noteQuery.update(new Note(curName, curContent, curCategory, false, null, curType), v -> finishSuccess());
-            }
-        }
-    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_note_preview, menu);
+        lockItem = menu.findItem(R.id.menu_note_preview_lock);
+        categoryItem = menu.findItem(R.id.menu_note_preview_category);
+        typeItem = menu.findItem(R.id.menu_note_preview_type);
 
-    private void showOverrideDialog(Note conflicting, DialogAcceptListener overrideListener) {
-        NoteOverrideDialog noteOverrideDialog = new NoteOverrideDialog.Builder()
-                .setExistsText("Note name already exists!")
-                .setQuestionText("Do you want to override existing note?")
-                .setWarningText("Warning: Overriden notes cannot be restored")
-                .setNote(conflicting)
-                .setOverrideListener(overrideListener)
-                .build();
-        runOnUiThread(() -> noteOverrideDialog.show(getSupportFragmentManager(), null));
+        switch (note.getType()) {
+            case TYPE_NORMAL:
+                menu.findItem(R.id.menu_note_preview_type_normal).setChecked(true);
+                typeItem.setIcon(R.drawable.ic_menu_note);
+                break;
+            case NoteType.TYPE_MARKDOWN:
+                menu.findItem(R.id.menu_note_preview_type_markdown).setChecked(true);
+                typeItem.setIcon(R.drawable.ic_menu_md);
+                break;
+            case NoteType.TYPE_MARKDOWN_LATEX:
+                menu.findItem(R.id.menu_note_preview_type_latex).setChecked(true);
+                typeItem.setIcon(R.drawable.ic_menu_latex);
+                break;
+        }
+
+        lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+        actionbar.setTitle(note.getName().length() == 0 ? "<no name set>" : note.getName());
+        return true;
     }
 
     @Override
@@ -221,14 +147,13 @@ public class NotePreviewActivity extends AppCompatActivity {
                 break;
             case R.id.menu_note_preview_category:
                 Intent intent = new Intent(this, CategoryEditActivity.class);
-                if (curCategory != null) {
-                    intent.putExtra("categoryName", curCategory.getCategoryName());
-                    intent.putExtra("categoryColor", curCategory.getCategoryColor());
-                }
+                intent.putExtra("categoryName", note.getCategory().getCategoryName());
+                intent.putExtra("categoryColor", note.getCategory().getCategoryColor());
                 startActivityForResult(intent, REQ_CATEGORY_EDIT);
                 break;
             case R.id.menu_note_preview_lock:
-                update(curName, curContent, curCategory, !curSecure, curType);
+                note.setSecure(!note.isSecure());
+                lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
                 break;
             case R.id.menu_note_preview_save:
                 save();
@@ -238,102 +163,27 @@ public class NotePreviewActivity extends AppCompatActivity {
             default:
                 switch (item.getItemId()) {
                     case R.id.menu_note_preview_type_normal:
-                        update(curName, curContent, curCategory, curSecure, NoteType.TYPE_NORMAL);
+                        note.setType(TYPE_NORMAL);
+                        typeItem.setIcon(R.drawable.ic_menu_note);
                         break;
                     case R.id.menu_note_preview_type_markdown:
-                        update(curName, curContent, curCategory, curSecure, NoteType.TYPE_MARKDOWN);
+                        note.setType(TYPE_MARKDOWN);
+                        typeItem.setIcon(R.drawable.ic_menu_md);
                         break;
                     case R.id.menu_note_preview_type_latex:
-                        update(curName, curContent, curCategory, curSecure, NoteType.TYPE_MARKDOWN_LATEX);
+                        typeItem.setIcon(R.drawable.ic_menu_latex);
+                        note.setType(TYPE_MARKDOWN_LATEX);
                         break;
                 }
                 item.setChecked(true);
+                setContent(note.getContent(), note.getType());
         }
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_note_preview, menu);
-        lockItem = menu.findItem(R.id.menu_note_preview_lock);
-        categoryItem = menu.findItem(R.id.menu_note_preview_category);
-        typeItem = menu.findItem(R.id.menu_note_preview_type);
-
-        Intent intent = getIntent();
-        editMode = intent.hasExtra("prevName");
-        if (editMode) {
-            prevName = intent.getStringExtra("prevName");
-            prevSecure = intent.getBooleanExtra("secure", false);
-            Category tmp = new Category(intent.getStringExtra("categoryName"), intent.getIntExtra("categoryColor", -1));
-            update(intent.getStringExtra("name"), intent.getStringExtra("content"), tmp, intent.getBooleanExtra("secure", false), intent.getIntExtra("type", NoteType.TYPE_NORMAL));
-            switch (intent.getIntExtra("type", NoteType.TYPE_NORMAL)) {
-                case NoteType.TYPE_NORMAL:
-                    menu.findItem(R.id.menu_note_preview_type_normal).setChecked(true); break;
-                case NoteType.TYPE_MARKDOWN:
-                    menu.findItem(R.id.menu_note_preview_type_markdown).setChecked(true); break;
-                case NoteType.TYPE_MARKDOWN_LATEX:
-                    menu.findItem(R.id.menu_note_preview_type_latex).setChecked(true); break;
-            }
-        } else {
-            curCategory = new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary));
-            update(intent.getStringExtra("name"), intent.getStringExtra("content"), curCategory, curSecure, curType);
-            menu.findItem(R.id.menu_note_preview_type_normal).setChecked(true);
-        }
-        lockItem.setIcon(getDrawable(curSecure ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
-        return true;
-    }
-
-    private void update(@NonNull String name, @NonNull String content, @NonNull Category category, boolean secure, @NoteType.Type int type) {
-        if (!name.equals(curName)) {
-            curName = name;
-            if (curName.equals(""))
-                curName = "<no name set>";
-            actionbar.setTitle(name);
-        }
-
-        if (!content.equals(curContent)) {
-            curContent = content;
-            if (type == curType)
-                setContent(curContent, type);
-        }
-
-        if (category != curCategory) {
-            int categoryColor = category.getCategoryName().length() == 0 ? getColor(R.color.colorPrimary) : category.getCategoryColor();
-            double diff = ColorUtils.calculateContrast(categoryColor, getColor(R.color.colorPrimary));
-            if (diff < 4.0)
-                categoryColor = getColor(R.color.colorWindowBackground);
-            categoryItem.getIcon().setColorFilter(categoryColor, PorterDuff.Mode.SRC_IN);
-            curCategory = category;
-        }
-
-        if (type != curType) {
-            setContent(curContent, type);
-            curType = type;
-            Drawable d;
-            switch (type) {
-                case NoteType.TYPE_NORMAL:
-                    d = getDrawable(R.drawable.ic_menu_note);
-                    break;
-                case NoteType.TYPE_MARKDOWN:
-                    d = getDrawable(R.drawable.ic_menu_md);
-                    break;
-                case NoteType.TYPE_MARKDOWN_LATEX:
-                default:
-                    d = getDrawable(R.drawable.ic_menu_latex);
-            }
-            typeItem.setIcon(d);
-        }
-
-        if (secure != curSecure) {
-            lockItem.setIcon(getDrawable(secure ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
-            curSecure = secure;
-        }
-    }
-
     private void finishSuccess() {
         Intent result = new Intent();
-        Log.e("Preview", curContent);
-        result.putExtra("content", curContent);
+        result.putExtra("note", new NoteContainer(note));
         setResult(RESULT_OK, result);
         finish();
     }
@@ -341,8 +191,14 @@ public class NotePreviewActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQ_CATEGORY_EDIT && resultCode == RESULT_OK && data != null) {
-            Category tmp = new Category(data.getStringExtra("categoryName"), data.getIntExtra("categoryColor", -1));
-            update(curName, curContent, tmp, curSecure, curType);
+            Category c = new Category(data.getStringExtra("categoryName"), data.getIntExtra("categoryColor", -1));
+            double diff = ColorUtils.calculateContrast(c.getCategoryColor(), getColor(R.color.colorPrimary));
+            int displaycolor = c.getCategoryColor();
+            if (diff < 4.0) {
+                displaycolor = getColor(R.color.colorWindowBackground);
+            }
+            categoryItem.getIcon().setColorFilter(new BlendModeColorFilter(displaycolor, BlendMode.SRC_IN));
+            note.setCategory(c);
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

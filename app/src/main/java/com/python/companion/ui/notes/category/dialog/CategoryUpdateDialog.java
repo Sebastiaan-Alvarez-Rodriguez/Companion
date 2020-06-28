@@ -14,14 +14,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
-import com.jaredrummler.android.colorpicker.ColorPickerDialog;
-import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
 import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.skydoves.colorpickerview.ColorPickerDialog;
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
 @SuppressWarnings("WeakerAccess")
 public class CategoryUpdateDialog extends DialogFragment {
@@ -100,20 +100,16 @@ public class CategoryUpdateDialog extends DialogFragment {
     }
 
     private void setupClicks() {
-        colorView.setOnClickListener(v -> {
-            ColorPickerDialog dialog = ColorPickerDialog.newBuilder().setShowAlphaSlider(false).setColor(category.getCategoryColor()).create();
-            dialog.setColorPickerDialogListener(new ColorPickerDialogListener() {
-                @Override
-                public void onColorSelected(int dialogId, int c) {
-                    category.setCategoryColor(c);
-                    colorView.setBackgroundColor(c);
-                }
-
-                @Override
-                public void onDialogDismissed(int dialogId) {}
-            });
-            dialog.show(getChildFragmentManager(), null);
-        });
+        colorView.setOnClickListener(v -> new ColorPickerDialog.Builder(getContext())
+                .setTitle("Pick a color")
+                .setPositiveButton("Pick", (ColorEnvelopeListener) (envelope, fromUser) -> {
+                    category.setCategoryColor(envelope.getColor());
+                    colorView.setBackgroundColor(envelope.getColor());
+                })
+                .setNegativeButton("Cancel", (dialog1, which) -> dialog1.dismiss())
+                .attachAlphaSlideBar(false)
+                .attachBrightnessSlideBar(true)
+                .show());
 
         cancelButton.setOnClickListener(v -> {
             if (cancelListener != null)

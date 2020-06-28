@@ -116,8 +116,8 @@ public class NoteQuery {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
     }
 
-    public void getAll(ResultListener<List<Note>> listener) {
-        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.getAll()));
+    public void getAll(boolean secureOnesToo, ResultListener<List<Note>> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.getAll(secureOnesToo)));
     }
 
     public void isUnique(String name, ResultListener<Boolean> listener) {

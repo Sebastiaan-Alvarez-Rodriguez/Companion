@@ -2,7 +2,6 @@ package com.python.companion.ui.notes.note.activity.edit;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -10,13 +9,16 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.python.companion.R;
-import com.python.companion.ui.notes.note.NoteType;
+import com.python.companion.db.entity.Note;
+import com.python.companion.ui.notes.note.NoteContainer;
 import com.python.companion.ui.notes.note.activity.view.NotePreviewActivity;
 
 public class NoteEditActivity extends AppCompatActivity {
     private static final int REQUEST_PREVIEW = 1;
     private EditText noteName, noteContent;
     private Button previewButton;
+
+    private Note note;
 
     private boolean editMode;
 
@@ -26,11 +28,12 @@ public class NoteEditActivity extends AppCompatActivity {
         setContentView(R.layout.activity_note_edit);
         findViews();
 
-        Intent inputIntent = getIntent();
-        editMode = inputIntent.hasExtra("name");
+        Intent intent = getIntent();
+        editMode = intent.hasExtra("note");
         if (editMode) {
-            noteName.setText(inputIntent.getStringExtra("name"));
-            noteContent.setText(inputIntent.getStringExtra("content"));
+            note = ((NoteContainer) intent.getParcelableExtra("note")).getNote();
+            noteName.setText(note.getName());
+            noteContent.setText(note.getContent());
         }
         setupClicks();
     }
@@ -43,16 +46,13 @@ public class NoteEditActivity extends AppCompatActivity {
 
     private void setupClicks() {
         previewButton.setOnClickListener(v -> {
-            Intent recvIntent = getIntent();
             Intent intent = new Intent(this, NotePreviewActivity.class);
-            intent.putExtra("name", noteName.getText().toString());
-            intent.putExtra("content", noteContent.getText().toString());
             if (editMode) {
-                intent.putExtra("prevName", recvIntent.getStringExtra("name"));
-                intent.putExtra("categoryName", recvIntent.getStringExtra("categoryName"));
-                intent.putExtra("categoryColor", recvIntent.getIntExtra("categoryColor", -1));
-                intent.putExtra("secure", recvIntent.getBooleanExtra("secure", false));
-                intent.putExtra("type", recvIntent.getIntExtra("type", NoteType.TYPE_NORMAL));
+                Note n = new Note(noteName.getText().toString(), noteContent.getText().toString(), note.getCategory(), note.isSecure(), note.getIv(), note.getType());
+                intent.putExtra("note", new NoteContainer(n));
+                intent.putExtra("prevName", note.getName());
+            } else {
+                intent.putExtra("note", new NoteContainer(new Note(noteName.getText().toString(), noteContent.getText().toString())));
             }
             startActivityForResult(intent, REQUEST_PREVIEW);
         });
@@ -65,6 +65,5 @@ public class NoteEditActivity extends AppCompatActivity {
             setResult(RESULT_OK, data);
             finish();
         }
-        Log.i("Edit", "Received resultcode "+resultCode+" for request "+requestCode);
     }
 }

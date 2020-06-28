@@ -15,8 +15,9 @@ import com.python.companion.security.ValidateCallback;
 import org.signal.argon2.Argon2;
 import org.signal.argon2.Argon2Exception;
 import org.signal.argon2.MemoryCost;
-import org.signal.argon2.Type;
 import org.signal.argon2.Version;
+
+import static org.signal.argon2.Type.Argon2id;
 
 
 public class PassGuard extends Guard {
@@ -131,7 +132,7 @@ public class PassGuard extends Guard {
     private @NonNull String hash(@NonNull byte[] password) throws Argon2Exception {
         byte[] salt = {0x42, 0x00, 0x77, 0x52, 0x36, 0x4F, 0x55, 0x13, 0x51, 0x33, 0x24, 0x45, 0x31, 0x10, 0x04, 0x39};
         Argon2 argon2 = new Argon2.Builder(Version.V13)
-                .type(Type.Argon2id)
+                .type(Argon2id)
                 .memoryCost(MemoryCost.MiB(32))
                 .parallelism(1)
                 .iterations(3)
