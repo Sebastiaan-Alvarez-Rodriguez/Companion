@@ -202,7 +202,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                     Note oldNote = oldItem.getNote(), newNote = newItem.getNote();
                     return oldNote.getModified().equals(newNote.getModified())
                             && oldNote.getCategory().getCategoryColor() == newNote.getCategory().getCategoryColor()
-                            && oldNote.isSecure() == newNote.isSecure();
+                            && oldNote.isSecure() == newNote.isSecure() && oldNote.isFavorite() == newNote.isFavorite();
                 }
 
                 @Nullable

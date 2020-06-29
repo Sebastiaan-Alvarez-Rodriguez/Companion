@@ -63,8 +63,9 @@ public class ExportUtil {
                 .packString(note.getContent())
                 .packString(note.getCategory().getCategoryName())
                 .packInt(note.getCategory().getCategoryColor())
+                .packLong(note.getModified().getEpochSecond())
                 .packInt(note.getType())
-                .packLong(note.getModified().getEpochSecond());
+                .packBoolean(note.isFavorite());
     }
 
     private static void doExport(@NonNull List<Note> notes, MessagePacker packer, @Nullable ExportInterface exportInterface) {

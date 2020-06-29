@@ -19,6 +19,13 @@
         app:showAsAction="always"/>
 
     <item
+        android:id="@+id/menu_note_view_favorite"
+        android:icon="@drawable/ic_cactus_outline"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        android:title="Favorite"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/menu_note_view_type"
         android:icon="@drawable/ic_menu_note"
         app:iconTint="@color/colorWindowBackground"

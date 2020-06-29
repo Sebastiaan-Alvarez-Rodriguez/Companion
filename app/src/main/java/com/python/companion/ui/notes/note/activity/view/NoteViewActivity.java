@@ -43,7 +43,7 @@ public class NoteViewActivity extends AppCompatActivity {
     private Note note;
     private String text;
 
-    private MenuItem lockItem, categoryItem, typeItem;
+    private MenuItem lockItem, categoryItem, favoriteItem, typeItem;
 
     private NoteViewViewModel model;
 
@@ -57,7 +57,6 @@ public class NoteViewActivity extends AppCompatActivity {
         note = ((NoteContainer) intent.getParcelableExtra("note")).getNote();
         text = note.isSecure() ? intent.getStringExtra("plaintext") : note.getContent();
 
-        Log.e("View", "Note type received: "+note.getType());
         findViews();
         setupButton();
         setupActionBar();
@@ -72,7 +71,7 @@ public class NoteViewActivity extends AppCompatActivity {
     private void setupButton() {
         editButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, NoteEditActivity.class);
-            intent.putExtra("note", new NoteContainer(new Note(note.getName(), text, note.getCategory(), note.isSecure(), note.getIv(), note.getType())));
+            intent.putExtra("note", new NoteContainer(new Note(note.getName(), text, note.getCategory(), note.isSecure(), note.getIv(), note.getType(), note.isFavorite())));
             startActivityForResult(intent, REQ_EDIT);
         });
     }
@@ -103,6 +102,7 @@ public class NoteViewActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.activity_note_view, menu);
         lockItem = menu.findItem(R.id.menu_note_view_lock);
         categoryItem = menu.findItem(R.id.menu_note_view_edit_category);
+        favoriteItem = menu.findItem(R.id.menu_note_view_favorite);
         typeItem = menu.findItem(R.id.menu_note_view_type);
 
         model.getNote(note.getName()).observe(this, n -> { //Observes note to automatically fetch category
@@ -115,6 +115,7 @@ public class NoteViewActivity extends AppCompatActivity {
             }
         });
         lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+        favoriteItem.setIcon(getDrawable(note.isFavorite() ? R.drawable.ic_cactus_filled : R.drawable.ic_cactus_outline));
         switch (note.getType()) {
             case NoteType.TYPE_MARKDOWN:
                 menu.findItem(R.id.menu_note_view_type_markdown).setChecked(true);
@@ -165,6 +166,14 @@ public class NoteViewActivity extends AppCompatActivity {
                 intent.putExtra("categoryName", note.getCategory().getCategoryName());
                 intent.putExtra("categoryColor", note.getCategory().getCategoryColor());
                 startActivityForResult(intent, REQ_CATEGORY_EDIT);
+                break;
+            }
+            case R.id.menu_note_view_favorite: {
+                Log.e("View", "Favorite was "+note.isFavorite()+", now "+!note.isFavorite());
+                note.setFavorite(!note.isFavorite());
+                favoriteItem.setIcon(getDrawable(note.isFavorite() ? R.drawable.ic_cactus_filled : R.drawable.ic_cactus_outline));
+                NoteQuery query = new NoteQuery(this);
+                query.updateFavorite(note.getName(), note.isFavorite(), v -> {});
                 break;
             }
             case R.id.menu_note_view_delete: {

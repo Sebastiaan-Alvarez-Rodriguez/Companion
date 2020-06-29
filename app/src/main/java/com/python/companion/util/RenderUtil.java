@@ -3,7 +3,6 @@ package com.python.companion.util;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.text.util.Linkify;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -54,7 +53,6 @@ public class RenderUtil {
     }
 
     public static void render(@NonNull TextView view, @NonNull String text, @NoteType.Type int type) {
-        Log.e("Renderer", "Received type: "+type);
         if (type == NoteType.TYPE_NORMAL) {
             view.setText(text);
             return;
@@ -66,7 +64,6 @@ public class RenderUtil {
                 renderer = getMDRenderer(view.getContext());
                 break;
             default: case NoteType.TYPE_MARKDOWN_LATEX:
-                Log.e("Renderer", "Using latex renderer");
                 renderer = getLatexMDRenderer(view, view.getContext(), view.getTextSize());
         }
         renderer.setMarkdown(view, text);

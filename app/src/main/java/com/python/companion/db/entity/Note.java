@@ -27,7 +27,9 @@ public class Note {
 
     private @NoteType.Type int type;
 
-    public Note(@NonNull String name, @NonNull String content, @NonNull Category category, boolean secure, byte[] iv, int type) {
+    private boolean favorite;
+
+    public Note(@NonNull String name, @NonNull String content, @NonNull Category category, boolean secure, byte[] iv, int type, boolean favorite) {
         this.name = name;
         this.content = content;
         this.category = category;
@@ -35,6 +37,13 @@ public class Note {
         this.iv = iv;
         this.modified = Instant.now();
         this.type = type;
+        this.favorite = favorite;
+    }
+
+    @Ignore
+    public Note(@NonNull String name, @NonNull String content, @NonNull Category category, boolean secure, byte[] iv, Instant modified, int type, boolean favorite) {
+        this(name, content, category, secure, iv, type, favorite);
+        this.modified = modified;
     }
 
     @Ignore
@@ -48,6 +57,7 @@ public class Note {
 
         modified = Instant.now();
         type = NoteType.TYPE_NORMAL;
+        favorite = false;
     }
 
     /**
@@ -162,13 +172,24 @@ public class Note {
         this.type = type;
     }
 
+    /** @return whether this item is 'favorite' or not. Favorite items appear at the top of note listings in UI */
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    /**
+     * Sets whether this item is 'favorite' or not. Favorite items appear at the top of note listings in UI
+     * @param favorite {@code true} if this note is favorite, {@code false} otherwise
+     */
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
     /**
      * Function to compare an object to this supplier on equality
      * @param obj the object to be compared to this supplier
      * @return true if there is equality, false on inequality or if the object is not a supplier
      */
-
-
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == this)

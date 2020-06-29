@@ -35,7 +35,7 @@ public class NotePreviewActivity extends AppCompatActivity {
     private static final int REQ_CATEGORY_EDIT = 1;
 
     private TextView contentView;
-    private MenuItem lockItem, categoryItem, typeItem;
+    private MenuItem lockItem, categoryItem, favoriteItem, typeItem;
 
     private Note note;
 
@@ -117,6 +117,7 @@ public class NotePreviewActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.activity_note_preview, menu);
         lockItem = menu.findItem(R.id.menu_note_preview_lock);
         categoryItem = menu.findItem(R.id.menu_note_preview_category);
+        favoriteItem = menu.findItem(R.id.menu_note_preview_favorite);
         typeItem = menu.findItem(R.id.menu_note_preview_type);
 
         switch (note.getType()) {
@@ -134,7 +135,8 @@ public class NotePreviewActivity extends AppCompatActivity {
                 break;
         }
 
-        lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+        lockItem.setIcon(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline); //getDrawable(
+        favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_cactus_filled : R.drawable.ic_cactus_outline);
         actionbar.setTitle(note.getName().length() == 0 ? "<no name set>" : note.getName());
         return true;
     }
@@ -154,6 +156,10 @@ public class NotePreviewActivity extends AppCompatActivity {
             case R.id.menu_note_preview_lock:
                 note.setSecure(!note.isSecure());
                 lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+                break;
+            case R.id.menu_note_preview_favorite:
+                note.setFavorite(!note.isFavorite());
+                favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_cactus_filled : R.drawable.ic_cactus_outline);
                 break;
             case R.id.menu_note_preview_save:
                 save();

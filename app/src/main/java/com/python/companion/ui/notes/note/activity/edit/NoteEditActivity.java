@@ -48,7 +48,7 @@ public class NoteEditActivity extends AppCompatActivity {
         previewButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, NotePreviewActivity.class);
             if (editMode) {
-                Note n = new Note(noteName.getText().toString(), noteContent.getText().toString(), note.getCategory(), note.isSecure(), note.getIv(), note.getType());
+                Note n = new Note(noteName.getText().toString(), noteContent.getText().toString(), note.getCategory(), note.isSecure(), note.getIv(), note.getType(), note.isFavorite());
                 intent.putExtra("note", new NoteContainer(n));
                 intent.putExtra("prevName", note.getName());
             } else {

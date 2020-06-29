@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        app:layout_constraintEnd_toStartOf="@+id/item_note_lock"
+        app:layout_constraintEnd_toStartOf="@+id/item_note_favorite"
         app:layout_constraintTop_toBottomOf="@+id/item_note_name"
         tools:text="10/03/2020" />
 
@@ -45,8 +45,22 @@
         android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/item_note_date"
         app:layout_constraintTop_toBottomOf="@+id/item_note_name"
+        app:layout_constraintVertical_bias="0.75"
         app:srcCompat="@drawable/ic_lock_outline"
         app:tint="@color/colorAccent"
-        app:tintMode="src_in"/>
+        app:tintMode="src_in" />
+
+    <ImageView
+        android:id="@+id/item_note_favorite"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/item_note_name"
+        app:srcCompat="@drawable/ic_cactus_outline"
+        app:tint="@color/colorAccent"
+        app:tintMode="src_in" />
 </androidx.constraintlayout.widget.ConstraintLayout>

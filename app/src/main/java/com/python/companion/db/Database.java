@@ -13,11 +13,12 @@ import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
+import com.python.companion.db.migrations.Migrate;
 import com.python.companion.db.typeconverters.ChronoUnitConverter;
 import com.python.companion.db.typeconverters.DateConverter;
 import com.python.companion.db.typeconverters.DurationConverter;
 
-@androidx.room.Database(entities = {Note.class, Category.class, Measurement.class}, version = 1, exportSchema = false)
+@androidx.room.Database(entities = {Note.class, Category.class, Measurement.class}, version = 2, exportSchema = false)
 @TypeConverters({DateConverter.class, DurationConverter.class, ChronoUnitConverter.class})
 public abstract class Database extends RoomDatabase {
 
@@ -37,7 +38,9 @@ public abstract class Database extends RoomDatabase {
         if (INSTANCE == null) {
             synchronized (Database.class) {
                 if (INSTANCE == null)
-                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(), Database.class, DB_NAME).build();
+                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(), Database.class, DB_NAME)
+                            .addMigrations(Migrate.getAll())
+                            .build();
             }
         }
         return INSTANCE;

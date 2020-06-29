@@ -68,9 +68,7 @@ public class ImportUtil {
     }
 
     private static Note importNote(@NonNull MessageUnpacker unpacker) throws IOException {
-        Note tmp = new Note(unpacker.unpackString(), unpacker.unpackString(), new Category(unpacker.unpackString(), unpacker.unpackInt()), false, null, unpacker.unpackInt());
-        tmp.setModified(Instant.ofEpochSecond(unpacker.unpackLong()));
-        return tmp;
+        return new Note(unpacker.unpackString(), unpacker.unpackString(), new Category(unpacker.unpackString(), unpacker.unpackInt()), false, null, Instant.ofEpochSecond(unpacker.unpackLong()), unpacker.unpackInt(), unpacker.unpackBoolean());
     }
 
     @WorkerThread

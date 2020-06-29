@@ -48,6 +48,13 @@ public class NoteQuery {
         });
     }
 
+    public void updateFavorite(String name, boolean isFavorite, ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.updateFavorite(name, isFavorite);
+            listener.onResult(null);
+        });
+    }
+
     /**
      * Update category of 1 item, specified by given name
      * @param name Note name to receive update
@@ -104,13 +111,6 @@ public class NoteQuery {
             listener.onResult(null);
         });
     }
-
-//    public void getContent(String name, ResultListener<String> listener) {
-//        Executors.newSingleThreadExecutor().execute(() -> {
-//            Note note = daoNote.get(name);
-//            listener.onResult(note == null ? null : note.getContent());
-//        });
-//    }
 
     public void get(String name, ResultListener<Note> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));

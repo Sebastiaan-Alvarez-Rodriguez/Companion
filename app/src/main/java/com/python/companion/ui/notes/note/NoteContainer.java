@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
 
+import java.time.Instant;
+
 /** Class wrapping around a {@link Note}, allowing it to be sent between Activities via Parcels ({@link Parcel}) */
 public class NoteContainer implements Parcelable {
     private @NonNull Note note;
@@ -28,8 +30,10 @@ public class NoteContainer implements Parcelable {
         } else {
             iv = null;
         }
+        Instant modified = Instant.ofEpochSecond(in.readLong());
         int type = in.readInt();
-        note = new Note(name, content, c, secure, iv, type);
+        boolean favorite = in.readBoolean();
+        note = new Note(name, content, c, secure, iv, modified, type, favorite);
     }
 
     public @NonNull Note getNote() {
@@ -67,6 +71,8 @@ public class NoteContainer implements Parcelable {
             dest.writeInt(note.getIv().length);
             dest.writeByteArray(note.getIv());
         }
+        dest.writeLong(note.getModified().getEpochSecond());
         dest.writeInt(note.getType());
+        dest.writeBoolean(note.isFavorite());
     }
 }

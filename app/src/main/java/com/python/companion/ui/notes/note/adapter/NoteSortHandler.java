@@ -76,9 +76,11 @@ public class NoteSortHandler {
     public void forceReSort() {
         resort();
     }
+
     public LiveData<Integer> getSortStrategy() {
         return strategy;
     }
+
     @Nullable
     public Comparator<NoteItem> getComparator() {
         switch (strategy.getValue()) {
@@ -104,27 +106,31 @@ public class NoteSortHandler {
     protected static class NoteAlphaComperator implements Comparator<NoteItem> {
         @Override
         public int compare(NoteItem o1, NoteItem o2) {
-            return o1.getNote().getName().compareTo(o2.getNote().getName());
+            int fav = Boolean.compare(o1.getNote().isFavorite(), o2.getNote().isFavorite());
+            return fav == 0 ? o1.getNote().getName().compareTo(o2.getNote().getName()) : -fav;
         }
     }
 
     protected static class NoteDateComperator implements Comparator<NoteItem> {
         @Override
         public int compare(NoteItem o1, NoteItem o2) {
-            return o1.getNote().getModified().compareTo(o2.getNote().getModified());
+            int fav = Boolean.compare(o1.getNote().isFavorite(), o2.getNote().isFavorite());
+            return fav == 0 ? o1.getNote().getModified().compareTo(o2.getNote().getModified()) : -fav;
         }
     }
     protected static class NoteCategoryComperator implements Comparator<NoteItem> {
         @Override
         public int compare(NoteItem o1, NoteItem o2) {
-            return o1.getNote().getCategory().getCategoryName().compareTo(o2.getNote().getCategory().getCategoryName());
+            int fav = Boolean.compare(o1.getNote().isFavorite(), o2.getNote().isFavorite());
+            return fav == 0 ? o1.getNote().getCategory().getCategoryName().compareTo(o2.getNote().getCategory().getCategoryName()) : -fav;
         }
     }
 
     protected static class NoteLockComperator implements Comparator<NoteItem> {
         @Override
         public int compare(NoteItem o1, NoteItem o2) {
-            return (o1.getNote().isSecure() == o2.getNote().isSecure()) ? 0 : (o1.getNote().isSecure() ? -1 : 1);
+            int fav = Boolean.compare(o1.getNote().isFavorite(), o2.getNote().isFavorite());
+            return fav == 0 ? (o1.getNote().isSecure() == o2.getNote().isSecure()) ? 0 : (o1.getNote().isSecure() ? -1 : 1) : -fav;
         }
     }
 }

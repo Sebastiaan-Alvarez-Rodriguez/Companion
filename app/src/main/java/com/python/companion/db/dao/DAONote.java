@@ -38,6 +38,8 @@ public abstract class DAONote {
     @Query("UPDATE Note SET name = :name, content = :content WHERE name = :prevName")
     public abstract void updateContent(String prevName, String name, String content);
 
+    @Query("Update Note SET favorite = :isFavorite WHERE name = :name")
+    public abstract void updateFavorite(String name, boolean isFavorite);
 
     @Query("UPDATE Note SET categoryName = :categoryName, categoryColor = :categoryColor WHERE name = :name")
     public abstract void updateCategory(String name, String categoryName, @ColorInt int categoryColor);
