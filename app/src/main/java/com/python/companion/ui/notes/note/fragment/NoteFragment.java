@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,8 +36,8 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
+import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
-import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.DecryptedCallback;
 import com.python.companion.security.Guard;
@@ -50,12 +49,7 @@ import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
 import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
-import com.python.companion.util.measurement.MeasurementUtil;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,8 +57,6 @@ import java.util.stream.Collectors;
 //    https://noties.io/Markwon/
 //    https://github.com/noties/Markwon/blob/master/sample/src/main/java/io/noties/markwon/sample/latex/LatexActivity.java
 
-
-// Color picking: https://github.com/martin-stone/hsv-alpha-color-picker-android
 // Now for menu redesign
 //    https://stackoverflow.com/questions/21329132/android-custom-dropdown-popup-menu
 public class NoteFragment extends Fragment implements ActionMode.Callback {
@@ -113,10 +105,6 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             Intent intent = new Intent(getContext(), NoteEditActivity.class);
             startActivity(intent);
         });
-        SharedPreferences preferences = getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
-        LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
-        Log.e("NoteFragment", "Amount of days between month and 42days: "+ MeasurementUtil.futureIntertwinedInterval(new Measurement("MMM", "MMMs", ChronoUnit.YEARS.getDuration(), ChronoUnit.YEARS), together, Collections.singletonList(new Measurement("42Day", "42Days", Duration.ofDays(42), ChronoUnit.DAYS)), 2));
-
     }
 
     private void prepareList(View view) {
@@ -323,10 +311,16 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 mode.finish();
                 break;
             case R.id.menu_fragment_note_action_update_category:
-                CategorySetDialog categorySetDialog = new CategorySetDialog.Builder()
-                        .setSelectedNotes(selectionExtension.getSelectedItems())
-                        .setFinishListener(mode::finish).build();
-                categorySetDialog.show(getChildFragmentManager(), null);
+                new CategoryQuery(getContext()).count(count -> {
+                    if (count == 0) {
+                        Snackbar.make(list, "You can only use this when there is >1 category. Making a category for 1 note first.", Snackbar.LENGTH_LONG).show();
+                    } else {
+                        CategorySetDialog categorySetDialog = new CategorySetDialog.Builder()
+                                .setSelectedNotes(selectionExtension.getSelectedItems())
+                                .setFinishListener(mode::finish).build();
+                        categorySetDialog.show(getChildFragmentManager(), null);
+                    }
+                });
                 break;
         }
         return true;

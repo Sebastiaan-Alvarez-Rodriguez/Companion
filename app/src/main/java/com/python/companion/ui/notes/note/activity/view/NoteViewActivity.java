@@ -147,8 +147,10 @@ public class NoteViewActivity extends AppCompatActivity {
                         NoteQuery query = new NoteQuery(getApplicationContext());
                         query.update(n, v -> {});
                         note = n;
-                        lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
-                        Snackbar.make(contentView, "Successfully changed lock status!", Snackbar.LENGTH_LONG).show();
+                        runOnUiThread(() -> {
+                            lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+                            Snackbar.make(contentView, "Successfully changed lock status!", Snackbar.LENGTH_LONG).show();
+                        });
                     }
                     @Override
                     public void onFailure() {

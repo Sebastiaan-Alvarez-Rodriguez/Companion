@@ -91,6 +91,7 @@ public class NoteQuery {
         });
     }
 
+    /** Updates type of note with given name */
     public void updateType(String name, @NoteType.Type int type, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             daoNote.updateType(name, type);
@@ -112,6 +113,14 @@ public class NoteQuery {
         });
     }
 
+    /** Deletes all secure notes. Must be called if password is reset */
+    public void deleteSecure(ResultListener<Void> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            daoNote.deleteSecure();
+            listener.onResult(null);
+        });
+    }
+
     public void get(String name, ResultListener<Note> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
     }
@@ -120,10 +129,12 @@ public class NoteQuery {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.getAll(secureOnesToo)));
     }
 
+    /** Checks whether given name for a note is unique. In callback, returns {@code true} if name is unique, {@code false} otherwise */
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name) == null));
     }
 
+    /** Checks whether given name for a note is unique. In callback, returns conflicting note if name is not unique, {@code null} otherwise */
     public void isUniqueInstanced(String name, ResultListener<Note> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
     }

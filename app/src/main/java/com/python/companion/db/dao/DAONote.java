@@ -29,6 +29,9 @@ public abstract class DAONote {
     @Delete
     public abstract void delete(Note... notes);
 
+    @Query("DELETE FROM Note WHERE secure = 1")
+    public abstract void deleteSecure();
+
     @Transaction
     public void replace(String name, Note note) {
         delete(new Note(name, ""));
@@ -38,7 +41,7 @@ public abstract class DAONote {
     @Query("UPDATE Note SET name = :name, content = :content WHERE name = :prevName")
     public abstract void updateContent(String prevName, String name, String content);
 
-    @Query("Update Note SET favorite = :isFavorite WHERE name = :name")
+    @Query("UPDATE Note SET favorite = :isFavorite WHERE name = :name")
     public abstract void updateFavorite(String name, boolean isFavorite);
 
     @Query("UPDATE Note SET categoryName = :categoryName, categoryColor = :categoryColor WHERE name = :name")

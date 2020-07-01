@@ -5,14 +5,14 @@
     android:orientation="vertical">
 
     <ImageView
-        android:id="@+id/dialog_category_merge_header"
+        android:id="@+id/dialog_security_pass_reset_header"
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:background="@color/colorPrimaryDark"
         android:gravity="center"
         android:minWidth="600dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_menu_merge"
+        android:src="@drawable/ic_error_outline"
         android:tint="@color/colorWindowBackground"
         android:tintMode="src_in"
         app:layout_constraintEnd_toEndOf="parent"
@@ -20,64 +20,54 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/dialog_category_merge_text1"
+        android:id="@+id/dialog_security_pass_reset_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Merging"
+        android:layout_below="@+id/dialog_security_pass_reset_header"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_horizontal"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_category_merge_header" />
-
-    <include
-        android:id="@+id/dialog_category_merge_from"
-        layout="@layout/item_category"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_category_merge_text1" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_security_pass_reset_header"
+        android:text="Reset password" />
 
     <TextView
-        android:id="@+id/dialog_category_merge_text2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="With"
-        android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_category_merge_from" />
-
-    <include
-        android:id="@+id/dialog_category_merge_to"
-        layout="@layout/item_category"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_category_merge_text2" />
-
-    <TextView
-        android:id="@+id/dialog_category_merge_text3"
+        android:id="@+id/dialog_security_pass_reset_question"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:text="Are you sure? This operation cannot be undone"
+        android:gravity="center_horizontal"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_category_merge_to" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_security_pass_reset_text"
+        android:text="Do you really want to reset your password?" />
+
+    <TextView
+        android:id="@+id/dialog_security_pass_reset_warning"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_horizontal"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_security_pass_reset_question"
+        android:text="WARNING: All your secure notes will be DELETED!" />
 
     <Button
-        android:id="@+id/dialog_category_merge_cancel"
+        android:id="@+id/dialog_security_pass_reset_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/dialog_security_pass_reset_text"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
@@ -87,26 +77,27 @@
         android:textColor="#ffffffff"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.148"
+        app:layout_constraintHorizontal_bias="0.16"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_category_merge_text3" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_security_pass_reset_warning" />
 
     <Button
-        android:id="@+id/dialog_category_merge_accept"
+        android:id="@+id/dialog_security_pass_reset_accept"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/dialog_security_pass_reset_text"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
-        android:background="@color/colorPrimary"
+        android:background="@android:color/holo_red_light"
         android:gravity="center_vertical|center_horizontal"
-        android:text="Merge"
-        android:textColor="@color/colorWindowBackground"
+        android:text="Reset"
+        android:textColor="#ffffffff"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.84"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_category_merge_text3" />
+        app:layout_constraintTop_toBottomOf="@+id/dialog_security_pass_reset_warning" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

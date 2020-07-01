@@ -64,8 +64,8 @@ public class CategoryEditActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent.hasExtra("categoryName") && intent.getStringExtra("categoryName").length() != 0) {
             categoryName = intent.getStringExtra("categoryName");
-            categoryColor = intent.getIntExtra("categoryColor", -1);
-        } else {
+            categoryColor = intent.getIntExtra("categoryColor", ContextCompat.getColor(this, R.color.colorPrimary));
+                    } else {
             categoryName = "<default>";
             categoryColor = ContextCompat.getColor(this, R.color.colorPrimary);
         }
@@ -92,7 +92,7 @@ public class CategoryEditActivity extends AppCompatActivity {
     private void updateCurrentCategoryView() {
         curNameView.setText(categoryName);
         curColorView.setBackgroundColor(categoryColor);
-    }
+            }
 
     private void prepareList() {
         ItemAdapter<CategoryItem> itemAdapter = new ItemAdapter<>();
@@ -103,7 +103,7 @@ public class CategoryEditActivity extends AppCompatActivity {
         fastAdapter.setOnClickListener((view, categoryItemIAdapter, categoryItem, pos) -> {
             Category category = categoryItem.getCategory();
             categoryName = category.getCategoryName();
-            categoryColor = category.getCategoryColor();
+                        categoryColor = category.getCategoryColor();
             updateCurrentCategoryView();
             return true;
         });

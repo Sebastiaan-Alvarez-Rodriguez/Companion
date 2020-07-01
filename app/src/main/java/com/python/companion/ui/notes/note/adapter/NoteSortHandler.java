@@ -1,7 +1,5 @@
 package com.python.companion.ui.notes.note.adapter;
 
-import android.util.Log;
-
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,7 +55,6 @@ public class NoteSortHandler {
 
 
     protected NoteSortHandler(@NoteSortStrategy int strategy, ComparableItemListImpl<NoteItem> itemList) {
-        Log.e("NotesortHandler", "Created with strategy: "+strategy);
         this.strategy = new MutableLiveData<>(strategy);
         this.itemList = itemList;
         resort();
@@ -66,7 +63,6 @@ public class NoteSortHandler {
 
 
     public void setSortStrategy(@NoteSortStrategy int strategy) {
-        Log.e("NotesortHandler", "Someone set strategy to: "+strategy);
         if (this.strategy.getValue() != strategy) {
             this.strategy.setValue(strategy);
             resort();

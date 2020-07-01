@@ -52,11 +52,16 @@ public class CategoryQuery {
         });
     }
 
+    public void count(ResultListener<Long> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoCategory.count()));
+    }
+
     public void getAll(ResultListener<List<Category>> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             listener.onResult(daoCategory.getAll());
         });
     }
+
     public void isUnique(String name, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoCategory.get(name) == null));
     }

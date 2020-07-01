@@ -12,7 +12,7 @@
         android:layout_height="120dp"
         android:background="@color/colorPrimaryDark"
         android:gravity="center"
-        android:minWidth="240dp"
+        android:minWidth="600dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_lock_outline"
         android:tint="@color/colorWindowBackground"

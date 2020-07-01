@@ -29,8 +29,6 @@ public class Biometry {
     protected @NonNull
     BioMetrySuccessCallback successCallback;
 
-    protected BiometricPrompt.CryptoObject cryptoObject;
-
     public static class Builder {
         protected BioMetryCancelCallback cancelCallback;
 
@@ -88,7 +86,7 @@ public class Biometry {
                     if (cancelCallback != null)
                         cancelCallback.onCancel();
                 }).build();
-        bio.authenticate(cryptoObject, new CancellationSignal(), Executors.newSingleThreadExecutor(), new BiometricPrompt.AuthenticationCallback() {
+        bio.authenticate(new CancellationSignal(), Executors.newSingleThreadExecutor(), new BiometricPrompt.AuthenticationCallback() {
             @Override
             public void onAuthenticationError(int errorCode, CharSequence errString) {
                 if (errorCallback != null)

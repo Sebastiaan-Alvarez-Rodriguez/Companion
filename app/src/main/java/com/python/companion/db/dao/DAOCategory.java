@@ -38,5 +38,5 @@ public interface DAOCategory {
     LiveData<Category> getLive(String categoryName);
 
     @Query("SELECT COUNT(*) from Category")
-    int count();
+    long count();
 }

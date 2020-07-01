@@ -1,6 +1,7 @@
 package com.python.companion.security;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
@@ -11,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.Pair;
 import androidx.fragment.app.FragmentManager;
 
+import com.python.companion.R;
 import com.python.companion.security.biometry.BioGuard;
 import com.python.companion.security.password.PassGuard;
 
@@ -43,8 +45,8 @@ import javax.crypto.spec.GCMParameterSpec;
 // https://www.programcreek.com/java-api-examples/?code=opensecuritycontroller/osc-core/osc-core-master/osc-server/src/main/java/org/osc/core/broker/util/crypto/KeyStoreProvider.java
 
 public abstract class Guard {
-    private static final int TYPE_PASSGUARD = 0;
-    private static final int TYPE_BIOGUARD = 1;
+    public static final int TYPE_PASSGUARD = 0;
+    public static final int TYPE_BIOGUARD = 1;
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({TYPE_PASSGUARD, TYPE_BIOGUARD})
     public @interface Type {}
@@ -52,23 +54,31 @@ public abstract class Guard {
     private static volatile Guard INSTANCE;
     private static volatile @Type int guardtype = TYPE_PASSGUARD;
 
+
+    /** Initializes Guard by setting the correct guardtype. Guard objects constructed at a later point will be constructed with correct type */
+    public static void init(@NonNull Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE);
+        Guard.guardtype = preferences.getInt("GuardType", Guard.TYPE_PASSGUARD);
+    }
+
     /**
      * Gets guard of specified type. If we currently use another type, we switch instance type and reset validation
-     * @param guardtype Type of guard to return
+     * @param type Type of guard to return
      */
-    public static Guard getGuard(@Type int guardtype) {
+    public static Guard getGuard(@Type int type) {
         if (INSTANCE == null) {
             synchronized (Guard.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = guardtype == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
-                    Guard.guardtype = guardtype;
+                    INSTANCE = type == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
+                    Guard.guardtype = type;
                 }
             }
-        }
-        if (Guard.guardtype != guardtype) {
+        } else if (Guard.guardtype != type) {
             synchronized (Guard.class) {
-                if (Guard.guardtype != guardtype)
-                    INSTANCE = guardtype == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
+                if (Guard.guardtype != type) {
+                    INSTANCE = type == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
+                    Guard.guardtype = type;
+                }
             }
         }
         return INSTANCE;
@@ -85,6 +95,12 @@ public abstract class Guard {
         return INSTANCE;
     }
 
+    public synchronized static void setGuardType(@Type int type) {
+        if (Guard.guardtype != type) {
+            INSTANCE = type == TYPE_PASSGUARD ? new PassGuard() : new BioGuard();
+            Guard.guardtype = type;
+        }
+    }
 
     protected Guard() {}
     protected boolean validated = false;

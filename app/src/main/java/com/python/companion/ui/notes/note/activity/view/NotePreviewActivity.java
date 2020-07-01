@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -52,6 +53,9 @@ public class NotePreviewActivity extends AppCompatActivity {
         editMode = intent.hasExtra("prevName");
         if (editMode)
             prevName = intent.getStringExtra("prevName");
+        else // We have not set a category yet
+            note.setCategory(new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary)));
+
         setContentView(R.layout.activity_note_preview);
         findViews();
         setupActionBar();

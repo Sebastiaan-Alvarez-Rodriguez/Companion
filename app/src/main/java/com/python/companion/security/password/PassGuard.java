@@ -21,24 +21,35 @@ import static org.signal.argon2.Type.Argon2id;
 
 
 public class PassGuard extends Guard {
-        public void setPass(@NonNull FragmentManager fragmentManager, @NonNull Context context) {
+    public void setPass(@NonNull FragmentManager fragmentManager, @NonNull Context context) {
+        setPass(fragmentManager, context, null);
+    }
+
+    public void setPass(@NonNull FragmentManager fragmentManager, @NonNull Context context, @Nullable ValidateCallback callback) {
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE);
         if (prefs.contains("p")) { // There already is a password set
             validate(fragmentManager, context, new ValidateCallback() {
                 @Override
                 public void onSuccess() {
                     updatePassInternal(fragmentManager, prefs);
+                    if (callback != null)
+                        callback.onSuccess();
                 }
 
                 @Override
-                public void onFailure() {}
+                public void onFailure() {
+                    if (callback != null)
+                        callback.onFailure();
+                }
             });
         } else {
             updatePassInternal(fragmentManager, prefs);
+            callback.onSuccess();
         }
     }
 
-    public boolean passIsSet(@NonNull Context context) {
+
+    public static boolean passIsSet(@NonNull Context context) {
         return context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE).contains("p");
     }
 
