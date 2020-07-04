@@ -5,17 +5,22 @@ import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Spannable;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.widget.NestedScrollView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
@@ -23,6 +28,7 @@ import com.python.companion.backend.interact.Store;
 import com.python.companion.backend.interact.StoreCallback;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.ui.general.textviewsearch.UITextSearcher;
 import com.python.companion.ui.notes.category.activity.CategoryEditActivity;
 import com.python.companion.ui.notes.note.NoteContainer;
 import com.python.companion.ui.notes.note.NoteType;
@@ -35,7 +41,10 @@ import static com.python.companion.ui.notes.note.NoteType.TYPE_NORMAL;
 public class NotePreviewActivity extends AppCompatActivity {
     private static final int REQ_CATEGORY_EDIT = 1;
 
+    private CoordinatorLayout layout;
+    private NestedScrollView nestedScrollView;
     private TextView contentView;
+    private SearchView searchView;
     private MenuItem lockItem, categoryItem, favoriteItem, typeItem;
 
     private Note note;
@@ -57,14 +66,15 @@ public class NotePreviewActivity extends AppCompatActivity {
             note.setCategory(new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary)));
 
         setContentView(R.layout.activity_note_preview);
+        layout = findViewById(R.id.activity_note_preview_layout);
         findViews();
         setupActionBar();
         setContent(note.getContent(), note.getType());
     }
 
-
     private void findViews() {
-        contentView = findViewById(R.id.activity_note_preview_content);
+        nestedScrollView = findViewById(R.id.activity_note_preview_scrollview);
+        contentView = nestedScrollView.findViewById(R.id.activity_note_preview_content);
     }
 
     private void setContent(@NonNull String content, @NoteType.Type int type) {
@@ -87,38 +97,37 @@ public class NotePreviewActivity extends AppCompatActivity {
         }
     }
 
-    private void save() {
-        if (note.getName().length() == 0) {
-            Snackbar.make(findViewById(R.id.activity_note_preview_layout), "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
-        } else {
-            if (editMode)
-                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
-                    @Override
-                    public void onSuccess() {
-                        finishSuccess();
-                    }
-                    @Override
-                    public void onFailure() {
+    private void setSearch() {
+        UITextSearcher searcher = new UITextSearcher(getSupportFragmentManager(), layout, nestedScrollView, contentView, searchView, (Spannable) contentView.getText());
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searcher.submit(query, true);
+                return true;
+            }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        searchView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                // Window opened
+            }
 
-                    }
-                });
-            else
-                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
-                    @Override
-                    public void onSuccess() {
-                        finishSuccess();
-                    }
-                    @Override
-                    public void onFailure() {
-
-                    }
-                });
-        }
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                //Window closed
+                searcher.finish();
+            }
+        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_note_preview, menu);
+        searchView = (SearchView) menu.findItem(R.id.menu_note_preview_search).getActionView();
         lockItem = menu.findItem(R.id.menu_note_preview_lock);
         categoryItem = menu.findItem(R.id.menu_note_preview_category);
         favoriteItem = menu.findItem(R.id.menu_note_preview_favorite);
@@ -142,7 +151,35 @@ public class NotePreviewActivity extends AppCompatActivity {
         lockItem.setIcon(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline); //getDrawable(
         favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_cactus_filled : R.drawable.ic_cactus_outline);
         actionbar.setTitle(note.getName().length() == 0 ? "<no name set>" : note.getName());
+        setSearch();
         return true;
+    }
+
+    private void save() {
+        if (note.getName().length() == 0) {
+            Snackbar.make(findViewById(R.id.activity_note_preview_layout), "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
+        } else {
+            if (editMode)
+                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
+                    @Override
+                    public void onSuccess() {
+                        finishSuccess();
+                    }
+                    @Override
+                    public void onFailure() {}
+                });
+            else
+                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
+                    @Override
+                    public void onSuccess() {
+                        finishSuccess();
+                    }
+                    @Override
+                    public void onFailure() {
+
+                    }
+                });
+        }
     }
 
     @Override

@@ -189,7 +189,9 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 public boolean areContentsTheSame(NoteItem oldItem, NoteItem newItem) {
                     Note oldNote = oldItem.getNote(), newNote = newItem.getNote();
                     return oldNote.getModified().equals(newNote.getModified())
+                            && oldNote.getCategory().getCategoryName().equals(newNote.getCategory().getCategoryName())
                             && oldNote.getCategory().getCategoryColor() == newNote.getCategory().getCategoryColor()
+                            && oldNote.getType() == newNote.getType()
                             && oldNote.isSecure() == newNote.isSecure() && oldNote.isFavorite() == newNote.isFavorite();
                 }
 

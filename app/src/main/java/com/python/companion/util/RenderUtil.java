@@ -54,7 +54,7 @@ public class RenderUtil {
 
     public static void render(@NonNull TextView view, @NonNull String text, @NoteType.Type int type) {
         if (type == NoteType.TYPE_NORMAL) {
-            view.setText(text);
+            view.setText(text, TextView.BufferType.SPANNABLE);
             return;
         }
 

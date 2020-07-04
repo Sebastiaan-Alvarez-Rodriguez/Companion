@@ -72,7 +72,7 @@
         app:layout_constraintStart_toEndOf="@+id/activity_category_edit_color"
         app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_list" />
 
-    <com.python.companion.ui.general.recyclerview.ContextMenuRecyclerView
+    <com.python.companion.ui.general.customviews.ContextMenuRecyclerView
         android:id="@+id/activity_category_edit_list"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

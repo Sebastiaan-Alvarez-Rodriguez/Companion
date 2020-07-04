@@ -14,14 +14,16 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/activity_note_view_toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
             android:gravity="center"
-            android:minHeight="?actionBarSize"
             android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
-            app:layout_scrollFlags="scroll|snap" />
+            app:layout_scrollFlags="scroll|snap"
+            app:popupTheme="@style/AppTheme.PopupOverlay"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/activity_note_view_scrollview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -31,7 +33,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="24sp"
-            tools:text="This is some sample. In reality, we would encounter normal text, markdown and latex code here" />
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            tools:text="This is some sample. In reality, we would encounter normal text, markdown and latex code here"/>
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -45,5 +49,6 @@
         android:tint="@color/colorWindowBackground"
         app:layout_behavior="com.google.android.material.floatingactionbutton.FloatingActionButton$Behavior"
         app:srcCompat="@drawable/ic_menu_edit" />
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

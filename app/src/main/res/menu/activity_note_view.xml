@@ -3,12 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_note_view_lock"
-        android:icon="@drawable/ic_lock_outline"
+        android:id="@+id/menu_note_view_search"
+        android:title="Search"
+        android:icon="@drawable/ic_menu_search"
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"
-        android:title="Security"
-        app:showAsAction="always"/>
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
 
     <item
         android:id="@+id/menu_note_view_edit_category"
@@ -16,7 +17,7 @@
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"
         android:title="Edit category"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/menu_note_view_favorite"
@@ -30,8 +31,9 @@
         android:icon="@drawable/ic_menu_note"
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"
-        android:title="Edit"
-        app:showAsAction="always">
+        android:title="Type"
+        app:showAsAction="ifRoom">
+
         <menu>
             <group android:checkableBehavior="single">
                 <item
@@ -58,11 +60,20 @@
             </group>
         </menu>
     </item>
+
+    <item
+        android:id="@+id/menu_note_view_lock"
+        android:icon="@drawable/ic_lock_outline"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        android:title="Security"
+        app:showAsAction="ifRoom"/>
+
     <item
         android:id="@+id/menu_note_view_delete"
         android:icon="@drawable/ic_menu_delete"
         app:iconTint="@color/colorWindowBackground"
         app:iconTintMode="src_in"
         android:title="Delete"
-        app:showAsAction="never" />
+        app:showAsAction="never"/>
 </menu>

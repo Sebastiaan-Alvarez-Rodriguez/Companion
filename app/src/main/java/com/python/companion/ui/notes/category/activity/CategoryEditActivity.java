@@ -30,7 +30,7 @@ import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.entity.Category;
-import com.python.companion.ui.general.recyclerview.ContextMenuRecyclerView;
+import com.python.companion.ui.general.customviews.ContextMenuRecyclerView;
 import com.python.companion.ui.notes.category.adapter.CategoryItem;
 import com.python.companion.ui.notes.category.dialog.CategoryDeleteDialog;
 import com.python.companion.ui.notes.category.dialog.CategoryUpdateDialog;
