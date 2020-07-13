@@ -77,7 +77,6 @@ public class NoteViewActivity extends AppCompatActivity {
         nestedScrollView = findViewById(R.id.activity_note_view_scrollview);
         contentView = nestedScrollView.findViewById(R.id.activity_note_view_content);
         editButton = findViewById(R.id.activity_note_view_edit);
-
     }
 
     private void setupButton() {
@@ -150,7 +149,8 @@ public class NoteViewActivity extends AppCompatActivity {
                 int categoryColor = n.getCategory().getCategoryColor();
                 double diff = ColorUtil.computeDiff(categoryColor, getColor(R.color.colorPrimary));
                 if (Math.abs(diff) < 4.0)
-                    categoryColor = getColor(R.color.colorPrimary);
+                    categoryColor = getColor(R.color.colorWindowBackground);
+//                    categoryColor = getColor(R.color.colorPrimary);
                 categoryItem.getIcon().setColorFilter(new BlendModeColorFilter(categoryColor, BlendMode.SRC_IN));
 //                findViewById(R.id.activity_note_view_toolbar).setBackgroundColor(categoryColor);
 //                Window window = getWindow();

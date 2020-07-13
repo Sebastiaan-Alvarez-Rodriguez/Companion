@@ -13,7 +13,6 @@ import com.python.companion.ui.cactus.type.TypeChangeListener;
 import com.python.companion.util.measurement.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,11 +26,10 @@ public class CactusItemRegular extends CactusItem implements TypeChangeListener 
     private LocalDate date;
     private long distance;
 
-    protected @Nullable CactusItem.MeasurementViewHolder viewHolder;
-
     public CactusItemRegular(Measurement measurement, LocalDate date) {
         super(measurement);
         this.measurement = measurement;
+        this.currentType = Type.DATE;
         this.date = date;
         this.distance = MeasurementUtil.computeDistance(date);
     }
@@ -39,8 +37,7 @@ public class CactusItemRegular extends CactusItem implements TypeChangeListener 
     @NotNull
     @Override
     public FastAdapter.ViewHolder getViewHolder(@NotNull View view) {
-        viewHolder = new CactusItem.MeasurementViewHolder(view);
-        return viewHolder;
+        return new CactusItem.MeasurementViewHolder(view);
     }
 
     @Override
@@ -75,12 +72,10 @@ public class CactusItemRegular extends CactusItem implements TypeChangeListener 
             holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorWindowBackground));
     }
 
-
     @Override
     public void onTypeChange(Type type) {
-        if (type != currentType && viewHolder != null) {
+        if (type != currentType) {
             currentType = type;
-            viewHolder.onDisplayValueChanged(getDisplayValue());
         }
     }
 }

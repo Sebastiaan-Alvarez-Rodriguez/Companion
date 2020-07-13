@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 public class CactusFragment extends Fragment {
+    //TODO: Create swipe-up-to-refresh behaviour
     private TextView quoteView, yearView, monthView, dayView, yearTextView, monthTextView, dayTextView;
     private ImageView cactusView;
 
@@ -80,12 +81,10 @@ public class CactusFragment extends Fragment {
         yearView.setText(String.valueOf(years));
         monthView.setText(String.valueOf(months));
         dayView.setText(String.valueOf(days));
-        if (years == 1)
-            yearTextView.setText("year");
-        if (months == 1)
-            monthTextView.setText("month");
-        if (days == 1)
-            dayTextView.setText("day");
+
+        yearTextView.setText(years == 1 ? "year" : "years");
+        monthTextView.setText(months == 1 ? "month" : "months");
+        dayTextView.setText(days == 1 ? "day" : "days");
     }
 
     private void setQuote() {

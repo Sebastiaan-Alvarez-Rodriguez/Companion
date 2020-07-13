@@ -12,15 +12,12 @@ import com.python.companion.db.entity.Measurement;
 import com.python.companion.ui.cactus.type.DisplayValueChangeListener;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 
 public abstract class CactusItem extends AbstractItem<ViewHolder> {
     protected Measurement measurement;
-
-    protected @Nullable MeasurementViewHolder viewHolder;
 
     public CactusItem(Measurement measurement) {
         this.measurement = measurement;
@@ -29,8 +26,7 @@ public abstract class CactusItem extends AbstractItem<ViewHolder> {
     @NotNull
     @Override
     public ViewHolder getViewHolder(@NotNull View view) {
-        viewHolder = new MeasurementViewHolder(view);
-        return viewHolder;
+        return new MeasurementViewHolder(view);
     }
 
     @Override

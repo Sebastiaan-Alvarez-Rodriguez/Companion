@@ -36,6 +36,7 @@
         android:layout_marginEnd="8dp"
         android:ems="10"
         android:inputType="numberSigned"
+        android:text="1"
         app:layout_constraintBottom_toBottomOf="@+id/textView"
         app:layout_constraintEnd_toStartOf="@+id/textView6"
         app:layout_constraintStart_toEndOf="@+id/textView"
@@ -68,6 +69,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
+            android:checked="false"
             android:text="Show distance (in days)" />
 
         <RadioButton
@@ -75,6 +77,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:checked="true"
             android:text="Show date" />
     </RadioGroup>
 

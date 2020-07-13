@@ -37,8 +37,8 @@ public class CactusSortHandler {
             return this;
         }
 
-        public Builder setItemList(@NonNull ComparableItemListImpl<CactusItem> itemList) {
-            this.itemList = itemList;
+        public Builder setItemList(@NonNull ComparableItemListImpl<? extends CactusItem> itemList) {
+            this.itemList = (ComparableItemListImpl<CactusItem>) itemList;
             return this;
         }
 
@@ -101,7 +101,7 @@ public class CactusSortHandler {
     protected static class MeasurementDateComperator implements Comparator<CactusItem> {
         @Override
         public int compare(CactusItem o1, CactusItem o2) {
-            return Long.compare(Long.parseLong(o1.getDisplayValue()), Long.parseLong(o2.getDisplayValue()));
+            return o1.getMeasurement().compareTo(o2.getMeasurement());
         }
     }
 }
