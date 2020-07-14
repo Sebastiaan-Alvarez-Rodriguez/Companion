@@ -26,7 +26,7 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
-import com.python.companion.util.measurement.MeasurementUtil;
+import com.python.companion.util.MeasurementUtil;
 
 import java.time.Duration;
 import java.util.List;

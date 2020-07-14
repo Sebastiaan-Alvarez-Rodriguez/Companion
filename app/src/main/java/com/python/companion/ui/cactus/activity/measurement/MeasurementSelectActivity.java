@@ -34,7 +34,7 @@ import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.ui.cactus.fragment.CactusViewModel;
 import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
-import com.python.companion.util.measurement.MeasurementUtil;
+import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,12 +1,14 @@
 package com.python.companion.ui.cactus.activity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -24,6 +26,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.mikepenz.fastadapter.diff.DiffCallback;
@@ -34,12 +37,14 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.ui.cactus.Type;
+import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
 import com.python.companion.ui.cactus.fragment.CactusViewModel;
 import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
 import com.python.companion.ui.cactus.measurement.adapter.item.CactusItemRegular;
-import com.python.companion.ui.cactus.type.Type;
-import com.python.companion.util.measurement.MeasurementUtil;
+import com.python.companion.util.MeasurementUtil;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,9 +53,8 @@ public class CactusJubileumActivity extends AppCompatActivity {
     private RecyclerView list;
     private EditText amountView;
     private RadioGroup displayGroup;
-
+    private FloatingActionButton addButton;
     private SearchView searchView;
-
 
     private ItemAdapter<CactusItemRegular> itemAdapter;
     private FastAdapter<CactusItemRegular> fastAdapter;
@@ -63,7 +67,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_cactus_result_global);
+        setContentView(R.layout.activity_cactus_jubileum);
         viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
         findViews();
         setupActionBar();
@@ -73,13 +77,14 @@ public class CactusJubileumActivity extends AppCompatActivity {
     }
 
     private void findViews() {
-        amountView = findViewById(R.id.activity_cactus_result_global_amount);
-        displayGroup = findViewById(R.id.activity_cactus_result_global_radiogroup);
-        list = findViewById(R.id.activity_cactus_result_global_list);
+        amountView = findViewById(R.id.activity_cactus_jubileum_amount);
+        displayGroup = findViewById(R.id.activity_cactus_jubileum_radiogroup);
+        list = findViewById(R.id.activity_cactus_jubileum_list);
+        addButton = findViewById(R.id.activity_cactus_jubileum_add);
     }
 
     private void setupActionBar() {
-        Toolbar myToolbar = findViewById(R.id.activity_cactus_result_global_toolbar);
+        Toolbar myToolbar = findViewById(R.id.activity_cactus_jubileum_toolbar);
         setSupportActionBar(myToolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
@@ -95,14 +100,37 @@ public class CactusJubileumActivity extends AppCompatActivity {
 
     private void prepareButtons() {
         displayGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            final Type t = checkedId == R.id.activity_cactus_result_global_dates ? Type.DATE : Type.DISTANCE;
+            final Type t = checkedId == R.id.activity_cactus_jubileum_dates ? Type.DATE : Type.DISTANCE;
             for (CactusItemRegular x : itemAdapter.getAdapterItems())
                 x.onTypeChange(t);
             fastAdapter.notifyAdapterDataSetChanged();
         });
+        amountView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-        //TODO: Handle interval textview
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                userInterval = getInterval(s);
+                SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+                LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
+                for (CactusItemRegular x : itemAdapter.getAdapterItems())
+                    try {
+                        x.onDateChange(MeasurementUtil.futureInterval(x.getMeasurement(), together, userInterval));
+                    } catch (DateTimeException e) {
+                        x.onDateError(userInterval >= 0 ? "Very far away" : "Very long ago");
+                    }
 
+                fastAdapter.notifyAdapterDataSetChanged();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+        addButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MeasurementAddActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void prepareList() {
@@ -122,15 +150,9 @@ public class CactusJubileumActivity extends AppCompatActivity {
         setListUpdates();
     }
 
-
     private void setListUpdates() {
         SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
         LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
-
-        Log.e("CactusJub", "test starting");
-        Measurement yearoof = MeasurementUtil.getDefaultMeasurements().get(2); //get year measurement
-        LocalDate res = MeasurementUtil.futureInterval(yearoof, together, 1);
-        Log.e("CactusJub", "Resulting date: "+res.toString());
 
         List<CactusItemRegular> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(measurement -> new CactusItemRegular(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval))).collect(Collectors.toList());
 
@@ -158,20 +180,30 @@ public class CactusJubileumActivity extends AppCompatActivity {
         });
     }
 
-    /** @return interval number the user wants to get results for */
-    private long getInterval() {
-        String tmp = amountView.getText().toString();
-        if (tmp.length() == 0)
+    private long getInterval(CharSequence text) {
+        if (text.length() == 0)
             return 1;
         try {
-            return Long.parseLong(tmp);
+            return Long.parseLong(text.toString());
         } catch (NumberFormatException e) {
-            return 1;
+            amountView.setError("Not a number");
+        } catch (Exception e) {
+            amountView.setError("Number overflow/underflow (pick less extreme number)");
         }
+        return 1;
+    }
+
+    /** @return interval number the user wants to get results for */
+    private long getInterval() {
+        return getInterval(amountView.getText().toString());
     }
 
     private void setListFiltering() {
-        itemAdapter.getItemFilter().setFilterPredicate((MeasurementItem, charSequence) -> MeasurementItem.getMeasurement().getNameSingular().toLowerCase().contains(charSequence.toString().toLowerCase()));
+        itemAdapter.getItemFilter().setFilterPredicate((MeasurementItem, charSequence) -> {
+            CharSequence lower = charSequence.toString().toLowerCase();
+            Measurement measurement = MeasurementItem.getMeasurement();
+            return measurement.getNameSingular().toLowerCase().contains(lower) || measurement.getNamePlural().toLowerCase().contains(lower);
+        });
         itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<CactusItemRegular>() {
             @Override
             public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends CactusItemRegular> list) {

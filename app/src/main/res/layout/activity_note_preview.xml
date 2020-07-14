@@ -29,6 +29,7 @@
 
         <TextView
             android:id="@+id/activity_note_preview_content"
+            android:textIsSelectable="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:autoLink="web"

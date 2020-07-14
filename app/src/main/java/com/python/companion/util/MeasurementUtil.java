@@ -1,4 +1,4 @@
-package com.python.companion.util.measurement;
+package com.python.companion.util;
 
 import android.util.Log;
 
@@ -8,6 +8,7 @@ import androidx.annotation.WorkerThread;
 
 import com.python.companion.db.entity.Measurement;
 
+import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -37,7 +38,7 @@ public class MeasurementUtil {
      *                 0 computes last interval. -1 computes interval before that, etcetera
      * @return next interval for this unit
      */
-    public static LocalDate futureInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, long interval) {
+    public static LocalDate futureInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, long interval) throws DateTimeException {
         long intervalsBefore = unit.between(together, LocalDate.now());
         return unit.addTo(together, intervalsBefore+interval);
     }

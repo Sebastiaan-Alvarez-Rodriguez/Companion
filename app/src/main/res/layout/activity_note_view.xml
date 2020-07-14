@@ -30,6 +30,7 @@
 
         <TextView
             android:id="@+id/activity_note_view_content"
+            android:textIsSelectable="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="24sp"

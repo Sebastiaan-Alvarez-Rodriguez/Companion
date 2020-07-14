@@ -9,7 +9,6 @@ import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
 import com.mikepenz.fastadapter.items.AbstractItem;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.type.DisplayValueChangeListener;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -52,7 +51,7 @@ public abstract class CactusItem extends AbstractItem<ViewHolder> {
             holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorWindowBackground));
     }
 
-    public static class MeasurementViewHolder extends ViewHolder<CactusItem> implements DisplayValueChangeListener {
+    public static class MeasurementViewHolder extends ViewHolder<CactusItem> {
         private TextView amountView, nameView;
 
 
@@ -70,11 +69,6 @@ public abstract class CactusItem extends AbstractItem<ViewHolder> {
 
         @Override
         public void unbindView(@NotNull CactusItem item) {
-        }
-
-        @Override
-        public void onDisplayValueChanged(String value) {
-            amountView.setText(value);
         }
     }
 }
