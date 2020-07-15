@@ -14,7 +14,6 @@ import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
@@ -111,7 +110,7 @@ public class LockDialog extends DialogFragment {
         });
         acceptButton.setOnClickListener(v -> {
             if (lock) {
-                NoteConverter.makeNoteSecure(getChildFragmentManager(), getContext(), note, new ConvertCallback() {
+                NoteConverter.noteEncrypt(getChildFragmentManager(), getContext(), note, new NoteConverter.ConvertCallback() {
                     @Override
                     public void onSuccess(@NonNull Note note) {
                         acceptListener.onAccept(note);
@@ -121,7 +120,7 @@ public class LockDialog extends DialogFragment {
                     public void onFailure() {}
                 });
             } else {
-                NoteConverter.makeNoteInsecure(getChildFragmentManager(), getContext(), note, new ConvertCallback() {
+                NoteConverter.noteDecrypt(getChildFragmentManager(), getContext(), note, new NoteConverter.ConvertCallback() {
                     @Override
                     public void onSuccess(@NonNull Note note) {
                         acceptListener.onAccept(note);

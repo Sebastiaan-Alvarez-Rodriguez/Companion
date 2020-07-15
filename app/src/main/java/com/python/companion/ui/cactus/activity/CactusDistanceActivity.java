@@ -28,7 +28,7 @@ import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivit
 import com.python.companion.ui.cactus.fragment.CactusViewModel;
 import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
 import com.python.companion.ui.cactus.measurement.adapter.item.CactusItem;
-import com.python.companion.ui.cactus.Type;
+import com.python.companion.ui.cactus.measurement.Type;
 
 import java.util.List;
 import java.util.stream.Collectors;

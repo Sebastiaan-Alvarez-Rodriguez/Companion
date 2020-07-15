@@ -1,5 +1,6 @@
 package com.python.companion.ui.notes.category.activity;
 
+import android.app.Application;
 import android.content.Intent;
 import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
@@ -15,11 +16,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,6 +32,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
+import com.python.companion.backend.category.CategoryRepository;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.entity.Category;
 import com.python.companion.ui.general.customviews.ContextMenuRecyclerView;
@@ -37,6 +42,7 @@ import com.python.companion.ui.notes.category.dialog.CategoryUpdateDialog;
 import com.skydoves.colorpickerview.ColorPickerDialog;
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class CategoryEditActivity extends AppCompatActivity {
@@ -230,5 +236,22 @@ public class CategoryEditActivity extends AppCompatActivity {
         data.putExtra("categoryColor", categoryColor);
         setResult(RESULT_OK, data);
         finish();
+    }
+
+    private static class CategoryEditViewModel extends AndroidViewModel {
+        private CategoryRepository categoryRepository;
+
+        private LiveData<List<Category>> categories = null;
+
+        public CategoryEditViewModel(@NonNull Application application) {
+            super(application);
+            categoryRepository = new CategoryRepository(application);
+        }
+
+        public LiveData<List<Category>> getCategories() {
+            if (categories == null)
+                categories = categoryRepository.getUniqueCategories();
+            return categories;
+        }
     }
 }

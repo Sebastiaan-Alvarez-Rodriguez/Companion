@@ -9,6 +9,7 @@ import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
 import com.python.companion.ui.notes.note.NoteType;
+import com.python.companion.util.genericinterfaces.ResultListener;
 
 import java.util.Collection;
 import java.util.List;

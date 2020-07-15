@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,17 +16,25 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.python.companion.R;
-import com.python.companion.ui.cactus.activity.CactusActivity;
+import com.python.companion.ui.cactus.activity.CactusDistanceActivity;
+import com.python.companion.ui.cactus.activity.CactusJubileumActivity;
+import com.python.companion.ui.cactus.activity.measurement.MeasurementSelectActivity;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+import static android.app.Activity.RESULT_OK;
+
+//TODO: Create swipe-up-to-refresh behaviour
 public class CactusFragment extends Fragment {
-    //TODO: Create swipe-up-to-refresh behaviour
-    private TextView quoteView, yearView, monthView, dayView, yearTextView, monthTextView, dayTextView;
-    private ImageView cactusView;
+    private static final int REQ_SHARED = 0;
+
+    private View buttonLayout;
+    private Button jubileumButton, calculatorButton;
 
     private LocalDate together, now;
+    private TextView quoteView, yearView, monthView, dayView, yearTextView, monthTextView, dayTextView;
+    private ImageView cactusView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,12 +52,15 @@ public class CactusFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         findViews(view);
-        prepareAdd();
+        prepareButtons();
         updateStats(true);
         setQuote();
     }
 
     private void findViews(View view) {
+        buttonLayout = view.findViewById(R.id.fragment_cactus_buttons);
+        jubileumButton = view.findViewById(R.id.fragment_cactus_jubileum);
+        calculatorButton = view.findViewById(R.id.fragment_cactus_calculator);
         quoteView = view.findViewById(R.id.fragment_cactus_quote);
         yearView = view.findViewById(R.id.fragment_cactus_years);
         monthView = view.findViewById(R.id.fragment_cactus_months);
@@ -59,10 +71,23 @@ public class CactusFragment extends Fragment {
         cactusView = view.findViewById(R.id.fragment_cactus_cactus);
     }
 
-    private void prepareAdd() {
+    private void prepareButtons() {
         cactusView.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), CactusActivity.class);
+            if (quoteView.getVisibility() == View.VISIBLE) {
+                quoteView.setVisibility(View.INVISIBLE);
+                buttonLayout.setVisibility(View.VISIBLE);
+            } else {
+                buttonLayout.setVisibility(View.GONE);
+                quoteView.setVisibility(View.VISIBLE);
+            }
+        });
+        jubileumButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), CactusJubileumActivity.class);
             startActivity(intent);
+        });
+        calculatorButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), MeasurementSelectActivity.class);
+            startActivityForResult(intent, REQ_SHARED);
         });
     }
 
@@ -89,5 +114,16 @@ public class CactusFragment extends Fragment {
 
     private void setQuote() {
         quoteView.setText("Rule 10 Greed is eternal!");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == REQ_SHARED && resultCode == RESULT_OK && data != null) {
+            Intent intent = new Intent(getContext(), CactusDistanceActivity.class);
+            intent.putParcelableArrayListExtra("chosen", data.getParcelableArrayListExtra("chosen"));
+            startActivity(intent);
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

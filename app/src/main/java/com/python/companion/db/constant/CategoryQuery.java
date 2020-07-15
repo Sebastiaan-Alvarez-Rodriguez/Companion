@@ -7,6 +7,7 @@ import androidx.annotation.ColorInt;
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.entity.Category;
+import com.python.companion.util.genericinterfaces.ResultListener;
 
 import java.util.List;
 import java.util.concurrent.Executors;

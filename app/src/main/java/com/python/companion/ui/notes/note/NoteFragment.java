@@ -1,5 +1,6 @@
-package com.python.companion.ui.notes.note.fragment;
+package com.python.companion.ui.notes.note;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,6 +19,8 @@ import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,15 +39,14 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
+import com.python.companion.backend.note.NoteRepository;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.DecryptedCallback;
 import com.python.companion.security.Guard;
 import com.python.companion.ui.MainActivity;
 import com.python.companion.ui.general.settings.SettingsActivity;
-import com.python.companion.ui.notes.category.dialog.set.CategorySetDialog;
-import com.python.companion.ui.notes.note.NoteContainer;
+import com.python.companion.ui.notes.category.dialog.CategorySetDialog;
 import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
@@ -137,7 +139,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 Note n = noteItem.getNote();
                 Intent intent = new Intent(getContext(), NoteViewActivity.class);
                 if (n.isSecure()) {
-                    Guard.getGuard().decrypt(n.getContent(), n.getIv(), n.getName(), getChildFragmentManager(), getContext(), new DecryptedCallback() {
+                    Guard.getGuard().decrypt(n.getContent(), n.getIv(), n.getName(), getChildFragmentManager(), getContext(), new Guard.DecryptedCallback() {
                         @Override
                         public void onFinish(@NonNull String plaintext) {
 //                            intent.putExtra("note", new NoteContainer(new Note(n.getName(), plaintext, n.getCategory(), true, n.getIv(), n.getType())));
@@ -330,5 +332,23 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
     @Override
     public void onDestroyActionMode(ActionMode mode) {
+    }
+
+    private static class NoteViewModel extends AndroidViewModel {
+        private NoteRepository noteRepository;
+
+        private LiveData<List<Note>> notes = null;
+
+        public NoteViewModel(@NonNull Application application) {
+            super(application);
+            noteRepository = new NoteRepository(application);
+        }
+
+
+        public LiveData<List<Note>> getNotes() {
+            if (notes == null)
+                notes = noteRepository.getNotes();
+            return notes;
+        }
     }
 }

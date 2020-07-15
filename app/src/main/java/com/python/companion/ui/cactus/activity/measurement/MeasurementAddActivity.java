@@ -1,6 +1,8 @@
 package com.python.companion.ui.cactus.activity.measurement;
 
-import android.graphics.PorterDuff;
+import android.app.Application;
+import android.graphics.BlendMode;
+import android.graphics.BlendModeColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
@@ -8,10 +10,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -24,7 +29,10 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
+import com.python.companion.db.Database;
 import com.python.companion.db.constant.MeasurementQuery;
+import com.python.companion.db.dao.DAOMeasurement;
+import com.python.companion.db.entity.Measurement;
 import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
 import com.python.companion.util.MeasurementUtil;
 
@@ -100,10 +108,10 @@ public class MeasurementAddActivity extends AppCompatActivity {
             actionbar.setDisplayHomeAsUpEnabled(true);
             Drawable icon = myToolbar.getNavigationIcon();
             if (icon != null) {
-                icon.setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
+                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
                 myToolbar.setNavigationIcon(icon);
             }
-            actionbar.setTitle("Categories");
+            actionbar.setTitle("Add Jubileum");
         }
     }
 
@@ -157,5 +165,23 @@ public class MeasurementAddActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private static class MeasurementAddViewModel extends AndroidViewModel {
+        private DAOMeasurement daoMeasurement;
+
+        private LiveData<List<Measurement>> data;
+
+        public MeasurementAddViewModel(@NonNull Application application) {
+            super(application);
+            daoMeasurement = Database.getDatabase(application).getDAOMeasurement();
+            data = null;
+        }
+
+        public LiveData<List<Measurement>> getMeasurements() {
+            if (data == null)
+                data = daoMeasurement.getAllLive();
+            return data;
+        }
     }
 }

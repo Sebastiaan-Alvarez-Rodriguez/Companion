@@ -25,7 +25,6 @@ import androidx.core.widget.NestedScrollView;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
 import com.python.companion.backend.interact.Store;
-import com.python.companion.backend.interact.StoreCallback;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
 import com.python.companion.ui.general.textviewsearch.UITextSearcher;
@@ -160,7 +159,7 @@ public class NotePreviewActivity extends AppCompatActivity {
             Snackbar.make(findViewById(R.id.activity_note_preview_layout), "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
         } else {
             if (editMode)
-                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
+                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), new Store.StoreCallback() {
                     @Override
                     public void onSuccess() {
                         finishSuccess();
@@ -169,7 +168,7 @@ public class NotePreviewActivity extends AppCompatActivity {
                     public void onFailure() {}
                 });
             else
-                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), new StoreCallback() {
+                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), new Store.StoreCallback() {
                     @Override
                     public void onSuccess() {
                         finishSuccess();

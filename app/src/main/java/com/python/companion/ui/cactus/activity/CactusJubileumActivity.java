@@ -37,7 +37,7 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.Type;
+import com.python.companion.ui.cactus.measurement.Type;
 import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
 import com.python.companion.ui.cactus.fragment.CactusViewModel;
 import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
@@ -49,6 +49,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO: Notifications for jubilea:
+//  https://www.raywenderlich.com/1214490-android-notifications-tutorial-getting-started
+//  https://www.youtube.com/watch?v=nl-dheVpt8o
 public class CactusJubileumActivity extends AppCompatActivity {
     private RecyclerView list;
     private EditText amountView;
@@ -154,10 +157,22 @@ public class CactusJubileumActivity extends AppCompatActivity {
         SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
         LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
 
-        List<CactusItemRegular> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(measurement -> new CactusItemRegular(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval))).collect(Collectors.toList());
+        List<CactusItemRegular> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(measurement -> {
+            try {
+                return new CactusItemRegular(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval));
+            } catch (DateTimeException e) {
+                return new CactusItemRegular(measurement, userInterval >= 0 ? "Very far away" : "Very long ago");
+            }
+        }).collect(Collectors.toList());
 
         viewModel.getMeasurements().observe(this, measurements -> {
-            List<CactusItemRegular> newlist = measurements.stream().map(measurement -> new CactusItemRegular(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval))).collect(Collectors.toList());
+            List<CactusItemRegular> newlist = measurements.stream().map(measurement -> {
+                try {
+                    return new CactusItemRegular(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval));
+                } catch (DateTimeException e) {
+                    return new CactusItemRegular(measurement, userInterval >= 0 ? "Very far away" : "Very long ago");
+                }
+            }).collect(Collectors.toList());
 
             newlist.addAll(defaultList);
             FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<CactusItemRegular>() {

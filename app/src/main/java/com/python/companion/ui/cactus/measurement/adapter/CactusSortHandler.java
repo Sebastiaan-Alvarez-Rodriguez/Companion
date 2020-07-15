@@ -37,6 +37,7 @@ public class CactusSortHandler {
             return this;
         }
 
+        @SuppressWarnings("unchecked")
         public Builder setItemList(@NonNull ComparableItemListImpl<? extends CactusItem> itemList) {
             this.itemList = (ComparableItemListImpl<CactusItem>) itemList;
             return this;

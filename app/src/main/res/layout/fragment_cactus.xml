@@ -7,6 +7,43 @@
     android:layout_height="match_parent"
     android:background="@drawable/background_desert">
 
+    <LinearLayout
+        android:id="@+id/fragment_cactus_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/fragment_cactus_jubileum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/button_rounded"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Jubilea"
+            android:textColor="@color/colorPrimary" />
+
+        <Button
+            android:id="@+id/fragment_cactus_calculator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/button_rounded"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="Calclator"
+            android:textColor="@color/colorPrimary" />
+    </LinearLayout>
+
     <TextView
         android:id="@+id/fragment_cactus_quote"
         android:layout_width="0dp"

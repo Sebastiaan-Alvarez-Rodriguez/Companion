@@ -8,7 +8,6 @@ import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.notes.note.dialog.LockDialog;
 import com.python.companion.ui.notes.note.dialog.NoteOverrideDialog;
@@ -101,7 +100,7 @@ public class Store {
      */
     private static void updateInternal(@NonNull Note note, boolean secure, @NonNull FragmentManager manager, @NonNull Context context, @NonNull NoteQuery noteQuery, @Nullable String replaceCandidate, @NonNull StoreCallback callback) {
         if (secure) {
-            NoteConverter.makeNoteSecure(manager, context, note, new ConvertCallback() {
+            NoteConverter.noteEncrypt(manager, context, note, new NoteConverter.ConvertCallback() {
                 @Override
                 public void onSuccess(@NonNull Note n) {
                     if (replaceCandidate == null)
@@ -132,5 +131,11 @@ public class Store {
                 .setCancelListener(callback::onFailure)
                 .build();
         noteOverrideDialog.show(manager, null);
+    }
+
+    /** Callback to receive final state of store operations */
+    public interface StoreCallback {
+        void onSuccess();
+        void onFailure();
     }
 }

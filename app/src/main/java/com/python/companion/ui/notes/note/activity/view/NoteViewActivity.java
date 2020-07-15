@@ -1,5 +1,6 @@
 package com.python.companion.ui.notes.note.activity.view;
 
+import android.app.Application;
 import android.content.Intent;
 import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
@@ -20,15 +21,18 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.widget.NestedScrollView;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
+import com.python.companion.db.Database;
 import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.general.textviewsearch.UITextSearcher;
 import com.python.companion.ui.notes.category.activity.CategoryEditActivity;
@@ -188,7 +192,7 @@ public class NoteViewActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.menu_note_view_lock: {
-                ConvertCallback callback = new ConvertCallback() {
+                NoteConverter.ConvertCallback callback = new NoteConverter.ConvertCallback() {
                     @Override
                     public void onSuccess(@NonNull Note n) {
                         NoteQuery query = new NoteQuery(getApplicationContext());
@@ -205,9 +209,9 @@ public class NoteViewActivity extends AppCompatActivity {
                     }
                 };
                 if (note.isSecure())
-                    NoteConverter.makeNoteInsecure(getSupportFragmentManager(), getApplicationContext(), note, callback);
+                    NoteConverter.noteDecrypt(getSupportFragmentManager(), getApplicationContext(), note, callback);
                 else
-                    NoteConverter.makeNoteSecure(getSupportFragmentManager(), getApplicationContext(), note, callback);
+                    NoteConverter.noteEncrypt(getSupportFragmentManager(), getApplicationContext(), note, callback);
                 break;
             }
             case R.id.menu_note_view_edit_category: {
@@ -276,5 +280,21 @@ public class NoteViewActivity extends AppCompatActivity {
             noteQuery.updateCategory(note.getName(), new Category(data.getStringExtra("categoryName"), data.getIntExtra("categoryColor", -1)), v -> {});
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private static class NoteViewViewModel extends AndroidViewModel {
+        private DAONote daoNote;
+        private LiveData<Note> data;
+
+        public NoteViewViewModel(@NonNull Application application) {
+            super(application);
+            daoNote = Database.getDatabase(application).getDAONote();
+        }
+
+        public LiveData<Note> getNote(@NonNull String name) {
+            if (data == null)
+                data = daoNote.getLive(name);
+            return data;
+        }
     }
 }

@@ -10,7 +10,7 @@ import com.python.companion.db.entity.Note;
 
 import java.time.Instant;
 
-/** Class wrapping around a {@link Note}, allowing it to be sent between Activities via Parcels ({@link Parcel}) */
+/** Class wrapping around a {@link Note}, allowing it to be sent between Activities efficiently, via Parcels ({@link Parcel}) */
 public class NoteContainer implements Parcelable {
     private @NonNull Note note;
 

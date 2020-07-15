@@ -5,6 +5,7 @@ import android.content.Context;
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.util.genericinterfaces.ResultListener;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;

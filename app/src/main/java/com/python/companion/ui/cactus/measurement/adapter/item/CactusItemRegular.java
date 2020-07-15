@@ -9,7 +9,7 @@ import androidx.core.content.ContextCompat;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.Type;
+import com.python.companion.ui.cactus.measurement.Type;
 import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;

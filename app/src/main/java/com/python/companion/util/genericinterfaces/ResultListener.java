@@ -1,7 +1,7 @@
-package com.python.companion.db.constant;
+package com.python.companion.util.genericinterfaces;
 
 /**
- * Simple interface to return query results of any type to UI
+ * Simple interface to return query results of any type
  * @param <T> Type of returned result
  */
 public interface ResultListener<T> {

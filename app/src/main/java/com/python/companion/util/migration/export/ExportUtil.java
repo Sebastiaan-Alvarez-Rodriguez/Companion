@@ -14,7 +14,6 @@ import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
 
 import org.msgpack.core.MessagePack;
@@ -102,7 +101,7 @@ public class ExportUtil {
                 if (exportInterface != null)
                     exportInterface.onStartDecryptNotes(secureNotes.size());
 
-                NoteConverter.batchInsecure(manager, context, secureNotes, new ConvertCallback() {
+                NoteConverter.batchDecrypt(manager, context, secureNotes, new NoteConverter.ConvertCallback() {
                         @Override
                         public void onSuccess(@NonNull Note note) {
                             decrypted.add(note);

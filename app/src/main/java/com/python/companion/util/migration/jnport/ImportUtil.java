@@ -15,7 +15,6 @@ import com.python.companion.db.dao.DAOCategory;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.converters.ConvertCallback;
 import com.python.companion.security.converters.NoteConverter;
 
 import org.msgpack.core.MessageFormat;
@@ -123,7 +122,7 @@ public class ImportUtil {
                     importInterface.onStartEncryptNotes(prevSecure);
                 List<Integer> tmp = new ArrayList<>(1);
                 tmp.add(0);
-                NoteConverter.batchSecure(manager, context, notes, new ConvertCallback() {
+                NoteConverter.batchEncrypt(manager, context, notes, new NoteConverter.ConvertCallback() {
                     @Override
                     public void onSuccess(@NonNull Note note) {
                         notes.set(tmp.get(0), note);

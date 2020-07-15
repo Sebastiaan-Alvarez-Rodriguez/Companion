@@ -1,5 +1,6 @@
-package com.python.companion.ui.notes.category.dialog.set;
+package com.python.companion.ui.notes.category.dialog;
 
+import android.app.Application;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,8 @@ import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,12 +26,15 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
+import com.python.companion.backend.category.CategoryRepository;
 import com.python.companion.db.constant.NoteQuery;
+import com.python.companion.db.entity.Category;
 import com.python.companion.ui.notes.category.adapter.CategoryItem;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -155,5 +161,22 @@ public class CategorySetDialog extends DialogFragment {
                 this.dismiss();
             }
         });
+    }
+
+    private static class CategorySetDialogViewModel extends AndroidViewModel {
+        private CategoryRepository categoryRepository;
+
+        private LiveData<List<Category>> categories = null;
+
+        public CategorySetDialogViewModel(@NonNull Application application) {
+            super(application);
+            categoryRepository = new CategoryRepository(application);
+        }
+
+        public LiveData<List<Category>> getCategories() {
+            if (categories == null)
+                categories = categoryRepository.getUniqueCategories();
+            return categories;
+        }
     }
 }

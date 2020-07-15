@@ -383,4 +383,21 @@ public abstract class Guard {
         }
         return false;
     }
+
+
+    /** Interface for receiving decryption callbacks */
+    public interface DecryptedCallback {
+        /** Called when decryption was successful, with generated plaintext */
+        void onFinish(@NonNull String plaintext);
+        /** Called when decryption fails */
+        void onFailure();
+    }
+
+    /** Interface for receiving encryption callbacks */
+    public interface EncryptedCallback {
+        /** Called when encryption was successful, with generated ciphertext and securely random generated initialization vector (IV) */
+        void onFinish(@NonNull String encrypted, @NonNull byte[] iv);
+        /** Called when encryption fails */
+        void onFailure();
+    }
 }
