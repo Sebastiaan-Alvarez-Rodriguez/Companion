@@ -32,7 +32,7 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.ui.cactus.fragment.CactusViewModel;
+import com.python.companion.ui.cactus.activity.CactusViewModel;
 import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
 import com.python.companion.util.MeasurementUtil;
 

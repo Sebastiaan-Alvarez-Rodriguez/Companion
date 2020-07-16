@@ -3,29 +3,61 @@ package com.python.companion.ui.cactus.measurement.adapter.item;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
+import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.items.AbstractItem;
+import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.ui.cactus.measurement.Type;
+import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDate;
 import java.util.List;
 
+public class CactusItem extends AbstractItem<ViewHolder> {
+    public static final @LayoutRes int layoutResource = R.layout.item_cactus;
 
-public abstract class CactusItem extends AbstractItem<ViewHolder> {
     protected Measurement measurement;
 
-    public CactusItem(Measurement measurement) {
+    private Type currentType;
+    private LocalDate date;
+    private long distance;
+    private boolean hasError;
+    private String error;
+
+    protected CactusItem(Measurement measurement) {
         this.measurement = measurement;
+        this.currentType = Type.DATE;
+    }
+
+    public CactusItem(Measurement measurement, LocalDate date) {
+        this(measurement);
+        this.date = date;
+        this.distance = MeasurementUtil.computeDistance(date);
+        this.hasError = false;
+    }
+
+    public CactusItem(Measurement measurement, String error) {
+        this(measurement);
+        this.hasError = true;
+        this.error = error;
     }
 
     @NotNull
     @Override
-    public ViewHolder getViewHolder(@NotNull View view) {
+    public FastAdapter.ViewHolder getViewHolder(@NotNull View view) {
         return new MeasurementViewHolder(view);
+    }
+
+    @Override
+    public int getLayoutRes() {
+        return layoutResource;
     }
 
     @Override
@@ -37,13 +69,17 @@ public abstract class CactusItem extends AbstractItem<ViewHolder> {
         return measurement;
     }
 
-    public abstract String getDisplayValue();
+    /** Returns currently displayed value. Can either be a date, distance, or a given error */
+    public String getDisplayValue() {
+        return hasError ? error : (currentType == Type.DATE ? date.toString() : String.valueOf(distance));
+    }
 
-    public abstract String getDisplayMeasurement();
-
+    public String getMeasurementName() {
+        return currentType == Type.DISTANCE && distance == 1 ? measurement.getNameSingular() : measurement.getNamePlural();
+    }
 
     @Override
-    public void bindView(@NotNull ViewHolder holder, @NotNull List<Object> payloads) {
+    public void bindView(@NotNull FastAdapter.ViewHolder holder, @NotNull List<Object> payloads) {
         super.bindView(holder, payloads);
         if (isSelected())
             holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
@@ -51,7 +87,29 @@ public abstract class CactusItem extends AbstractItem<ViewHolder> {
             holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorWindowBackground));
     }
 
-    public static class MeasurementViewHolder extends ViewHolder<CactusItem> {
+    /** Called when user changes type. Does not require recomputing date/distance.
+     * !!! Manually invalidate view after update!!! This object merely represents an item, not a view
+     */
+    public void onTypeChange(Type type) {
+        if (type != currentType) {
+            currentType = type;
+        }
+    }
+
+    public void onDateChange(LocalDate date) {
+        this.date = date;
+        this.distance = MeasurementUtil.computeDistance(date);
+        this.hasError = false;
+    }
+
+    public void onDateError(@Nullable String msg) {
+        hasError = true;
+        error = msg == null ? "!" : msg;
+    }
+
+
+    /** Viewholder for {@link CactusItem#layoutResource} */
+    public static class MeasurementViewHolder extends FastAdapter.ViewHolder<CactusItem> {
         private TextView amountView, nameView;
 
 
@@ -64,7 +122,7 @@ public abstract class CactusItem extends AbstractItem<ViewHolder> {
         @Override
         public void bindView(@NotNull CactusItem item, @NotNull List<Object> list) {
             amountView.setText(item.getDisplayValue());
-            nameView.setText(item.getDisplayMeasurement());
+            nameView.setText(item.getMeasurementName());
         }
 
         @Override

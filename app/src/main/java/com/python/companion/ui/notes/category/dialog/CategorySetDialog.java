@@ -163,7 +163,7 @@ public class CategorySetDialog extends DialogFragment {
         });
     }
 
-    private static class CategorySetDialogViewModel extends AndroidViewModel {
+    public static class CategorySetDialogViewModel extends AndroidViewModel {
         private CategoryRepository categoryRepository;
 
         private LiveData<List<Category>> categories = null;

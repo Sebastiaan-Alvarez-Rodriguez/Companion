@@ -7,6 +7,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.util.genericinterfaces.ErrorListener;
+import com.python.companion.util.genericinterfaces.ResultListener;
 
 import java.time.DateTimeException;
 import java.time.Duration;
@@ -15,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class MeasurementUtil {
@@ -27,23 +30,32 @@ public class MeasurementUtil {
     public static long computeDistance(@NonNull TemporalUnit unit, @NonNull LocalDate date) {
         return unit.between(LocalDate.now(), date);
     }
-
     /** Wrapper for {@link #computeDistance(TemporalUnit, LocalDate)} to return distance in days */
     public static long computeDistance(@NonNull LocalDate date) {
         return computeDistance(ChronoUnit.DAYS, date);
     }
 
     /**
-     * @param interval intervals to look ahead. Default is 1. Zero and negative values allowed.
+     * Computes the interval-th jubileum occuring after present date, asynchronously
+     * @param interval intervals to look ahead. Default is 1 (upcoming interval). Zero and negative values allowed.
      *                 0 computes last interval. -1 computes interval before that, etcetera
-     * @return next interval for this unit
+     * @param dateListener Receives computed localdate on success
+     * @param errorListener Receives localized error message on failure
      */
+    public static void futureInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, long interval, @NonNull ResultListener<LocalDate> dateListener, @NonNull ErrorListener errorListener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                long intervalsBefore = unit.between(together, LocalDate.now());
+                dateListener.onResult(unit.addTo(together, intervalsBefore + interval));
+            } catch (DateTimeException e) {
+                errorListener.onError(e.getLocalizedMessage());
+            }
+        });
+    }
+    /** Sequential alernative for {@link #futureInterval(TemporalUnit, LocalDate, long, ResultListener, ErrorListener)} */
     public static LocalDate futureInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, long interval) throws DateTimeException {
         long intervalsBefore = unit.between(together, LocalDate.now());
-        return unit.addTo(together, intervalsBefore+interval);
-    }
-    public static LocalDate futureInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together) {
-        return futureInterval(unit,together, 1);
+        return unit.addTo(together, intervalsBefore + interval);
     }
 
     private static long gcd_binary(long a, long b) {
@@ -83,13 +95,26 @@ public class MeasurementUtil {
     private static boolean onInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull LocalDate date) {
         return unit.between(together, date.minus(1, ChronoUnit.DAYS)) + 1 == unit.between(together, date);
     }
+
+
+    public static void futureIntertwinedInterval(@NonNull Measurement unit, @NonNull LocalDate together, @NonNull List<Measurement> others, long interval, ResultListener<LocalDate> dateListener, ErrorListener errorListener) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                dateListener.onResult(futureIntertwinedInterval(unit, together, others, interval));
+            } catch (DateTimeException e) {
+                errorListener.onError(e.getLocalizedMessage());
+            }
+        });
+    }
+
     /**
+     * Computes interval with a given list of measurements. You really should do this in the background, as it may require lots of work
      * @param others Other temporal units to compute intertwined integer interval for
      * @param interval intervals to look ahead. Default is 1. Only > 1 allowed.
      * @return next interval intertwined with given other units
      */
     @WorkerThread
-    public static LocalDate futureIntertwinedInterval(@NonNull Measurement unit, @NonNull LocalDate together, @NonNull List<Measurement> others, long interval) {
+    public static LocalDate futureIntertwinedInterval(@NonNull Measurement unit, @NonNull LocalDate together, @NonNull List<Measurement> others, long interval) throws DateTimeException {
         ArrayList<Measurement> all = new ArrayList<>(others);
         all.add(unit);
 

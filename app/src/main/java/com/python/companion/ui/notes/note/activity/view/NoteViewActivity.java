@@ -282,7 +282,7 @@ public class NoteViewActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private static class NoteViewViewModel extends AndroidViewModel {
+    public static class NoteViewViewModel extends AndroidViewModel {
         private DAONote daoNote;
         private LiveData<Note> data;
 

@@ -1,4 +1,4 @@
-package com.python.companion.ui.cactus.fragment;
+package com.python.companion.ui.cactus;
 
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.python.companion.R;
-import com.python.companion.ui.cactus.activity.CactusDistanceActivity;
+import com.python.companion.ui.cactus.activity.CactusCalculatorActivity;
 import com.python.companion.ui.cactus.activity.CactusJubileumActivity;
 import com.python.companion.ui.cactus.activity.measurement.MeasurementSelectActivity;
 
@@ -119,7 +119,7 @@ public class CactusFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQ_SHARED && resultCode == RESULT_OK && data != null) {
-            Intent intent = new Intent(getContext(), CactusDistanceActivity.class);
+            Intent intent = new Intent(getContext(), CactusCalculatorActivity.class);
             intent.putParcelableArrayListExtra("chosen", data.getParcelableArrayListExtra("chosen"));
             startActivity(intent);
             return;

@@ -334,7 +334,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
     public void onDestroyActionMode(ActionMode mode) {
     }
 
-    private static class NoteViewModel extends AndroidViewModel {
+    public static class NoteViewModel extends AndroidViewModel {
         private NoteRepository noteRepository;
 
         private LiveData<List<Note>> notes = null;

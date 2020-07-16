@@ -238,7 +238,7 @@ public class CategoryEditActivity extends AppCompatActivity {
         finish();
     }
 
-    private static class CategoryEditViewModel extends AndroidViewModel {
+    public static class CategoryEditViewModel extends AndroidViewModel {
         private CategoryRepository categoryRepository;
 
         private LiveData<List<Category>> categories = null;

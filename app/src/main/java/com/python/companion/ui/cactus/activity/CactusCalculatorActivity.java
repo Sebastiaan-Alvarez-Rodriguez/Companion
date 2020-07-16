@@ -37,21 +37,20 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.measurement.Type;
 import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
+import com.python.companion.ui.cactus.measurement.Type;
 import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
+import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
 import com.python.companion.ui.cactus.measurement.adapter.item.CactusItem;
 import com.python.companion.util.MeasurementUtil;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// TODO: Notifications for jubilea:
-//  https://www.raywenderlich.com/1214490-android-notifications-tutorial-getting-started
-//  https://www.youtube.com/watch?v=nl-dheVpt8o
-public class CactusJubileumActivity extends AppCompatActivity {
+public class CactusCalculatorActivity extends AppCompatActivity {
     private RecyclerView list;
     private EditText amountView;
     private RadioGroup displayGroup;
@@ -65,17 +64,21 @@ public class CactusJubileumActivity extends AppCompatActivity {
     private CactusViewModel viewModel;
 
     private long userInterval;
+    private List<Measurement> others;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cactus_jubileum);
         viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
+
+        ArrayList<MeasurementItem> items = getIntent().getParcelableArrayListExtra("chosen");
+        others = items.stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList());
         findViews();
         setupActionBar();
-        userInterval = getInterval();
-        prepareList();
         prepareButtons();
+        prepareList();
     }
 
     private void findViews() {
@@ -96,7 +99,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
                 icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
                 myToolbar.setNavigationIcon(icon);
             }
-            actionbar.setTitle("Cactus");
+            actionbar.setTitle("Cactulator");
         }
     }
 
@@ -110,6 +113,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
         amountView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 userInterval = getInterval(s);
@@ -118,7 +122,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
                 for (int x = 0; x < fastAdapter.getItemCount(); ++x) {
                     CactusItem item = fastAdapter.getItem(x);
                     final int w = x;
-                    MeasurementUtil.futureInterval(item.getMeasurement(), together, userInterval, date -> {
+                    MeasurementUtil.futureIntertwinedInterval(item.getMeasurement(), together, others, userInterval, date -> {
                         item.onDateChange(date);
                         runOnUiThread(() -> fastAdapter.notifyAdapterItemChanged(w));
                     }, error -> item.onDateError(userInterval >= 0 ? "Very far away" : "Very long ago"));
@@ -156,16 +160,19 @@ public class CactusJubileumActivity extends AppCompatActivity {
 
         List<CactusItem> defaultList = MeasurementUtil.getDefaultMeasurements().parallelStream().map(measurement -> {
             try {
-                return new CactusItem(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval));
+                return new CactusItem(measurement, MeasurementUtil.futureIntertwinedInterval(measurement, together, others));
             } catch (DateTimeException e) {
                 return new CactusItem(measurement, userInterval >= 0 ? "Very far away" : "Very long ago");
             }
         }).collect(Collectors.toList());
 
+        for (CactusItem x : defaultList)
+            x.setSelectable(false);
+
         viewModel.getMeasurements().observe(this, measurements -> {
             List<CactusItem> newlist = measurements.parallelStream().map(measurement -> {
                 try {
-                    return new CactusItem(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval));
+                    return new CactusItem(measurement, MeasurementUtil.futureIntertwinedInterval(measurement, together, others));
                 } catch (DateTimeException e) {
                     return new CactusItem(measurement, userInterval >= 0 ? "Very far away" : "Very long ago");
                 }
@@ -283,4 +290,3 @@ public class CactusJubileumActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 }
-

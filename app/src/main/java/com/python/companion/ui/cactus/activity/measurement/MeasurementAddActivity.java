@@ -167,7 +167,7 @@ public class MeasurementAddActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private static class MeasurementAddViewModel extends AndroidViewModel {
+    public static class MeasurementAddViewModel extends AndroidViewModel {
         private DAOMeasurement daoMeasurement;
 
         private LiveData<List<Measurement>> data;

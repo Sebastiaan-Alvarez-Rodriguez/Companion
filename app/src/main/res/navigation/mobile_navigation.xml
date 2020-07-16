@@ -9,11 +9,11 @@
         android:id="@+id/nav_home"
         android:name="com.python.companion.ui.notes.note.NoteFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_list" />
 
     <fragment
         android:id="@+id/nav_cactus"
-        android:name="com.python.companion.ui.cactus.fragment.CactusFragment"
+        android:name="com.python.companion.ui.cactus.CactusFragment"
         android:label="@string/menu_cactus"
         tools:layout="@layout/fragment_cactus" />
 

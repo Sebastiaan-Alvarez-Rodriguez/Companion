@@ -1,4 +1,4 @@
-package com.python.companion.ui.cactus.fragment;
+package com.python.companion.ui.cactus.activity;
 
 import android.app.Application;
 

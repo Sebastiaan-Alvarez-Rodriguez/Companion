@@ -37,9 +37,8 @@ public class CactusSortHandler {
             return this;
         }
 
-        @SuppressWarnings("unchecked")
-        public Builder setItemList(@NonNull ComparableItemListImpl<? extends CactusItem> itemList) {
-            this.itemList = (ComparableItemListImpl<CactusItem>) itemList;
+        public Builder setItemList(@NonNull ComparableItemListImpl<CactusItem> itemList) {
+            this.itemList = itemList;
             return this;
         }
 
@@ -95,7 +94,7 @@ public class CactusSortHandler {
     protected static class MeasurementAlphaComperator implements Comparator<CactusItem> {
         @Override
         public int compare(CactusItem o1, CactusItem o2) {
-            return o1.getDisplayMeasurement().compareTo(o2.getDisplayMeasurement());
+            return o1.getMeasurementName().compareTo(o2.getMeasurementName());
         }
     }
 

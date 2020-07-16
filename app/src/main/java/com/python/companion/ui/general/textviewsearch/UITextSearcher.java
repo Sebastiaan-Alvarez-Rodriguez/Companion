@@ -17,7 +17,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.ui.general.customviews.SearchResultBottombar;
 import com.python.companion.ui.general.dialog.ErrorDialog;
 import com.python.companion.ui.general.spans.ColoredStyleSpan;
-import com.python.companion.util.Keyboard;
+import com.python.companion.util.KeyboardUtil;
 import com.python.companion.util.ThreadUtil;
 import com.python.companion.util.genericinterfaces.FinishListener;
 import com.python.companion.util.textsearch.TextSearcher;
@@ -115,7 +115,7 @@ public class UITextSearcher {
             }, listener);
         else
             searcher.submit(query, listener);
-        Keyboard.hideKeyboard(textView.getContext(), textView);
+        KeyboardUtil.hideKeyboard(textView.getContext(), textView);
     }
 
     /** Call to stop the search process and to revert text to its original, non-spanned variant */
