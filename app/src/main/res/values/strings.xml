@@ -12,7 +12,8 @@
     <string name="menu_security">Security</string>
 
     <string name="note_preferences">NotePrefs</string>
-    <string name="measurement_preferences">DatePrefs</string>
+    <string name="measurement_preferences">MeasurementPrefs</string>
+    <string name="cactus_preferences">DatePrefs</string>
     <string name="pass_preferences">PassPrefs</string>
 
     <string name="measurement_key_together">together</string>

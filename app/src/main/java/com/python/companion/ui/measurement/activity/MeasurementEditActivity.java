@@ -1,6 +1,7 @@
-package com.python.companion.ui.cactus.activity.measurement;
+package com.python.companion.ui.measurement.activity;
 
 import android.app.Application;
+import android.content.Intent;
 import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
 import android.graphics.drawable.Drawable;
@@ -29,35 +30,49 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
+import com.python.companion.backend.interact.MeasurementStore;
 import com.python.companion.db.Database;
-import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
+import com.python.companion.ui.measurement.MeasurementContainer;
+import com.python.companion.ui.measurement.adapter.item.MeasurementItemSimple;
 import com.python.companion.util.MeasurementUtil;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class MeasurementAddActivity extends AppCompatActivity {
+public class MeasurementEditActivity extends AppCompatActivity {
     private EditText singular, plural, amount;
     private RecyclerView list;
     private View layout;
 
     private MeasurementAddViewModel viewmodel;
 
-    private FastAdapter<MeasurementItem> fastAdapter;
-    protected SelectExtension<MeasurementItem> selectionExtension;
+    private FastAdapter<MeasurementItemSimple> fastAdapter;
+    protected SelectExtension<MeasurementItemSimple> selectionExtension;
+
+
+    private @Nullable Measurement measurement;
+    private boolean editMode, selectedParent;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_measurement_add);
         viewmodel = new ViewModelProvider(this).get(MeasurementAddViewModel.class);
-
         findViews();
         setupList();
+
+        Intent intent = getIntent();
+        editMode = intent.hasExtra("measurement");
+        if (editMode) {
+            measurement = ((MeasurementContainer) intent.getParcelableExtra("measurement")).getMeasurement();
+            singular.setText(measurement.getNameSingular());
+            plural.setText(measurement.getNamePlural());
+            amount.setText(String.valueOf(measurement.getAmount()));
+            selectedParent = false;
+        }
         setupActionBar();
     }
 
@@ -71,7 +86,7 @@ public class MeasurementAddActivity extends AppCompatActivity {
     }
 
     private void setupList() {
-        ItemAdapter<MeasurementItem> itemAdapter = new ItemAdapter<>();
+        ItemAdapter<MeasurementItemSimple> itemAdapter = new ItemAdapter<>();
 
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
@@ -94,9 +109,19 @@ public class MeasurementAddActivity extends AppCompatActivity {
         });
 
         viewmodel.getMeasurements().observe(this, measurements -> {
-            List<MeasurementItem> items = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItem::new).collect(Collectors.toList());
-            items.addAll(measurements.stream().map(MeasurementItem::new).collect(Collectors.toList()));
+            List<MeasurementItemSimple> items = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItemSimple::new).collect(Collectors.toList());
+            items.addAll(measurements.stream().map(MeasurementItemSimple::new).collect(Collectors.toList()));
             itemAdapter.set(items);
+            if (editMode && !selectedParent) {
+                long pid = measurement.getParentID();
+                int location = fastAdapter.getPosition(pid);
+                if (location != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                    selectionExtension.toggleSelection(location);
+                    fastAdapter.getItem(location).setSelected(true);
+                    fastAdapter.notifyItemChanged(location);
+                    selectedParent = true;
+                }
+            }
         });
     }
 
@@ -111,7 +136,7 @@ public class MeasurementAddActivity extends AppCompatActivity {
                 icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
                 myToolbar.setNavigationIcon(icon);
             }
-            actionbar.setTitle("Add Jubileum");
+            actionbar.setTitle((editMode ? "Edit" : "Add") + " Jubileum");
         }
     }
 
@@ -126,7 +151,7 @@ public class MeasurementAddActivity extends AppCompatActivity {
         if (Long.parseLong(amountText) < 1)
             amount.setError("Minimum value is 1");
 
-        Set<MeasurementItem> selected = selectionExtension.getSelectedItems();
+        Set<MeasurementItemSimple> selected = selectionExtension.getSelectedItems();
         if (selected.size() == 0)
             Snackbar.make(layout, "Please pick a measurement unit to describe this unit in", Snackbar.LENGTH_LONG).show();
         return !nameSingular.isEmpty() && !namePlural.isEmpty() && ! amountText.isEmpty();
@@ -145,26 +170,44 @@ public class MeasurementAddActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.menu_measurement_add_save:
-                if (checkInput()) {
-                    String nameSingular = singular.getText().toString(), namePlural = plural.getText().toString(), amountText = amount.getText().toString();
-                    long amt = Long.parseLong(amountText);
-
-                    MeasurementItem selected = selectionExtension.getSelectedItems().iterator().next();
-
-                    Duration d = selected.getMeasurement().getDuration().multipliedBy(amt);
-                    MeasurementQuery measurementQuery = new MeasurementQuery(this);
-                    measurementQuery.isUnique(namePlural, unique -> {
-                        if (unique) {
-                            measurementQuery.insert(nameSingular, namePlural, d, selected.getMeasurement().getCornerstoneType());
-                            finish();
-                        } else {
-                            Snackbar.make(layout, "Measurement with same plural name already exists", Snackbar.LENGTH_LONG).show();
-                        }
-                    });
-                }
+                save();
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void save() {
+        if (!checkInput())
+            return;
+
+        String nameSingular = singular.getText().toString(), namePlural = plural.getText().toString(), amountText = amount.getText().toString();
+        long amt = Long.parseLong(amountText);
+        MeasurementItemSimple selected = selectionExtension.getSelectedItems().iterator().next();
+
+        Measurement m = Measurement.createFrom(nameSingular, namePlural, amt, selected.getMeasurement());
+
+        if (!editMode) {
+            MeasurementStore.insert(m, getSupportFragmentManager(), getApplicationContext(), new MeasurementStore.StoreCallback() {
+                @Override
+                public void onSuccess() {
+                    finish();
+                }
+                @Override
+                public void onFailure() {}
+            });
+        } else {
+            m.setMeasurementID(measurement.getMeasurementID());
+            MeasurementStore.update(m, measurement, getSupportFragmentManager(), getApplicationContext(), new MeasurementStore.StoreCallback() {
+                @Override
+                public void onSuccess() {
+                    finish();
+                }
+                @Override
+                public void onFailure() {
+                    Snackbar.make(layout, "Cannot make this measurement depend on itself! Pick other measurement", Snackbar.LENGTH_INDEFINITE).show();
+                }
+            });
+        }
     }
 
     public static class MeasurementAddViewModel extends AndroidViewModel {

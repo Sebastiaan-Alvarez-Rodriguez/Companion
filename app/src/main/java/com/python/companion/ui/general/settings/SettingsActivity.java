@@ -79,7 +79,7 @@ public class SettingsActivity extends AppCompatActivity {
         });
         dateView.setOnClickListener(v -> {
             TogetherDialog dialog = new TogetherDialog.Builder()
-                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.measurement_preferences), MODE_PRIVATE).getString(getString(R.string.measurement_key_together),"2018-11-08")))
+                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.cactus_preferences), MODE_PRIVATE).getString(getString(R.string.measurement_key_together),"2018-11-08")))
                     .setFinishListener(() -> Snackbar.make(background, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getSupportFragmentManager(), null);
         });

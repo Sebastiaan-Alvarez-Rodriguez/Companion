@@ -18,7 +18,7 @@ import com.python.companion.db.typeconverters.ChronoUnitConverter;
 import com.python.companion.db.typeconverters.DateConverter;
 import com.python.companion.db.typeconverters.DurationConverter;
 
-@androidx.room.Database(entities = {Note.class, Category.class, Measurement.class}, version = 2, exportSchema = false)
+@androidx.room.Database(entities = {Note.class, Category.class, Measurement.class}, version = 3, exportSchema = false)
 @TypeConverters({DateConverter.class, DurationConverter.class, ChronoUnitConverter.class})
 public abstract class Database extends RoomDatabase {
 

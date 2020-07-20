@@ -37,11 +37,11 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
-import com.python.companion.ui.cactus.measurement.Type;
-import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
-import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
-import com.python.companion.ui.cactus.measurement.adapter.item.CactusItem;
+import com.python.companion.ui.cactus.adapter.CactusSortHandler;
+import com.python.companion.ui.cactus.adapter.item.CactusItem;
+import com.python.companion.ui.measurement.MeasurementContainer;
+import com.python.companion.ui.measurement.Type;
+import com.python.companion.ui.measurement.activity.MeasurementEditActivity;
 import com.python.companion.util.MeasurementUtil;
 
 import java.time.DateTimeException;
@@ -73,8 +73,8 @@ public class CactusCalculatorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cactus_jubileum);
         viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
 
-        ArrayList<MeasurementItem> items = getIntent().getParcelableArrayListExtra("chosen");
-        others = items.stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList());
+        ArrayList<MeasurementContainer> items = getIntent().getParcelableArrayListExtra("chosen");
+        others = items.stream().map(MeasurementContainer::getMeasurement).collect(Collectors.toList());
         findViews();
         setupActionBar();
         prepareButtons();
@@ -117,7 +117,7 @@ public class CactusCalculatorActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 userInterval = getInterval(s);
-                SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+                SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
                 LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
                 for (int x = 0; x < fastAdapter.getItemCount(); ++x) {
                     CactusItem item = fastAdapter.getItem(x);
@@ -132,7 +132,7 @@ public class CactusCalculatorActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
         addButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MeasurementAddActivity.class);
+            Intent intent = new Intent(this, MeasurementEditActivity.class);
             startActivity(intent);
         });
     }
@@ -143,7 +143,7 @@ public class CactusCalculatorActivity extends AppCompatActivity {
         fastAdapter = FastAdapter.with(itemAdapter);
 
         sortHandler = new CactusSortHandler.Builder()
-                .setStrategy(getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", CactusSortHandler.SORT_DURATION))
+                .setStrategy(getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE).getInt("CactusCalculatorSort", CactusSortHandler.SORT_DURATION))
                 .setItemList(itemList)
                 .build();
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
@@ -155,7 +155,7 @@ public class CactusCalculatorActivity extends AppCompatActivity {
     }
 
     private void setListUpdates() {
-        SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
         LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
 
         List<CactusItem> defaultList = MeasurementUtil.getDefaultMeasurements().parallelStream().map(measurement -> {
@@ -254,7 +254,7 @@ public class CactusCalculatorActivity extends AppCompatActivity {
         setListFiltering();
 
         @IdRes int id;
-        switch (getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", CactusSortHandler.SORT_DURATION)) {
+        switch (getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE).getInt("CactusCalculatorSort", CactusSortHandler.SORT_DURATION)) {
             case CactusSortHandler.SORT_ALPHA:
                 id = R.id.activity_cactus_jubileum_sort_alpha;
                 break;
@@ -269,7 +269,7 @@ public class CactusCalculatorActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        @CactusSortHandler.MeasurementSortStrategy int strategy;
+        @CactusSortHandler.CactusSortStrategy int strategy;
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
@@ -285,8 +285,8 @@ public class CactusCalculatorActivity extends AppCompatActivity {
         }
         sortHandler.setSortStrategy(strategy);
         item.setChecked(true);
-        SharedPreferences.Editor editor = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).edit();
-        editor.putInt("MeasurementSort", strategy).apply();
+        SharedPreferences.Editor editor = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE).edit();
+        editor.putInt("CactusCalculatorSort", strategy).apply();
         return super.onOptionsItemSelected(item);
     }
 }

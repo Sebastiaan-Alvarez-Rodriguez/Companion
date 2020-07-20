@@ -2,13 +2,15 @@ package com.python.companion.db.constant;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.util.genericinterfaces.ResultListener;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -19,24 +21,45 @@ public class MeasurementQuery {
         daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
     }
 
-    public void insert(String nameSingular, String namePlural, Duration duration, ChronoUnit cornerstone) {
-        Executors.newSingleThreadExecutor().execute(() -> daoMeasurement.insert(new Measurement(nameSingular, namePlural, duration, cornerstone)));
+    /** Insert a new measurement */
+    public void insert(@NonNull Measurement measurement) {
+        Executors.newSingleThreadExecutor().execute(() -> daoMeasurement.insert(measurement));
     }
-    public void insert(String nameSingular, String namePlural, Duration duration, ChronoUnit cornerstone, ResultListener<Void> listener) {
+
+    public void delete(@NonNull List<Measurement> measurements, @NonNull ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            insert(nameSingular, namePlural, duration, cornerstone);
+            for (Measurement m : measurements)
+                daoMeasurement.deleteInherit(m);
             listener.onResult(null);
         });
     }
 
-    public void delete(List<Measurement> measurements, ResultListener<Void> listener) {
+    public void delete(@NonNull Measurement measurement, @NonNull ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            daoMeasurement.delete(measurements.toArray(new Measurement[]{}));
+            daoMeasurement.deleteInherit(measurement);
             listener.onResult(null);
         });
     }
 
-    public void isUnique(String namePlural, ResultListener<Boolean> listener) {
-        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.get(namePlural) == null));
+    public void update(@NonNull Measurement measurement, @NonNull Measurement old, @NonNull ResultListener<Boolean> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.updateInherit(measurement, old)));
+    }
+
+    public void isUnique(String nameSingular, String namePlural, ResultListener<Boolean> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getBySingularOrPlural(nameSingular, namePlural) == null));
+    }
+
+    public void isUniqueInstanced(String nameSingular, String namePlural, ResultListener<Measurement> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getBySingularOrPlural(nameSingular, namePlural)));
+    }
+
+    @WorkerThread
+    public Measurement findByID(long id) {
+        return daoMeasurement.findByID(id);
+    }
+
+    @WorkerThread
+    public @Nullable Measurement isUniqueInstanced(String nameSingular, String namePlural) {
+        return daoMeasurement.getBySingularOrPlural(nameSingular, namePlural);
     }
 }

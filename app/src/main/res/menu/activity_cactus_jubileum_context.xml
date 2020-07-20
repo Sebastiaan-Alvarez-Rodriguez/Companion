@@ -3,13 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/menu_context_category_edit_edit"
+        android:id="@+id/menu_context_jubileum_edit"
         android:icon="@drawable/ic_menu_edit"
         app:iconTint="@color/colorPrimary"
         app:iconTintMode="src_in"
         android:title="Edit" />
     <item
-        android:id="@+id/menu_context_category_edit_delete"
+        android:id="@+id/menu_context_jubileum_delete"
         android:icon="@drawable/ic_menu_delete"
         app:iconTint="@color/colorPrimary"
         app:iconTintMode="src_in"

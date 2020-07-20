@@ -1,7 +1,5 @@
 package com.python.companion.util;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
@@ -126,33 +124,23 @@ public class MeasurementUtil {
         if (dayBased.size() > 0) {
             Measurement one = dayBased.get(dayBased.size() - 1);
             dayBased.remove(dayBased.size() - 1);
-            dayJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, dayBased.toArray(new Measurement[]{}))), ChronoUnit.DAYS);
+            dayJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, dayBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.DAYS);
         }
         if (monthBased.size() > 0) {
             Measurement one = monthBased.get(monthBased.size() - 1);
             monthBased.remove(monthBased.size() - 1);
-            monthJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, monthBased.toArray(new Measurement[]{}))), ChronoUnit.MONTHS);
+            monthJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, monthBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.MONTHS);
         }
         if (yearBased.size() > 0) {
             Measurement one = yearBased.get(yearBased.size() - 1);
             yearBased.remove(yearBased.size() - 1);
-            yearJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, yearBased.toArray(new Measurement[]{}))), ChronoUnit.YEARS);
+            yearJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, yearBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.YEARS);
         }
 
         Measurement largest = unit;
         for (Measurement m : all)
             if (m.compareTo(largest) > 0)
                 largest = m;
-
-        for (Measurement m : all)
-            Log.e("MeasurementUtil", "Measurement: "+m.getNamePlural());
-        Log.e("MeasurementUtil", "Largest: "+largest.getNamePlural());
-        if (dayJumpAmount != null)
-            Log.e("MeasurementUtil", "Working with shared day based length: "+dayJumpAmount.getDuration().toDays()+" days");
-        if (monthJumpAmount != null)
-            Log.e("MeasurementUtil", "Working with shared month based length: "+monthJumpAmount.getDuration().toDays()/ChronoUnit.MONTHS.getDuration().toDays()+" months");
-        if (yearJumpAmount != null)
-            Log.e("MeasurementUtil", "Working with shared year based length: "+yearJumpAmount.getDuration().toDays()/ChronoUnit.YEARS.getDuration().toDays()+" years");
 
         LocalDate answer = largest.addTo(together, largest.between(together, LocalDate.now()));
         for (long x = 1; x <= interval; ++x) {
@@ -181,7 +169,33 @@ public class MeasurementUtil {
         String[] singulars = {"Day", "Month", "Year"};
         ArrayList<Measurement> list = new ArrayList<>(3);
         for (int x = 0; x < regulars.length; ++x)
-            list.add(new Measurement(singulars[x], regulars[x].toString(), regulars[x].getDuration(), regulars[x]));
+            list.add(new Measurement(ChronoUnitToID(regulars[x]), singulars[x], regulars[x].toString(), regulars[x].getDuration(), 1, 1, -1, regulars[x]));
         return list;
+    }
+
+    public static boolean isDefault(long id) {
+        return id >=-3 && id <= -1;
+    }
+
+    public static String IDtoName(long id, int amount) {
+        if (id < 0) {
+            final String[] singulars = {"Day", "Month", "Year"};
+            final String[] plurals = {"Days", "Months", "Years"};
+            int idx = (int) ((id * -1) - 1);
+            return (amount == 1) ? singulars[idx] : plurals[idx];
+        }
+        throw new RuntimeException("Unsupported id ("+id+")");
+    }
+
+    public static long ChronoUnitToID(@NonNull ChronoUnit unit) {
+        switch (unit) {
+            case DAYS:
+                return -1;
+            case MONTHS:
+                return -2;
+            case YEARS:
+                return -3;
+        }
+        throw new RuntimeException("Unsupported ChronoUnit ("+unit.toString()+")");
     }
 }

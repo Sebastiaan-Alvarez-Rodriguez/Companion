@@ -12,7 +12,7 @@ import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.notes.note.dialog.LockDialog;
 import com.python.companion.ui.notes.note.dialog.NoteOverrideDialog;
 
-public class Store {
+public class NoteStore {
     /**
      * Insert a given new note into the database, either when there is no name-conflict, or the user tells us we may override
      * @param note Note to store. If its {@code secure} field is set, store the note securely
@@ -86,7 +86,7 @@ public class Store {
         }
     }
 
-    /** Equivalent to calling {@link Store#updateInternal(Note, boolean, FragmentManager, Context, NoteQuery, String, StoreCallback)} with {@code null} as replace candidate */
+    /** Equivalent to calling {@link NoteStore#updateInternal(Note, boolean, FragmentManager, Context, NoteQuery, String, StoreCallback)} with {@code null} as replace candidate */
     private static void updateInternal(@NonNull Note note, boolean secure, @NonNull FragmentManager manager, @NonNull Context context, @NonNull NoteQuery noteQuery, @NonNull StoreCallback callback) {
         updateInternal(note, secure, manager, context, noteQuery, null, callback);
     }

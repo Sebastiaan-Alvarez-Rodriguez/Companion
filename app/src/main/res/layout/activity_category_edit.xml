@@ -22,7 +22,9 @@
         layout="@layout/item_category"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_toolbar" />
@@ -63,22 +65,24 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
         android:ems="10"
         android:hint="New category name..."
         android:inputType="textPersonName"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/activity_category_edit_add_new"
-        app:layout_constraintStart_toEndOf="@+id/activity_category_edit_color"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_list" />
+        app:layout_constraintStart_toEndOf="@+id/activity_category_edit_color" />
 
     <com.python.companion.ui.general.customviews.ContextMenuRecyclerView
         android:id="@+id/activity_category_edit_list"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/activity_category_edit_new"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_text" />

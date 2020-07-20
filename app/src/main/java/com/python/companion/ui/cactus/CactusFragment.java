@@ -18,7 +18,7 @@ import androidx.fragment.app.Fragment;
 import com.python.companion.R;
 import com.python.companion.ui.cactus.activity.CactusCalculatorActivity;
 import com.python.companion.ui.cactus.activity.CactusJubileumActivity;
-import com.python.companion.ui.cactus.activity.measurement.MeasurementSelectActivity;
+import com.python.companion.ui.measurement.activity.MeasurementSelectActivity;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -40,7 +40,7 @@ public class CactusFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         now = LocalDate.now();
-        SharedPreferences preferences = getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+        SharedPreferences preferences = getContext().getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
         together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
     }
 
