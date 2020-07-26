@@ -43,7 +43,7 @@ import com.python.companion.backend.note.NoteRepository;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
-import com.python.companion.security.Guard;
+import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.MainActivity;
 import com.python.companion.ui.general.settings.SettingsActivity;
 import com.python.companion.ui.notes.category.dialog.CategorySetDialog;
@@ -139,19 +139,14 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 Note n = noteItem.getNote();
                 Intent intent = new Intent(getContext(), NoteViewActivity.class);
                 if (n.isSecure()) {
-                    Guard.getGuard().decrypt(n.getContent(), n.getIv(), n.getName(), getChildFragmentManager(), getContext(), new Guard.DecryptedCallback() {
-                        @Override
-                        public void onFinish(@NonNull String plaintext) {
-//                            intent.putExtra("note", new NoteContainer(new Note(n.getName(), plaintext, n.getCategory(), true, n.getIv(), n.getType())));
-                            intent.putExtra("note", new NoteContainer(n));
-                            intent.putExtra("plaintext", plaintext);
-                            startActivity(intent);
-                        }
-                        @Override
-                        public void onFailure() {
-                            Snackbar.make(list, "Could not unlock note", Snackbar.LENGTH_SHORT).show();
-                        }
-                    });
+                    NoteConverter.Decrypter.from(getChildFragmentManager(), getContext())
+                            .setOnFinishListener(note -> {
+                                intent.putExtra("note", new NoteContainer(n));
+                                intent.putExtra("plaintext", note.getContent());
+                                startActivity(intent);
+                            })
+                            .setOnErrorListener(error -> Snackbar.make(list, error, Snackbar.LENGTH_SHORT).show())
+                            .decrypt(n);
                 } else {
                     intent.putExtra("note", new NoteContainer(n));
                     startActivity(intent);

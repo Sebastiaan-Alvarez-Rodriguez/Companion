@@ -9,12 +9,13 @@ import androidx.room.Ignore;
 
 import com.python.companion.R;
 import com.python.companion.ui.notes.note.NoteType;
+import com.python.companion.util.migration.EntityVisitor;
 
 import java.time.Instant;
 
 @SuppressWarnings("unused")
 @Entity(primaryKeys = {"name"})
-public class Note {
+public class Note implements EntityVisitor.Visitable {
     private @NonNull String name, content;
 
     @Embedded @NonNull
@@ -58,6 +59,10 @@ public class Note {
         modified = Instant.now();
         type = NoteType.TYPE_NORMAL;
         favorite = false;
+    }
+
+    public static Note template() {
+        return new Note("", "");
     }
 
     /**
@@ -208,5 +213,10 @@ public class Note {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    @Override
+    public void accept(@NonNull EntityVisitor visitor) {
+        visitor.visit(this);
     }
 }

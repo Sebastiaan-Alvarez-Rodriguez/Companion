@@ -23,4 +23,7 @@ public interface DAOMeasurement {
 
     @Query("SELECT * FROM Measurement WHERE namePlural = :namePlural")
     Measurement get(String namePlural);
+
+    @Query("SELECT COUNT(*) FROM MEASUREMENT")
+    int count();
 }

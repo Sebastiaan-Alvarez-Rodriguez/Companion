@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_port_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -24,10 +24,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/activity_port_info">
 
@@ -39,16 +40,35 @@
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toStartOf="@+id/activity_port_bar1_state"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/activity_port_bar1_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar1"
+            app:layout_constraintEnd_toStartOf="@+id/textView9"
+            app:layout_constraintTop_toTopOf="@+id/activity_port_bar1"
+            tools:text="10" />
+
+        <TextView
+            android:id="@+id/textView9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="/"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar1_state"
+            app:layout_constraintEnd_toStartOf="@+id/activity_port_bar1_state_max"
+            app:layout_constraintTop_toTopOf="@+id/activity_port_bar1_state" />
+
+        <TextView
+            android:id="@+id/activity_port_bar1_state_max"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/textView9"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="10/12" />
+            app:layout_constraintTop_toTopOf="@+id/textView9"
+            tools:text="12" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -78,9 +98,33 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar2"
+            app:layout_constraintEnd_toStartOf="@+id/textView10"
+            app:layout_constraintTop_toTopOf="@+id/activity_port_bar2"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="9" />
+
+        <TextView
+            android:id="@+id/textView10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="/"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar2_state"
+            app:layout_constraintEnd_toStartOf="@+id/activity_port_bar2_state_max"
+            app:layout_constraintTop_toTopOf="@+id/activity_port_bar2_state"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+            android:id="@+id/activity_port_bar2_state_max"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar2"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="10/12" />
+            app:layout_constraintTop_toTopOf="@+id/activity_port_bar2"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="12" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
@@ -125,9 +169,31 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar3"
+            app:layout_constraintEnd_toStartOf="@+id/textView12"
+            app:layout_constraintTop_toTopOf="@+id/activity_port_bar3"
+            tools:text="10" />
+
+        <TextView
+            android:id="@+id/textView12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="/"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar3_state"
+            app:layout_constraintEnd_toStartOf="@+id/activity_port_bar3_state_max"
+            app:layout_constraintTop_toTopOf="@+id/activity_port_bar3_state"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+            android:id="@+id/activity_port_bar3_state_max"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:layout_constraintBottom_toBottomOf="@+id/activity_port_bar3"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="10/12" />
+            app:layout_constraintTop_toTopOf="@+id/textView12"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="12" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -136,20 +202,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="48dp"
-        tools:text="Skip encrypted files"
         app:layout_constraintBottom_toTopOf="@+id/activity_port_start"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Skip encrypted files" />
 
     <Button
         android:id="@+id/activity_port_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
+        android:background="@color/colorWindowBackground"
         android:text="Start"
+        android:textColor="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:background="@color/colorWindowBackground"
-        android:textColor="@color/colorPrimary"/>
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

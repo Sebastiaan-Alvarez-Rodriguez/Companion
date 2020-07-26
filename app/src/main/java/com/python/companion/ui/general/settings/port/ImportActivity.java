@@ -1,91 +1,65 @@
 package com.python.companion.ui.general.settings.port;
 
 import android.os.Bundle;
-import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.python.companion.util.migration.jnport.ImportInterface;
-import com.python.companion.util.migration.jnport.ImportUtil;
+import com.python.companion.util.migration.MigrationInterface;
+import com.python.companion.util.migration.Importer;
 
-public class ImportActivity extends PortActivity implements ImportInterface {
-    private boolean reSecure;
+public class ImportActivity extends PortActivity implements MigrationInterface {
+    private boolean importing, reSecure, finished;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        infoView.setText("Prepare your settings and press start to begin importing.");
+        infoView.setText("Press button to begin importing.");
         check.setText("Re-secure previously secure notes");
         check.setChecked(true);
+        importing = false;
+        reSecure = true;
+        finished = false;
+        handleClicks();
+    }
+
+    private void handleClicks() {
         start.setOnClickListener(v -> {
-            infoView.setText("We begin importing now...");
-            check.setEnabled(false);
-            start.setEnabled(false);
-            reSecure = check.isChecked();
-            ImportUtil.importDatabase(getSupportFragmentManager(),this, location, reSecure, this);
-        });
+            if (!finished) {
+                check.setEnabled(false);
+                importing = true;
+                infoView.setText("We begin importing now...");
+                check.setEnabled(false);
+                start.setEnabled(false);
+                reSecure = check.isChecked();
 
-        check.setOnCheckedChangeListener((buttonView, isChecked) -> barView2.setVisibility(isChecked ? View.VISIBLE : View.INVISIBLE));
-    }
-
-    @Override
-    public void onStartImportNotes(int amount) {
-        runOnUiThread(() -> {
-            infoView.setText("Processing notes...");
-            barState1.setText("0/" + amount);
-            bar1.setMax(amount);
+                Importer.from(getSupportFragmentManager(), this).with(this).jnport(location, reSecure);
+            } else {
+                finish();
+            }
         });
     }
 
+
     @Override
-    public void onNoteProcessed(int complete, int failed, int amount) {
-        runOnUiThread(() -> {
-            barState1.setText(complete + "/" + amount);
-            bar1.setProgress(complete, true);
-        });
+    public void onFinishMigration() {
+        importing = false;
+        finished = true;
+        infoView.setText("Importing completed successfully");
+        start.setText("OK");
+        start.setEnabled(true);
     }
 
     @Override
-    public void onStartEncryptNotes(int amount) {
-        runOnUiThread(() -> {
-            infoView.setText("We now re-secure previously secured notes. Please provide your fingerprint for each of the " + amount + "items. (This is inconvenient, but we use a different cryptographic key for every note for high security, and every key needs authentication)");
-            barState2.setText("0/" + amount);
-            bar2.setMax(amount);
-        });
+    public void onFatalError(@NonNull String error) {
+        super.onFatalError(error);
+        importing = false;
+        finished = false;
     }
 
     @Override
-    public void onNoteEncryptProcessed(int complete, int amount) {
-        runOnUiThread(() -> {
-            barState2.setText(complete + "/" + amount);
-            if (complete == amount)
-                infoView.setText("");
-            bar2.setProgress(complete, true);
-        });
-    }
-
-    @Override
-    public void onStartImportCategories(int amount) {
-        runOnUiThread(() -> {
-            infoView.setText("Processing categories...");
-            barState3.setText("0/" + amount);
-            bar3.setMax(amount);
-        });
-    }
-
-    @Override
-    public void onCategoryProcessed(int complete, int failed, int amount) {
-        runOnUiThread(() -> {
-            barState3.setText(complete + "/" + amount);
-            bar3.setProgress(complete, true);
-        });
-    }
-
-    @Override
-    public void onImportComplete() {
-        runOnUiThread(() -> {
-//        finish();
-        });
+    public void onBackPressed() {
+        if (!importing)
+            super.onBackPressed();
     }
 }

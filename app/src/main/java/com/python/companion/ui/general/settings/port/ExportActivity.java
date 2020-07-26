@@ -1,99 +1,63 @@
 package com.python.companion.ui.general.settings.port;
 
 import android.os.Bundle;
-import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.python.companion.util.migration.export.ExportInterface;
-import com.python.companion.util.migration.export.ExportUtil;
+import com.python.companion.util.migration.Exporter;
 
-public class ExportActivity extends PortActivity implements ExportInterface {
-    private boolean skipSecure;
+public class ExportActivity extends PortActivity {
+    private boolean exporting, skipSecure, finished;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        infoView.setText("Prepare your settings and press start to begin exporting.");
+        infoView.setText("Press button to begin exporting.");
         check.setText("Skip secure notes");
         check.setChecked(false);
+        exporting = false;
+        skipSecure = false;
+        finished = false;
+        handleClicks();
+    }
+
+    private void handleClicks() {
         start.setOnClickListener(v -> {
-            infoView.setText("We begin exporting now...");
-            check.setEnabled(false);
-            start.setEnabled(false);
-            skipSecure = check.isChecked();
+            if (!finished) {
+                check.setEnabled(false);
+                exporting = true;
+                infoView.setText("We begin exporting now...");
+                check.setEnabled(false);
+                start.setEnabled(false);
+                skipSecure = check.isChecked();
 
-            ExportUtil.exportDatabase(getSupportFragmentManager(),this, location, skipSecure, this);
-        });
-
-        check.setOnCheckedChangeListener((buttonView, isChecked) -> barView1.setVisibility(isChecked ? View.INVISIBLE : View.VISIBLE));
-    }
-
-    @Override
-    public void onStartDecryptNotes(int amount) {
-        runOnUiThread(() -> {
-            infoView.setText("We now decrypt secure notes. Please provide your fingerprint for each of the "+amount+ "items. (This is inconvenient, but we use a different cryptographic key for every note for high security, and every key needs authentication)");
-            barState1.setText("0/"+amount);
-            bar1.setMax(amount);
-        });
-    }
-
-    @Override
-    public void onNoteDecryptProcessed(int complete, int amount) {
-        runOnUiThread(() -> {
-            barState1.setText(complete + "/" + amount);
-            if (complete == amount)
-                infoView.setText("");
-            bar1.setProgress(complete, true);
-        });
-    }
-
-    @Override
-    public void onNoteDecryptFinished(int amount) {
-        runOnUiThread(() -> {
-            if (amount == 0) {
-                bar1.setMax(1);
-                bar1.setProgress(1, true);
+                Exporter.from(getSupportFragmentManager(), this).with(this).export(location, skipSecure);
+            } else {
+                finish();
             }
         });
     }
 
     @Override
-    public void onStartExportNotes(int amount) {
-        runOnUiThread(() -> {
-            infoView.setText("Processing notes...");
-            barState2.setText("0/" + amount);
-            bar2.setMax(amount);
-        });
+    public void onFinishMigration() {
+        exporting = false;
+        finished = true;
+        infoView.setText("Exporting completed successfully");
+        start.setText("OK");
+        start.setEnabled(true);
     }
 
     @Override
-    public void onNoteProcessed(int complete, int failed, int amount) {
-        runOnUiThread(() -> {
-            barState2.setText(complete + "/" + amount);
-            bar2.setProgress(complete, true);
-        });
+    public void onFatalError(@NonNull String error) {
+        super.onFatalError(error);
+        exporting = false;
+        finished = false;
     }
 
     @Override
-    public void onStartExportCategories(int amount) {
-        runOnUiThread(() -> {
-            infoView.setText("Processing categories...");
-            barState3.setText("0/" + amount);
-            bar3.setMax(amount);
-        });
-    }
-
-    @Override
-    public void onCategoryProcessed(int complete, int failed, int amount) {
-        runOnUiThread(() -> {
-            barState3.setText(complete + "/" + amount);
-            bar3.setProgress(complete, true);
-        });
-    }
-
-    @Override
-    public void onExportComplete() {
-//        finish();
+    public void onBackPressed() {
+        if (!exporting) // Only allow user to go back when we are not exporting
+            super.onBackPressed();
     }
 }

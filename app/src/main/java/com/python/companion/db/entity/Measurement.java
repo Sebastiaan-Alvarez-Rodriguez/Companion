@@ -3,13 +3,15 @@ package com.python.companion.db.entity;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 
+import com.python.companion.util.migration.EntityVisitor;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 
 @Entity(primaryKeys = {"namePlural"})
-public class Measurement implements TemporalUnit {
+public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
     private @NonNull String nameSingular, namePlural;
     private Duration duration;
 
@@ -163,5 +165,10 @@ public class Measurement implements TemporalUnit {
     @Override
     public String toString() {
         return namePlural;
+    }
+
+    @Override
+    public void accept(@NonNull EntityVisitor visitor) {
+        visitor.visit(this);
     }
 }

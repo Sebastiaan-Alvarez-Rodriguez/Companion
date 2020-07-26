@@ -65,13 +65,13 @@ public class NotePreviewActivity extends AppCompatActivity {
             note.setCategory(new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary)));
 
         setContentView(R.layout.activity_note_preview);
-        layout = findViewById(R.id.activity_note_preview_layout);
         findViews();
         setupActionBar();
         setContent(note.getContent(), note.getType());
     }
 
     private void findViews() {
+        layout = findViewById(R.id.activity_note_preview_layout);
         nestedScrollView = findViewById(R.id.activity_note_preview_scrollview);
         contentView = nestedScrollView.findViewById(R.id.activity_note_preview_content);
     }
@@ -155,29 +155,14 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
 
     private void save() {
+
         if (note.getName().length() == 0) {
-            Snackbar.make(findViewById(R.id.activity_note_preview_layout), "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(layout, "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
         } else {
             if (editMode)
-                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), new Store.StoreCallback() {
-                    @Override
-                    public void onSuccess() {
-                        finishSuccess();
-                    }
-                    @Override
-                    public void onFailure() {}
-                });
+                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
             else
-                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), new Store.StoreCallback() {
-                    @Override
-                    public void onSuccess() {
-                        finishSuccess();
-                    }
-                    @Override
-                    public void onFailure() {
-
-                    }
-                });
+                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
         }
     }
 

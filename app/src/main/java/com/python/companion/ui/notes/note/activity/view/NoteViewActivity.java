@@ -41,6 +41,7 @@ import com.python.companion.ui.notes.note.NoteType;
 import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.util.ColorUtil;
 import com.python.companion.util.RenderUtil;
+import com.python.companion.util.genericinterfaces.ResultListener;
 
 import static com.python.companion.ui.notes.note.NoteType.TYPE_MARKDOWN_LATEX;
 
@@ -192,26 +193,25 @@ public class NoteViewActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.menu_note_view_lock: {
-                NoteConverter.ConvertCallback callback = new NoteConverter.ConvertCallback() {
-                    @Override
-                    public void onSuccess(@NonNull Note n) {
-                        NoteQuery query = new NoteQuery(getApplicationContext());
-                        query.update(n, v -> {});
-                        note = n;
-                        runOnUiThread(() -> {
-                            lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
-                            Snackbar.make(contentView, "Successfully changed lock status!", Snackbar.LENGTH_LONG).show();
-                        });
-                    }
-                    @Override
-                    public void onFailure() {
-                        Snackbar.make(contentView, "Failure: Did not change lock status!", Snackbar.LENGTH_LONG).show();
-                    }
+                ResultListener<Note> listener = note -> {
+                    NoteQuery query = new NoteQuery(getApplicationContext());
+                    query.update(note, v -> {});
+                    this.note = note;
+                    runOnUiThread(() -> {
+                        lockItem.setIcon(getDrawable(this.note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+                        Snackbar.make(contentView, "Successfully changed lock status!", Snackbar.LENGTH_LONG).show();
+                    });
                 };
                 if (note.isSecure())
-                    NoteConverter.noteDecrypt(getSupportFragmentManager(), getApplicationContext(), note, callback);
+                    NoteConverter.Decrypter.from(getSupportFragmentManager(), getApplicationContext())
+                            .setOnErrorListener(error -> Snackbar.make(contentView, error, Snackbar.LENGTH_LONG).show())
+                            .setOnFinishListener(listener)
+                            .decrypt(note);
                 else
-                    NoteConverter.noteEncrypt(getSupportFragmentManager(), getApplicationContext(), note, callback);
+                    NoteConverter.Encrypter.from(getSupportFragmentManager(), getApplicationContext())
+                            .setOnErrorListener(error -> Snackbar.make(contentView, error, Snackbar.LENGTH_LONG).show())
+                            .setOnFinishListener(listener)
+                            .encrypt(note);
                 break;
             }
             case R.id.menu_note_view_edit_category: {

@@ -11,6 +11,8 @@ import androidx.fragment.app.FragmentManager;
 import com.python.companion.R;
 import com.python.companion.security.Guard;
 import com.python.companion.security.ValidateCallback;
+import com.python.companion.util.genericinterfaces.ErrorListener;
+import com.python.companion.util.genericinterfaces.FinishListener;
 
 import org.signal.argon2.Argon2;
 import org.signal.argon2.Argon2Exception;
@@ -21,34 +23,21 @@ import static org.signal.argon2.Type.Argon2id;
 
 
 public class PassGuard extends Guard {
-    public void setPass(@NonNull FragmentManager fragmentManager, @NonNull Context context) {
-        setPass(fragmentManager, context, null);
-    }
-
-    public void setPass(@NonNull FragmentManager fragmentManager, @NonNull Context context, @Nullable ValidateCallback callback) {
+    public void setPass(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull FinishListener finishListener, @NonNull ErrorListener errorListener) {
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE);
         if (prefs.contains("p")) { // There already is a password set
-            validate(fragmentManager, context, new ValidateCallback() {
-                @Override
-                public void onSuccess() {
+            validate(fragmentManager, context, () -> {
                     updatePassInternal(fragmentManager, prefs);
-                    if (callback != null)
-                        callback.onSuccess();
-                }
-
-                @Override
-                public void onFailure() {
-                    if (callback != null)
-                        callback.onFailure();
-                }
-            });
+                    finishListener.onFinish();
+                }, errorListener);
         } else {
             updatePassInternal(fragmentManager, prefs);
-            callback.onSuccess();
+            finishListener.onFinish();
         }
     }
 
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean passIsSet(@NonNull Context context) {
         return context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE).contains("p");
     }
@@ -57,32 +46,34 @@ public class PassGuard extends Guard {
      * Function handling user validation. Sends a validation dialogfragment to user, requesting password
      */
     @Override
-    protected void validate(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull ValidateCallback validateCallback) {
+    protected void validate(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull FinishListener finishListener, @NonNull ErrorListener errorListener) {
         if (!passIsSet(context)) {
             updatePassInternal(fragmentManager, context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE), new ValidateCallback() {
                 @Override
                 public void onSuccess() {
-                    passDialog(fragmentManager, context, validateCallback);
+                    passDialog(fragmentManager, context, finishListener, errorListener);
                 }
                 @Override
                 public void onFailure() {
-                    validateCallback.onFailure();
+                    errorListener.onError("Must setup password in order to use security features!");
                 }
             });
         } else {
-            passDialog(fragmentManager, context, validateCallback);
+            passDialog(fragmentManager, context, finishListener, errorListener);
         }
     }
 
     /** Boots up a password-requesting dialog. On success, the user entered the correct password */
-    private void passDialog(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull ValidateCallback validateCallback) {
+    private void passDialog(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull FinishListener finishListener, @NonNull ErrorListener errorListener) {
         PassDialog dialog = new PassDialog.Builder()
                 .setAcceptListener(stayLoggedIn -> {
                     if (stayLoggedIn)
                         super.validated = true;
-                    validateCallback.onSuccess();
+                    finishListener.onFinish();
                 })
-                .setCancelListener(validateCallback::onFailure)
+                .setCancelListener(() -> {
+                    errorListener.onError("Uses canceled authentication");
+                })
                 .build(password -> passCheck(context, password));
 
         dialog.show(fragmentManager, null);

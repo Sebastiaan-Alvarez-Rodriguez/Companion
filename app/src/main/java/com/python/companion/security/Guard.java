@@ -9,12 +9,15 @@ import android.util.Log;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-import androidx.core.util.Pair;
 import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.R;
+import com.python.companion.db.entity.Note;
 import com.python.companion.security.biometry.BioGuard;
 import com.python.companion.security.password.PassGuard;
+import com.python.companion.util.genericinterfaces.ErrorListener;
+import com.python.companion.util.genericinterfaces.FinishListener;
+import com.python.companion.util.genericinterfaces.ResultListener;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
@@ -105,204 +108,220 @@ public abstract class Guard {
     protected Guard() {}
     protected boolean validated = false;
 
-    protected abstract void validate(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull ValidateCallback validateCallback);
+    protected abstract void validate(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull FinishListener finishListener, @NonNull ErrorListener errorListener);
 
     /**
      * Public call to handle encryption once
-     * @see Guard#encryptInternal(String, String, EncryptedCallback)
-     * @param data Data to encrypt
-     * @param alias Name we stored a key under
+     * @see Guard#encryptInternal(Note, EncryptedCallback)
+     * @param note Note to encrypt
      * @param callback Called when encryption had success
+     * @param errorListener Called when fatal error occurred
      */
-    public synchronized void encrypt(@NonNull String data, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback) {
-        if (!this.validated) {
-            validate(fragmentManager, context, new ValidateCallback() {
-                @Override
-                public void onSuccess() {
-                    synchronized (Guard.class) {
-                        final boolean wasvalidated = Guard.this.validated;
-                        Guard.this.validated = true;
-                        encryptInternal(data, alias, callback);
-                        if (!wasvalidated)
-                            Guard.this.validated = false;
-                    }
-                }
+    public synchronized void encrypt(@NonNull Note note, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback, @NonNull ErrorListener errorListener) {
+        if (note.isSecure()) {
+            errorListener.onError("Note already is secure");
+            return;
+        }
 
-                @Override
-                public void onFailure() {
-                    callback.onFailure();
+        if (note.getIv() != null) {
+            errorListener.onError("Note already has iv");
+            return;
+        }
+
+        if (!this.validated) {
+            validate(fragmentManager, context, () -> {
+                synchronized (Guard.class) {
+                    final boolean wasvalidated = Guard.this.validated;
+                    Guard.this.validated = true;
+                    encryptInternal(note, callback);
+                    if (!wasvalidated)
+                        Guard.this.validated = false;
                 }
-            });
+            }, errorListener);
         } else {
-            encryptInternal(data, alias, callback);
+            encryptInternal(note, callback);
         }
     }
 
     /**
-     * Public call to handle encryption of multiple items at once. For each item, the callback will be called
-     * @see Guard#encrypt(String, String, FragmentManager, Context, EncryptedCallback)
+     * Public call to handle encryption of multiple items at once. For each item, EncryptedCallback will be called.
+     * On fatal error, the ErrorCallback will be called
+     * On finishing encryption, the finishListener will be called with all successfully processed Notes in a stream
+     * @see Guard#encrypt(Note, FragmentManager, Context, EncryptedCallback, ErrorListener)
      */
-    public synchronized void encrypt(@NonNull Stream<String> datas, @NonNull Stream<String> aliases, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback) {
+    public synchronized void encrypt(@NonNull Stream<Note> notes, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull EncryptedCallback callback, @NonNull ResultListener<Stream<Note>> finishListener, @NonNull ErrorListener errorListener) {
         if (!this.validated) {
-            validate(fragmentManager, context, new ValidateCallback() {
-                @Override
-                public void onSuccess() {
-                    synchronized (Guard.class) {
-                        final boolean wasvalidated = Guard.this.validated;
-                        Guard.this.validated = true;
-                        encryptInternal(datas, aliases, callback);
-                        if (!wasvalidated)
-                            Guard.this.validated = false;
-                    }
+            validate(fragmentManager, context, () -> {
+                synchronized (Guard.class) {
+                    final boolean wasvalidated = Guard.this.validated;
+                    Guard.this.validated = true;
+                    encryptInternal(notes, callback, finishListener, errorListener);
+                    if (!wasvalidated)
+                        Guard.this.validated = false;
                 }
-                @Override
-                public void onFailure() {
-                    callback.onFailure();
-                }
-            });
+            }, errorListener);
         } else {
-            encryptInternal(datas, aliases, callback);
+            encryptInternal(notes, callback, finishListener, errorListener);
         }
     }
 
     /**
      * Public call to handle decryption once
-     * @see Guard#decryptInternal(String, byte[], String, DecryptedCallback)
-     * @param data Data to decrypt
-     * @param iv Initialization Vector (IV) we got in the callback while encrypting ({@link Guard#encrypt(String, String, FragmentManager, Context, EncryptedCallback)}
-     * @param alias Name we stored key under
+     * @see Guard#decryptInternal(Note, DecryptedCallback)
+     * @param note Note with encrypted data and set iv
      * @param callback Called when decryption had success
+    * @param errorListener Called when fatal error occurred
      */
-    public synchronized void decrypt(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback) {
+    public synchronized void decrypt(@NonNull Note note, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback,  @NonNull ErrorListener errorListener) {
+        if (note.getIv() == null) {
+            errorListener.onError("Note has no iv set");
+            return;
+        }
+        if (!note.isSecure()) {
+            errorListener.onError("Note is not secure");
+            return;
+        }
+
         if (!this.validated) {
-            validate(fragmentManager, context, new ValidateCallback() {
-                @Override
-                public void onSuccess() {
+            validate(fragmentManager, context, () -> {
                     synchronized (Guard.class) {
                         final boolean wasvalidated = Guard.this.validated;
                         Guard.this.validated = true;
-                        decryptInternal(data, iv, alias, callback);
+                        decryptInternal(note, callback);
                         if (!wasvalidated)
                             Guard.this.validated = false;
                     }
-                }
-
-                @Override
-                public void onFailure() {
-                    callback.onFailure();
-                }
-            });
+                }, errorListener);
         } else {
-            decryptInternal(data, iv, alias, callback);
+            decryptInternal(note, callback);
         }
     }
 
     /**
      * Public call to handle decryption of multiple items at once. For each item, the callback will be called
-     * @see Guard#decrypt(String, byte[], String, FragmentManager, Context, DecryptedCallback)
+     * @see Guard#decrypt(Note, FragmentManager, Context, DecryptedCallback, ErrorListener)
      */
-    public synchronized void decrypt(@NonNull Stream<String> datas, @NonNull Stream<byte[]> ivs, @NonNull Stream<String> aliases, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback) {
+    public synchronized void decrypt(@NonNull Stream<Note> notes, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback, @NonNull ResultListener<Stream<Note>> finishListener, @NonNull ErrorListener errorListener) {
         if (!this.validated) {
-            validate(fragmentManager, context, new ValidateCallback() {
-                @Override
-                public void onSuccess() {
+            validate(fragmentManager, context, () -> {
                     synchronized (Guard.class) {
                         final boolean wasvalidated = Guard.this.validated;
                         Guard.this.validated = true;
                         // This would be a major security vulnerability, since a thread could be used to boot other functions while this thread is busy.
                         // Luckily, every method is synchronized, meaning we have a lock, and only 1 method can be active at any point in time.
-                        // When control reaches this statement, we own the lock. No abuse is possible.
-                        decryptInternal(datas, ivs, aliases, callback);
+                        // When control reaches this statement, we own the lock. No abuse is possible (In this manner)
+                        decryptInternal(notes, callback, finishListener);
                         if (!wasvalidated)
                             Guard.this.validated = false;
                     }
-                }
-
-                @Override
-                public void onFailure() {
-                    callback.onFailure();
-                }
-            });
+                }, errorListener);
         } else {
-            decryptInternal(datas, ivs, aliases, callback);
+            decryptInternal(notes, callback, finishListener);
         }
     }
 
     /**
      * Encrypt given string using key in Android KeyStore with given alias, and return content in a {@link EncryptedCallback}
      */
-    @SuppressWarnings("ConstantConditions")
-    private synchronized void encryptInternal(@NonNull String data, @NonNull String alias, @NonNull EncryptedCallback callback) {
+    private synchronized void encryptInternal(@NonNull Note note, @NonNull EncryptedCallback callback) {
         try {
-            Pair<String, byte[]> encrypted = enc(data, alias);
-            callback.onFinish(encrypted.first, encrypted.second);
+            EncryptionTuple tuple = enc(note.getContent(), note.getName());
+            note.setContent(tuple.ciphertext);
+            note.setIv(tuple.iv);
+            note.setSecure(true);
+            callback.onEncrypted(note);
         } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException | BadPaddingException | IllegalBlockSizeException e) {
             Log.e("encrypt", "Exception: ", e);
-            callback.onFailure();
+            callback.onEncryptFailure();
         }
     }
 
     /**
      * Encrypts multiple data objects at once. Make absolutely sure the streams are of even length.
-     * @see Guard#encryptInternal(String, String, EncryptedCallback)
+     * @see Guard#encryptInternal(Note, EncryptedCallback)
      */
-    @SuppressWarnings("ConstantConditions")
-    protected synchronized void encryptInternal(@NonNull Stream<String> datas, @NonNull Stream<String> aliases, @NonNull EncryptedCallback callback) {
-        Iterator<String> dit = datas.iterator();
-        Iterator<String> aliasit = aliases.iterator();
-        while (dit.hasNext()) {
+    @SuppressWarnings({"unused"})
+    protected synchronized void encryptInternal(@NonNull Stream<Note> notes, @NonNull EncryptedCallback callback, @NonNull ResultListener<Stream<Note>> finishListener, @NonNull ErrorListener errorListener) {
+        Iterator<Note> noteIt = notes.iterator();
+
+        Stream.Builder<Note> stream = Stream.builder();
+        while (noteIt.hasNext()) {
             try {
-                Pair<String, byte[]> encrypted = enc(dit.next(), aliasit.next());
-                callback.onFinish(encrypted.first, encrypted.second);
+                Note n = noteIt.next();
+                EncryptionTuple tuple = enc(n.getContent(), n.getName());
+
+                n.setContent(tuple.ciphertext);
+                n.setIv(tuple.iv);
+                n.setSecure(true);
+
+                callback.onEncrypted(n);
+                stream.accept(n);
             } catch (InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException | CertificateException | KeyStoreException | NoSuchPaddingException | IOException | BadPaddingException | IllegalBlockSizeException e) {
                 Log.e("encrypt", "Exception: ", e);
-                callback.onFailure();
+                callback.onEncryptFailure();
             }
         }
+        finishListener.onResult(stream.build());
     }
 
     /**
      * Decrypt given String using key in Android KeyStore with given alias, and return content in a {@link DecryptedCallback}
      */
-    protected synchronized void decryptInternal(@NonNull String data, @NonNull byte[] iv, @NonNull String alias, @NonNull DecryptedCallback callback) {
+    @SuppressWarnings("ConstantConditions")
+    protected synchronized void decryptInternal(@NonNull Note note, @NonNull DecryptedCallback callback) {
         try {
-            callback.onFinish(dec(data, iv, alias));
+            String plaintext = dec(note.getContent(), note.getIv(), note.getName());
+
+            note.setContent(plaintext);
+            note.setIv(null);
+            note.setSecure(false);
+
+            callback.onDecrypted(note);
         } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
             Log.e("decrypt", "Exception: ", e);
-            callback.onFailure();
+            callback.onDecryptFailure();
         }
     }
 
     /**
      * Decrypts multiple data objects at once. Make absolutely sure the streams are of even length.
-     * @see Guard#decryptInternal(String, byte[], String, DecryptedCallback)
+     * @see Guard#decryptInternal(Note, DecryptedCallback)
      */
-    protected synchronized void decryptInternal(@NonNull Stream<String> datas, @NonNull Stream<byte[]> ivs, @NonNull Stream<String> aliases, @NonNull DecryptedCallback callback) {
-        Iterator<String> dit = datas.iterator();
-        Iterator<byte[]> ivit = ivs.iterator();
-        Iterator<String> aliasit = aliases.iterator();
+    protected synchronized void decryptInternal(@NonNull Stream<Note> notes, @NonNull DecryptedCallback callback, @NonNull ResultListener<Stream<Note>> finishListener) {
+        Iterator<Note> noteIt = notes.iterator();
 
-        while (dit.hasNext()) {
+        Stream.Builder<Note> stream = Stream.builder();
+
+        while (noteIt.hasNext()) {
+            Note note = noteIt.next();
             try {
-                callback.onFinish(dec(dit.next(), ivit.next(), aliasit.next()));
+                String plain = dec(note.getContent(), note.getIv(), note.getName());
+
+                note.setContent(plain);
+                note.setIv(null);
+                note.setSecure(false);
+
+                callback.onDecrypted(note);
+                stream.accept(note);
             } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
                 Log.e("decrypt", "Exception: ", e);
-                callback.onFailure();
+                callback.onDecryptFailure();
             }
         }
+        finishListener.onResult(stream.build());
     }
     
     /**
      * Encrypt given string using key in Android KeyStore with given alias, and return content in a {@link EncryptedCallback}
      * @return Pair of encrypted string, iv
      */
-    private synchronized Pair<String, byte[]> enc(@NonNull String data, @NonNull String alias) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, NoSuchPaddingException, InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException {
+    private synchronized EncryptionTuple enc(@NonNull String data, @NonNull String alias) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, NoSuchPaddingException, InvalidKeyException, IOException, BadPaddingException, IllegalBlockSizeException {
         if (!this.validated)
             throw new RuntimeException("Cannot perform operation: Not authenticated");
         Cipher cipher = getEncCipher(alias);
         byte[] iv = cipher.getIV();
         byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-        return new Pair<>(Base64.encodeToString(encrypted, Base64.DEFAULT), iv);
+        return new EncryptionTuple(Base64.encodeToString(encrypted, Base64.DEFAULT), iv);
     }
     
     /**
@@ -387,17 +406,17 @@ public abstract class Guard {
 
     /** Interface for receiving decryption callbacks */
     public interface DecryptedCallback {
-        /** Called when decryption was successful, with generated plaintext */
-        void onFinish(@NonNull String plaintext);
+        /** Called when decryption was successful, with generated plaintext set, and iv set to null */
+        void onDecrypted(@NonNull Note note);
         /** Called when decryption fails */
-        void onFailure();
+        void onDecryptFailure();
     }
 
     /** Interface for receiving encryption callbacks */
     public interface EncryptedCallback {
-        /** Called when encryption was successful, with generated ciphertext and securely random generated initialization vector (IV) */
-        void onFinish(@NonNull String encrypted, @NonNull byte[] iv);
+        /** Called when encryption was successful, with generated ciphertext and securely random generated initialization vector (IV) set */
+        void onEncrypted(@NonNull Note note);
         /** Called when encryption fails */
-        void onFailure();
+        void onEncryptFailure();
     }
 }

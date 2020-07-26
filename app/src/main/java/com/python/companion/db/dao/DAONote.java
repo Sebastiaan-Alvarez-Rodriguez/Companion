@@ -66,7 +66,7 @@ public abstract class DAONote {
     public abstract Note get(String name);
 
     @Query("SELECT * FROM Note")
-    protected abstract List<Note> getAll();
+    public abstract List<Note> getAll();
 
     @Query("SELECT * FROM Note WHERE secure = 0")
     public abstract List<Note> getInsecure();
@@ -74,16 +74,14 @@ public abstract class DAONote {
     @Query("SELECT * FROM Note WHERE secure = 1")
     public abstract List<Note> getSecure();
 
-    @Transaction
-    public List<Note> getAll(boolean secureOnesToo) {
-        return secureOnesToo ? getAll() : getInsecure();
-    }
-
     @Query("SELECT * FROM Note WHERE name = :name")
     public abstract LiveData<Note> getLive(String name);
     @Query("SELECT categoryName,categoryColor FROM Note WHERE name = :name")
     public abstract LiveData<Category> getCategoryLive(String name);
 
-    @Query("SELECT COUNT(*) from Note")
+    @Query("SELECT COUNT(*) FROM Note WHERE secure = 0")
+    public abstract int countInsecure();
+
+    @Query("SELECT COUNT(*) FROM Note")
     public abstract int count();
 }

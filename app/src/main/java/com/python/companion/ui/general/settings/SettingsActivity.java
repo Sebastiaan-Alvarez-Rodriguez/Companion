@@ -22,7 +22,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.security.Guard;
-import com.python.companion.security.ValidateCallback;
 import com.python.companion.security.password.PassGuard;
 import com.python.companion.security.password.PassResetDialog;
 import com.python.companion.ui.cactus.dialog.TogetherDialog;
@@ -35,7 +34,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_EXPORT = 1;
     private static final int REQUEST_CODE_IMPORT = 2;
 
-    private View background, importView, exportView, dateView, changepassView, biometricsView, resetPassView;
+    private View layout, importView, exportView, dateView, changepassView, biometricsView, resetPassView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,7 +47,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void findGlobalViews() {
-        background = findViewById(R.id.activity_settings_layout);
+        layout = findViewById(R.id.activity_settings_layout);
         importView = findViewById(R.id.activity_settings_import);
         exportView = findViewById(R.id.activity_settings_export);
         dateView = findViewById(R.id.activity_settings_date);
@@ -80,10 +79,10 @@ public class SettingsActivity extends AppCompatActivity {
         dateView.setOnClickListener(v -> {
             TogetherDialog dialog = new TogetherDialog.Builder()
                     .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.measurement_preferences), MODE_PRIVATE).getString(getString(R.string.measurement_key_together),"2018-11-08")))
-                    .setFinishListener(() -> Snackbar.make(background, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
+                    .setFinishListener(() -> Snackbar.make(layout, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getSupportFragmentManager(), null);
         });
-        changepassView.setOnClickListener(v -> ((PassGuard) Guard.getGuard(Guard.TYPE_PASSGUARD)).setPass(getSupportFragmentManager(), this));
+        changepassView.setOnClickListener(v -> ((PassGuard) Guard.getGuard(Guard.TYPE_PASSGUARD)).setPass(getSupportFragmentManager(), this, () -> {}, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show()));
         biometricsView.setOnClickListener(v -> changeAuthType());
         resetPassView.setOnClickListener(v -> {
             PassResetDialog dialog = new PassResetDialog.Builder()
@@ -91,7 +90,7 @@ public class SettingsActivity extends AppCompatActivity {
                         NoteQuery query = new NoteQuery(SettingsActivity.this);
                         query.deleteSecure(v1 -> {
                             getSharedPreferences(getString(R.string.pass_preferences), Context.MODE_PRIVATE).edit().remove("p").apply();
-                            Snackbar.make(background, "Password reset successfully", Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(layout, "Password reset successfully", Snackbar.LENGTH_LONG).show();
                         });
                     })
                     .build();
@@ -122,33 +121,25 @@ public class SettingsActivity extends AppCompatActivity {
             BiometricManager manager = getSystemService(BiometricManager.class);
             switch (manager.canAuthenticate()) {
                 case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                    Snackbar.make(background, "Cannot use biometrics. No biometric enrolled!", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(layout, "Cannot use biometrics. No biometric enrolled!", Snackbar.LENGTH_LONG).show();
                     return;
                 case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                    Snackbar.make(background, "Cannot use biometrics. No biometric hardware available", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(layout, "Cannot use biometrics. No biometric hardware available", Snackbar.LENGTH_LONG).show();
                     return;
                 case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                    Snackbar.make(background, "Cannot use biometrics. Biometric hardware is in use at this time", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(layout, "Cannot use biometrics. Biometric hardware is in use at this time", Snackbar.LENGTH_LONG).show();
                     return;
                 case BiometricManager.BIOMETRIC_SUCCESS:
                     break;
             }
         }
         if (!PassGuard.passIsSet(this)) { // Password is primary fallback. It must be set before changing to other strategies
-            ((PassGuard) PassGuard.getGuard(Guard.TYPE_PASSGUARD)).setPass(getSupportFragmentManager(), this, new ValidateCallback() {
-                @Override
-                public void onSuccess() {
+            ((PassGuard) PassGuard.getGuard(Guard.TYPE_PASSGUARD)).setPass(getSupportFragmentManager(), this, () -> {
                     preferences.edit().putInt("GuardType", newtype).apply();
                     Guard.setGuardType(newtype);
                     TextView biometricsText = findViewById(R.id.activity_settings_txt5);
                     biometricsText.setText(newtype == Guard.TYPE_BIOGUARD ? "Stop using biometrics" : "Use biometrics");
-                }
-
-                @Override
-                public void onFailure() {
-                    Snackbar.make(background, "Could not change authentication type", Snackbar.LENGTH_LONG);
-                }
-            });
+                }, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG));
         } else {
             preferences.edit().putInt("GuardType", newtype).apply();
             Guard.setGuardType(newtype);

@@ -5,8 +5,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Entity;
 
+import com.python.companion.util.migration.EntityVisitor;
+
 @Entity(primaryKeys = {"categoryName"})
-public class Category {
+public class Category implements EntityVisitor.Visitable {
     private @NonNull String categoryName;
     private @ColorInt int categoryColor;
 
@@ -37,5 +39,10 @@ public class Category {
             return false;
         Category other = (Category) obj;
         return this.categoryName.equals(other.getCategoryName()) && this.categoryColor == other.getCategoryColor();
+    }
+
+    @Override
+    public void accept(@NonNull EntityVisitor visitor) {
+        visitor.visit(this);
     }
 }

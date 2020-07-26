@@ -126,8 +126,8 @@ public class NoteQuery {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.get(name)));
     }
 
-    public void getAll(boolean secureOnesToo, ResultListener<List<Note>> listener) {
-        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.getAll(secureOnesToo)));
+    public void getAll(ResultListener<List<Note>> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoNote.getAll()));
     }
 
     /** Checks whether given name for a note is unique. In callback, returns {@code true} if name is unique, {@code false} otherwise */
