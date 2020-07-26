@@ -45,9 +45,7 @@ public abstract class DAOMeasurement {
     public abstract Measurement getBySingular(String nameSingular);
 
     @Query("SELECT * FROM Measurement WHERE namePlural = :namePlural")
-    Measurement get(String namePlural);
-
-    public abstract Measurement getByPlural(String namePlural);
+        public abstract Measurement getByPlural(String namePlural);
 
     @Query("SELECT * FROM Measurement WHERE nameSingular = :nameSingular OR namePlural = :namePlural")
     public abstract Measurement getBySingularOrPlural(String nameSingular, String namePlural);
@@ -122,5 +120,5 @@ public abstract class DAOMeasurement {
     }
 
     @Query("SELECT COUNT(*) FROM MEASUREMENT")
-    int count();
+    public abstract int count();
 }

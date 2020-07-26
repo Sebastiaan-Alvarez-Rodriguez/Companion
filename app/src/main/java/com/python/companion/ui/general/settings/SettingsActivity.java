@@ -78,7 +78,7 @@ public class SettingsActivity extends AppCompatActivity {
         });
         dateView.setOnClickListener(v -> { //TODO: Test! what is right sharedprefs register and key?
             TogetherDialog dialog = new TogetherDialog.Builder()
-                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.cactus_preferences), MODE_PRIVATE).getString(getString(R.string.measurement_key_together),"2018-11-08")))
+                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.cactus_preferences), MODE_PRIVATE).getString(getString(R.string.cactus_preferences_key_together),"2018-11-08")))
                     .setFinishListener(() -> Snackbar.make(layout, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getSupportFragmentManager(), null);
         });
@@ -89,7 +89,7 @@ public class SettingsActivity extends AppCompatActivity {
                     .setAcceptListener(() -> {
                         NoteQuery query = new NoteQuery(SettingsActivity.this);
                         query.deleteSecure(v1 -> {
-                            getSharedPreferences(getString(R.string.pass_preferences), Context.MODE_PRIVATE).edit().remove("p").apply();
+                            getSharedPreferences(getString(R.string.pass_preferences), Context.MODE_PRIVATE).edit().remove(getString(R.string.pass_preferences_key_pass)).apply();
                             Snackbar.make(layout, "Password reset successfully", Snackbar.LENGTH_LONG).show();
                         });
                     })

@@ -63,12 +63,6 @@ public class PassSetDialog extends DialogFragment {
         this.passGuard = guard;
     }
 
-//    @Override
-//    public void onCreate(@Nullable Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setStyle(DialogFragment.STYLE_NO_TITLE, R.style.DialogStyle);
-//    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

@@ -41,7 +41,7 @@ public class CactusFragment extends Fragment {
         super.onCreate(savedInstanceState);
         now = LocalDate.now();
         SharedPreferences preferences = getContext().getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-        together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
+        together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

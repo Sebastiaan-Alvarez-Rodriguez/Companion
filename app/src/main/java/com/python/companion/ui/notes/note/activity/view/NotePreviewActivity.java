@@ -160,9 +160,9 @@ public class NotePreviewActivity extends AppCompatActivity {
             Snackbar.make(layout, "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
         } else {
             if (editMode)
-                Store.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
+                NoteStore.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
             else
-                Store.insert(note, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
+                NoteStore.insert(note, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
         }
     }
 

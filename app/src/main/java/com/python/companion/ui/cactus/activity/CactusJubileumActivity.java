@@ -116,7 +116,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 userInterval = getInterval(s);
                 SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-                LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
+                LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
                 for (int x = 0; x < fastAdapter.getItemCount(); ++x) {
                     CactusItem item = fastAdapter.getItem(x);
                     final int w = x;
@@ -159,7 +159,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
 
     private void setListUpdates() {
         SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-        LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
+        LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
 
         List<CactusItem> defaultList = MeasurementUtil.getDefaultMeasurements().parallelStream().map(measurement -> {
             try {

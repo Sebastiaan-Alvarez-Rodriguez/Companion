@@ -19,7 +19,7 @@ import java.time.temporal.TemporalUnit;
  * @implNote Even though Room does not support unique columns, we want singular and plural names of measurements to be unique.
  * We enforce this in code on creation of and when updating measurements.
  */
-@Entity(primaryKeys = {"namePlural"})
+@Entity
 public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
     @PrimaryKey(autoGenerate = true)
     long measurementID;

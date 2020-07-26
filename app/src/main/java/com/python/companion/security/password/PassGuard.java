@@ -25,13 +25,13 @@ import static org.signal.argon2.Type.Argon2id;
 public class PassGuard extends Guard {
     public void setPass(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull FinishListener finishListener, @NonNull ErrorListener errorListener) {
         SharedPreferences prefs = context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE);
-        if (prefs.contains("p")) { // There already is a password set
+        if (prefs.contains(context.getString(R.string.pass_preferences_key_pass))) { // There already is a password set
             validate(fragmentManager, context, () -> {
-                    updatePassInternal(fragmentManager, prefs);
+                    updatePassInternal(fragmentManager, context);
                     finishListener.onFinish();
                 }, errorListener);
         } else {
-            updatePassInternal(fragmentManager, prefs);
+            updatePassInternal(fragmentManager, context);
             finishListener.onFinish();
         }
     }
@@ -39,7 +39,7 @@ public class PassGuard extends Guard {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean passIsSet(@NonNull Context context) {
-        return context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE).contains("p");
+        return context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE).contains(context.getString(R.string.pass_preferences_key_pass));
     }
 
     /**
@@ -48,7 +48,7 @@ public class PassGuard extends Guard {
     @Override
     protected void validate(@NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull FinishListener finishListener, @NonNull ErrorListener errorListener) {
         if (!passIsSet(context)) {
-            updatePassInternal(fragmentManager, context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE), new ValidateCallback() {
+            updatePassInternal(fragmentManager, context, new ValidateCallback() {
                 @Override
                 public void onSuccess() {
                     passDialog(fragmentManager, context, finishListener, errorListener);
@@ -85,7 +85,7 @@ public class PassGuard extends Guard {
      * @return {@code true} if password was correct, {@code false} otherwise
      */
     private boolean passCheck(@NonNull Context context, @NonNull byte[] password) {
-        String password_actual = context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE).getString("p", "");
+        String password_actual = context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE).getString(context.getString(R.string.pass_preferences_key_pass), "");
         String password_current;
         try {
             password_current = hash(password);
@@ -102,12 +102,12 @@ public class PassGuard extends Guard {
      * Asks user to give a password, then hashes and stores it.
      * (!) Make sure only authenticated users arrive here
      */
-    private void updatePassInternal(@NonNull FragmentManager fragmentManager, @NonNull SharedPreferences prefs, @Nullable ValidateCallback validateCallback) {
+    private void updatePassInternal(@NonNull FragmentManager fragmentManager, @NonNull Context context, @Nullable ValidateCallback validateCallback) {
         PassSetDialog dialog = new PassSetDialog.Builder()
                 .setAcceptListener(newpass -> {
                     try {
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putString("p", hash(newpass));
+                        SharedPreferences.Editor editor = context.getSharedPreferences(context.getString(R.string.pass_preferences), Context.MODE_PRIVATE).edit();
+                        editor.putString(context.getString(R.string.pass_preferences_key_pass), hash(newpass));
                         editor.apply();
                         if (validateCallback != null)
                             validateCallback.onSuccess();
@@ -124,11 +124,11 @@ public class PassGuard extends Guard {
     }
 
     /**
-     * Equivalent to {@link PassGuard#updatePassInternal(FragmentManager, SharedPreferences, ValidateCallback)}, without specifying callback
+     * Equivalent to {@link PassGuard#updatePassInternal(FragmentManager, Context, ValidateCallback)}, without specifying callback
      * (!) Make sure only authenticated users arrive here
      */
-    private void updatePassInternal(@NonNull FragmentManager fragmentManager, @NonNull SharedPreferences prefs) {
-        updatePassInternal(fragmentManager, prefs, null);
+    private void updatePassInternal(@NonNull FragmentManager fragmentManager, @NonNull Context context) {
+        updatePassInternal(fragmentManager, context, null);
     }
 
     private @NonNull String hash(@NonNull byte[] password) throws Argon2Exception {

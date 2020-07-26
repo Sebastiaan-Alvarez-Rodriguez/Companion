@@ -11,10 +11,19 @@
     <string name="menu_send">Send</string>
     <string name="menu_security">Security</string>
 
+    <!--Note preferences contain sorting prefs-->
     <string name="note_preferences">NotePrefs</string>
-    <string name="measurement_preferences">MeasurementPrefs</string>
-    <string name="cactus_preferences">DatePrefs</string>
-    <string name="pass_preferences">PassPrefs</string>
 
-    <string name="measurement_key_together">together</string>
+    <!--Measurement preferences contain sorting prefs-->
+    <string name="measurement_preferences">MeasurementPrefs</string>
+
+    <!--Cactus preferences contain sorting prefs and date together-->
+    <string name="cactus_preferences">DatePrefs</string>
+    <string name="cactus_preferences_key_together">together</string> <!-- date together as yyyy-MM-dd-->
+
+    <!--Password preferences contain password-->
+    <string name="pass_preferences">PassPrefs</string>
+    <string name="pass_preferences_key_pass">p</string> <!-- Password hash with Argon2 stored under this key-->
+
+
 </resources>

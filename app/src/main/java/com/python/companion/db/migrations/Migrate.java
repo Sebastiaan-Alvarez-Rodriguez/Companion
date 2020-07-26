@@ -7,7 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 public class Migrate {
 
     public static Migration[] getAll() {
-        return new Migration[]{m1_2()};
+        return new Migration[]{m1_2(), m2_3()};
     }
 
     public static Migration m1_2() {
@@ -23,8 +23,10 @@ public class Migrate {
         return new Migration(2, 3) {
             @Override
             public void migrate(@NonNull SupportSQLiteDatabase database) {
-                //TODO: go from measurement with duration and chrono-unit cornerstonetype to measurement with
-                // amount, measurement cornerstonetype, boolean for indicating whether type is precise or not, and still a duration
+                database.execSQL("BEGIN TRANSACTION;");
+                database.execSQL("DROP TABLE IF EXISTS Measurement");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Measurement` (`measurementID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT)");
+                database.execSQL("COMMIT;");
             }
         };
     }

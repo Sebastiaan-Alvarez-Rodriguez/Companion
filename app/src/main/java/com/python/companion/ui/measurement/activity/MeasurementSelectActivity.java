@@ -98,7 +98,7 @@ public class MeasurementSelectActivity extends AppCompatActivity {
 
     private void setListUpdates() {
         SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-        LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
+        LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
 
         List<MeasurementItemSimple> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItemSimple::new).collect(Collectors.toList());
 
