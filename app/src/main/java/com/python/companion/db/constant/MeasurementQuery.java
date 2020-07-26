@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 public class MeasurementQuery {
     private DAOMeasurement daoMeasurement;
 
+
     public MeasurementQuery(Context context) {
         daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
     }
