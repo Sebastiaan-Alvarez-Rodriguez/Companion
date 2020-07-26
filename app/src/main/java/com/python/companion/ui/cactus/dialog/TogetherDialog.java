@@ -113,7 +113,7 @@ public class TogetherDialog extends DialogFragment {
         });
 
         acceptButton.setOnClickListener(v -> {
-            SharedPreferences.Editor editor = getContext().getSharedPreferences(getContext().getString(R.string.measurement_preferences), Context.MODE_PRIVATE).edit();
+            SharedPreferences.Editor editor = getContext().getSharedPreferences(getContext().getString(R.string.cactus_preferences), Context.MODE_PRIVATE).edit();
             editor.putString(getString(R.string.measurement_key_together), picker.getDate().toString());
             editor.apply();
             if (acceptListener != null)

@@ -13,7 +13,7 @@ import com.python.companion.ui.notes.note.dialog.NoteOverrideDialog;
 import com.python.companion.util.genericinterfaces.ErrorListener;
 import com.python.companion.util.genericinterfaces.FinishListener;
 
-public class Store {
+public class NoteStore {
     /**
      * Insert a given new note into the database, either when there is no name-conflict, or the user tells us we may override
      * @param note Note to store. If its {@code secure} field is set, store the note securely

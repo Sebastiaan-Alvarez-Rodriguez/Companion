@@ -1,4 +1,4 @@
-package com.python.companion.ui.cactus.activity.measurement;
+package com.python.companion.ui.measurement.activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -33,7 +33,8 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.ui.cactus.activity.CactusViewModel;
-import com.python.companion.ui.cactus.measurement.adapter.MeasurementItem;
+import com.python.companion.ui.measurement.MeasurementContainer;
+import com.python.companion.ui.measurement.adapter.item.MeasurementItemSimple;
 import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;
@@ -48,9 +49,9 @@ public class MeasurementSelectActivity extends AppCompatActivity {
     private RecyclerView list;
     private SearchView searchView;
 
-    private ItemAdapter<MeasurementItem> itemAdapter;
-    private FastAdapter<MeasurementItem> fastAdapter;
-    private SelectExtension<MeasurementItem> selectionExtension;
+    private ItemAdapter<MeasurementItemSimple> itemAdapter;
+    private FastAdapter<MeasurementItemSimple> fastAdapter;
+    private SelectExtension<MeasurementItemSimple> selectionExtension;
 
     private CactusViewModel viewModel;
 
@@ -72,7 +73,7 @@ public class MeasurementSelectActivity extends AppCompatActivity {
 
 
     private void prepareList() {
-        ComparableItemListImpl<MeasurementItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
+        ComparableItemListImpl<MeasurementItemSimple> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
         itemAdapter = new ItemAdapter<>(itemList);
         fastAdapter = FastAdapter.with(itemAdapter);
 
@@ -96,29 +97,29 @@ public class MeasurementSelectActivity extends AppCompatActivity {
     }
 
     private void setListUpdates() {
-        SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
         LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
 
-        List<MeasurementItem> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItem::new).collect(Collectors.toList());
+        List<MeasurementItemSimple> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItemSimple::new).collect(Collectors.toList());
 
         viewModel.getMeasurements().observe(this, measurements -> {
-            List<MeasurementItem> newlist = measurements.stream().sorted((o1, o2) -> o1.getNamePlural().compareTo(o2.getNamePlural())).map(MeasurementItem::new).collect(Collectors.toList());
+            List<MeasurementItemSimple> newlist = measurements.stream().sorted((o1, o2) -> o1.getNamePlural().compareTo(o2.getNamePlural())).map(MeasurementItemSimple::new).collect(Collectors.toList());
 
             newlist.addAll(defaultList);
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<MeasurementItem>() {
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<MeasurementItemSimple>() {
                 @Override
-                public boolean areItemsTheSame(MeasurementItem oldItem, MeasurementItem newItem) {
+                public boolean areItemsTheSame(MeasurementItemSimple oldItem, MeasurementItemSimple newItem) {
                     return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());
                 }
 
                 @Override
-                public boolean areContentsTheSame(MeasurementItem oldItem, MeasurementItem newItem) {
+                public boolean areContentsTheSame(MeasurementItemSimple oldItem, MeasurementItemSimple newItem) {
                     return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());
                 }
 
                 @NotNull
                 @Override
-                public Object getChangePayload(MeasurementItem oldItem, int oldPosition, MeasurementItem newItem, int newPosition) {
+                public Object getChangePayload(MeasurementItemSimple oldItem, int oldPosition, MeasurementItemSimple newItem, int newPosition) {
                     return newItem.getMeasurement().getNamePlural();
                 }
             });
@@ -127,9 +128,9 @@ public class MeasurementSelectActivity extends AppCompatActivity {
 
     private void setListFiltering() {
         itemAdapter.getItemFilter().setFilterPredicate((MeasurementItem, charSequence) -> MeasurementItem.getMeasurement().getNameSingular().toLowerCase().contains(charSequence.toString().toLowerCase()));
-        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<MeasurementItem>() {
+        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<MeasurementItemSimple>() {
             @Override
-            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends MeasurementItem> list) {
+            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends MeasurementItemSimple> list) {
             }
 
             @Override
@@ -185,7 +186,8 @@ public class MeasurementSelectActivity extends AppCompatActivity {
                     Snackbar.make(layout, "Select at least one item to compute shared interval for", Snackbar.LENGTH_LONG).show();
                 } else {
                     Intent data = new Intent();
-                    data.putParcelableArrayListExtra("chosen", new ArrayList<>(selectionExtension.getSelectedItems()));
+                    ArrayList<MeasurementContainer> c = selectionExtension.getSelectedItems().stream().map(itemsimple -> new MeasurementContainer(itemsimple.getMeasurement())).collect(Collectors.toCollection(ArrayList::new));
+                    data.putParcelableArrayListExtra("chosen", c);
                     setResult(RESULT_OK, data);
                     finish();
                 }

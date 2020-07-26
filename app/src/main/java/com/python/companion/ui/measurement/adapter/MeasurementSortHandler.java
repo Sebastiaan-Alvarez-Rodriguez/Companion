@@ -1,4 +1,4 @@
-package com.python.companion.ui.cactus.measurement.adapter;
+package com.python.companion.ui.measurement.adapter;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -7,13 +7,14 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
-import com.python.companion.ui.cactus.measurement.adapter.item.CactusItem;
+import com.python.companion.ui.cactus.adapter.CactusSortHandler;
+import com.python.companion.ui.measurement.adapter.item.MeasurementItem;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Comparator;
 
-public class CactusSortHandler {
+public class MeasurementSortHandler {
     public static final int SORT_DURATION = 0;
     public static final int SORT_ALPHA = 1;
 
@@ -21,12 +22,14 @@ public class CactusSortHandler {
     @IntDef({SORT_ALPHA, SORT_DURATION})
     public @interface MeasurementSortStrategy {}
 
-    protected @NonNull MutableLiveData<Integer> strategy;
-    protected ComparableItemListImpl<CactusItem> itemList;
+    protected @NonNull
+    MutableLiveData<Integer> strategy;
+    protected ComparableItemListImpl<MeasurementItem> itemList;
 
     public static class Builder {
-        protected @MeasurementSortStrategy int strategy;
-        protected @Nullable ComparableItemListImpl<CactusItem> itemList;
+        protected @CactusSortHandler.CactusSortStrategy
+        int strategy;
+        protected @Nullable ComparableItemListImpl<MeasurementItem> itemList;
 
         public Builder() {
             strategy = SORT_DURATION;
@@ -37,20 +40,20 @@ public class CactusSortHandler {
             return this;
         }
 
-        public Builder setItemList(@NonNull ComparableItemListImpl<CactusItem> itemList) {
+        public Builder setItemList(@NonNull ComparableItemListImpl<MeasurementItem> itemList) {
             this.itemList = itemList;
             return this;
         }
 
-        public CactusSortHandler build() {
+        public MeasurementSortHandler build() {
             if (itemList == null)
                 throw new IllegalStateException("ItemList must be set");
-            return new CactusSortHandler(strategy, itemList);
+            return new MeasurementSortHandler(strategy, itemList);
         }
     }
 
 
-    protected CactusSortHandler(@MeasurementSortStrategy int strategy, ComparableItemListImpl<CactusItem> itemList) {
+    protected MeasurementSortHandler(@CactusSortHandler.CactusSortStrategy int strategy, ComparableItemListImpl<MeasurementItem> itemList) {
         this.strategy = new MutableLiveData<>(strategy);
         this.itemList = itemList;
         resort();
@@ -74,7 +77,7 @@ public class CactusSortHandler {
     }
 
     @Nullable
-    public Comparator<CactusItem> getComparator() {
+    public Comparator<MeasurementItem> getComparator() {
         switch (strategy.getValue()) {
             case SORT_ALPHA:
                 return new MeasurementAlphaComperator();
@@ -91,16 +94,16 @@ public class CactusSortHandler {
         itemList.withComparator(getComparator());
     }
 
-    protected static class MeasurementAlphaComperator implements Comparator<CactusItem> {
+    protected static class MeasurementAlphaComperator implements Comparator<MeasurementItem> {
         @Override
-        public int compare(CactusItem o1, CactusItem o2) {
-            return o1.getMeasurementName().compareTo(o2.getMeasurementName());
+        public int compare(MeasurementItem o1, MeasurementItem o2) {
+            return o1.getMeasurement().getNamePlural().compareTo(o2.getMeasurement().getNamePlural());
         }
     }
 
-    protected static class MeasurementDateComperator implements Comparator<CactusItem> {
+    protected static class MeasurementDateComperator implements Comparator<MeasurementItem> {
         @Override
-        public int compare(CactusItem o1, CactusItem o2) {
+        public int compare(MeasurementItem o1, MeasurementItem o2) {
             return o1.getMeasurement().compareTo(o2.getMeasurement());
         }
     }

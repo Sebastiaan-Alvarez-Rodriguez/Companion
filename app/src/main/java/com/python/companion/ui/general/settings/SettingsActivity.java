@@ -76,9 +76,9 @@ public class SettingsActivity extends AppCompatActivity {
             Intent finalIntent = Intent.createChooser(intent, "Select location to export to");
             startActivityForResult(finalIntent, REQUEST_CODE_EXPORT);
         });
-        dateView.setOnClickListener(v -> {
+        dateView.setOnClickListener(v -> { //TODO: Test! what is right sharedprefs register and key?
             TogetherDialog dialog = new TogetherDialog.Builder()
-                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.measurement_preferences), MODE_PRIVATE).getString(getString(R.string.measurement_key_together),"2018-11-08")))
+                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.cactus_preferences), MODE_PRIVATE).getString(getString(R.string.measurement_key_together),"2018-11-08")))
                     .setFinishListener(() -> Snackbar.make(layout, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getSupportFragmentManager(), null);
         });

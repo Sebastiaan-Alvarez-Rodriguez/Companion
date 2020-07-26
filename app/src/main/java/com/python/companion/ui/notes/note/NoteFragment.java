@@ -210,12 +210,10 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
         itemAdapter.getItemFilter().setFilterPredicate((noteItem, charSequence) -> noteItem.getNote().getName().toLowerCase().contains(charSequence.toString().toLowerCase()));
         itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<NoteItem>() {
             @Override
-            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends NoteItem> list) {
-            }
+            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends NoteItem> list) {}
 
             @Override
-            public void onReset() {
-            }
+            public void onReset() {}
         });
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {

@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void onAppStart() {
         Guard.init(this);
-        if (!getSharedPreferences(getString(R.string.measurement_preferences), MODE_PRIVATE).contains("together")) {
+        if (!getSharedPreferences(getString(R.string.cactus_preferences), MODE_PRIVATE).contains("together")) {
             TogetherDialog dialog = new TogetherDialog.Builder()
                     .setCancelListener(() -> {
                         Snackbar.make(drawer, "Default value '2017-11-08 (yyyy-MM-dd)' set", Snackbar.LENGTH_LONG)

@@ -13,12 +13,17 @@ import com.python.companion.db.entity.Note;
 import com.python.companion.ui.notes.note.NoteContainer;
 import com.python.companion.ui.notes.note.activity.view.NotePreviewActivity;
 
+/**
+ * Redirect users here to create a new note or edit an existing one. If the user wants to edit a note,
+ * just add the note under key {@code "note"} in the intent, with the note shipped in a NoteContainer (which is parcelable)
+ * @see NoteContainer
+ */
 public class NoteEditActivity extends AppCompatActivity {
     private static final int REQUEST_PREVIEW = 1;
     private EditText noteName, noteContent;
     private Button previewButton;
 
-    private Note note;
+    private @Nullable Note note;
 
     private boolean editMode;
 
@@ -44,6 +49,7 @@ public class NoteEditActivity extends AppCompatActivity {
         previewButton = findViewById(R.id.activity_note_edit_preview);
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void setupClicks() {
         previewButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, NotePreviewActivity.class);

@@ -18,4 +18,14 @@ public class Migrate {
             }
         };
     }
+
+    public static Migration m2_3() {
+        return new Migration(2, 3) {
+            @Override
+            public void migrate(@NonNull SupportSQLiteDatabase database) {
+                //TODO: go from measurement with duration and chrono-unit cornerstonetype to measurement with
+                // amount, measurement cornerstonetype, boolean for indicating whether type is precise or not, and still a duration
+            }
+        };
+    }
 }

@@ -9,8 +9,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 
@@ -24,7 +27,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mikepenz.fastadapter.FastAdapter;
@@ -36,11 +38,14 @@ import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
+import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.cactus.measurement.Type;
-import com.python.companion.ui.cactus.activity.measurement.MeasurementAddActivity;
-import com.python.companion.ui.cactus.measurement.adapter.CactusSortHandler;
-import com.python.companion.ui.cactus.measurement.adapter.item.CactusItem;
+import com.python.companion.ui.cactus.adapter.CactusSortHandler;
+import com.python.companion.ui.cactus.adapter.item.CactusItem;
+import com.python.companion.ui.general.customviews.ContextMenuRecyclerView;
+import com.python.companion.ui.measurement.MeasurementContainer;
+import com.python.companion.ui.measurement.Type;
+import com.python.companion.ui.measurement.activity.MeasurementEditActivity;
 import com.python.companion.util.MeasurementUtil;
 
 import java.time.DateTimeException;
@@ -48,11 +53,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// TODO: Notifications for jubilea:
-//  https://www.raywenderlich.com/1214490-android-notifications-tutorial-getting-started
-//  https://www.youtube.com/watch?v=nl-dheVpt8o
 public class CactusJubileumActivity extends AppCompatActivity {
-    private RecyclerView list;
+    private ContextMenuRecyclerView list;
     private EditText amountView;
     private RadioGroup displayGroup;
     private FloatingActionButton addButton;
@@ -113,7 +115,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 userInterval = getInterval(s);
-                SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+                SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
                 LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
                 for (int x = 0; x < fastAdapter.getItemCount(); ++x) {
                     CactusItem item = fastAdapter.getItem(x);
@@ -128,7 +130,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
         addButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MeasurementAddActivity.class);
+            Intent intent = new Intent(this, MeasurementEditActivity.class);
             startActivity(intent);
         });
     }
@@ -136,10 +138,13 @@ public class CactusJubileumActivity extends AppCompatActivity {
     private void prepareList() {
         ComparableItemListImpl<CactusItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
         itemAdapter = new ItemAdapter<>(itemList);
+
+        registerForContextMenu(list);
+
         fastAdapter = FastAdapter.with(itemAdapter);
 
         sortHandler = new CactusSortHandler.Builder()
-                .setStrategy(getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", CactusSortHandler.SORT_DURATION))
+                .setStrategy(getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE).getInt("CactusJubileumSort", CactusSortHandler.SORT_DURATION))
                 .setItemList(itemList)
                 .build();
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
@@ -147,11 +152,13 @@ public class CactusJubileumActivity extends AppCompatActivity {
         list.setLayoutManager(new LinearLayoutManager(this));
         list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
 
+        fastAdapter.setOnLongClickListener((view, cactusItemIAdapter, cactusItem, integer) -> false);
+
         setListUpdates();
     }
 
     private void setListUpdates() {
-        SharedPreferences preferences = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
         LocalDate together = LocalDate.parse(preferences.getString("together", "2017-11-08"));
 
         List<CactusItem> defaultList = MeasurementUtil.getDefaultMeasurements().parallelStream().map(measurement -> {
@@ -161,7 +168,6 @@ public class CactusJubileumActivity extends AppCompatActivity {
                 return new CactusItem(measurement, userInterval >= 0 ? "Very far away" : "Very long ago");
             }
         }).collect(Collectors.toList());
-
         viewModel.getMeasurements().observe(this, measurements -> {
             List<CactusItem> newlist = measurements.parallelStream().map(measurement -> {
                 try {
@@ -247,7 +253,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
         setListFiltering();
 
         @IdRes int id;
-        switch (getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", CactusSortHandler.SORT_DURATION)) {
+        switch (getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE).getInt("CactusJubileumSort", CactusSortHandler.SORT_DURATION)) {
             case CactusSortHandler.SORT_ALPHA:
                 id = R.id.activity_cactus_jubileum_sort_alpha;
                 break;
@@ -262,7 +268,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        @CactusSortHandler.MeasurementSortStrategy int strategy;
+        @CactusSortHandler.CactusSortStrategy int strategy;
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
@@ -278,9 +284,41 @@ public class CactusJubileumActivity extends AppCompatActivity {
         }
         sortHandler.setSortStrategy(strategy);
         item.setChecked(true);
-        SharedPreferences.Editor editor = getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).edit();
-        editor.putInt("MeasurementSort", strategy).apply();
+        SharedPreferences.Editor editor = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE).edit();
+        editor.putInt("CactusJubileumSort", strategy).apply();
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        ContextMenuRecyclerView.RecyclerViewContextMenuInfo info = (ContextMenuRecyclerView.RecyclerViewContextMenuInfo) menuInfo;
+        CactusItem clicked = fastAdapter.getItem(info.position);
+        if (MeasurementUtil.isDefault(clicked.getMeasurement().getMeasurementID())) { // We will not allow default measurements to be edited/deleted
+            menu.close();
+            return;
+        }
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_cactus_jubileum_context, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        ContextMenuRecyclerView.RecyclerViewContextMenuInfo info = (ContextMenuRecyclerView.RecyclerViewContextMenuInfo) item.getMenuInfo();
+        CactusItem clicked = fastAdapter.getItem(info.position);
+
+        switch (item.getItemId()) {
+            case R.id.menu_context_jubileum_edit:
+                Intent intent = new Intent(this, MeasurementEditActivity.class);
+                intent.putExtra("measurement", new MeasurementContainer(clicked.getMeasurement()));
+                startActivity(intent);
+                break;
+            case R.id.menu_context_jubileum_delete:
+                MeasurementQuery query = new MeasurementQuery(this);
+                query.delete(clicked.getMeasurement(), v -> {});
+                break;
+        }
+        return super.onContextItemSelected(item);
     }
 }
 

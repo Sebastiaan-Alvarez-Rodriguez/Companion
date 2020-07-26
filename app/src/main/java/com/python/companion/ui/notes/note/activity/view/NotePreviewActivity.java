@@ -24,7 +24,7 @@ import androidx.core.widget.NestedScrollView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
-import com.python.companion.backend.interact.Store;
+import com.python.companion.backend.interact.NoteStore;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
 import com.python.companion.ui.general.textviewsearch.UITextSearcher;
@@ -65,6 +65,7 @@ public class NotePreviewActivity extends AppCompatActivity {
             note.setCategory(new Category("<default>", ContextCompat.getColor(this, R.color.colorPrimary)));
 
         setContentView(R.layout.activity_note_preview);
+        layout = findViewById(R.id.activity_note_preview_layout);
         findViews();
         setupActionBar();
         setContent(note.getContent(), note.getType());
@@ -155,7 +156,6 @@ public class NotePreviewActivity extends AppCompatActivity {
     }
 
     private void save() {
-
         if (note.getName().length() == 0) {
             Snackbar.make(layout, "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
         } else {
