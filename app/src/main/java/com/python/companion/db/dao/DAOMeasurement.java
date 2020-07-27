@@ -36,9 +36,10 @@ public abstract class DAOMeasurement {
 
 
     /**
+     * Constructed using: https://www.sqlitetutorial.net/sqlite-self-join/
      * @return List of measurements, with parent singular and plural names
      */
-    @Query("SELECT m1.*, m2.nameSingular AS parentSingular, m2.namePlural AS parentPlural FROM Measurement AS m1, Measurement AS m2 WHERE m1.parentID = m2.measurementID")
+    @Query("SELECT m1.*, m2.nameSingular AS parentSingular, m2.namePlural AS parentPlural FROM Measurement m1 LEFT JOIN Measurement m2 ON m1.parentID = m2.measurementID")
     public abstract LiveData<List<MeasurementWithParentNames>> getAllNamedLive();
 
     @Query("SELECT * FROM Measurement WHERE nameSingular = :nameSingular")

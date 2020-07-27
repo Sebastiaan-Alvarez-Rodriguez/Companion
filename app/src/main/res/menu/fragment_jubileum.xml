@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/fragment_jubileum_search"
+        android:title="Search"
+        android:icon="@drawable/ic_menu_search"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+    <item
+        android:id="@+id/fragment_jubileum_sort"
+        android:title="Sort"
+        android:icon="@drawable/ic_menu_sort"
+        app:iconTint="@color/colorWindowBackground"
+        app:iconTintMode="src_in"
+        app:showAsAction="always">
+        <menu>
+            <group android:checkableBehavior="single" >
+                <item
+                    android:id="@+id/fragment_jubileum_sort_alpha"
+                    android:title="Alpha" />
+                <item
+                    android:id="@+id/fragment_jubileum_sort_duration"
+                    android:title="Duration" />
+            </group>
+        </menu>
+    </item>
+</menu>

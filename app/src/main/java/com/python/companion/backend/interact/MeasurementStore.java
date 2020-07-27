@@ -7,7 +7,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.measurement.dialog.MeasurementDeleteDialog;
+import com.python.companion.ui.jubileum.dialog.MeasurementDeleteDialog;
 
 
 public class MeasurementStore {

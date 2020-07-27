@@ -43,9 +43,9 @@ import com.python.companion.db.entity.Measurement;
 import com.python.companion.ui.cactus.adapter.CactusSortHandler;
 import com.python.companion.ui.cactus.adapter.item.CactusItem;
 import com.python.companion.ui.general.customviews.ContextMenuRecyclerView;
-import com.python.companion.ui.measurement.MeasurementContainer;
-import com.python.companion.ui.measurement.Type;
-import com.python.companion.ui.measurement.activity.MeasurementEditActivity;
+import com.python.companion.ui.jubileum.MeasurementContainer;
+import com.python.companion.ui.jubileum.Type;
+import com.python.companion.ui.jubileum.activity.JubileumEditActivity;
 import com.python.companion.util.MeasurementUtil;
 
 import java.time.DateTimeException;
@@ -130,7 +130,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
         addButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MeasurementEditActivity.class);
+            Intent intent = new Intent(this, JubileumEditActivity.class);
             startActivity(intent);
         });
     }
@@ -309,7 +309,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
             case R.id.menu_context_jubileum_edit:
-                Intent intent = new Intent(this, MeasurementEditActivity.class);
+                Intent intent = new Intent(this, JubileumEditActivity.class);
                 intent.putExtra("measurement", new MeasurementContainer(clicked.getMeasurement()));
                 startActivity(intent);
                 break;

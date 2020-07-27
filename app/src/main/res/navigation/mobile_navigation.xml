@@ -3,12 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_home">
+    app:startDestination="@+id/nav_note">
 
     <fragment
-        android:id="@+id/nav_home"
+        android:id="@+id/nav_note"
         android:name="com.python.companion.ui.notes.note.NoteFragment"
-        android:label="@string/menu_home"
+        android:label="@string/menu_notes"
         tools:layout="@layout/fragment_list" />
 
     <fragment
@@ -16,6 +16,12 @@
         android:name="com.python.companion.ui.cactus.CactusFragment"
         android:label="@string/menu_cactus"
         tools:layout="@layout/fragment_cactus" />
+
+    <fragment
+        android:id="@+id/nav_jubilea"
+        android:name="com.python.companion.ui.jubileum.JubileumFragment"
+        android:label="@string/menu_jubilea"
+        tools:layout="@layout/fragment_list" />
 
     <fragment
         android:id="@+id/nav_tools"

@@ -1,4 +1,4 @@
-package com.python.companion.ui.measurement.adapter;
+package com.python.companion.ui.jubileum.adapter;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -8,7 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.ui.cactus.adapter.CactusSortHandler;
-import com.python.companion.ui.measurement.adapter.item.MeasurementItem;
+import com.python.companion.ui.jubileum.adapter.item.MeasurementItem;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

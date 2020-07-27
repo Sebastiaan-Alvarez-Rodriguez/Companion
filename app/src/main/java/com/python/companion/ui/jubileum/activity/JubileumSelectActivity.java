@@ -1,4 +1,4 @@
-package com.python.companion.ui.measurement.activity;
+package com.python.companion.ui.jubileum.activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -33,8 +33,8 @@ import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
 import com.python.companion.ui.cactus.activity.CactusViewModel;
-import com.python.companion.ui.measurement.MeasurementContainer;
-import com.python.companion.ui.measurement.adapter.item.MeasurementItemSimple;
+import com.python.companion.ui.jubileum.MeasurementContainer;
+import com.python.companion.ui.jubileum.adapter.item.MeasurementItemSimple;
 import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MeasurementSelectActivity extends AppCompatActivity {
+public class JubileumSelectActivity extends AppCompatActivity {
     private View layout;
     private RecyclerView list;
     private SearchView searchView;

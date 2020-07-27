@@ -5,44 +5,8 @@
     android:id="@+id/fragment_cactus_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_desert">
-
-    <LinearLayout
-        android:id="@+id/fragment_cactus_buttons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:visibility="gone">
-
-        <Button
-            android:id="@+id/fragment_cactus_jubileum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/button_rounded"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="Jubilea"
-            android:textColor="@color/colorPrimary" />
-
-        <Button
-            android:id="@+id/fragment_cactus_calculator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/button_rounded"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="Calclator"
-            android:textColor="@color/colorPrimary" />
-    </LinearLayout>
+    android:background="@drawable/background_desert"
+    android:animateLayoutChanges="true">
 
     <TextView
         android:id="@+id/fragment_cactus_quote"
@@ -94,7 +58,6 @@
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_months_text"
         app:layout_constraintEnd_toEndOf="@+id/fragment_cactus_years"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/fragment_cactus_years"
         app:layout_constraintTop_toTopOf="@+id/fragment_cactus_months_text"
         tools:text="11" />
@@ -119,7 +82,6 @@
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="@+id/fragment_cactus_days_text"
         app:layout_constraintEnd_toEndOf="@+id/fragment_cactus_years"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/fragment_cactus_years"
         app:layout_constraintTop_toTopOf="@+id/fragment_cactus_days_text"
         tools:text="31" />
@@ -143,4 +105,32 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_cactus_companion" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fragment_cactus_jubileum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
+        android:backgroundTint="@color/colorPrimary"
+        android:backgroundTintMode="src_in"
+        android:clickable="true"
+        android:tint="@color/colorWindowBackground"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_jubileum" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fragment_cactus_calculator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
+        android:backgroundTint="@color/colorPrimary"
+        android:backgroundTintMode="src_in"
+        android:clickable="true"
+        android:tint="@color/colorWindowBackground"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_cactus_jubileum"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_cactulator" />
 </androidx.constraintlayout.widget.ConstraintLayout>

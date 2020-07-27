@@ -1,23 +1,24 @@
-package com.python.companion.ui.measurement.activity;
+package com.python.companion.ui.jubileum;
 
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BlendMode;
-import android.graphics.BlendModeColorFilter;
-import android.graphics.drawable.Drawable;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.SearchView;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -41,78 +42,76 @@ import com.python.companion.backend.measurement.MeasurementRepository;
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
-import com.python.companion.ui.measurement.MeasurementContainer;
-import com.python.companion.ui.measurement.adapter.MeasurementSortHandler;
-import com.python.companion.ui.measurement.adapter.item.MeasurementItem;
+import com.python.companion.ui.MainActivity;
+import com.python.companion.ui.jubileum.activity.JubileumEditActivity;
+import com.python.companion.ui.jubileum.adapter.MeasurementSortHandler;
+import com.python.companion.ui.jubileum.adapter.item.MeasurementItem;
+import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MeasurementActivity extends AppCompatActivity implements ActionMode.Callback {
+public class JubileumFragment extends Fragment implements ActionMode.Callback {
+
+    private MeasurementViewModel jubileumViewModel;
 
     private RecyclerView list;
     private SearchView searchView;
     private FloatingActionButton fab;
-    
+
     private ItemAdapter<MeasurementItem> itemAdapter;
     private FastAdapter<MeasurementItem> fastAdapter;
     private SelectExtension<MeasurementItem> selectionExtension;
     private ActionModeHelper<MeasurementItem> actionModeHelper;
     private MeasurementSortHandler sortHandler;
 
-    private MeasurementViewModel measurementViewModel;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_measurement);
-        measurementViewModel = new ViewModelProvider(this).get(MeasurementViewModel.class);
-        findViews();
-        prepareAdd();
-        setupActionBar();
-        prepareList();
+        setHasOptionsMenu(true);
+        jubileumViewModel = new ViewModelProvider(this).get(MeasurementViewModel.class);
     }
 
-    private void findViews() {
-        list = findViewById(R.id.fragment_list_list);
-        fab = findViewById(R.id.fragment_list_add);
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_list, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        findViews(view);
+        prepareAdd();
+        prepareList(view);
+    }
+
+    private void findViews(View view) {
+        list = view.findViewById(R.id.fragment_list_list);
+        fab = view.findViewById(R.id.fragment_list_add);
     }
 
     private void prepareAdd() {
         fab.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MeasurementActivity.class);
+            Intent intent = new Intent(getContext(), JubileumEditActivity.class);
             startActivity(intent);
         });
     }
 
-    private void setupActionBar() {
-        Toolbar myToolbar = findViewById(R.id.activity_measurement_toolbar);
-        setSupportActionBar(myToolbar);
-        ActionBar actionbar = getSupportActionBar();
-        if (actionbar != null) {
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
-                myToolbar.setNavigationIcon(icon);
-            }
-            actionbar.setTitle("Measurements");
-        }
-    }
-
-    private void prepareList() {
+    private void prepareList(View view) {
         ComparableItemListImpl<MeasurementItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
 
         itemAdapter = new ItemAdapter<>(itemList);
         sortHandler = new MeasurementSortHandler.Builder()
-                .setStrategy(getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", MeasurementSortHandler.SORT_ALPHA))
+                .setStrategy(view.getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", MeasurementSortHandler.SORT_ALPHA))
                 .setItemList(itemList)
                 .build();
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
         list.setAdapter(fastAdapter);
-        list.setLayoutManager(new LinearLayoutManager(this));
-        list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        list.setLayoutManager(new LinearLayoutManager(view.getContext()));
+        list.addItemDecoration(new DividerItemDecoration(view.getContext(), LinearLayoutManager.VERTICAL));
 
 
         selectionExtension = fastAdapter.getOrCreateExtension(SelectExtension.class);
@@ -120,36 +119,34 @@ public class MeasurementActivity extends AppCompatActivity implements ActionMode
         selectionExtension.setMultiSelect(true);
         selectionExtension.setSelectOnLongClick(true);
 
-        fastAdapter.setOnPreClickListener((view1, MeasurementItemIAdapter, MeasurementItem, integer) -> {
-            Boolean res = actionModeHelper.onClick(MeasurementItem);
+        fastAdapter.setOnPreClickListener((view1, noteItemIAdapter, noteItem, integer) -> {
+            Boolean res = actionModeHelper.onClick(noteItem);
             return res != null ? res : false;
         });
 
-        fastAdapter.setOnClickListener((view1, MeasurementItemIAdapter, MeasurementItem, position) -> {
+        fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, position) -> {
             if (!actionModeHelper.isActive()) {
-                Measurement m = MeasurementItem.getMeasurement();
-                Intent intent = new Intent(this, MeasurementEditActivity.class);
-                intent.putExtra("measurement", new MeasurementContainer(m));
-                startActivity(intent);
+                //TODO: Do something on a regular click
             } else {
                 fastAdapter.notifyItemChanged(position);
             }
             return true;
         });
 
-        fastAdapter.setOnPreLongClickListener((view1, measurementItemIAdapter, measurementItem, position) -> {
-            ActionMode actionMode = actionModeHelper.onLongClick(this, position);
+        fastAdapter.setOnPreLongClickListener((view1, noteItemIAdapter, noteItem, position) -> {
+            ActionMode actionMode = actionModeHelper.onLongClick((MainActivity) getActivity(), position);
             if (actionMode != null)
-                findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary));
+                getActivity().findViewById(R.id.action_mode_bar).setBackgroundColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
             return actionMode != null;
         });
 
-        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.activity_measurement_action, this);
+
+        actionModeHelper = new ActionModeHelper<>(fastAdapter, R.menu.fragment_jubileum_action, this);
         setListUpdates();
     }
 
     private void setListUpdates() {
-        measurementViewModel.getMeasurements().observe(this, measurements -> {
+        jubileumViewModel.getMeasurements().observe(getViewLifecycleOwner(), measurements -> {
             List<MeasurementItem> newlist = measurements.stream().map(MeasurementItem::new).collect(Collectors.toList());
             FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<MeasurementItem>() {
                 @Override
@@ -207,11 +204,38 @@ public class MeasurementActivity extends AppCompatActivity implements ActionMode
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_measurement, menu);
-        searchView = (SearchView) menu.findItem(R.id.activity_measurement_menu_search).getActionView();
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.fragment_jubileum, menu);
+        searchView = (SearchView) menu.findItem(R.id.fragment_jubileum_search).getActionView();
         setListFiltering();
-        return true;
+        @IdRes int id;
+        if (getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("jubileumSort", NoteSortHandler.SORT_DATE) == MeasurementSortHandler.SORT_ALPHA)
+            id = R.id.fragment_jubileum_sort_alpha;
+        else
+            id = R.id.fragment_jubileum_sort_duration;
+        MenuItem item = menu.findItem(id);
+        item.setChecked(true);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        @NoteSortHandler.NoteSortStrategy int strategy;
+        switch (item.getItemId()) {
+            case R.id.fragment_jubileum_sort_alpha:
+                strategy = MeasurementSortHandler.SORT_ALPHA;
+                break;
+            case R.id.fragment_jubileum_sort_duration:
+                strategy = MeasurementSortHandler.SORT_DURATION;
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        sortHandler.setSortStrategy(strategy);
+        item.setChecked(true);
+        SharedPreferences.Editor editor = getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).edit();
+        editor.putInt("jubileumSort", strategy).apply();
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -226,9 +250,9 @@ public class MeasurementActivity extends AppCompatActivity implements ActionMode
 
     @Override
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-        if (item.getItemId() == R.id.menu_measurement_action_delete) {
+        if (item.getItemId() == R.id.fragment_jubileum_action_delete) {
 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
-            final MeasurementQuery measurementQuery = new MeasurementQuery(this);
+            final MeasurementQuery measurementQuery = new MeasurementQuery(getContext());
             measurementQuery.delete(selectionExtension.getSelectedItems().stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList()), x -> {
             });
             mode.finish();

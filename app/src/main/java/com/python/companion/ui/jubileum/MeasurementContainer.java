@@ -1,4 +1,4 @@
-package com.python.companion.ui.measurement;
+package com.python.companion.ui.jubileum;
 
 import android.os.Parcel;
 import android.os.Parcelable;

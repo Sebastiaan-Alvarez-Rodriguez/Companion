@@ -1,4 +1,4 @@
-package com.python.companion.ui.measurement.activity;
+package com.python.companion.ui.jubileum.activity;
 
 import android.app.Application;
 import android.content.Intent;
@@ -34,15 +34,15 @@ import com.python.companion.backend.interact.MeasurementStore;
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.measurement.MeasurementContainer;
-import com.python.companion.ui.measurement.adapter.item.MeasurementItemSimple;
+import com.python.companion.ui.jubileum.MeasurementContainer;
+import com.python.companion.ui.jubileum.adapter.item.MeasurementItemSimple;
 import com.python.companion.util.MeasurementUtil;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class MeasurementEditActivity extends AppCompatActivity {
+public class JubileumEditActivity extends AppCompatActivity {
     private EditText singular, plural, amount;
     private RecyclerView list;
     private View layout;

@@ -29,9 +29,9 @@
         <activity android:name=".ui.general.settings.SettingsActivity" />
         <activity android:name=".ui.general.settings.port.ImportActivity" />
         <activity android:name=".ui.general.settings.port.ExportActivity" />
-        <activity android:name=".ui.measurement.activity.MeasurementEditActivity" />
+        <activity android:name=".ui.jubileum.activity.JubileumEditActivity" />
         <activity android:name=".ui.cactus.activity.CactusCalculatorActivity" />
-        <activity android:name=".ui.measurement.activity.MeasurementSelectActivity" />
+        <activity android:name=".ui.jubileum.activity.JubileumSelectActivity" />
         <activity android:name=".ui.cactus.activity.CactusJubileumActivity" />
     </application>
 

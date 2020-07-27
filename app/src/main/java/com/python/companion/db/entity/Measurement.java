@@ -146,7 +146,7 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
 
     @Override
     public boolean isDurationEstimated() {
-        return this.compareTo(ChronoUnit.DAYS) >= 0;
+        return this.cornerstoneType.isDurationEstimated();
     }
 
     @Override

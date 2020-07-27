@@ -39,9 +39,9 @@ import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.ui.cactus.adapter.CactusSortHandler;
 import com.python.companion.ui.cactus.adapter.item.CactusItem;
-import com.python.companion.ui.measurement.MeasurementContainer;
-import com.python.companion.ui.measurement.Type;
-import com.python.companion.ui.measurement.activity.MeasurementEditActivity;
+import com.python.companion.ui.jubileum.MeasurementContainer;
+import com.python.companion.ui.jubileum.Type;
+import com.python.companion.ui.jubileum.activity.JubileumEditActivity;
 import com.python.companion.util.MeasurementUtil;
 
 import java.time.DateTimeException;
@@ -132,7 +132,7 @@ public class CactusCalculatorActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
         addButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MeasurementEditActivity.class);
+            Intent intent = new Intent(this, JubileumEditActivity.class);
             startActivity(intent);
         });
     }

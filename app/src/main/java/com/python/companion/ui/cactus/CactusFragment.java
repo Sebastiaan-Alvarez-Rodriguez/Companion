@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,10 +14,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.python.companion.R;
 import com.python.companion.ui.cactus.activity.CactusCalculatorActivity;
 import com.python.companion.ui.cactus.activity.CactusJubileumActivity;
-import com.python.companion.ui.measurement.activity.MeasurementSelectActivity;
+import com.python.companion.ui.jubileum.activity.JubileumSelectActivity;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -29,8 +29,8 @@ import static android.app.Activity.RESULT_OK;
 public class CactusFragment extends Fragment {
     private static final int REQ_SHARED = 0;
 
-    private View buttonLayout;
-    private Button jubileumButton, calculatorButton;
+
+    private FloatingActionButton jubileumButton, calculatorButton;
 
     private LocalDate together, now;
     private TextView quoteView, yearView, monthView, dayView, yearTextView, monthTextView, dayTextView;
@@ -58,7 +58,6 @@ public class CactusFragment extends Fragment {
     }
 
     private void findViews(View view) {
-        buttonLayout = view.findViewById(R.id.fragment_cactus_buttons);
         jubileumButton = view.findViewById(R.id.fragment_cactus_jubileum);
         calculatorButton = view.findViewById(R.id.fragment_cactus_calculator);
         quoteView = view.findViewById(R.id.fragment_cactus_quote);
@@ -73,12 +72,12 @@ public class CactusFragment extends Fragment {
 
     private void prepareButtons() {
         cactusView.setOnClickListener(v -> {
-            if (quoteView.getVisibility() == View.VISIBLE) {
-                quoteView.setVisibility(View.INVISIBLE);
-                buttonLayout.setVisibility(View.VISIBLE);
+            if (jubileumButton.getVisibility() == View.INVISIBLE) {
+                jubileumButton.setVisibility(View.VISIBLE);
+                calculatorButton.setVisibility(View.VISIBLE);
             } else {
-                buttonLayout.setVisibility(View.GONE);
-                quoteView.setVisibility(View.VISIBLE);
+                jubileumButton.setVisibility(View.INVISIBLE);
+                calculatorButton.setVisibility(View.INVISIBLE);
             }
         });
         jubileumButton.setOnClickListener(v -> {
@@ -86,7 +85,7 @@ public class CactusFragment extends Fragment {
             startActivity(intent);
         });
         calculatorButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), MeasurementSelectActivity.class);
+            Intent intent = new Intent(getContext(), JubileumSelectActivity.class);
             startActivityForResult(intent, REQ_SHARED);
         });
     }

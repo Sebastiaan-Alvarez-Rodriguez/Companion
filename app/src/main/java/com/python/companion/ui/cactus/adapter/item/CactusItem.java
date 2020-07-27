@@ -12,7 +12,7 @@ import com.mikepenz.fastadapter.items.AbstractItem;
 import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.ui.measurement.Type;
+import com.python.companion.ui.jubileum.Type;
 import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;

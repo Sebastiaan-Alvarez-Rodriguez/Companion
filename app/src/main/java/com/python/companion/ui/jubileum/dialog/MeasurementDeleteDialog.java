@@ -1,4 +1,4 @@
-package com.python.companion.ui.measurement.dialog;
+package com.python.companion.ui.jubileum.dialog;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

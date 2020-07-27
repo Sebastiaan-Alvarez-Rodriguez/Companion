@@ -1,4 +1,4 @@
-package com.python.companion.ui.measurement.adapter.item;
+package com.python.companion.ui.jubileum.adapter.item;
 
 import android.view.View;
 import android.widget.TextView;

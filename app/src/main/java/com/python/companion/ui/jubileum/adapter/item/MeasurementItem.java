@@ -1,4 +1,4 @@
-package com.python.companion.ui.measurement.adapter.item;
+package com.python.companion.ui.jubileum.adapter.item;
 
 import android.view.View;
 import android.widget.TextView;
@@ -118,11 +118,10 @@ public class MeasurementItem extends AbstractItem<FastAdapter.ViewHolder> {
             nameView.setText(item.getMeasurement().getNamePlural());
             equalityView.setText("1 "+item.getMeasurement().getNameSingular()+" =");
             Executors.newSingleThreadExecutor().execute(() -> {
-                String prelude = (item.getMeasurement().getCornerstoneType().isDurationEstimated()) ? "approx. " : "";
                 long amount = item.getMeasurement().getAmount();
 
                 String parentname = amount == 1 ? item.getParentSingular() : item.getParentPlural();
-                ThreadUtil.runOnUIThread(() -> definitionView.setText(prelude+amount+" "+parentname));
+                ThreadUtil.runOnUIThread(() -> definitionView.setText(amount +" "+parentname));
             });
         }
 
