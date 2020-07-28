@@ -12,12 +12,12 @@ import com.mikepenz.fastadapter.items.AbstractItem;
 import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
-import com.python.companion.util.MeasurementUtil;
 import com.python.companion.util.ThreadUtil;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 
 public class MeasurementItem extends AbstractItem<FastAdapter.ViewHolder> {
@@ -30,14 +30,12 @@ public class MeasurementItem extends AbstractItem<FastAdapter.ViewHolder> {
 
     public MeasurementItem(@NonNull MeasurementWithParentNames measurementWithParentNames) {
         this.measurement = measurementWithParentNames.measurement;
-        if (measurementWithParentNames.parentSingular == null || measurementWithParentNames.parentPlural == null) {
-            long id = measurementWithParentNames.measurement.getParentID();
-            this.parentSingular = MeasurementUtil.IDtoName(id, 1);
-            this.parentPlural = MeasurementUtil.IDtoName(id, 2);
-        } else {
-            this.parentSingular = measurementWithParentNames.parentSingular;
-            this.parentPlural = measurementWithParentNames.parentPlural;
-        }
+
+        measurementWithParentNames.fill();
+
+        this.parentSingular = Objects.requireNonNull(measurementWithParentNames.parentSingular);
+        this.parentPlural = Objects.requireNonNull(measurementWithParentNames.parentPlural);
+
     }
     public MeasurementItem(@NonNull Measurement measurement, @NonNull String parentSingular, @NonNull String parentPlural) {
         this.measurement = measurement;

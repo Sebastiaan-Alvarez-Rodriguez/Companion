@@ -14,12 +14,9 @@ import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.constant.MeasurementQuery;
-import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
-import com.python.companion.util.ThreadUtil;
-
-import java.util.concurrent.Executors;
 
 public class MeasurementDeleteDialog extends DialogFragment {
 
@@ -29,7 +26,7 @@ public class MeasurementDeleteDialog extends DialogFragment {
         private DialogAcceptListener dialogAcceptListener = null;
 
         private String existsString = "", questionString = "", warningString = "";
-        private Measurement measurement;
+        private MeasurementWithParentNames measurementWithParentName;
 
         public Builder setCancelListener(DialogCancelListener dialogCancelListener) {
             this.dialogCancelListener = dialogCancelListener;
@@ -56,15 +53,15 @@ public class MeasurementDeleteDialog extends DialogFragment {
             return this;
         }
 
-        public Builder setMeasurement(Measurement measurement) {
-            this.measurement = measurement;
+        public Builder setMeasurementWithParentName(MeasurementWithParentNames measurementWithParentNames) {
+            this.measurementWithParentName = measurementWithParentNames;
             return this;
         }
 
         public MeasurementDeleteDialog build() {
-            if (measurement == null)
+            if (measurementWithParentName == null)
                 throw new IllegalStateException("Caller must provide Measurement which will be deleted with builder.setMeasurement(measurement)");
-            return new MeasurementDeleteDialog(dialogCancelListener, dialogAcceptListener, existsString, questionString, warningString, measurement);
+            return new MeasurementDeleteDialog(dialogCancelListener, dialogAcceptListener, existsString, questionString, warningString, measurementWithParentName);
         }
     }
 
@@ -75,15 +72,15 @@ public class MeasurementDeleteDialog extends DialogFragment {
     protected @Nullable DialogCancelListener cancelListener;
     protected @Nullable DialogAcceptListener overrideListener;
     protected String existsText, questionText, warningText;
-    protected @NonNull Measurement measurement;
+    protected @NonNull MeasurementWithParentNames measurementWithParentNames;
 
-    protected MeasurementDeleteDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @NonNull Measurement measurement) {
+    protected MeasurementDeleteDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @NonNull MeasurementWithParentNames measurementWithParentNames) {
         this.cancelListener = cancelListener;
         this.overrideListener = overrideListener;
         this.existsText = existsText;
         this.warningText = warningText;
         this.questionText = questionText;
-        this.measurement = measurement;
+        this.measurementWithParentNames = measurementWithParentNames;
     }
 
     @Nullable
@@ -122,16 +119,11 @@ public class MeasurementDeleteDialog extends DialogFragment {
     }
 
     protected void setMeasurement() {
-        measurementNameView.setText(measurement.getNamePlural());
-        measurementEqualityView.setText("1 "+measurement.getNameSingular()+" =");
-        Executors.newSingleThreadExecutor().execute(() -> {
-            String prelude = (measurement.getCornerstoneType().isDurationEstimated()) ? "approx. " : "";
-            long amount = measurement.getAmount();
-            MeasurementQuery query = new MeasurementQuery(getContext());
-            Measurement parent = query.findByID(measurement.getParentID());
-            String parentname = amount == 1 ? parent.getNameSingular() : parent.getNamePlural();
-            ThreadUtil.runOnUIThread(() -> measurementDefinitionView.setText(prelude+amount+" "+parentname));
-        });
+        measurementWithParentNames.fill();
+        measurementNameView.setText(measurementWithParentNames.measurement.getNamePlural());
+        measurementEqualityView.setText("1 "+ measurementWithParentNames.measurement.getNameSingular()+" =");
+        long amount = measurementWithParentNames.measurement.getAmount();
+        measurementDefinitionView.setText(amount+" "+ (amount == 1 ? measurementWithParentNames.parentSingular : measurementWithParentNames.parentPlural));
     }
 
     private void prepareButtons() {
@@ -143,7 +135,8 @@ public class MeasurementDeleteDialog extends DialogFragment {
         });
         overrideButton.setOnClickListener(v -> {
             if (overrideListener != null) {
-                overrideListener.onAccept();
+                MeasurementQuery query = new MeasurementQuery(getContext());
+                query.delete(measurementWithParentNames.measurement, () -> overrideListener.onAccept());
             }
             dismiss();
         });

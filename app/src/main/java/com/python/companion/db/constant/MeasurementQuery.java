@@ -9,6 +9,8 @@ import androidx.annotation.WorkerThread;
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
+import com.python.companion.util.genericinterfaces.FinishListener;
 import com.python.companion.util.genericinterfaces.ResultListener;
 
 import java.util.List;
@@ -27,18 +29,18 @@ public class MeasurementQuery {
         Executors.newSingleThreadExecutor().execute(() -> daoMeasurement.insert(measurement));
     }
 
-    public void delete(@NonNull List<Measurement> measurements, @NonNull ResultListener<Void> listener) {
+    public void delete(@NonNull List<Measurement> measurements, @NonNull FinishListener listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             for (Measurement m : measurements)
                 daoMeasurement.deleteInherit(m);
-            listener.onResult(null);
+            listener.onFinish();
         });
     }
 
-    public void delete(@NonNull Measurement measurement, @NonNull ResultListener<Void> listener) {
+    public void delete(@NonNull Measurement measurement, @NonNull FinishListener listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             daoMeasurement.deleteInherit(measurement);
-            listener.onResult(null);
+            listener.onFinish();
         });
     }
 
@@ -54,9 +56,12 @@ public class MeasurementQuery {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getBySingularOrPlural(nameSingular, namePlural)));
     }
 
-    @WorkerThread
-    public Measurement findByID(long id) {
-        return daoMeasurement.findByID(id);
+    public void isUniqueInstancedNamed(String nameSingular, String namePlural, ResultListener<MeasurementWithParentNames> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getBySingularOrPluralNamed(nameSingular, namePlural)));
+    }
+
+    public void findByIDNamed(long id, ResultListener<MeasurementWithParentNames> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.findByIDNamed(id)));
     }
 
     @WorkerThread

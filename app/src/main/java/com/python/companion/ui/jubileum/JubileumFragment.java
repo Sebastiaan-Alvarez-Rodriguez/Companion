@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -124,9 +125,11 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
             return res != null ? res : false;
         });
 
-        fastAdapter.setOnClickListener((view1, noteItemIAdapter, noteItem, position) -> {
+        fastAdapter.setOnClickListener((view1, measurementItemIAdapter, measurementItem, position) -> {
             if (!actionModeHelper.isActive()) {
                 //TODO: Do something on a regular click
+                Measurement m = measurementItem.getMeasurement();
+                Log.e("JubileumFragment", "Measurement "+m.getNameSingular()+"(id "+m.getMeasurementID()+"): parent "+m.getParentID()+", nameSingular "+measurementItem.getParentSingular());
             } else {
                 fastAdapter.notifyItemChanged(position);
             }
@@ -177,7 +180,8 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
     private void setListFiltering() {
         itemAdapter.getItemFilter().setFilterPredicate((measurementItem, sequence) -> {
             Measurement m = measurementItem.getMeasurement();
-            return m.getNameSingular().toLowerCase().contains(sequence) || m.getNamePlural().toLowerCase().contains(sequence);
+            final CharSequence lsequence = sequence.toString().toLowerCase();
+            return m.getNameSingular().toLowerCase().contains(lsequence) || m.getNamePlural().toLowerCase().contains(lsequence);
         });
         itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<MeasurementItem>() {
             @Override
@@ -220,7 +224,7 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        @NoteSortHandler.NoteSortStrategy int strategy;
+        @MeasurementSortHandler.MeasurementSortStrategy int strategy;
         switch (item.getItemId()) {
             case R.id.fragment_jubileum_sort_alpha:
                 strategy = MeasurementSortHandler.SORT_ALPHA;
@@ -253,8 +257,7 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
         if (item.getItemId() == R.id.fragment_jubileum_action_delete) {
 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
             final MeasurementQuery measurementQuery = new MeasurementQuery(getContext());
-            measurementQuery.delete(selectionExtension.getSelectedItems().stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList()), x -> {
-            });
+            measurementQuery.delete(selectionExtension.getSelectedItems().stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList()), () -> {});
             mode.finish();
         }
         return true;

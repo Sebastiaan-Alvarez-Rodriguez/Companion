@@ -315,7 +315,7 @@ public class CactusJubileumActivity extends AppCompatActivity {
                 break;
             case R.id.menu_context_jubileum_delete:
                 MeasurementQuery query = new MeasurementQuery(this);
-                query.delete(clicked.getMeasurement(), v -> {});
+                query.delete(clicked.getMeasurement(), () -> {});
                 break;
         }
         return super.onContextItemSelected(item);

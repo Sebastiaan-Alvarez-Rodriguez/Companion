@@ -229,7 +229,7 @@ public class JubileumActivity extends AppCompatActivity implements ActionMode.Ca
         if (item.getItemId() == R.id.fragment_jubileum_action_delete) {
 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
             final MeasurementQuery measurementQuery = new MeasurementQuery(this);
-            measurementQuery.delete(selectionExtension.getSelectedItems().stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList()), x -> {
+            measurementQuery.delete(selectionExtension.getSelectedItems().stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList()), () -> {
             });
             mode.finish();
         }

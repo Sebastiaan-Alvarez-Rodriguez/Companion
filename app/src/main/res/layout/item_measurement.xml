@@ -11,32 +11,32 @@
         android:id="@+id/item_measurement_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="Days"
         android:textSize="32sp"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintEnd_toStartOf="@+id/item_measurement_equality"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Days" />
 
     <TextView
         android:id="@+id/item_measurement_equality"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="1 Day ="
         android:textSize="22sp"
+        android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/item_measurement_name"
+        app:layout_constraintEnd_toStartOf="@+id/item_measurement_definition"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="32dp"/>
+        tools:text="1 Day =" />
 
     <TextView
         android:id="@+id/item_measurement_definition"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        tools:text="2 thingies"
+        android:gravity="end"
         android:textSize="22sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/item_measurement_equality"
         app:layout_constraintTop_toTopOf="parent"
-        android:gravity="end"/>
+        tools:text="2 thingies" />
 </androidx.constraintlayout.widget.ConstraintLayout>

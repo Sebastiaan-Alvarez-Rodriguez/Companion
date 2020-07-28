@@ -46,13 +46,24 @@ public abstract class DAOMeasurement {
     public abstract Measurement getBySingular(String nameSingular);
 
     @Query("SELECT * FROM Measurement WHERE namePlural = :namePlural")
-        public abstract Measurement getByPlural(String namePlural);
+    public abstract Measurement getByPlural(String namePlural);
 
     @Query("SELECT * FROM Measurement WHERE nameSingular = :nameSingular OR namePlural = :namePlural")
     public abstract Measurement getBySingularOrPlural(String nameSingular, String namePlural);
 
+    @Transaction
+    public MeasurementWithParentNames getBySingularOrPluralNamed(String nameSingular, String namePlural) {
+        @Nullable Measurement found = getBySingularOrPlural(nameSingular, namePlural);
+        if (found == null)
+            return null;
+        return findByIDNamed(found.getMeasurementID());
+    }
+
     @Query("SELECT * FROM Measurement WHERE measurementID = :id")
     public abstract Measurement findByID(long id);
+
+    @Query("SELECT m1.*, m2.nameSingular AS parentSingular, m2.namePlural AS parentPlural FROM Measurement m1 LEFT JOIN Measurement m2 ON m1.parentID = m2.measurementID WHERE m1.measurementID = :id")
+    public abstract MeasurementWithParentNames findByIDNamed(long id);
 
     @Query("SELECT * FROM Measurement WHERE parentID = :id")
     public abstract List<Measurement> findChildren(long id);

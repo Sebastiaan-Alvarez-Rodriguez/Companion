@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.room.Embedded;
 
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.util.MeasurementUtil;
 
 /**
  * Container to fetch a measurement with the singular and plural name of its parent, allowing livedata to trigger updates on parent name change
@@ -11,8 +12,16 @@ import com.python.companion.db.entity.Measurement;
 public class MeasurementWithParentNames {
     @Embedded
     public Measurement measurement;
-//    @ColumnInfo(name = "nameSingular")
+
     public @Nullable String parentSingular;
-//    @ColumnInfo(name = "namePlural")
     public @Nullable String parentPlural;
+
+    /** Fills missing information about parent singular or plural names */
+    public void fill() {
+        if (measurement != null && (parentSingular == null || parentPlural == null)) {
+            long id = measurement.getParentID();
+            this.parentSingular = MeasurementUtil.IDtoName(id, 1);
+            this.parentPlural = MeasurementUtil.IDtoName(id, 2);
+        }
+    }
 }
