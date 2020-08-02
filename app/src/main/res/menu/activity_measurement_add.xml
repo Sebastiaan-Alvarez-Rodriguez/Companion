@@ -4,7 +4,7 @@
     <item
         android:id="@+id/menu_measurement_add_save"
         android:icon="@drawable/ic_menu_save"
-        app:iconTint="@color/colorWindowBackground"
+        app:iconTint="@android:color/white"
         app:iconTintMode="src_in"
         android:title="save"
         app:showAsAction="always" />

@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
 import com.python.companion.util.genericinterfaces.ErrorListener;
 import com.python.companion.util.genericinterfaces.ResultListener;
 
@@ -124,17 +125,17 @@ public class MeasurementUtil {
         if (dayBased.size() > 0) {
             Measurement one = dayBased.get(dayBased.size() - 1);
             dayBased.remove(dayBased.size() - 1);
-            dayJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, dayBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.DAYS);
+            dayJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, dayBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.DAYS, false);
         }
         if (monthBased.size() > 0) {
             Measurement one = monthBased.get(monthBased.size() - 1);
             monthBased.remove(monthBased.size() - 1);
-            monthJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, monthBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.MONTHS);
+            monthJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, monthBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.MONTHS, false);
         }
         if (yearBased.size() > 0) {
             Measurement one = yearBased.get(yearBased.size() - 1);
             yearBased.remove(yearBased.size() - 1);
-            yearJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, yearBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.YEARS);
+            yearJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, yearBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.YEARS, false);
         }
 
         Measurement largest = unit;
@@ -162,17 +163,30 @@ public class MeasurementUtil {
     }
 
     /**
-     * @return An <code>ItemAdapter</code> containing default measurements: Days, Months, Years, as defined by {@link ChronoUnit}
+     * @return <code>List</code> containing default measurements: Days, Months, Years, as defined by {@link ChronoUnit}
      */
     public static List<Measurement> getDefaultMeasurements() {
         ChronoUnit[] regulars = {ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
         String[] singulars = {"Day", "Month", "Year"};
         ArrayList<Measurement> list = new ArrayList<>(3);
         for (int x = 0; x < regulars.length; ++x)
-            list.add(new Measurement(ChronoUnitToID(regulars[x]), singulars[x], regulars[x].toString(), regulars[x].getDuration(), 1, 1, -1, regulars[x]));
+            list.add(new Measurement(ChronoUnitToID(regulars[x]), singulars[x], regulars[x].toString(), regulars[x].getDuration(), 1, 1, ChronoUnitToID(regulars[x]), regulars[x], true));
         return list;
     }
 
+    /**
+     * @return <code>List</code> containing default measurements: Days, Months, Years, as defined by {@link ChronoUnit}, with their own names as parent names
+     */
+    public static List<MeasurementWithParentNames> getDefaultMeasurementsNamed() {
+        ChronoUnit[] regulars = {ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
+        String[] singulars = {"Day", "Month", "Year"};
+        ArrayList<MeasurementWithParentNames> list = new ArrayList<>(3);
+        for (int x = 0; x < regulars.length; ++x)
+            list.add(new MeasurementWithParentNames(new Measurement(ChronoUnitToID(regulars[x]), singulars[x], regulars[x].toString(), regulars[x].getDuration(), 1, 1, ChronoUnitToID(regulars[x]), regulars[x], true), singulars[x], regulars[x].toString()));
+        return list;
+    }
+
+    /** Returns <code>true</code> if the given measurement ID belongs to a default type (e.g. DAYS), otherwise <code>false</code> */
     public static boolean isDefault(long id) {
         return id >=-3 && id <= -1;
     }
@@ -197,5 +211,18 @@ public class MeasurementUtil {
                 return -3;
         }
         throw new RuntimeException("Unsupported ChronoUnit ("+unit.toString()+")");
+    }
+
+
+    /** Returns suffix type for the "number'th" number */
+    public static String getDayOfMonthSuffix(int n) {
+        if (n >= 11 && n <= 13)
+            return "th";
+        switch (n % 10) {
+            case 1:  return "st";
+            case 2:  return "nd";
+            case 3:  return "rd";
+            default: return "th";
+        }
     }
 }

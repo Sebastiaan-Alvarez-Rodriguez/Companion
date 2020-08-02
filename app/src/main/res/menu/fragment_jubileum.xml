@@ -5,7 +5,7 @@
         android:id="@+id/fragment_jubileum_search"
         android:title="Search"
         android:icon="@drawable/ic_menu_search"
-        app:iconTint="@color/colorWindowBackground"
+        app:iconTint="@android:color/white"
         app:iconTintMode="src_in"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
@@ -13,7 +13,7 @@
         android:id="@+id/fragment_jubileum_sort"
         android:title="Sort"
         android:icon="@drawable/ic_menu_sort"
-        app:iconTint="@color/colorWindowBackground"
+        app:iconTint="@android:color/white"
         app:iconTintMode="src_in"
         app:showAsAction="always">
         <menu>

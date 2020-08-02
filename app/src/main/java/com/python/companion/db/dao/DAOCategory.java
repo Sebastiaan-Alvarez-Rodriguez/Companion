@@ -16,12 +16,16 @@ import java.util.List;
 public interface DAOCategory {
     @Insert
     void insert(Category... categories);
+
     @Query("UPDATE Category SET categoryColor = :categoryColor WHERE categoryName = :categoryName")
     void update(String categoryName, @ColorInt int categoryColor);
+
     @Query("UPDATE Category SET categoryName = :categoryName, categoryColor = :categoryColor WHERE categoryName = :prevName")
     void update(String prevName, String categoryName, @ColorInt int categoryColor);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void upsert(Category... categories);
+
     @Delete
     void delete(Category... categories);
 

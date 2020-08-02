@@ -21,15 +21,33 @@ public abstract class DAOMeasurement {
     @Insert
     public abstract void insert(Measurement... measurements);
 
-    @Delete
-    protected abstract void delete(Measurement... measurements);
-
     /**
      * Updating is protected, because inheritance trees must be modified in a specific way before updates can be allowed
      * Use {@link #updateInherit(Measurement, boolean, boolean, boolean)} to update a measurement, while guaranteeing structural tree integrity
      */
     @Update
     protected abstract void update(Measurement... measurements);
+
+    @Transaction
+    public void upsert(Measurement... measurements) {
+        for (Measurement m : measurements) {
+            @Nullable Measurement existing = getBySingularOrPlural(m.getNameSingular(), m.getNamePlural());
+            if (existing == null) { // There currently exists no conflicting note in the database
+                insert(m);
+            } else { // A conflicting item exists, update it and any children
+                updateInherit(m, existing);
+            }
+        }
+    }
+    /**
+     * Deleting is protected, because inheritance trees must be modified in a specific way before deletion can be allowed
+     * Use {@link #deleteInherit(Measurement)} to delete a measurement, while guaranteeing structural tree integrity
+     */
+    @Delete
+    protected abstract void delete(Measurement... measurements);
+
+    @Query("SELECT * FROM Measurement")
+    public abstract List<Measurement> getAll();
 
     @Query("SELECT * FROM Measurement")
     public abstract LiveData<List<Measurement>> getAllLive();
@@ -69,11 +87,12 @@ public abstract class DAOMeasurement {
     public abstract List<Measurement> findChildren(long id);
 
 
-    /** Shorthand function for {@link #updateInherit(Measurement, boolean, boolean, boolean)}, determining required checks/changes on-the-fly */
+    /** Shorthand function for {@link #updateInherit(Measurement, boolean, boolean, boolean)}, maintaining tree structure integrity */
     public boolean updateInherit(@NonNull Measurement cur, @NonNull Measurement old) {
-        boolean checkRecursion = (cur.getParentID() != old.getParentID());// Does this matter? -> yes, watch out for recursion
+        cur.setMeasurementID(old.getMeasurementID()); // Needed for the update-call to actually update
+        boolean checkRecursion = (cur.getParentID() != old.getParentID());
         boolean changeCornerstone = (cur.getCornerstoneType() != old.getCornerstoneType());// Change cornerstonetype of children, too (and their duration)
-        boolean changeAmount = (cur.getAmount() != old.getAmount());// handle amount change (and duration has to change too, and precomputedamount in children too)
+        boolean changeAmount = (cur.getAmount() != old.getAmount());// handle amount change, and precomputedamount in self and children (and durations)
         return updateInherit(cur, checkRecursion, changeCornerstone, changeAmount);
     }
 
@@ -86,7 +105,7 @@ public abstract class DAOMeasurement {
      * @return {@code true} when update occurred, {@code false} otherwise (e.g. when user tries to make measurement depend on itself
      */
     @Transaction
-    public boolean updateInherit(@NonNull Measurement cur, boolean checkRecursion, boolean changeCornerstone, boolean changeAmount) {
+    protected boolean updateInherit(@NonNull Measurement cur, boolean checkRecursion, boolean changeCornerstone, boolean changeAmount) {
         if (checkRecursion) {
             if (cur.getMeasurementID() == cur.getParentID()) // Direct recursion
                 return false;

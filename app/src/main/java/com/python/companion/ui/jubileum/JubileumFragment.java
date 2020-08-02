@@ -1,11 +1,11 @@
 package com.python.companion.ui.jubileum;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,32 +39,38 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.backend.measurement.MeasurementRepository;
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
+import com.python.companion.db.repository.MeasurementRepository;
 import com.python.companion.ui.MainActivity;
 import com.python.companion.ui.jubileum.activity.JubileumEditActivity;
-import com.python.companion.ui.jubileum.adapter.MeasurementSortHandler;
-import com.python.companion.ui.jubileum.adapter.item.MeasurementItem;
+import com.python.companion.ui.jubileum.activity.JubileumSelectActivity;
+import com.python.companion.ui.jubileum.activity.JubileumViewActivity;
+import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorActivity;
+import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity;
+import com.python.companion.ui.jubileum.adapter.JubileumSortHandler;
+import com.python.companion.ui.jubileum.adapter.item.JubileumItem;
 import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
+import com.python.companion.util.MeasurementUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class JubileumFragment extends Fragment implements ActionMode.Callback {
+    private int REQ_SELECT = 1;
 
     private MeasurementViewModel jubileumViewModel;
 
     private RecyclerView list;
     private SearchView searchView;
-    private FloatingActionButton fab;
+    private FloatingActionButton calculatorSharedButton, calculatorButton, addButton;
 
-    private ItemAdapter<MeasurementItem> itemAdapter;
-    private FastAdapter<MeasurementItem> fastAdapter;
-    private SelectExtension<MeasurementItem> selectionExtension;
-    private ActionModeHelper<MeasurementItem> actionModeHelper;
-    private MeasurementSortHandler sortHandler;
+    private ItemAdapter<JubileumItem> itemAdapter;
+    private FastAdapter<JubileumItem> fastAdapter;
+    private SelectExtension<JubileumItem> selectionExtension;
+    private ActionModeHelper<JubileumItem> actionModeHelper;
+    private JubileumSortHandler sortHandler;
 
 
     @Override
@@ -77,35 +83,47 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_list, container, false);
+        return inflater.inflate(R.layout.fragment_jubileum, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         findViews(view);
-        prepareAdd();
+        prepareButtons();
         prepareList(view);
     }
 
     private void findViews(View view) {
-        list = view.findViewById(R.id.fragment_list_list);
-        fab = view.findViewById(R.id.fragment_list_add);
+        list = view.findViewById(R.id.fragment_jubileum_list);
+        addButton = view.findViewById(R.id.fragment_jubileum_add);
+        calculatorButton = view.findViewById(R.id.fragment_jubileum_jcalculator);
+        calculatorSharedButton = view.findViewById(R.id.fragment_jubileum_jcalculator_shared);
     }
 
-    private void prepareAdd() {
-        fab.setOnClickListener(v -> {
+    private void prepareButtons() {
+        addButton.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), JubileumEditActivity.class);
             startActivity(intent);
+        });
+
+        calculatorButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), JubileumCalculatorActivity.class);
+            startActivity(intent);
+        });
+
+        calculatorSharedButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), JubileumSelectActivity.class);
+            startActivityForResult(intent, REQ_SELECT);
         });
     }
 
     private void prepareList(View view) {
-        ComparableItemListImpl<MeasurementItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
+        ComparableItemListImpl<JubileumItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
 
         itemAdapter = new ItemAdapter<>(itemList);
-        sortHandler = new MeasurementSortHandler.Builder()
-                .setStrategy(view.getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", MeasurementSortHandler.SORT_ALPHA))
+        sortHandler = new JubileumSortHandler.Builder()
+                .setStrategy(view.getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", JubileumSortHandler.SORT_ALPHA))
                 .setItemList(itemList)
                 .build();
         fastAdapter = FastAdapter.with(itemAdapter);
@@ -127,9 +145,11 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
 
         fastAdapter.setOnClickListener((view1, measurementItemIAdapter, measurementItem, position) -> {
             if (!actionModeHelper.isActive()) {
-                //TODO: Do something on a regular click
-                Measurement m = measurementItem.getMeasurement();
-                Log.e("JubileumFragment", "Measurement "+m.getNameSingular()+"(id "+m.getMeasurementID()+"): parent "+m.getParentID()+", nameSingular "+measurementItem.getParentSingular());
+                Intent intent = new Intent(getContext(), JubileumViewActivity.class);
+                intent.putExtra("measurement", new MeasurementContainer(measurementItem.getMeasurement()));
+                intent.putExtra("parentSingular", measurementItem.getParentSingular());
+                intent.putExtra("parentPlural", measurementItem.getParentPlural());
+                startActivity(intent);
             } else {
                 fastAdapter.notifyItemChanged(position);
             }
@@ -150,15 +170,17 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
 
     private void setListUpdates() {
         jubileumViewModel.getMeasurements().observe(getViewLifecycleOwner(), measurements -> {
-            List<MeasurementItem> newlist = measurements.stream().map(MeasurementItem::new).collect(Collectors.toList());
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<MeasurementItem>() {
+            List<JubileumItem> newlist = measurements.parallelStream().map(JubileumItem::new).collect(Collectors.toList());
+            newlist.addAll(MeasurementUtil.getDefaultMeasurementsNamed().parallelStream().map(JubileumItem::new).collect(Collectors.toList()));
+
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<JubileumItem>() {
                 @Override
-                public boolean areItemsTheSame(MeasurementItem oldItem, MeasurementItem newItem) {
+                public boolean areItemsTheSame(JubileumItem oldItem, JubileumItem newItem) {
                     return oldItem.getMeasurement().getMeasurementID() == newItem.getMeasurement().getMeasurementID();
                 }
 
                 @Override
-                public boolean areContentsTheSame(MeasurementItem oldItem, MeasurementItem newItem) {
+                public boolean areContentsTheSame(JubileumItem oldItem, JubileumItem newItem) {
                     Measurement old = oldItem.getMeasurement(), cur = newItem.getMeasurement();
                     return old.getNameSingular().equals(cur.getNameSingular())
                             && old.getNamePlural().equals(cur.getNamePlural())
@@ -170,7 +192,7 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
 
                 @Nullable
                 @Override
-                public Object getChangePayload(MeasurementItem oldItem, int oldPosition, MeasurementItem newItem, int newPosition) {
+                public Object getChangePayload(JubileumItem oldItem, int oldPosition, JubileumItem newItem, int newPosition) {
                     return null;
                 }
             });
@@ -183,9 +205,9 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
             final CharSequence lsequence = sequence.toString().toLowerCase();
             return m.getNameSingular().toLowerCase().contains(lsequence) || m.getNamePlural().toLowerCase().contains(lsequence);
         });
-        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<MeasurementItem>() {
+        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<JubileumItem>() {
             @Override
-            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends MeasurementItem> list) {}
+            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends JubileumItem> list) {}
 
             @Override
             public void onReset() {}
@@ -213,7 +235,7 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
         searchView = (SearchView) menu.findItem(R.id.fragment_jubileum_search).getActionView();
         setListFiltering();
         @IdRes int id;
-        if (getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("jubileumSort", NoteSortHandler.SORT_DATE) == MeasurementSortHandler.SORT_ALPHA)
+        if (getContext().getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("jubileumSort", NoteSortHandler.SORT_DATE) == JubileumSortHandler.SORT_ALPHA)
             id = R.id.fragment_jubileum_sort_alpha;
         else
             id = R.id.fragment_jubileum_sort_duration;
@@ -224,13 +246,13 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        @MeasurementSortHandler.MeasurementSortStrategy int strategy;
+        @JubileumSortHandler.MeasurementSortStrategy int strategy;
         switch (item.getItemId()) {
             case R.id.fragment_jubileum_sort_alpha:
-                strategy = MeasurementSortHandler.SORT_ALPHA;
+                strategy = JubileumSortHandler.SORT_ALPHA;
                 break;
             case R.id.fragment_jubileum_sort_duration:
-                strategy = MeasurementSortHandler.SORT_DURATION;
+                strategy = JubileumSortHandler.SORT_DURATION;
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -257,7 +279,7 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
         if (item.getItemId() == R.id.fragment_jubileum_action_delete) {
 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
             final MeasurementQuery measurementQuery = new MeasurementQuery(getContext());
-            measurementQuery.delete(selectionExtension.getSelectedItems().stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList()), () -> {});
+            measurementQuery.delete(getContext(), selectionExtension.getSelectedItems().stream().map(JubileumItem::getMeasurement).collect(Collectors.toList()), () -> {});
             mode.finish();
         }
         return true;
@@ -265,6 +287,17 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
 
     @Override
     public void onDestroyActionMode(ActionMode mode) {
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == REQ_SELECT && resultCode == Activity.RESULT_OK && data != null) {
+            Intent intent = new Intent(getContext(), JubileumCalculatorSharedActivity.class);
+            intent.putParcelableArrayListExtra("chosen", data.getParcelableArrayListExtra("chosen"));
+            startActivity(intent);
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     public static class MeasurementViewModel extends AndroidViewModel {

@@ -1,10 +1,6 @@
 package com.python.companion.ui.jubileum.activity;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,14 +28,13 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.ui.cactus.activity.CactusViewModel;
 import com.python.companion.ui.jubileum.MeasurementContainer;
-import com.python.companion.ui.jubileum.adapter.item.MeasurementItemSimple;
+import com.python.companion.ui.jubileum.adapter.item.JubileumItemSimple;
+import com.python.companion.ui.jubileum.viewmodel.JubileumViewModel;
 import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,17 +44,17 @@ public class JubileumSelectActivity extends AppCompatActivity {
     private RecyclerView list;
     private SearchView searchView;
 
-    private ItemAdapter<MeasurementItemSimple> itemAdapter;
-    private FastAdapter<MeasurementItemSimple> fastAdapter;
-    private SelectExtension<MeasurementItemSimple> selectionExtension;
+    private ItemAdapter<JubileumItemSimple> itemAdapter;
+    private FastAdapter<JubileumItemSimple> fastAdapter;
+    private SelectExtension<JubileumItemSimple> selectionExtension;
 
-    private CactusViewModel viewModel;
+    private JubileumViewModel viewModel;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_measurement_select);
-        viewModel = new ViewModelProvider(this).get(CactusViewModel.class);
+        viewModel = new ViewModelProvider(this).get(JubileumViewModel.class);
         findViews();
         prepareList();
         setupActionBar();
@@ -73,7 +68,7 @@ public class JubileumSelectActivity extends AppCompatActivity {
 
 
     private void prepareList() {
-        ComparableItemListImpl<MeasurementItemSimple> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
+        ComparableItemListImpl<JubileumItemSimple> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
         itemAdapter = new ItemAdapter<>(itemList);
         fastAdapter = FastAdapter.with(itemAdapter);
 
@@ -97,29 +92,26 @@ public class JubileumSelectActivity extends AppCompatActivity {
     }
 
     private void setListUpdates() {
-        SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-        LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
-
-        List<MeasurementItemSimple> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItemSimple::new).collect(Collectors.toList());
+        List<JubileumItemSimple> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(JubileumItemSimple::new).collect(Collectors.toList());
 
         viewModel.getMeasurements().observe(this, measurements -> {
-            List<MeasurementItemSimple> newlist = measurements.stream().sorted((o1, o2) -> o1.getNamePlural().compareTo(o2.getNamePlural())).map(MeasurementItemSimple::new).collect(Collectors.toList());
+            List<JubileumItemSimple> newlist = measurements.stream().sorted((o1, o2) -> o1.getNamePlural().compareTo(o2.getNamePlural())).map(JubileumItemSimple::new).collect(Collectors.toList());
 
             newlist.addAll(defaultList);
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<MeasurementItemSimple>() {
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<JubileumItemSimple>() {
                 @Override
-                public boolean areItemsTheSame(MeasurementItemSimple oldItem, MeasurementItemSimple newItem) {
+                public boolean areItemsTheSame(JubileumItemSimple oldItem, JubileumItemSimple newItem) {
                     return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());
                 }
 
                 @Override
-                public boolean areContentsTheSame(MeasurementItemSimple oldItem, MeasurementItemSimple newItem) {
+                public boolean areContentsTheSame(JubileumItemSimple oldItem, JubileumItemSimple newItem) {
                     return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());
                 }
 
                 @NotNull
                 @Override
-                public Object getChangePayload(MeasurementItemSimple oldItem, int oldPosition, MeasurementItemSimple newItem, int newPosition) {
+                public Object getChangePayload(JubileumItemSimple oldItem, int oldPosition, JubileumItemSimple newItem, int newPosition) {
                     return newItem.getMeasurement().getNamePlural();
                 }
             });
@@ -128,9 +120,9 @@ public class JubileumSelectActivity extends AppCompatActivity {
 
     private void setListFiltering() {
         itemAdapter.getItemFilter().setFilterPredicate((MeasurementItem, charSequence) -> MeasurementItem.getMeasurement().getNameSingular().toLowerCase().contains(charSequence.toString().toLowerCase()));
-        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<MeasurementItemSimple>() {
+        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<JubileumItemSimple>() {
             @Override
-            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends MeasurementItemSimple> list) {
+            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends JubileumItemSimple> list) {
             }
 
             @Override
@@ -159,14 +151,8 @@ public class JubileumSelectActivity extends AppCompatActivity {
 
         ActionBar actionbar = getSupportActionBar();
 
-        if (actionbar != null) {
+        if (actionbar != null)
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(getResources().getColor(R.color.colorWindowBackground, null), PorterDuff.Mode.SRC_IN);
-                myToolbar.setNavigationIcon(icon);
-            }
-        }
     }
 
     @Override

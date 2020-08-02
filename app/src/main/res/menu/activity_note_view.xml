@@ -6,31 +6,24 @@
         android:id="@+id/menu_note_view_search"
         android:title="Search"
         android:icon="@drawable/ic_menu_search"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="always|collapseActionView" />
+        app:showAsAction="always|collapseActionView"
+        android:theme="@style/Toolbar"/>
 
     <item
         android:id="@+id/menu_note_view_edit_category"
         android:icon="@drawable/ic_menu_category"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="Edit category"
         app:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/menu_note_view_favorite"
         android:icon="@drawable/ic_cactus_outline"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="Favorite"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/menu_note_view_type"
         android:icon="@drawable/ic_menu_note"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="Type"
         app:showAsAction="ifRoom">
 
@@ -39,22 +32,16 @@
                 <item
                     android:id="@+id/menu_note_view_type_normal"
                     android:icon="@drawable/ic_menu_note"
-                    app:iconTint="@color/colorWindowBackground"
-                    app:iconTintMode="src_in"
                     android:title="Text"
                     app:showAsAction="always"/>
                 <item
                     android:id="@+id/menu_note_view_type_markdown"
                     android:icon="@drawable/ic_menu_md"
-                    app:iconTint="@color/colorWindowBackground"
-                    app:iconTintMode="src_in"
                     android:title="Markdown"
                     app:showAsAction="always"/>
                 <item
                     android:id="@+id/menu_note_view_type_latex"
                     android:icon="@drawable/ic_menu_latex"
-                    app:iconTint="@color/colorWindowBackground"
-                    app:iconTintMode="src_in"
                     android:title="Latex"
                     app:showAsAction="always"/>
             </group>
@@ -63,17 +50,13 @@
 
     <item
         android:id="@+id/menu_note_view_lock"
-        android:icon="@drawable/ic_lock_outline"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
+        android:icon="@drawable/ic_lock_full"
         android:title="Security"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="always"/>
 
     <item
         android:id="@+id/menu_note_view_delete"
         android:icon="@drawable/ic_menu_delete"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="Delete"
         app:showAsAction="never"/>
 </menu>

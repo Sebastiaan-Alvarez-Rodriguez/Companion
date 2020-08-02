@@ -18,21 +18,27 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.notes.note.activity.edit.NoteEditActivity" />
+
+<!--        Note related activities -->
         <activity android:name=".ui.notes.note.activity.view.NoteViewActivity" />
+        <activity android:name=".ui.notes.note.activity.edit.NoteEditActivity" />
         <activity android:name=".ui.notes.note.activity.view.NotePreviewActivity" />
         <activity android:name=".ui.notes.category.activity.CategoryEditActivity" />
+
+<!--        Settings related activities -->
         <activity android:name=".ui.general.settings.SettingsActivity" />
         <activity android:name=".ui.general.settings.port.ImportActivity" />
         <activity android:name=".ui.general.settings.port.ExportActivity" />
+
+<!--        Jubileum related activities -->
+        <activity android:name=".ui.jubileum.activity.JubileumViewActivity" />
         <activity android:name=".ui.jubileum.activity.JubileumEditActivity" />
-        <activity android:name=".ui.cactus.activity.CactusCalculatorActivity" />
+        <activity android:name=".ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity" />
         <activity android:name=".ui.jubileum.activity.JubileumSelectActivity" />
-        <activity android:name=".ui.cactus.activity.CactusJubileumActivity" />
+        <activity android:name=".ui.jubileum.activity.calculate.JubileumCalculatorActivity" />
     </application>
 
 </manifest>

@@ -14,8 +14,9 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
+import com.python.companion.notification.Platform;
 import com.python.companion.security.Guard;
-import com.python.companion.ui.cactus.dialog.TogetherDialog;
+import com.python.companion.ui.jubileum.dialog.TogetherDialog;
 import com.python.companion.ui.general.settings.SettingsActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
                     .setFinishListener(() -> Snackbar.make(drawer, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getSupportFragmentManager(), null);
         }
+        Platform.getPlatform(this).registerJubileaChannels();
     }
 
     @Override

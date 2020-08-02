@@ -109,6 +109,7 @@ public class NoteQuery {
 
     public void delete(Collection<Note> notes, ResultListener<Void> listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
+
             daoNote.delete(notes.toArray(new Note[]{}));
             listener.onResult(null);
         });

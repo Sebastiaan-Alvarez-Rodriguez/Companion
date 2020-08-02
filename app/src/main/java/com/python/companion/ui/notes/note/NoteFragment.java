@@ -39,10 +39,10 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.backend.note.NoteRepository;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
+import com.python.companion.db.repository.NoteRepository;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.MainActivity;
 import com.python.companion.ui.general.settings.SettingsActivity;
@@ -141,6 +141,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 if (n.isSecure()) {
                     NoteConverter.Decrypter.from(getChildFragmentManager(), getContext())
                             .setOnFinishListener(note -> {
+                                n.setSecure(true);
                                 intent.putExtra("note", new NoteContainer(n));
                                 intent.putExtra("plaintext", note.getContent());
                                 startActivity(intent);
@@ -303,8 +304,7 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             case R.id.menu_fragment_note_action_delete:
                 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
                 final NoteQuery noteQuery = new NoteQuery(getContext());
-                noteQuery.delete(selectionExtension.getSelectedItems().stream().map(NoteItem::getNote).collect(Collectors.toList()), x -> {
-                });
+                noteQuery.delete(selectionExtension.getSelectedItems().stream().map(NoteItem::getNote).collect(Collectors.toList()), x -> {});
                 mode.finish();
                 break;
             case R.id.menu_fragment_note_action_update_category:

@@ -6,7 +6,7 @@
         android:title="search"
         android:id="@+id/activity_measurement_select_search"
         android:icon="@drawable/ic_menu_search"
-        app:iconTint="@color/colorWindowBackground"
+        app:iconTint="@android:color/white"
         app:iconTintMode="src_in"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView"/>

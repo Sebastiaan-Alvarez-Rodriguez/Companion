@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
+import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Measurement;
@@ -23,7 +24,9 @@ import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 
@@ -126,11 +129,33 @@ public class Importer implements EntityVisitor {
      */
     @Override
     public void visit(@NonNull Measurement measurement) {
-//        try {
-// TODO: Create
-//        } catch (IOException e) {
-//            Log.e("Importer", "Big big error (measurement): ", e);
-//        }
+        try {
+            long id = unpacker.unpackLong();
+            String singular = unpacker.unpackString();
+            String plural = unpacker.unpackString();
+            Duration duration = Duration.parse(unpacker.unpackString());
+            long amount = unpacker.unpackLong();
+            long precomputedamount = unpacker.unpackLong();
+            long parentID = unpacker.unpackLong();
+            ChronoUnit cornerstoneType = ChronoUnit.valueOf(unpacker.unpackString());
+//            boolean hasNotifications = unpacker.unpackBoolean(); TODO: Uncomment this line when ready
+
+            measurement.setMeasurementID(id);
+            measurement.setNameSingular(singular);
+            measurement.setNamePlural(plural);
+            measurement.setDuration(duration);
+            measurement.setAmount(amount);
+            measurement.setPrecomputedamount(precomputedamount);
+            measurement.setParentID(parentID);
+            measurement.setCornerstoneType(cornerstoneType);
+//            measurement.setHasNotifications(hasNotifications); TODO: Uncomment this line when ready
+            if (migrationInterface != null)
+                ThreadUtil.runOnUIThread(migrationInterface::onMeasurementProcessed);
+        } catch (IOException e) {
+            Log.e("Importer", "Big big error (measurement): ", e);
+            if (migrationInterface != null)
+                ThreadUtil.runOnUIThread(migrationInterface::onMeasurementFailed);
+        }
     }
 
     protected void jnportCategories(long amount) {
@@ -221,7 +246,18 @@ public class Importer implements EntityVisitor {
     }
 
     protected void jnportMeasurements(long amount) {
-        //TODO: Make this thing, along with exporting measurements
+        if (migrationInterface != null)
+            ThreadUtil.runOnUIThread(migrationInterface::onStartMeasurements);
+
+        DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
+        for (int x = 0; x < amount; ++x) {
+            Measurement m = Measurement.template();
+            visit(m);
+            daoMeasurement.upsert(m);
+        }
+
+        if (migrationInterface != null)
+            ThreadUtil.runOnUIThread(migrationInterface::onFinishMeasurements);
     }
 
 

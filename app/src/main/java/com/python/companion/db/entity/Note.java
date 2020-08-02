@@ -61,6 +61,10 @@ public class Note implements EntityVisitor.Visitable {
         favorite = false;
     }
 
+    /**
+     * Returns a basic note template, with no fields filled with something intelligent.
+     * Use this only if you will fill in all fields yourself at a later time
+     */
     public static Note template() {
         return new Note("", "");
     }

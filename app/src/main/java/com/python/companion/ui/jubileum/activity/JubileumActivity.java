@@ -3,9 +3,6 @@ package com.python.companion.ui.jubileum.activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BlendMode;
-import android.graphics.BlendModeColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,13 +34,13 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.backend.measurement.MeasurementRepository;
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
+import com.python.companion.db.repository.MeasurementRepository;
 import com.python.companion.ui.jubileum.MeasurementContainer;
-import com.python.companion.ui.jubileum.adapter.MeasurementSortHandler;
-import com.python.companion.ui.jubileum.adapter.item.MeasurementItem;
+import com.python.companion.ui.jubileum.adapter.JubileumSortHandler;
+import com.python.companion.ui.jubileum.adapter.item.JubileumItem;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,11 +51,11 @@ public class JubileumActivity extends AppCompatActivity implements ActionMode.Ca
     private SearchView searchView;
     private FloatingActionButton fab;
     
-    private ItemAdapter<MeasurementItem> itemAdapter;
-    private FastAdapter<MeasurementItem> fastAdapter;
-    private SelectExtension<MeasurementItem> selectionExtension;
-    private ActionModeHelper<MeasurementItem> actionModeHelper;
-    private MeasurementSortHandler sortHandler;
+    private ItemAdapter<JubileumItem> itemAdapter;
+    private FastAdapter<JubileumItem> fastAdapter;
+    private SelectExtension<JubileumItem> selectionExtension;
+    private ActionModeHelper<JubileumItem> actionModeHelper;
+    private JubileumSortHandler sortHandler;
 
     private MeasurementViewModel measurementViewModel;
 
@@ -91,21 +88,16 @@ public class JubileumActivity extends AppCompatActivity implements ActionMode.Ca
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
-                myToolbar.setNavigationIcon(icon);
-            }
-            actionbar.setTitle("Measurements");
+            actionbar.setTitle("Jubilea");
         }
     }
 
     private void prepareList() {
-        ComparableItemListImpl<MeasurementItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
+        ComparableItemListImpl<JubileumItem> itemList = new ComparableItemListImpl<>((o1, o2) -> 0);
 
         itemAdapter = new ItemAdapter<>(itemList);
-        sortHandler = new MeasurementSortHandler.Builder()
-                .setStrategy(getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", MeasurementSortHandler.SORT_ALPHA))
+        sortHandler = new JubileumSortHandler.Builder()
+                .setStrategy(getSharedPreferences(getString(R.string.measurement_preferences), Context.MODE_PRIVATE).getInt("MeasurementSort", JubileumSortHandler.SORT_ALPHA))
                 .setItemList(itemList)
                 .build();
         fastAdapter = FastAdapter.with(itemAdapter);
@@ -150,15 +142,15 @@ public class JubileumActivity extends AppCompatActivity implements ActionMode.Ca
 
     private void setListUpdates() {
         measurementViewModel.getMeasurements().observe(this, measurements -> {
-            List<MeasurementItem> newlist = measurements.stream().map(MeasurementItem::new).collect(Collectors.toList());
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<MeasurementItem>() {
+            List<JubileumItem> newlist = measurements.stream().map(JubileumItem::new).collect(Collectors.toList());
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<JubileumItem>() {
                 @Override
-                public boolean areItemsTheSame(MeasurementItem oldItem, MeasurementItem newItem) {
+                public boolean areItemsTheSame(JubileumItem oldItem, JubileumItem newItem) {
                     return oldItem.getMeasurement().getMeasurementID() == newItem.getMeasurement().getMeasurementID();
                 }
 
                 @Override
-                public boolean areContentsTheSame(MeasurementItem oldItem, MeasurementItem newItem) {
+                public boolean areContentsTheSame(JubileumItem oldItem, JubileumItem newItem) {
                     Measurement old = oldItem.getMeasurement(), cur = newItem.getMeasurement();
                     return old.getNameSingular().equals(cur.getNameSingular())
                             && old.getNamePlural().equals(cur.getNamePlural())
@@ -170,7 +162,7 @@ public class JubileumActivity extends AppCompatActivity implements ActionMode.Ca
 
                 @Nullable
                 @Override
-                public Object getChangePayload(MeasurementItem oldItem, int oldPosition, MeasurementItem newItem, int newPosition) {
+                public Object getChangePayload(JubileumItem oldItem, int oldPosition, JubileumItem newItem, int newPosition) {
                     return null;
                 }
             });
@@ -182,9 +174,9 @@ public class JubileumActivity extends AppCompatActivity implements ActionMode.Ca
             Measurement m = measurementItem.getMeasurement();
             return m.getNameSingular().toLowerCase().contains(sequence) || m.getNamePlural().toLowerCase().contains(sequence);
         });
-        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<MeasurementItem>() {
+        itemAdapter.getItemFilter().setItemFilterListener(new ItemFilterListener<JubileumItem>() {
             @Override
-            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends MeasurementItem> list) {}
+            public void itemsFiltered(@Nullable CharSequence charSequence, @Nullable List<? extends JubileumItem> list) {}
 
             @Override
             public void onReset() {}
@@ -229,8 +221,7 @@ public class JubileumActivity extends AppCompatActivity implements ActionMode.Ca
         if (item.getItemId() == R.id.fragment_jubileum_action_delete) {
 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
             final MeasurementQuery measurementQuery = new MeasurementQuery(this);
-            measurementQuery.delete(selectionExtension.getSelectedItems().stream().map(MeasurementItem::getMeasurement).collect(Collectors.toList()), () -> {
-            });
+            measurementQuery.delete(this, selectionExtension.getSelectedItems().stream().map(JubileumItem::getMeasurement).collect(Collectors.toList()), () -> {});
             mode.finish();
         }
         return true;

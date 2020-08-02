@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
+import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Measurement;
@@ -82,9 +83,23 @@ public class Exporter implements EntityVisitor {
 
     @Override
     public void visit(@NonNull Measurement measurement) {
-        //TODO: Make this, and also measurement import too
-        if (migrationInterface != null)
-            ThreadUtil.runOnUIThread(migrationInterface::onMeasurementProcessed);
+        try {
+            packer.packLong(measurement.getMeasurementID());
+            packer.packString(measurement.getNameSingular());
+            packer.packString(measurement.getNamePlural());
+            packer.packString(measurement.getDuration().toString());
+            packer.packLong(measurement.getAmount());
+            packer.packLong(measurement.getPrecomputedamount());
+            packer.packLong(measurement.getParentID());
+            packer.packString(measurement.getCornerstoneType().name());
+//            packer.packBoolean(measurement.hasNotifications()); TODO: Uncomment when ready
+            if (migrationInterface != null)
+                ThreadUtil.runOnUIThread(migrationInterface::onMeasurementProcessed);
+        } catch (IOException e) {
+            Log.e("Exporter", "Big problem (measurement): ", e);
+            if (migrationInterface != null)
+                ThreadUtil.runOnUIThread(migrationInterface::onNoteFailed);
+        }
     }
 
     protected void exportCategories() {
@@ -149,7 +164,16 @@ public class Exporter implements EntityVisitor {
     }
 
     protected void exportMeasurements() {
-        //TODO: implement
+        if (migrationInterface != null)
+            ThreadUtil.runOnUIThread(migrationInterface::onStartMeasurements);
+
+        DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
+
+        for (Measurement measurement : daoMeasurement.getAll())
+            measurement.accept(this);
+
+        if (migrationInterface != null)
+            ThreadUtil.runOnUIThread(migrationInterface::onFinishMeasurements);
     }
 
     public void export(@NonNull Uri location, boolean skipSecure) {
@@ -170,16 +194,14 @@ public class Exporter implements EntityVisitor {
                 long secureNoteAmount = skipSecure ? 0 : noteAmount - daoNote.countInsecure();
                 packer.packLong(secureNoteAmount);
 
-                //DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
-                long measurementAmount = 0;//daoMeasurement.count(); TODO: Remove when implemented import/export of measurements, and use above line
+                DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
+                long measurementAmount = daoMeasurement.count();
                 packer.packLong(measurementAmount);
 
                 if (migrationInterface != null)
                     ThreadUtil.runOnUIThread(()-> migrationInterface.onStatsAvailable(categoryAmount, noteAmount, secureNoteAmount, measurementAmount));
 
                 exportCategories();
-
-                exportMeasurements();
 
                 boolean success = exportNotes(manager, skipSecure);
 

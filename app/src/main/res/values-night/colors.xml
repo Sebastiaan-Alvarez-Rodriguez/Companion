@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#388e3c</color>
+    <color name="colorPrimaryDark">#00600f</color>
+    <color name="colorAccent">#6abf69</color>
+
+    <!--Text-->
+    <color name="colorTextPrimary">#edf2f4</color>
+    <color name="colorTextSecondary">#DEEDF2F4</color>
+    <color name="colorTextTertiary">#8AEDF2F4</color>
+    <color name="colorTextHint">#8AEDF2F4</color>
+    <color name="colorURL">@color/colorAccent</color>
+
+    <color name="colorTextPrimaryInverse">#2B2D42</color>
+    <color name="colorTextSecondaryInverse">#DE2B2D42</color>
+    <color name="colorTextTertiaryInverse">#8A2B2D42</color>
+    <color name="colorTextHintInverse">#8A2B2D42</color>
+    <color name="colorURLInverse">@color/colorPrimaryDark</color>
+
+
+
+
+    <!--Window-->
+    <color name="colorWindowBackground">#1E1E1E</color>
+    <color name="colorWindowBackgroundInverse">#edf2f4</color>
+
+    <!-- reds: #FF1654  #ef233c   #d90429-->
+    <!-- backgrounds: #2b2d42-->
+<!--    <color name="colorPrimary">#EF233C</color>-->
+<!--    <color name="colorPrimaryDark">#D90429</color>-->
+<!--    <color name="colorAccent">#FF1654</color>-->
+
+<!--    &lt;!&ndash;Text&ndash;&gt;-->
+<!--    <color name="colorTextPrimary">#2b2d42</color>-->
+<!--    <color name="colorTextSecondary">#DE2B2D42</color>-->
+<!--    <color name="colorTextTertiary">#8A2B2D42</color>-->
+<!--    <color name="colorTextHint">#8A2B2D42</color>-->
+<!--    <color name="colorURL">#D50000</color>-->
+
+<!--    <color name="colorTextPrimaryInverse">#edf2f4</color>-->
+<!--    <color name="colorTextSecondaryInverse">#DEEDF2F4</color>-->
+<!--    <color name="colorTextTertiaryInverse">#8AEDF2F4</color>-->
+<!--    <color name="colorTextHintInverse">#8AEDF2F4</color>-->
+<!--    <color name="colorURLInverse">#247ba0</color>-->
+
+
+<!--    &lt;!&ndash;Window&ndash;&gt;-->
+<!--    <color name="colorWindowBackground">#edf2f4</color>-->
+<!--    <color name="colorWindowBackgroundInverse">@android:color/black</color>-->
+
+<!--    &lt;!&ndash; reds: #FF1654  #ef233c   #d90429&ndash;&gt;-->
+<!--    &lt;!&ndash; backgrounds: #2b2d42&ndash;&gt;-->
+</resources>

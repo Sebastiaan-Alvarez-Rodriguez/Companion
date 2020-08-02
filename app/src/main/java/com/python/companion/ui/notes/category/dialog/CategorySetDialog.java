@@ -26,7 +26,7 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
-import com.python.companion.backend.category.CategoryRepository;
+import com.python.companion.db.repository.CategoryRepository;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
 import com.python.companion.ui.notes.category.adapter.CategoryItem;

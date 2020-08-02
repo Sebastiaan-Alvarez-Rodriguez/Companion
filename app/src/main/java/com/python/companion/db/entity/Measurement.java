@@ -17,12 +17,12 @@ import java.time.temporal.TemporalUnit;
  * We do this by specifying our new measurement in terms of existing measurements (no need to re-invent the idea of 'time').
  *
  * @implNote Even though Room does not support unique columns, we want singular and plural names of measurements to be unique.
- * We enforce this in code on creation of and when updating measurements.
+ * We enforce this in code when creating/updating measurements.
  */
 @Entity
 public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
     @PrimaryKey(autoGenerate = true)
-    long measurementID;
+    private long measurementID;
 
     private @NonNull String nameSingular, namePlural;
     private Duration duration;
@@ -30,6 +30,10 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
     private long amount, precomputedamount;
     private long parentID;
     private ChronoUnit cornerstoneType;
+
+    private boolean hasNotifications;
+
+    private boolean canModify;
 
     /**
      * Shorthand function to construct a Measurement, handling all inheritance
@@ -46,11 +50,12 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
                         amount,
                         amount*parent.getPrecomputedamount(),
                         parent.getMeasurementID(),
-                        parent.getCornerstoneType());
+                        parent.getCornerstoneType(),
+                false);
     }
 
 
-    public Measurement(long id, @NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType) {
+    public Measurement(long id, @NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType, boolean hasNotifications) {
         this.measurementID = id;
         this.nameSingular = nameSingular;
         this.namePlural = namePlural;
@@ -59,6 +64,7 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
         this.precomputedamount = precomputedamount;
         this.parentID = parentID;
         this.cornerstoneType = cornerstoneType;
+        this.hasNotifications = hasNotifications;
     }
 
     /**
@@ -67,7 +73,7 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
      * Prefer to use {@link #createFrom(String, String, long, Measurement)} if possible instead of this function
      * @param cornerstoneType The normalized cornerstone type this represents. e.g.: ChronoUnit.MONTHS
      */
-    public Measurement(@NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType) {
+    public Measurement(@NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType, boolean hasNotifications) {
         this.nameSingular = nameSingular;
         this.namePlural = namePlural;
         this.duration = duration;
@@ -75,6 +81,15 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
         this.precomputedamount = precomputedamount;
         this.parentID = parentID;
         this.cornerstoneType = cornerstoneType;
+        this.hasNotifications = hasNotifications;
+    }
+
+    /**
+     * Returns a basic measurement template, with no fields filled with something intelligent.
+     * Use this only if you will fill in all fields yourself at a later time
+     */
+    public static Measurement template() {
+        return new Measurement(0, "", "", null, 0, 0, 0, null, false);
     }
 
     public long getMeasurementID() {
@@ -142,6 +157,22 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
 
     public void setCornerstoneType(ChronoUnit cornerstoneType) {
         this.cornerstoneType = cornerstoneType;
+    }
+
+    public boolean getHasNotifications() {
+        return hasNotifications;
+    }
+
+    public void setHasNotifications(boolean hasNotifications) {
+        this.hasNotifications = hasNotifications;
+    }
+
+    public boolean getCanModify() {
+        return canModify;
+    }
+
+    public void setCanModify(boolean canModify) {
+        this.canModify = canModify;
     }
 
     @Override

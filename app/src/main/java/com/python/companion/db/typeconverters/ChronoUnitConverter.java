@@ -6,12 +6,12 @@ import java.time.temporal.ChronoUnit;
 
 public class ChronoUnitConverter {
     @TypeConverter
-    public static ChronoUnit durationFromDays(String value) {
+    public static ChronoUnit chronoUnitFromString(String value) {
         return value == null ? null : ChronoUnit.valueOf(value);
     }
 
     @TypeConverter
-    public static String durationToDays(ChronoUnit unit) {
+    public static String chronoUnitToString(ChronoUnit unit) {
         return unit.name();
     }
 }

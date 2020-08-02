@@ -5,7 +5,7 @@
     <item
         android:id="@+id/menu_fragment_note_action_update_category"
         android:icon="@drawable/ic_menu_category"
-        app:iconTint="@color/colorWindowBackground"
+        app:iconTint="@android:color/white"
         app:iconTintMode="src_in"
         android:title="Update Category"
         app:showAsAction="always" />
@@ -13,7 +13,7 @@
     <item
         android:id="@+id/menu_fragment_note_action_delete"
         android:icon="@drawable/ic_menu_delete"
-        app:iconTint="@color/colorWindowBackground"
+        app:iconTint="@android:color/white"
         app:iconTintMode="src_in"
         android:title="Delete"
         app:showAsAction="always" />

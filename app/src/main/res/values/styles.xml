@@ -2,7 +2,7 @@
 
     <!--https://medium.com/@joannekao/android-working-with-themes-and-styles-18cde717f4d-->
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!--Main colors-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -32,6 +32,12 @@
         <item name="actionBarStyle">@style/Toolbar</item>
         <item name="toolbarStyle">@style/Toolbar</item>
 
+        <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
+    </style>
+
+<!--    Set drawer icon color -->
+    <style name="DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">@android:color/white</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -40,24 +46,36 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
+        <item name="iconTint">@android:color/white</item>
+        <item name="iconTintMode">src_in</item>
+        <item name="colorControlNormal">@android:color/white</item>
     </style>
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light">
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.DayNight">
+        <item name="iconTint">@android:color/white</item>
+        <item name="iconTintMode">src_in</item>
+        <item name="colorControlNormal">@android:color/white</item>
     </style>
 
 
     <style name="Toolbar" parent="Widget.AppCompat.Toolbar">
         <item name="android:background">@color/colorPrimary</item>
         <item name="titleTextAppearance">@style/Toolbar.TextAppearance</item>
+        <item name="iconTint">@android:color/white</item>
+        <item name="iconTintMode">src_in</item>
     </style>
     <style name="Toolbar.TextAppearance" parent="Widget.AppCompat.Toolbar">
         <item name="android:textSize">22sp</item>
-        <item name="android:textColor">@color/colorWindowBackground</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="iconTint">@android:color/white</item>
+        <item name="iconTintMode">src_in</item>
     </style>
 
 
     <style name="SearchView" parent="Widget.AppCompat.SearchView">
         <item name="iconifiedByDefault">false</item>
+        <item name="iconTint">@android:color/white</item>
+        <item name="iconTintMode">src_in</item>
     </style>
 
     <style name="ImageButton" parent="android:Widget.Material.ImageButton">

@@ -2,6 +2,7 @@ package com.python.companion.db.pojo.measurement;
 
 import androidx.annotation.Nullable;
 import androidx.room.Embedded;
+import androidx.room.Ignore;
 
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.util.MeasurementUtil;
@@ -15,6 +16,16 @@ public class MeasurementWithParentNames {
 
     public @Nullable String parentSingular;
     public @Nullable String parentPlural;
+
+
+    public MeasurementWithParentNames() {}
+
+    @Ignore
+    public MeasurementWithParentNames(Measurement measurement, @Nullable String parentSingular, @Nullable String parentPlural) {
+        this.measurement = measurement;
+        this.parentSingular = parentSingular;
+        this.parentPlural = parentPlural;
+    }
 
     /** Fills missing information about parent singular or plural names */
     public void fill() {

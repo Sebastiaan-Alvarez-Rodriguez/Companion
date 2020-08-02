@@ -4,7 +4,6 @@ import android.app.Application;
 import android.content.Intent;
 import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.util.Log;
@@ -102,11 +101,6 @@ public class NoteViewActivity extends AppCompatActivity {
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
-                myToolbar.setNavigationIcon(icon);
-            }
             actionbar.setTitle(note.getName());
         }
     }
@@ -139,6 +133,13 @@ public class NoteViewActivity extends AppCompatActivity {
         });
     }
 
+    private void setCategory(int categoryColor) {
+        double diff = ColorUtil.computeDiff(categoryColor, getColor(R.color.colorPrimary));
+        if (Math.abs(diff) < 4.0)
+            categoryColor = getColor(R.color.colorWindowBackground);
+        categoryItem.getIcon().setColorFilter(new BlendModeColorFilter(categoryColor, BlendMode.SRC_IN));
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_note_view, menu);
@@ -149,21 +150,9 @@ public class NoteViewActivity extends AppCompatActivity {
         typeItem = menu.findItem(R.id.menu_note_view_type);
         lockItem = menu.findItem(R.id.menu_note_view_lock);
 
-        model.getNote(note.getName()).observe(this, n -> { //Observes note to automatically fetch category
-            if (!note.getCategory().equals(n.getCategory())) {
-                int categoryColor = n.getCategory().getCategoryColor();
-                double diff = ColorUtil.computeDiff(categoryColor, getColor(R.color.colorPrimary));
-                if (Math.abs(diff) < 4.0)
-                    categoryColor = getColor(R.color.colorWindowBackground);
-//                    categoryColor = getColor(R.color.colorPrimary);
-                categoryItem.getIcon().setColorFilter(new BlendModeColorFilter(categoryColor, BlendMode.SRC_IN));
-//                findViewById(R.id.activity_note_view_toolbar).setBackgroundColor(categoryColor);
-//                Window window = getWindow();
-//                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-//                window.setStatusBarColor(categoryColor);
-            }
-        });
-        lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+        setCategory(note.getCategory().getCategoryColor());
+
+        lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_full : R.drawable.ic_lock_open_outline));
         favoriteItem.setIcon(getDrawable(note.isFavorite() ? R.drawable.ic_cactus_filled : R.drawable.ic_cactus_outline));
         switch (note.getType()) {
             case NoteType.TYPE_MARKDOWN:
@@ -198,7 +187,7 @@ public class NoteViewActivity extends AppCompatActivity {
                     query.update(note, v -> {});
                     this.note = note;
                     runOnUiThread(() -> {
-                        lockItem.setIcon(getDrawable(this.note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+                        lockItem.setIcon(getDrawable(this.note.isSecure() ? R.drawable.ic_lock_full : R.drawable.ic_lock_open_outline));
                         Snackbar.make(contentView, "Successfully changed lock status!", Snackbar.LENGTH_LONG).show();
                     });
                 };
@@ -278,6 +267,7 @@ public class NoteViewActivity extends AppCompatActivity {
         } else if (requestCode == REQ_CATEGORY_EDIT && resultCode == RESULT_OK && data != null) {
             NoteQuery noteQuery = new NoteQuery(this);
             noteQuery.updateCategory(note.getName(), new Category(data.getStringExtra("categoryName"), data.getIntExtra("categoryColor", -1)), v -> {});
+            setCategory(data.getIntExtra("categoryColor", -1));
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

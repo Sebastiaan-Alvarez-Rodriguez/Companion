@@ -3,7 +3,6 @@ package com.python.companion.ui.notes.note.activity.view;
 import android.content.Intent;
 import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.view.Menu;
@@ -24,9 +23,9 @@ import androidx.core.widget.NestedScrollView;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
-import com.python.companion.backend.interact.NoteStore;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
+import com.python.companion.db.interact.NoteStore;
 import com.python.companion.ui.general.textviewsearch.UITextSearcher;
 import com.python.companion.ui.notes.category.activity.CategoryEditActivity;
 import com.python.companion.ui.notes.note.NoteContainer;
@@ -47,6 +46,7 @@ public class NotePreviewActivity extends AppCompatActivity {
     private MenuItem lockItem, categoryItem, favoriteItem, typeItem;
 
     private Note note;
+    private boolean makeSecure;
 
     private String prevName;
     private boolean editMode;
@@ -69,6 +69,8 @@ public class NotePreviewActivity extends AppCompatActivity {
         findViews();
         setupActionBar();
         setContent(note.getContent(), note.getType());
+
+        makeSecure = false;
     }
 
     private void findViews() {
@@ -87,14 +89,8 @@ public class NotePreviewActivity extends AppCompatActivity {
 
         actionbar = getSupportActionBar();
 
-        if (actionbar != null) {
+        if (actionbar != null)
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
-                myToolbar.setNavigationIcon(icon);
-            }
-        }
     }
 
     private void setSearch() {
@@ -148,7 +144,7 @@ public class NotePreviewActivity extends AppCompatActivity {
                 break;
         }
 
-        lockItem.setIcon(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline); //getDrawable(
+        lockItem.setIcon(makeSecure ? R.drawable.ic_lock_full : R.drawable.ic_lock_open_outline); //getDrawable(
         favoriteItem.setIcon(note.isFavorite() ? R.drawable.ic_cactus_filled : R.drawable.ic_cactus_outline);
         actionbar.setTitle(note.getName().length() == 0 ? "<no name set>" : note.getName());
         setSearch();
@@ -160,9 +156,9 @@ public class NotePreviewActivity extends AppCompatActivity {
             Snackbar.make(layout, "Cannot save: No name for note!", Snackbar.LENGTH_LONG).show();
         } else {
             if (editMode)
-                NoteStore.update(note, prevName, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
+                NoteStore.update(note, prevName, makeSecure, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
             else
-                NoteStore.insert(note, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
+                NoteStore.insert(note, makeSecure, getSupportFragmentManager(), getApplicationContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
         }
     }
 
@@ -179,8 +175,8 @@ public class NotePreviewActivity extends AppCompatActivity {
                 startActivityForResult(intent, REQ_CATEGORY_EDIT);
                 break;
             case R.id.menu_note_preview_lock:
-                note.setSecure(!note.isSecure());
-                lockItem.setIcon(getDrawable(note.isSecure() ? R.drawable.ic_lock_outline : R.drawable.ic_lock_open_outline));
+                makeSecure = !makeSecure;
+                lockItem.setIcon(getDrawable(makeSecure ? R.drawable.ic_lock_full : R.drawable.ic_lock_open_outline));
                 break;
             case R.id.menu_note_preview_favorite:
                 note.setFavorite(!note.isFavorite());

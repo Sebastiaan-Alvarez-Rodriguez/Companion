@@ -2,9 +2,6 @@ package com.python.companion.ui.notes.category.activity;
 
 import android.app.Application;
 import android.content.Intent;
-import android.graphics.BlendMode;
-import android.graphics.BlendModeColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -32,9 +29,9 @@ import com.google.android.material.snackbar.Snackbar;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.python.companion.R;
-import com.python.companion.backend.category.CategoryRepository;
 import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.entity.Category;
+import com.python.companion.db.repository.CategoryRepository;
 import com.python.companion.ui.general.customviews.ContextMenuRecyclerView;
 import com.python.companion.ui.notes.category.adapter.CategoryItem;
 import com.python.companion.ui.notes.category.dialog.CategoryDeleteDialog;
@@ -162,11 +159,6 @@ public class CategoryEditActivity extends AppCompatActivity {
 
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
-                myToolbar.setNavigationIcon(icon);
-            }
             actionbar.setTitle("Categories");
         }
     }

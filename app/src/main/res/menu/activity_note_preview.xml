@@ -6,30 +6,22 @@
         android:id="@+id/menu_note_preview_search"
         android:title="Search"
         android:icon="@drawable/ic_menu_search"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always|collapseActionView" />
 
     <item
         android:id="@+id/menu_note_preview_category"
         android:icon="@drawable/ic_menu_category"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="Category"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_note_preview_favorite"
         android:icon="@drawable/ic_cactus_outline"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="Favorite"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_note_preview_type"
         android:icon="@drawable/ic_menu_note"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="Type"
         app:showAsAction="ifRoom">
         <menu>
@@ -37,20 +29,14 @@
                 <item
                     android:id="@+id/menu_note_preview_type_normal"
                     android:icon="@drawable/ic_menu_note"
-                    app:iconTint="@color/colorWindowBackground"
-                    app:iconTintMode="src_in"
                     android:title="Text"/>
                 <item
                     android:id="@+id/menu_note_preview_type_markdown"
                     android:icon="@drawable/ic_menu_md"
-                    app:iconTint="@color/colorWindowBackground"
-                    app:iconTintMode="src_in"
                     android:title="Markdown"/>
                 <item
                     android:id="@+id/menu_note_preview_type_latex"
                     android:icon="@drawable/ic_menu_latex"
-                    app:iconTint="@color/colorWindowBackground"
-                    app:iconTintMode="src_in"
                     android:title="Latex" />
             </group>
         </menu>
@@ -58,17 +44,13 @@
 
     <item
         android:id="@+id/menu_note_preview_lock"
-        android:icon="@drawable/ic_lock_outline"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
+        android:icon="@drawable/ic_lock_full"
         android:title="Security"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/menu_note_preview_save"
         android:icon="@drawable/ic_menu_save"
-        app:iconTint="@color/colorWindowBackground"
-        app:iconTintMode="src_in"
         android:title="save"
         app:showAsAction="always" />
 </menu>

@@ -24,7 +24,7 @@ import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.security.Guard;
 import com.python.companion.security.password.PassGuard;
 import com.python.companion.security.password.PassResetDialog;
-import com.python.companion.ui.cactus.dialog.TogetherDialog;
+import com.python.companion.ui.jubileum.dialog.TogetherDialog;
 import com.python.companion.ui.general.settings.port.ExportActivity;
 import com.python.companion.ui.general.settings.port.ImportActivity;
 
@@ -104,12 +104,7 @@ public class SettingsActivity extends AppCompatActivity {
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
-                myToolbar.setNavigationIcon(icon);
-            }
-            actionbar.setTitle("Categories");
+actionbar.setTitle("Categories");
         }
     }
 

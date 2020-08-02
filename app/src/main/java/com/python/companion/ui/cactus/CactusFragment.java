@@ -16,8 +16,8 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.python.companion.R;
-import com.python.companion.ui.cactus.activity.CactusCalculatorActivity;
-import com.python.companion.ui.cactus.activity.CactusJubileumActivity;
+import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity;
+import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorActivity;
 import com.python.companion.ui.jubileum.activity.JubileumSelectActivity;
 
 import java.time.LocalDate;
@@ -27,7 +27,7 @@ import static android.app.Activity.RESULT_OK;
 
 //TODO: Create swipe-up-to-refresh behaviour
 public class CactusFragment extends Fragment {
-    private static final int REQ_SHARED = 0;
+    private static final int REQ_SELECT = 0;
 
 
     private FloatingActionButton jubileumButton, calculatorButton;
@@ -81,12 +81,12 @@ public class CactusFragment extends Fragment {
             }
         });
         jubileumButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), CactusJubileumActivity.class);
+            Intent intent = new Intent(getContext(), JubileumCalculatorActivity.class);
             startActivity(intent);
         });
         calculatorButton.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), JubileumSelectActivity.class);
-            startActivityForResult(intent, REQ_SHARED);
+            startActivityForResult(intent, REQ_SELECT);
         });
     }
 
@@ -117,8 +117,8 @@ public class CactusFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQ_SHARED && resultCode == RESULT_OK && data != null) {
-            Intent intent = new Intent(getContext(), CactusCalculatorActivity.class);
+        if (requestCode == REQ_SELECT && resultCode == RESULT_OK && data != null) {
+            Intent intent = new Intent(getContext(), JubileumCalculatorSharedActivity.class);
             intent.putParcelableArrayListExtra("chosen", data.getParcelableArrayListExtra("chosen"));
             startActivity(intent);
             return;

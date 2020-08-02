@@ -1,11 +1,13 @@
 package com.python.companion.ui.notes.note.activity.edit;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.python.companion.R;
@@ -24,7 +26,6 @@ public class NoteEditActivity extends AppCompatActivity {
     private Button previewButton;
 
     private @Nullable Note note;
-
     private boolean editMode;
 
     @Override
@@ -71,5 +72,15 @@ public class NoteEditActivity extends AppCompatActivity {
             setResult(RESULT_OK, data);
             finish();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setMessage("Go back without saving?")
+                .setNegativeButton("Cancel", (DialogInterface.OnClickListener) (dialog1, which) -> dialog1.dismiss())
+                .setPositiveButton("Go back", (DialogInterface.OnClickListener) (dialog12, which) -> finish())
+                .setOnCancelListener((DialogInterface.OnCancelListener) dialog -> finish())
+                .show();
     }
 }

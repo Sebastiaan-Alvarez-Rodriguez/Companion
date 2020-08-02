@@ -10,6 +10,7 @@ import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
+import com.python.companion.util.NotificationUtil;
 import com.python.companion.util.genericinterfaces.FinishListener;
 import com.python.companion.util.genericinterfaces.ResultListener;
 
@@ -19,9 +20,12 @@ import java.util.concurrent.Executors;
 public class MeasurementQuery {
     private DAOMeasurement daoMeasurement;
 
-
-    public MeasurementQuery(Context context) {
+    public MeasurementQuery(@NonNull Context context) {
         daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
+    }
+
+    public MeasurementQuery(@NonNull Database database) {
+        daoMeasurement = database.getDAOMeasurement();
     }
 
     /** Insert a new measurement */
@@ -29,16 +33,18 @@ public class MeasurementQuery {
         Executors.newSingleThreadExecutor().execute(() -> daoMeasurement.insert(measurement));
     }
 
-    public void delete(@NonNull List<Measurement> measurements, @NonNull FinishListener listener) {
+    public void delete(@NonNull Context context, @NonNull List<Measurement> measurements, @NonNull FinishListener listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
+            NotificationUtil.deleteChannels2(context, measurements);
             for (Measurement m : measurements)
                 daoMeasurement.deleteInherit(m);
             listener.onFinish();
         });
     }
 
-    public void delete(@NonNull Measurement measurement, @NonNull FinishListener listener) {
+    public void delete(@NonNull Context context, @NonNull Measurement measurement, @NonNull FinishListener listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
+            NotificationUtil.deleteChannel(context, measurement);
             daoMeasurement.deleteInherit(measurement);
             listener.onFinish();
         });
@@ -46,6 +52,10 @@ public class MeasurementQuery {
 
     public void update(@NonNull Measurement measurement, @NonNull Measurement old, @NonNull ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.updateInherit(measurement, old)));
+    }
+
+    public void getAll(@NonNull ResultListener<List<Measurement>> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getAll()));
     }
 
     public void isUnique(String nameSingular, String namePlural, ResultListener<Boolean> listener) {

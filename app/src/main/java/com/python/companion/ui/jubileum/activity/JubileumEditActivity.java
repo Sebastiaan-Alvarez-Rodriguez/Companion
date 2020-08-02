@@ -2,9 +2,6 @@ package com.python.companion.ui.jubileum.activity;
 
 import android.app.Application;
 import android.content.Intent;
-import android.graphics.BlendMode;
-import android.graphics.BlendModeColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,12 +27,12 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
-import com.python.companion.backend.interact.MeasurementStore;
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.interact.MeasurementStore;
 import com.python.companion.ui.jubileum.MeasurementContainer;
-import com.python.companion.ui.jubileum.adapter.item.MeasurementItemSimple;
+import com.python.companion.ui.jubileum.adapter.item.JubileumItemSimple;
 import com.python.companion.util.MeasurementUtil;
 
 import java.util.List;
@@ -49,8 +46,8 @@ public class JubileumEditActivity extends AppCompatActivity {
 
     private MeasurementAddViewModel viewmodel;
 
-    private FastAdapter<MeasurementItemSimple> fastAdapter;
-    protected SelectExtension<MeasurementItemSimple> selectionExtension;
+    private FastAdapter<JubileumItemSimple> fastAdapter;
+    protected SelectExtension<JubileumItemSimple> selectionExtension;
 
 
     private @Nullable Measurement measurement;
@@ -86,7 +83,7 @@ public class JubileumEditActivity extends AppCompatActivity {
     }
 
     private void setupList() {
-        ItemAdapter<MeasurementItemSimple> itemAdapter = new ItemAdapter<>();
+        ItemAdapter<JubileumItemSimple> itemAdapter = new ItemAdapter<>();
 
         fastAdapter = FastAdapter.with(itemAdapter);
         ExtensionsFactories.INSTANCE.register(new SelectExtensionFactory());
@@ -109,8 +106,8 @@ public class JubileumEditActivity extends AppCompatActivity {
         });
 
         viewmodel.getMeasurements().observe(this, measurements -> {
-            List<MeasurementItemSimple> items = MeasurementUtil.getDefaultMeasurements().stream().map(MeasurementItemSimple::new).collect(Collectors.toList());
-            items.addAll(measurements.stream().map(MeasurementItemSimple::new).collect(Collectors.toList()));
+            List<JubileumItemSimple> items = MeasurementUtil.getDefaultMeasurements().stream().map(JubileumItemSimple::new).collect(Collectors.toList());
+            items.addAll(measurements.stream().map(JubileumItemSimple::new).collect(Collectors.toList()));
             itemAdapter.set(items);
             if (editMode && !selectedParent) {
                 long pid = measurement.getParentID();
@@ -131,11 +128,6 @@ public class JubileumEditActivity extends AppCompatActivity {
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
-            Drawable icon = myToolbar.getNavigationIcon();
-            if (icon != null) {
-                icon.setColorFilter(new BlendModeColorFilter(getResources().getColor(R.color.colorWindowBackground, null), BlendMode.SRC_IN));
-                myToolbar.setNavigationIcon(icon);
-            }
             actionbar.setTitle((editMode ? "Edit" : "Add") + " Jubileum");
         }
     }
@@ -151,7 +143,7 @@ public class JubileumEditActivity extends AppCompatActivity {
         if (Long.parseLong(amountText) < 1)
             amount.setError("Minimum value is 1");
 
-        Set<MeasurementItemSimple> selected = selectionExtension.getSelectedItems();
+        Set<JubileumItemSimple> selected = selectionExtension.getSelectedItems();
         if (selected.size() == 0)
             Snackbar.make(layout, "Please pick a measurement unit to describe this unit in", Snackbar.LENGTH_LONG).show();
         return !nameSingular.isEmpty() && !namePlural.isEmpty() && ! amountText.isEmpty();
@@ -167,7 +159,7 @@ public class JubileumEditActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish();
+                finishSuccess();
                 break;
             case R.id.menu_measurement_add_save:
                 save();
@@ -182,7 +174,7 @@ public class JubileumEditActivity extends AppCompatActivity {
 
         String nameSingular = singular.getText().toString(), namePlural = plural.getText().toString(), amountText = amount.getText().toString();
         long amt = Long.parseLong(amountText);
-        MeasurementItemSimple selected = selectionExtension.getSelectedItems().iterator().next();
+        JubileumItemSimple selected = selectionExtension.getSelectedItems().iterator().next();
 
         Measurement m = Measurement.createFrom(nameSingular, namePlural, amt, selected.getMeasurement());
 
@@ -190,17 +182,16 @@ public class JubileumEditActivity extends AppCompatActivity {
             MeasurementStore.insert(m, getSupportFragmentManager(), getApplicationContext(), new MeasurementStore.StoreCallback() {
                 @Override
                 public void onSuccess() {
-                    finish();
+                    finishSuccess();
                 }
                 @Override
                 public void onFailure() {}
             });
         } else {
-            m.setMeasurementID(measurement.getMeasurementID());
             MeasurementStore.update(m, measurement, getSupportFragmentManager(), getApplicationContext(), new MeasurementStore.StoreCallback() {
                 @Override
                 public void onSuccess() {
-                    finish();
+                    finishSuccess();
                 }
                 @Override
                 public void onFailure() {
@@ -208,6 +199,11 @@ public class JubileumEditActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void finishSuccess() {
+        setResult(RESULT_OK);
+        finish();
     }
 
     public static class MeasurementAddViewModel extends AndroidViewModel {

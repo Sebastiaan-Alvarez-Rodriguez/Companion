@@ -47,7 +47,7 @@
         android:layout_margin="@dimen/fab_margin"
         android:backgroundTint="@color/colorPrimary"
         android:backgroundTintMode="src_in"
-        android:tint="@color/colorWindowBackground"
+        app:tint="@android:color/white"
         app:layout_behavior="com.google.android.material.floatingactionbutton.FloatingActionButton$Behavior"
         app:srcCompat="@drawable/ic_menu_edit" />
 
