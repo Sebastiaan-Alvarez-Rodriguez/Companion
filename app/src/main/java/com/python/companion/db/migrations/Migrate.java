@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.python.companion.db.populators.Populator;
+
 public class Migrate {
 
     public static Migration[] getAll() {
@@ -36,10 +38,11 @@ public class Migrate {
             @Override
             public void migrate(@NonNull SupportSQLiteDatabase database) {
                 database.execSQL("BEGIN TRANSACTION;");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`measurementID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `jubileumDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `cornerstoneType` TEXT, PRIMARY KEY(`measurementID`, `notifyDate`))");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `measurementID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `jubileumDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `cornerstoneType` TEXT)");
                 database.execSQL("DROP TABLE IF EXISTS Measurement");
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Measurement` (`measurementID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
                 database.execSQL("COMMIT;");
+                Populator.populate(database);
             }
         };
     }

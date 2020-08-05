@@ -14,7 +14,7 @@
         android:minWidth="600dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_menu_edit"
-        android:tint="@color/colorWindowBackground"
+        android:tint="@android:color/white"
         android:tintMode="src_in"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -78,7 +78,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
-        android:background="@color/colorWindowBackground"
+        android:background="@android:color/white"
         android:gravity="center_vertical|center_horizontal"
         android:text="Accept"
         android:textColor="@color/colorPrimary"

@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.mikepenz.fastadapter.FastAdapter;
 import com.mikepenz.fastadapter.adapters.ItemAdapter;
 import com.mikepenz.fastadapter.diff.DiffCallback;
@@ -52,6 +53,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class JubileumCalculatorActivity extends AppCompatActivity {
+    private View layout;
     private ContextMenuRecyclerView list;
     private EditText amountView;
     private RadioGroup displayGroup;
@@ -79,6 +81,7 @@ public class JubileumCalculatorActivity extends AppCompatActivity {
     }
 
     private void findViews() {
+        layout = findViewById(R.id.activity_cactus_jubileum_layout);
         amountView = findViewById(R.id.activity_cactus_jubileum_amount);
         displayGroup = findViewById(R.id.activity_cactus_jubileum_radiogroup);
         list = findViewById(R.id.activity_cactus_jubileum_list);
@@ -102,14 +105,13 @@ public class JubileumCalculatorActivity extends AppCompatActivity {
                 x.onTypeChange(t);
             fastAdapter.notifyAdapterDataSetChanged();
         });
+        LocalDate together = MeasurementUtil.getTogether(this);
         amountView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 userInterval = getInterval(s);
-                SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-                LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
                 for (int x = 0; x < fastAdapter.getItemCount(); ++x) {
                     JubileumCalculatorItem item = fastAdapter.getItem(x);
                     final int w = x;
@@ -151,18 +153,10 @@ public class JubileumCalculatorActivity extends AppCompatActivity {
     }
 
     private void setListUpdates() {
-        SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-        LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
+        LocalDate together = MeasurementUtil.getTogether(this);
 
-        List<JubileumCalculatorItem> defaultList = MeasurementUtil.getDefaultMeasurements().parallelStream().map(measurement -> {
-            try {
-                return new JubileumCalculatorItem(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval));
-            } catch (DateTimeException e) {
-                return new JubileumCalculatorItem(measurement, userInterval >= 0 ? "Very far away" : "Very long ago");
-            }
-        }).collect(Collectors.toList());
         viewModel.getMeasurements().observe(this, measurements -> {
-            List<JubileumCalculatorItem> newlist = measurements.parallelStream().map(measurement -> {
+            List<JubileumCalculatorItem> list = measurements.parallelStream().map(measurement -> {
                 try {
                     return new JubileumCalculatorItem(measurement, MeasurementUtil.futureInterval(measurement, together, userInterval));
                 } catch (DateTimeException e) {
@@ -170,8 +164,7 @@ public class JubileumCalculatorActivity extends AppCompatActivity {
                 }
             }).collect(Collectors.toList());
 
-            newlist.addAll(defaultList);
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<JubileumCalculatorItem>() {
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, list, new DiffCallback<JubileumCalculatorItem>() {
                 @Override
                 public boolean areItemsTheSame(JubileumCalculatorItem oldItem, JubileumCalculatorItem newItem) {
                     return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());
@@ -285,12 +278,6 @@ public class JubileumCalculatorActivity extends AppCompatActivity {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        ContextMenuRecyclerView.RecyclerViewContextMenuInfo info = (ContextMenuRecyclerView.RecyclerViewContextMenuInfo) menuInfo;
-        JubileumCalculatorItem clicked = fastAdapter.getItem(info.position);
-        if (MeasurementUtil.isDefault(clicked.getMeasurement().getMeasurementID())) { // We will not allow default measurements to be edited/deleted
-            menu.close();
-            return;
-        }
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.activity_cactus_jubileum_context, menu);
     }
@@ -302,13 +289,21 @@ public class JubileumCalculatorActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
             case R.id.menu_context_jubileum_edit:
-                Intent intent = new Intent(this, JubileumEditActivity.class);
-                intent.putExtra("measurement", new MeasurementContainer(clicked.getMeasurement()));
-                startActivity(intent);
+                if (clicked.getMeasurement().getCanModify()) {
+                    Intent intent = new Intent(this, JubileumEditActivity.class);
+                    intent.putExtra("measurement", new MeasurementContainer(clicked.getMeasurement()));
+                    startActivity(intent);
+                } else {
+                    Snackbar.make(layout, "Cannot edit default type '"+clicked.getMeasurement().getNameSingular()+"'!", Snackbar.LENGTH_LONG).show();
+                }
                 break;
             case R.id.menu_context_jubileum_delete:
-                MeasurementQuery query = new MeasurementQuery(this);
-                query.delete(this, clicked.getMeasurement(), () -> {});
+                if (clicked.getMeasurement().getCanModify()) {
+                    MeasurementQuery query = new MeasurementQuery(this);
+                    query.delete(this, clicked.getMeasurement(), () -> {});
+                } else {
+                    Snackbar.make(layout, "Cannot delete default type '"+clicked.getMeasurement().getNameSingular()+"'!", Snackbar.LENGTH_LONG).show();
+                }
                 break;
         }
         return super.onContextItemSelected(item);

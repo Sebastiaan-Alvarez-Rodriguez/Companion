@@ -31,7 +31,6 @@ import com.python.companion.R;
 import com.python.companion.ui.jubileum.MeasurementContainer;
 import com.python.companion.ui.jubileum.adapter.item.JubileumItemSimple;
 import com.python.companion.ui.jubileum.viewmodel.JubileumViewModel;
-import com.python.companion.util.MeasurementUtil;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -92,13 +91,11 @@ public class JubileumSelectActivity extends AppCompatActivity {
     }
 
     private void setListUpdates() {
-        List<JubileumItemSimple> defaultList = MeasurementUtil.getDefaultMeasurements().stream().map(JubileumItemSimple::new).collect(Collectors.toList());
 
         viewModel.getMeasurements().observe(this, measurements -> {
-            List<JubileumItemSimple> newlist = measurements.stream().sorted((o1, o2) -> o1.getNamePlural().compareTo(o2.getNamePlural())).map(JubileumItemSimple::new).collect(Collectors.toList());
+            List<JubileumItemSimple> list = measurements.stream().sorted((o1, o2) -> o1.getNamePlural().compareTo(o2.getNamePlural())).map(JubileumItemSimple::new).collect(Collectors.toList());
 
-            newlist.addAll(defaultList);
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<JubileumItemSimple>() {
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, list, new DiffCallback<JubileumItemSimple>() {
                 @Override
                 public boolean areItemsTheSame(JubileumItemSimple oldItem, JubileumItemSimple newItem) {
                     return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());

@@ -34,7 +34,7 @@
         <activity android:name=".ui.general.settings.port.ExportActivity" />
 
 <!--        Jubileum related activities -->
-        <activity android:name=".ui.jubileum.activity.JubileumViewActivity" />
+        <activity android:name=".ui.jubileum.activity.JubileumViewActivity" android:theme="@style/AppTheme.NoActionBar"/>
         <activity android:name=".ui.jubileum.activity.JubileumEditActivity" />
         <activity android:name=".ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity" />
         <activity android:name=".ui.jubileum.activity.JubileumSelectActivity" />

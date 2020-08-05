@@ -14,7 +14,7 @@
         android:minWidth="600dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_menu_delete"
-        android:tint="@color/colorWindowBackground"
+        android:tint="@android:color/white"
         android:tintMode="src_in"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -80,7 +80,7 @@
         android:background="@color/colorPrimary"
         android:gravity="center_vertical|center_horizontal"
         android:text="Delete"
-        android:textColor="@color/colorWindowBackground"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.84"

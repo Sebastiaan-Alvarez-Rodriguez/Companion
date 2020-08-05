@@ -212,7 +212,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
-        android:background="@color/colorWindowBackground"
+        android:background="@android:color/white"
         android:text="Start"
         android:textColor="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"

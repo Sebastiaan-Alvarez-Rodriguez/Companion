@@ -1,11 +1,15 @@
 package com.python.companion.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import com.python.companion.R;
 import com.python.companion.db.entity.Measurement;
-import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
 import com.python.companion.util.genericinterfaces.ErrorListener;
 import com.python.companion.util.genericinterfaces.ResultListener;
 
@@ -52,6 +56,7 @@ public class MeasurementUtil {
         });
     }
     /** Sequential alernative for {@link #futureInterval(TemporalUnit, LocalDate, long, ResultListener, ErrorListener)} */
+    @CheckResult
     public static LocalDate futureInterval(@NonNull TemporalUnit unit, @NonNull LocalDate together, long interval) throws DateTimeException {
         long intervalsBefore = unit.between(together, LocalDate.now());
         return unit.addTo(together, intervalsBefore + interval);
@@ -125,17 +130,17 @@ public class MeasurementUtil {
         if (dayBased.size() > 0) {
             Measurement one = dayBased.get(dayBased.size() - 1);
             dayBased.remove(dayBased.size() - 1);
-            dayJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, dayBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.DAYS, false);
+            dayJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, dayBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.DAYS, false, false);
         }
         if (monthBased.size() > 0) {
             Measurement one = monthBased.get(monthBased.size() - 1);
             monthBased.remove(monthBased.size() - 1);
-            monthJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, monthBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.MONTHS, false);
+            monthJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, monthBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.MONTHS, false, false);
         }
         if (yearBased.size() > 0) {
             Measurement one = yearBased.get(yearBased.size() - 1);
             yearBased.remove(yearBased.size() - 1);
-            yearJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, yearBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.YEARS, false);
+            yearJumpAmount = new Measurement("", "", Duration.ofDays(getIntertwinedDistance(one, yearBased.toArray(new Measurement[]{}))), 1, 1, -1, ChronoUnit.YEARS, false, false);
         }
 
         Measurement largest = unit;
@@ -162,55 +167,44 @@ public class MeasurementUtil {
         return futureIntertwinedInterval(unit, together, others, 1);
     }
 
-    /**
-     * @return <code>List</code> containing default measurements: Days, Months, Years, as defined by {@link ChronoUnit}
-     */
-    public static List<Measurement> getDefaultMeasurements() {
-        ChronoUnit[] regulars = {ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
-        String[] singulars = {"Day", "Month", "Year"};
-        ArrayList<Measurement> list = new ArrayList<>(3);
-        for (int x = 0; x < regulars.length; ++x)
-            list.add(new Measurement(ChronoUnitToID(regulars[x]), singulars[x], regulars[x].toString(), regulars[x].getDuration(), 1, 1, ChronoUnitToID(regulars[x]), regulars[x], true));
-        return list;
+    public static @NonNull LocalDate getTogether(@NonNull Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(context.getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
+        return LocalDate.parse(preferences.getString(context.getString(R.string.cactus_preferences_key_together), "2017-11-08"));
     }
 
-    /**
-     * @return <code>List</code> containing default measurements: Days, Months, Years, as defined by {@link ChronoUnit}, with their own names as parent names
-     */
-    public static List<MeasurementWithParentNames> getDefaultMeasurementsNamed() {
-        ChronoUnit[] regulars = {ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
-        String[] singulars = {"Day", "Month", "Year"};
-        ArrayList<MeasurementWithParentNames> list = new ArrayList<>(3);
-        for (int x = 0; x < regulars.length; ++x)
-            list.add(new MeasurementWithParentNames(new Measurement(ChronoUnitToID(regulars[x]), singulars[x], regulars[x].toString(), regulars[x].getDuration(), 1, 1, ChronoUnitToID(regulars[x]), regulars[x], true), singulars[x], regulars[x].toString()));
-        return list;
+    public static void setTogether(@NonNull LocalDate date, @NonNull Context context) {
+        SharedPreferences.Editor preferences = context.getSharedPreferences(context.getString(R.string.cactus_preferences), Context.MODE_PRIVATE).edit();
+        preferences.putString(context.getString(R.string.cactus_preferences_key_together), date.toString());
+        preferences.apply();
     }
 
-    /** Returns <code>true</code> if the given measurement ID belongs to a default type (e.g. DAYS), otherwise <code>false</code> */
-    public static boolean isDefault(long id) {
-        return id >=-3 && id <= -1;
-    }
-
-    public static String IDtoName(long id, int amount) {
-        if (id < 0) {
-            final String[] singulars = {"Day", "Month", "Year"};
-            final String[] plurals = {"Days", "Months", "Years"};
-            int idx = (int) ((id * -1) - 1);
-            return (amount == 1) ? singulars[idx] : plurals[idx];
-        }
-        throw new RuntimeException("Unsupported id ("+id+")");
-    }
-
-    public static long ChronoUnitToID(@NonNull ChronoUnit unit) {
+    /** Converts default types (chronounits) to measurementID's, used to store them in the database */
+    public static long chronoUnitToID(@NonNull ChronoUnit unit) {
         switch (unit) {
             case DAYS:
-                return -1;
-            case MONTHS:
                 return -2;
-            case YEARS:
+            case MONTHS:
                 return -3;
+            case YEARS:
+                return -4;
         }
         throw new RuntimeException("Unsupported ChronoUnit ("+unit.toString()+")");
+    }
+
+    public static Measurement getBaseMeasurement(@NonNull ChronoUnit unit) {
+        switch (unit) {
+            case DAYS:
+                return new Measurement(chronoUnitToID(unit), "Day", "Days", ChronoUnit.DAYS.getDuration(), 1, 1, chronoUnitToID(unit), ChronoUnit.DAYS, false, false);
+            case MONTHS:
+                return new Measurement(chronoUnitToID(unit), "Month", "Months", ChronoUnit.MONTHS.getDuration(), 1, 1, chronoUnitToID(unit), ChronoUnit.MONTHS, false, false);
+            case YEARS:
+                return new Measurement(chronoUnitToID(unit), "Year", "Years", ChronoUnit.YEARS.getDuration(), 1, 1, chronoUnitToID(unit), ChronoUnit.YEARS, false, false);
+        }
+        return Measurement.template();
+    }
+
+    public static long NoneMeasurementID() {
+        return -1;
     }
 
 

@@ -222,7 +222,7 @@ public class NotePreviewActivity extends AppCompatActivity {
             double diff = ColorUtils.calculateContrast(c.getCategoryColor(), getColor(R.color.colorPrimary));
             int displaycolor = c.getCategoryColor();
             if (diff < 4.0) {
-                displaycolor = getColor(R.color.colorWindowBackground);
+                displaycolor = getColor(android.R.color.transparent);
             }
             categoryItem.getIcon().setColorFilter(new BlendModeColorFilter(displaycolor, BlendMode.SRC_IN));
             note.setCategory(c);

@@ -53,7 +53,7 @@ public class NoteItem extends AbstractItem<ViewHolder> {
         if (isSelected())
             holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
         else
-            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorWindowBackground));
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), android.R.color.transparent));
     }
 
     @SuppressWarnings("WeakerAccess")

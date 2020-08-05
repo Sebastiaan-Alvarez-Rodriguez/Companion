@@ -4,6 +4,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.mikepenz.fastadapter.FastAdapter.ViewHolder;
@@ -21,8 +22,15 @@ public class JubileumItemSimple extends AbstractItem<ViewHolder> {
 
     private Measurement measurement;
 
-    public JubileumItemSimple(Measurement measurement) {
+    private boolean displayPlural;
+
+    public JubileumItemSimple(@NonNull Measurement measurement) {
+        this(measurement, true);
+    }
+
+    public JubileumItemSimple(@NonNull Measurement measurement, boolean displayPlural) {
         this.measurement = measurement;
+        this.displayPlural = displayPlural;
     }
 
     @NotNull
@@ -38,7 +46,7 @@ public class JubileumItemSimple extends AbstractItem<ViewHolder> {
 
     @Override
     public int getType() {
-        return R.id.item_text_layout;
+        return R.id.item_jubileum_layout;
     }
 
     public Measurement getMeasurement() {
@@ -49,13 +57,21 @@ public class JubileumItemSimple extends AbstractItem<ViewHolder> {
         this.measurement = measurement;
     }
 
+    public boolean getDisplayPlural() {
+        return displayPlural;
+    }
+
+    public void setDisplayPlural(boolean displayPlural) {
+        this.displayPlural = displayPlural;
+    }
+
     @Override
     public void bindView(@NotNull ViewHolder holder, @NotNull List<Object> payloads) {
         super.bindView(holder, payloads);
         if (isSelected())
             holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
         else
-            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorWindowBackground));
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), android.R.color.transparent));
     }
 
     @Override
@@ -74,12 +90,10 @@ public class JubileumItemSimple extends AbstractItem<ViewHolder> {
 
         @Override
         public void bindView(@NotNull JubileumItemSimple item, @NotNull List<Object> list) {
-            nameView.setText(item.getMeasurement().getNamePlural());
+            nameView.setText(item.getDisplayPlural() ? item.getMeasurement().getNamePlural() : item.getMeasurement().getNameSingular());
         }
 
         @Override
-        public void unbindView(@NotNull JubileumItemSimple item) {
-
-        }
+        public void unbindView(@NotNull JubileumItemSimple item) {}
     }
 }

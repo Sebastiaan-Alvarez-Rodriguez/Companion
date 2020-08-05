@@ -1,8 +1,6 @@
 package com.python.companion.ui.cactus;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,9 +14,10 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.python.companion.R;
-import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity;
-import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorActivity;
 import com.python.companion.ui.jubileum.activity.JubileumSelectActivity;
+import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorActivity;
+import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity;
+import com.python.companion.util.MeasurementUtil;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -40,8 +39,7 @@ public class CactusFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         now = LocalDate.now();
-        SharedPreferences preferences = getContext().getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-        together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
+        together = MeasurementUtil.getTogether(getContext());
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

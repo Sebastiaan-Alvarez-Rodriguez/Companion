@@ -33,7 +33,6 @@ import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.interact.MeasurementStore;
 import com.python.companion.ui.jubileum.MeasurementContainer;
 import com.python.companion.ui.jubileum.adapter.item.JubileumItemSimple;
-import com.python.companion.util.MeasurementUtil;
 
 import java.util.List;
 import java.util.Set;
@@ -53,6 +52,7 @@ public class JubileumEditActivity extends AppCompatActivity {
     private @Nullable Measurement measurement;
     private boolean editMode, selectedParent;
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,6 +82,7 @@ public class JubileumEditActivity extends AppCompatActivity {
 
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void setupList() {
         ItemAdapter<JubileumItemSimple> itemAdapter = new ItemAdapter<>();
 
@@ -106,8 +107,7 @@ public class JubileumEditActivity extends AppCompatActivity {
         });
 
         viewmodel.getMeasurements().observe(this, measurements -> {
-            List<JubileumItemSimple> items = MeasurementUtil.getDefaultMeasurements().stream().map(JubileumItemSimple::new).collect(Collectors.toList());
-            items.addAll(measurements.stream().map(JubileumItemSimple::new).collect(Collectors.toList()));
+            List<JubileumItemSimple> items = measurements.stream().map(JubileumItemSimple::new).collect(Collectors.toList());
             itemAdapter.set(items);
             if (editMode && !selectedParent) {
                 long pid = measurement.getParentID();
@@ -168,6 +168,7 @@ public class JubileumEditActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void save() {
         if (!checkInput())
             return;

@@ -48,7 +48,7 @@
         android:layout_marginEnd="8dp"
         android:text="Preview"
         android:background="@color/colorPrimaryDark"
-        android:textColor="@color/colorWindowBackground"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

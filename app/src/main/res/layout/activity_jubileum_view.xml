@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_jubileum_view_layout">
+    android:id="@+id/activity_jubileum_view_layout"
+    tools:context=".ui.jubileum.activity.JubileumViewActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/activity_jubileum_view_toolbar"
@@ -12,11 +13,12 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:gravity="center"
-        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:theme="@style/AppTheme.AppBarOverlay"/>
+        android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        app:popupTheme="@style/AppTheme.PopupOverlay"/>
 
     <TextView
         android:id="@+id/activity_jubileum_view_equation"
@@ -140,56 +142,15 @@
         app:tint="@android:color/white"
         android:layout_marginEnd="16dp"/>
 
-    <ListView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/activity_jubileum_view_notifications"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_margin="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/activity_jubileum_view_notifications_announce" />
-
-    <TextView
-        android:id="@+id/activity_jubileum_view_notifications_add2"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Add notification..."
-        android:textSize="20sp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_jubileum_view_notifications" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/activity_jubileum_view_jcalculator_shared"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
-        android:layout_marginEnd="24dp"
-        android:backgroundTint="@color/colorPrimary"
-        android:backgroundTintMode="src_in"
-        android:clickable="true"
-        app:srcCompat="@drawable/ic_cactulator"
-        app:tint="@android:color/white"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/activity_jubileum_view_jcalculator"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/activity_jubileum_view_jcalculator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/fab_margin"
-        android:layout_marginBottom="32dp"
-        android:backgroundTint="@color/colorPrimary"
-        android:backgroundTintMode="src_in"
-        android:clickable="true"
-        app:tint="@android:color/white"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/activity_jubileum_view_edit"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_jubileum" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/activity_jubileum_view_edit"

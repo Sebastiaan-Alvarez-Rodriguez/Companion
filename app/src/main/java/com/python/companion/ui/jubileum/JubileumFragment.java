@@ -52,7 +52,6 @@ import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorSha
 import com.python.companion.ui.jubileum.adapter.JubileumSortHandler;
 import com.python.companion.ui.jubileum.adapter.item.JubileumItem;
 import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
-import com.python.companion.util.MeasurementUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -170,10 +169,9 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
 
     private void setListUpdates() {
         jubileumViewModel.getMeasurements().observe(getViewLifecycleOwner(), measurements -> {
-            List<JubileumItem> newlist = measurements.parallelStream().map(JubileumItem::new).collect(Collectors.toList());
-            newlist.addAll(MeasurementUtil.getDefaultMeasurementsNamed().parallelStream().map(JubileumItem::new).collect(Collectors.toList()));
+            List<JubileumItem> list = measurements.parallelStream().map(JubileumItem::new).collect(Collectors.toList());
 
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<JubileumItem>() {
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, list, new DiffCallback<JubileumItem>() {
                 @Override
                 public boolean areItemsTheSame(JubileumItem oldItem, JubileumItem newItem) {
                     return oldItem.getMeasurement().getMeasurementID() == newItem.getMeasurement().getMeasurementID();

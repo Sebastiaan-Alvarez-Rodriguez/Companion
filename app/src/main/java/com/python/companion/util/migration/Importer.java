@@ -213,14 +213,14 @@ public class Importer implements EntityVisitor {
         if (reSecure) {
             Boolean[] done = new Boolean[]{false, false}; // [0] = done; [1] = success
             jnportNotesInternal(amountSecure, resultList -> {
-                NoteConverter.BatchEncrypter.from(manager, context).setOnFinishListener(stream -> {
+                NoteConverter.BatchEncrypter.from(manager, context).setOnFinishListener(stream -> Executors.newSingleThreadExecutor().execute(() -> {
                     daoNote.upsert(stream.toArray(Note[]::new));
                     synchronized (Importer.this) {
                         done[0] = true;
                         done[1] = true;
                         Importer.this.notify();
                     }
-                }).setOnErrorListener(error -> {
+                })).setOnErrorListener(error -> {
                     synchronized (Importer.this) {
                         done[0] = true;
                         done[1] = false;

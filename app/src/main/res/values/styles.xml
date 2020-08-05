@@ -28,7 +28,7 @@
         <item name="imageButtonStyle">@style/ImageButton</item>
 
         <!--text menu items in toolbars-->
-        <item name="actionMenuTextColor">@color/colorWindowBackground</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
         <item name="actionBarStyle">@style/Toolbar</item>
         <item name="toolbarStyle">@style/Toolbar</item>
 
@@ -79,7 +79,7 @@
     </style>
 
     <style name="ImageButton" parent="android:Widget.Material.ImageButton">
-        <item name="android:background">@color/colorWindowBackground</item>
+        <item name="android:background">@android:color/white</item>
     </style>
 
     <style name="DialogStyle" parent="AppTheme">

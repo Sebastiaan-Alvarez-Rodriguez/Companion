@@ -3,9 +3,6 @@ package com.python.companion.ui.general.settings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.BlendMode;
-import android.graphics.BlendModeColorFilter;
-import android.graphics.drawable.Drawable;
 import android.hardware.biometrics.BiometricManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,11 +21,10 @@ import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.security.Guard;
 import com.python.companion.security.password.PassGuard;
 import com.python.companion.security.password.PassResetDialog;
-import com.python.companion.ui.jubileum.dialog.TogetherDialog;
 import com.python.companion.ui.general.settings.port.ExportActivity;
 import com.python.companion.ui.general.settings.port.ImportActivity;
-
-import java.time.LocalDate;
+import com.python.companion.ui.jubileum.dialog.TogetherDialog;
+import com.python.companion.util.MeasurementUtil;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_EXPORT = 1;
@@ -78,7 +74,7 @@ public class SettingsActivity extends AppCompatActivity {
         });
         dateView.setOnClickListener(v -> { //TODO: Test! what is right sharedprefs register and key?
             TogetherDialog dialog = new TogetherDialog.Builder()
-                    .setStartDate(LocalDate.parse(getSharedPreferences(getString(R.string.cactus_preferences), MODE_PRIVATE).getString(getString(R.string.cactus_preferences_key_together),"2018-11-08")))
+                    .setStartDate(MeasurementUtil.getTogether(this))
                     .setFinishListener(() -> Snackbar.make(layout, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getSupportFragmentManager(), null);
         });

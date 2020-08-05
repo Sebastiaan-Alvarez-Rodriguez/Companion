@@ -10,12 +10,9 @@ import androidx.annotation.NonNull;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.constant.MeasurementQuery;
-import com.python.companion.db.entity.Measurement;
-import com.python.companion.util.MeasurementUtil;
 import com.python.companion.util.NotificationUtil;
 
 import java.util.Calendar;
-import java.util.List;
 
 public class Platform {
 
@@ -43,11 +40,7 @@ public class Platform {
     /** Registers a notification channel for all currently known jubilea. Call this function on application startup */
     public void registerJubileaChannels() {
         MeasurementQuery measurementQuery = new MeasurementQuery(database);
-        measurementQuery.getAll(list -> {
-            List<Measurement> defaults = MeasurementUtil.getDefaultMeasurements();
-            defaults.addAll(list);
-            NotificationUtil.buildChannels(notificationManager, list);
-        });
+        measurementQuery.getAll(list -> NotificationUtil.buildChannels(notificationManager, list));
     }
 
     private PendingIntent buildPendingIntent(@NonNull Context context) {

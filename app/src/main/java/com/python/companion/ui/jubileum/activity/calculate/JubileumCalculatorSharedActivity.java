@@ -103,6 +103,7 @@ public class JubileumCalculatorSharedActivity extends AppCompatActivity {
                 x.onTypeChange(t);
             fastAdapter.notifyAdapterDataSetChanged();
         });
+        LocalDate together = MeasurementUtil.getTogether(this);
         amountView.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -110,8 +111,6 @@ public class JubileumCalculatorSharedActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 userInterval = getInterval(s);
-                SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-                LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
                 for (int x = 0; x < fastAdapter.getItemCount(); ++x) {
                     JubileumCalculatorItem item = fastAdapter.getItem(x);
                     final int w = x;
@@ -148,22 +147,10 @@ public class JubileumCalculatorSharedActivity extends AppCompatActivity {
     }
 
     private void setListUpdates() {
-        SharedPreferences preferences = getSharedPreferences(getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
-        LocalDate together = LocalDate.parse(preferences.getString(getString(R.string.cactus_preferences_key_together), "2017-11-08"));
-
-        List<JubileumCalculatorItem> defaultList = MeasurementUtil.getDefaultMeasurements().parallelStream().map(measurement -> {
-            try {
-                return new JubileumCalculatorItem(measurement, MeasurementUtil.futureIntertwinedInterval(measurement, together, others));
-            } catch (DateTimeException e) {
-                return new JubileumCalculatorItem(measurement, userInterval >= 0 ? "Very far away" : "Very long ago");
-            }
-        }).collect(Collectors.toList());
-
-        for (JubileumCalculatorItem x : defaultList)
-            x.setSelectable(false);
+        LocalDate together = MeasurementUtil.getTogether(this);
 
         viewModel.getMeasurements().observe(this, measurements -> {
-            List<JubileumCalculatorItem> newlist = measurements.parallelStream().map(measurement -> {
+            List<JubileumCalculatorItem> list = measurements.parallelStream().map(measurement -> {
                 try {
                     return new JubileumCalculatorItem(measurement, MeasurementUtil.futureIntertwinedInterval(measurement, together, others));
                 } catch (DateTimeException e) {
@@ -171,8 +158,7 @@ public class JubileumCalculatorSharedActivity extends AppCompatActivity {
                 }
             }).collect(Collectors.toList());
 
-            newlist.addAll(defaultList);
-            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, newlist, new DiffCallback<JubileumCalculatorItem>() {
+            FastAdapterDiffUtil.INSTANCE.set(itemAdapter, list, new DiffCallback<JubileumCalculatorItem>() {
                 @Override
                 public boolean areItemsTheSame(JubileumCalculatorItem oldItem, JubileumCalculatorItem newItem) {
                     return oldItem.getMeasurement().getNamePlural().equals(newItem.getMeasurement().getNamePlural());

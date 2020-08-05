@@ -51,11 +51,12 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
                         amount*parent.getPrecomputedamount(),
                         parent.getMeasurementID(),
                         parent.getCornerstoneType(),
-                false);
+                        false,
+                        true);
     }
 
 
-    public Measurement(long id, @NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType, boolean hasNotifications) {
+    public Measurement(long id, @NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType, boolean hasNotifications, boolean canModify) {
         this.measurementID = id;
         this.nameSingular = nameSingular;
         this.namePlural = namePlural;
@@ -65,6 +66,7 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
         this.parentID = parentID;
         this.cornerstoneType = cornerstoneType;
         this.hasNotifications = hasNotifications;
+        this.canModify = canModify;
     }
 
     /**
@@ -73,7 +75,7 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
      * Prefer to use {@link #createFrom(String, String, long, Measurement)} if possible instead of this function
      * @param cornerstoneType The normalized cornerstone type this represents. e.g.: ChronoUnit.MONTHS
      */
-    public Measurement(@NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType, boolean hasNotifications) {
+    public Measurement(@NonNull String nameSingular, @NonNull String namePlural, Duration duration, long amount, long precomputedamount, long parentID, ChronoUnit cornerstoneType, boolean hasNotifications, boolean canModify) {
         this.nameSingular = nameSingular;
         this.namePlural = namePlural;
         this.duration = duration;
@@ -82,6 +84,7 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
         this.parentID = parentID;
         this.cornerstoneType = cornerstoneType;
         this.hasNotifications = hasNotifications;
+        this.canModify = canModify;
     }
 
     /**
@@ -89,7 +92,7 @@ public class Measurement implements TemporalUnit, EntityVisitor.Visitable {
      * Use this only if you will fill in all fields yourself at a later time
      */
     public static Measurement template() {
-        return new Measurement(0, "", "", null, 0, 0, 0, null, false);
+        return new Measurement(0, "", "", null, 0, 0, 0, null, false, true);
     }
 
     public long getMeasurementID() {

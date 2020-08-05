@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 3,
-    "identityHash": "0dd5e42069b8db064ce1750824bb4f8a",
+    "version": 4,
+    "identityHash": "abdf41a4899b43b5831b1b818c4f2a65",
     "entities": [
       {
         "tableName": "Note",
@@ -174,7 +174,7 @@
       },
       {
         "tableName": "Notify",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `measurementID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `jubileumDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `cornerstoneType` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jubileumID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `measurementID` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "notifyID",
@@ -183,8 +183,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "measurementID",
-            "columnName": "measurementID",
+            "fieldPath": "jubileumID",
+            "columnName": "jubileumID",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -195,22 +195,16 @@
             "notNull": true
           },
           {
-            "fieldPath": "jubileumDate",
-            "columnName": "jubileumDate",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
             "fieldPath": "amount",
             "columnName": "amount",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "cornerstoneType",
-            "columnName": "cornerstoneType",
-            "affinity": "TEXT",
-            "notNull": false
+            "fieldPath": "measurementID",
+            "columnName": "measurementID",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -226,7 +220,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0dd5e42069b8db064ce1750824bb4f8a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'abdf41a4899b43b5831b1b818c4f2a65')"
     ]
   }
 }

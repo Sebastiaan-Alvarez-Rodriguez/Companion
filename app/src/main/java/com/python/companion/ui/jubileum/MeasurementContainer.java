@@ -18,7 +18,7 @@ public class MeasurementContainer implements Parcelable {
     }
 
     protected MeasurementContainer(Parcel in) {
-        measurement = new Measurement(in.readLong(), in.readString(), in.readString(), Duration.parse(in.readString()), in.readLong(), in.readLong(), in.readLong(), ChronoUnit.valueOf(in.readString()), in.readBoolean());
+        measurement = new Measurement(in.readLong(), in.readString(), in.readString(), Duration.parse(in.readString()), in.readLong(), in.readLong(), in.readLong(), ChronoUnit.valueOf(in.readString()), in.readBoolean(), in.readBoolean());
     }
 
     public @NonNull Measurement getMeasurement() {
@@ -53,5 +53,6 @@ public class MeasurementContainer implements Parcelable {
         dest.writeLong(measurement.getParentID());
         dest.writeString(measurement.getCornerstoneType().name());
         dest.writeBoolean(measurement.getHasNotifications());
+        dest.writeBoolean(measurement.getCanModify());
     }
 }

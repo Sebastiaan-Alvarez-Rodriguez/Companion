@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
-public class JubileumItem extends AbstractItem<FastAdapter.ViewHolder> {
+public class JubileumItem extends AbstractItem<FastAdapter.ViewHolder<JubileumItem>> {
     public static final @LayoutRes
     int layoutResource = R.layout.item_jubileum;
 
@@ -30,12 +30,10 @@ public class JubileumItem extends AbstractItem<FastAdapter.ViewHolder> {
     public JubileumItem(@NonNull MeasurementWithParentNames measurementWithParentNames) {
         this.measurement = measurementWithParentNames.measurement;
 
-        measurementWithParentNames.fill();
-
         this.parentSingular = Objects.requireNonNull(measurementWithParentNames.parentSingular);
         this.parentPlural = Objects.requireNonNull(measurementWithParentNames.parentPlural);
-
     }
+
     public JubileumItem(@NonNull Measurement measurement, @NonNull String parentSingular, @NonNull String parentPlural) {
         this.measurement = measurement;
         this.parentSingular = parentSingular;
@@ -44,7 +42,7 @@ public class JubileumItem extends AbstractItem<FastAdapter.ViewHolder> {
 
     @NotNull
     @Override
-    public FastAdapter.ViewHolder getViewHolder(@NotNull View view) {
+    public FastAdapter.ViewHolder<JubileumItem> getViewHolder(@NotNull View view) {
         return new JubileumItem.MeasurementViewHolder(view);
     }
 
@@ -55,7 +53,7 @@ public class JubileumItem extends AbstractItem<FastAdapter.ViewHolder> {
 
     @Override
     public int getType() {
-        return R.id.item_text_layout;
+        return R.id.item_jubileum_layout;
     }
 
     @Override
@@ -90,12 +88,12 @@ public class JubileumItem extends AbstractItem<FastAdapter.ViewHolder> {
     }
 
     @Override
-    public void bindView(@NotNull FastAdapter.ViewHolder holder, @NotNull List<Object> payloads) {
+    public void bindView(@NotNull FastAdapter.ViewHolder<JubileumItem> holder, @NotNull List<Object> payloads) {
         super.bindView(holder, payloads);
         if (isSelected())
             holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
         else
-            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorWindowBackground));
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), android.R.color.transparent));
     }
 
 

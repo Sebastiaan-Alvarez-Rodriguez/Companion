@@ -30,9 +30,7 @@ public class NoteQuery {
     }
 
     public void insert(Note... notes) {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            daoNote.insert(notes);
-        });
+        Executors.newSingleThreadExecutor().execute(() -> daoNote.insert(notes));
     }
 
     public void update(Note note, ResultListener<Void> listener) {

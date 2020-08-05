@@ -26,5 +26,12 @@
     <string name="pass_preferences">PassPrefs</string>
     <string name="pass_preferences_key_pass">p</string> <!-- Password hash with Argon2 stored under this key-->
 
+    <!--Used in NotifyAddDialog -->
+    <string-array
+        name="notify_add_dialog_options">
+        <item>On the jubileum itself</item>
+        <item>Some time before…</item>
+        <item>Every day until jubileum, some time before…</item>
+    </string-array>
 
 </resources>

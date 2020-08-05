@@ -1,6 +1,5 @@
 package com.python.companion.ui.notes.note.activity.view;
 
-import android.app.Application;
 import android.content.Intent;
 import android.graphics.BlendMode;
 import android.graphics.BlendModeColorFilter;
@@ -12,7 +11,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,16 +18,11 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.widget.NestedScrollView;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
-import com.python.companion.db.Database;
 import com.python.companion.db.constant.NoteQuery;
-import com.python.companion.db.dao.DAONote;
 import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.converters.NoteConverter;
@@ -58,14 +51,11 @@ public class NoteViewActivity extends AppCompatActivity {
     private SearchView searchView;
     private MenuItem searchItem, categoryItem, favoriteItem, typeItem, lockItem;
 
-    private NoteViewViewModel model;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_view);
         layout = findViewById(R.id.activity_note_view_layout);
-        model = new ViewModelProvider(this).get(NoteViewViewModel.class);
 
         Intent intent = getIntent();
         note = ((NoteContainer) intent.getParcelableExtra("note")).getNote();
@@ -136,7 +126,7 @@ public class NoteViewActivity extends AppCompatActivity {
     private void setCategory(int categoryColor) {
         double diff = ColorUtil.computeDiff(categoryColor, getColor(R.color.colorPrimary));
         if (Math.abs(diff) < 4.0)
-            categoryColor = getColor(R.color.colorWindowBackground);
+            categoryColor = getColor(android.R.color.transparent);
         categoryItem.getIcon().setColorFilter(new BlendModeColorFilter(categoryColor, BlendMode.SRC_IN));
     }
 
@@ -270,21 +260,5 @@ public class NoteViewActivity extends AppCompatActivity {
             setCategory(data.getIntExtra("categoryColor", -1));
         }
         super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    public static class NoteViewViewModel extends AndroidViewModel {
-        private DAONote daoNote;
-        private LiveData<Note> data;
-
-        public NoteViewViewModel(@NonNull Application application) {
-            super(application);
-            daoNote = Database.getDatabase(application).getDAONote();
-        }
-
-        public LiveData<Note> getNote(@NonNull String name) {
-            if (data == null)
-                data = daoNote.getLive(name);
-            return data;
-        }
     }
 }

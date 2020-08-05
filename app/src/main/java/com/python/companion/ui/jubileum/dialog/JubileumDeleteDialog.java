@@ -119,7 +119,6 @@ public class JubileumDeleteDialog extends DialogFragment {
     }
 
     protected void setMeasurement() {
-        measurementWithParentNames.fill();
         measurementNameView.setText(measurementWithParentNames.measurement.getNamePlural());
         measurementEqualityView.setText("1 "+ measurementWithParentNames.measurement.getNameSingular()+" =");
         long amount = measurementWithParentNames.measurement.getAmount();

@@ -1,8 +1,6 @@
 package com.python.companion.ui.jubileum.dialog;
 
 import android.app.Dialog;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +16,7 @@ import com.python.companion.R;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
 import com.python.companion.ui.general.picker.GoodDatePicker;
+import com.python.companion.util.MeasurementUtil;
 
 import java.time.LocalDate;
 
@@ -113,9 +112,7 @@ public class TogetherDialog extends DialogFragment {
         });
 
         acceptButton.setOnClickListener(v -> {
-            SharedPreferences.Editor editor = getContext().getSharedPreferences(getContext().getString(R.string.cactus_preferences), Context.MODE_PRIVATE).edit();
-            editor.putString(getString(R.string.cactus_preferences_key_together), picker.getDate().toString());
-            editor.apply();
+            MeasurementUtil.setTogether(picker.getDate(), getContext());
             if (acceptListener != null)
                 acceptListener.onAccept();
             dismiss();
