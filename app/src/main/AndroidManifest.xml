@@ -39,6 +39,14 @@
         <activity android:name=".ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity" />
         <activity android:name=".ui.jubileum.activity.JubileumSelectActivity" />
         <activity android:name=".ui.jubileum.activity.calculate.JubileumCalculatorActivity" />
-    </application>
 
+<!--        Notification BroadcastReceiver-->
+        <receiver android:name=".notification.PlatformReceiver"  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="com.python.companion.action.CHECK_NOTIFICATIONS"/>
+            </intent-filter>
+        </receiver>
+
+    </application>
 </manifest>

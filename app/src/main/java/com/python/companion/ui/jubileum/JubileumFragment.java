@@ -39,8 +39,8 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.interact.MeasurementStore;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
 import com.python.companion.db.repository.MeasurementRepository;
 import com.python.companion.ui.MainActivity;
@@ -276,8 +276,7 @@ public class JubileumFragment extends Fragment implements ActionMode.Callback {
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         if (item.getItemId() == R.id.fragment_jubileum_action_delete) {
 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
-            final MeasurementQuery measurementQuery = new MeasurementQuery(getContext());
-            measurementQuery.delete(getContext(), selectionExtension.getSelectedItems().stream().map(JubileumItem::getMeasurement).collect(Collectors.toList()), () -> {});
+            MeasurementStore.delete(selectionExtension.getSelectedItems().stream().map(JubileumItem::getMeasurement).collect(Collectors.toList()), getContext(), () -> {});
             mode.finish();
         }
         return true;

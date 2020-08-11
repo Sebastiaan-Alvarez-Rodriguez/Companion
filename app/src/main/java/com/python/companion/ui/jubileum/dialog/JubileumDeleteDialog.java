@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
-import com.python.companion.db.constant.MeasurementQuery;
+import com.python.companion.db.interact.MeasurementStore;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
@@ -70,13 +70,13 @@ public class JubileumDeleteDialog extends DialogFragment {
     protected Button cancelButton, overrideButton;
 
     protected @Nullable DialogCancelListener cancelListener;
-    protected @Nullable DialogAcceptListener overrideListener;
+    protected @Nullable DialogAcceptListener deleteListener;
     protected String existsText, questionText, warningText;
     protected @NonNull MeasurementWithParentNames measurementWithParentNames;
 
-    protected JubileumDeleteDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, String existsText, String questionText, String warningText, @NonNull MeasurementWithParentNames measurementWithParentNames) {
+    protected JubileumDeleteDialog(@Nullable DialogCancelListener cancelListener, @NonNull DialogAcceptListener deleteListener, String existsText, String questionText, String warningText, @NonNull MeasurementWithParentNames measurementWithParentNames) {
         this.cancelListener = cancelListener;
-        this.overrideListener = overrideListener;
+        this.deleteListener = deleteListener;
         this.existsText = existsText;
         this.warningText = warningText;
         this.questionText = questionText;
@@ -133,10 +133,11 @@ public class JubileumDeleteDialog extends DialogFragment {
             dismiss();
         });
         overrideButton.setOnClickListener(v -> {
-            if (overrideListener != null) {
-                MeasurementQuery query = new MeasurementQuery(getContext());
-                query.delete(getContext(), measurementWithParentNames.measurement, () -> overrideListener.onAccept());
-            }
+
+            if (deleteListener != null)
+                MeasurementStore.delete(measurementWithParentNames.measurement, getContext(), () -> deleteListener.onAccept());
+            else
+                MeasurementStore.delete(measurementWithParentNames.measurement, getContext(), () -> {});
             dismiss();
         });
     }

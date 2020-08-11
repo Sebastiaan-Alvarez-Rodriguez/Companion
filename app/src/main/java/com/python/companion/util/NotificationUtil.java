@@ -74,7 +74,7 @@ public class NotificationUtil {
             return this;
         }
 
-        /** Builds the notification channel. If notification channel already exists, nothing happens */
+        /** Builds and registers the notification channel. If notification channel already exists, nothing happens */
         public NotificationChannel build(@NonNull Context context) {
             NotificationChannel channel = reap();
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
@@ -83,12 +83,12 @@ public class NotificationUtil {
         }
 
         /** Builds and registers all given prepared channelBuilders */
-        public static void buildAll(@NonNull Context context, @NonNull Collection<ChannelBuilder> channelBuilders) {
+        public static void buildAll(@NonNull Collection<ChannelBuilder> channelBuilders, @NonNull Context context) {
             NotificationManager manager = context.getSystemService(NotificationManager.class);
             manager.createNotificationChannels(channelBuilders.parallelStream().map(ChannelBuilder::reap).collect(Collectors.toList()));
         }
-        /** Equivalent to {@link #buildAll(Context, Collection)}. This call does not require context, but instead a NotificationManager */
-        public static void buildAll(@NonNull NotificationManager manager, @NonNull Collection<ChannelBuilder> channelBuilders) {
+        /** Equivalent to {@link #buildAll(Collection, Context)}. This call does not require context, but instead a NotificationManager */
+        public static void buildAll(@NonNull Collection<ChannelBuilder> channelBuilders, @NonNull NotificationManager manager) {
             manager.createNotificationChannels(channelBuilders.parallelStream().map(ChannelBuilder::reap).collect(Collectors.toList()));
         }
 
@@ -106,17 +106,22 @@ public class NotificationUtil {
         }
     }
 
-    /**
-     * Builds a notification for each measurement
-     * @param measurements List of measurements to build notification channels for. Channels are created in definition order in provided list
-     */
-    public static void buildChannels(@NonNull Context context, @NonNull List<Measurement> measurements) {
-        ChannelBuilder.buildAll(context, measurements.stream().map(measurement -> new ChannelBuilder().setTitle(measurement.getNamePlural()).setDescription("Channel to receive "+measurement.getNameSingular()+" jubilea on")).collect(Collectors.toList()));
+
+    public static void buildChannel(@NonNull Measurement measurement, @NonNull Context context) {
+        new ChannelBuilder().setTitle(measurement.getNamePlural()).setDescription("Channel to receive "+measurement.getNameSingular()+" jubilea on").build(context);
     }
 
-    /** Equivalent to {@link #buildChannels(Context, List)}. This call does not require context */
-    public static void buildChannels(@NonNull NotificationManager manager, @NonNull List<Measurement> measurements) {
-        ChannelBuilder.buildAll(manager, measurements.stream().map(measurement -> new ChannelBuilder().setTitle(measurement.getNamePlural()).setDescription("Channel to receive "+measurement.getNameSingular()+" jubilea on")).collect(Collectors.toList()));
+    /**
+     * Builds a notification for each provided measurement
+     * @param measurements List of measurements to build notification channels for. Channels are created in definition order in provided list
+     */
+    public static void buildChannels(@NonNull List<Measurement> measurements, @NonNull Context context) {
+        ChannelBuilder.buildAll(measurements.stream().map(measurement -> new ChannelBuilder().setTitle(measurement.getNamePlural()).setDescription("Channel to receive "+measurement.getNameSingular()+" jubilea on")).collect(Collectors.toList()), context);
+    }
+
+    /** Equivalent to {@link #buildChannels(List, Context)}. This call does not require context */
+    public static void buildChannels(@NonNull List<Measurement> measurements, @NonNull NotificationManager manager) {
+        ChannelBuilder.buildAll(measurements.stream().map(measurement -> new ChannelBuilder().setTitle(measurement.getNamePlural()).setDescription("Channel to receive "+measurement.getNameSingular()+" jubilea on")).collect(Collectors.toList()), manager);
     }
 
     /**
@@ -124,7 +129,7 @@ public class NotificationUtil {
      * NOTE: If you delete a notification channel with a given title, and later recreate it, it is configured with settings from before deletion!
      * @param channelTitle Title of notification channel
      */
-    protected static void deleteChannel(@NonNull Context context, @NonNull String channelTitle) {
+    protected static void deleteChannel(@NonNull String channelTitle, @NonNull Context context) {
         NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         notificationManager.deleteNotificationChannel(CHANNEL_ID_HEADER+channelTitle);
     }
@@ -133,41 +138,40 @@ public class NotificationUtil {
      * Deletes notification channel for given measurement, if it exists.
      * NOTE: If you delete a notification channel with a given title, and later recreate it, it is configured with settings from before deletion!
      */
-    public static void deleteChannel(@NonNull Context context, @NonNull Measurement measurement) {
-        deleteChannel(context, measurement.getNamePlural());
+    public static void deleteChannel(@NonNull Measurement measurement, @NonNull Context context) {
+        deleteChannel(measurement.getNamePlural(), context);
     }
 
     /**
      * Deletes list of notification channels
      * NOTE: If you delete a notification channel with a given title, and later recreate it, it is configured with settings from before deletion!
      */
-    protected static void deleteChannels(@NonNull Context context, @NonNull List<String> titles) {
+    protected static void deleteChannels(@NonNull List<String> titles, @NonNull Context context) {
         NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-        deleteChannels(notificationManager, titles);
+        deleteChannels(titles, notificationManager);
     }
 
-    /** Equivalent to {@link #deleteChannels(Context, List)}, using a given {@link NotificationManager} instead of a <code>Context</code> */
-    public static void deleteChannels(@NonNull NotificationManager notificationManager, @NonNull List<String> titles) {
+    /** Equivalent to {@link #deleteChannels(List, Context)}, using a given {@link NotificationManager} instead of a <code>Context</code> */
+    public static void deleteChannels(@NonNull List<String> titles, @NonNull NotificationManager notificationManager) {
         for (String title : titles)
             notificationManager.deleteNotificationChannel(CHANNEL_ID_HEADER+title);
     }
 
     /**
-     * Equivalent to {@link #deleteChannels(Context, List)}, when converting given measurements to their plural titles.
+     * Equivalent to {@link #deleteChannels(List, Context)}, when converting given measurements to their plural titles.
      * Other name is needed because of method erasure equivalence
      */
-    public static void deleteChannels2(@NonNull Context context, @NonNull List<Measurement> measurements) {
-        deleteChannels(context, measurements.parallelStream().map(Measurement::getNamePlural).collect(Collectors.toList()));
+    public static void deleteChannels2(@NonNull List<Measurement> measurements, @NonNull Context context) {
+        deleteChannels(measurements.parallelStream().map(Measurement::getNamePlural).collect(Collectors.toList()), context);
     }
-    /** Equivalent to {@link #deleteChannels2(Context, List)}, using a given {@link NotificationManager} instead of a <code>Context</code> */
-    public static void deleteChannels2(@NonNull NotificationManager notificationManager, @NonNull List<Measurement> measurements) {
-        deleteChannels(notificationManager, measurements.parallelStream().map(Measurement::getNamePlural).collect(Collectors.toList()));
+    /** Equivalent to {@link #deleteChannels2(List, Context)}, using a given {@link NotificationManager} instead of a <code>Context</code> */
+    public static void deleteChannels2(@NonNull List<Measurement> measurements, @NonNull NotificationManager notificationManager) {
+        deleteChannels(measurements.parallelStream().map(Measurement::getNamePlural).collect(Collectors.toList()), notificationManager);
     }
-
 
 
     /** Returns <code>true</code> if this app has registered a notification channel with this title, <code>false</code> otherwise */
-    public static boolean channelExists(@NonNull Context context, @NonNull String title) {
+    public static boolean channelExists(@NonNull String title, @NonNull Context context) {
         NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         for (NotificationChannel channel : notificationManager.getNotificationChannels())
             if (channel.getId().equals(CHANNEL_ID_HEADER+title))
@@ -175,13 +179,14 @@ public class NotificationUtil {
         return false;
     }
 
+
     /**
      * Constructs builder object to create notifications
      * @see Notification.Builder
      * @param channelTitle Title of the channel you want to post this notification on
      * @return builder object to create notifications
      */
-    public static Notification.Builder builder(@NonNull Context context, @NonNull String channelTitle) {
+    public static Notification.Builder builder(@NonNull String channelTitle, @NonNull Context context) {
         return new Notification.Builder(context, CHANNEL_ID_HEADER+channelTitle);
     }
 }

@@ -56,7 +56,7 @@ public class JubileumViewActivity extends AppCompatActivity implements ActionMod
     private int REQ_EDIT = 1;
 
     private View layout;
-    private TextView equationView, amountHadView, amountHadNameView, nextAnnounceView, nextDateView, nextDistanceView, notificationsAnnounceView;
+    private TextView equationView, amountHadView, amountHadNameView, nextAnnounceView, nextDateView, nextDistanceView;
     private RecyclerView notificationsView;
     private ImageButton notificationAddButton;
     private FloatingActionButton editButton;
@@ -98,7 +98,6 @@ public class JubileumViewActivity extends AppCompatActivity implements ActionMod
         nextAnnounceView = findViewById(R.id.activity_jubileum_view_next_announce);
         nextDateView = findViewById(R.id.activity_jubileum_view_next_date);
         nextDistanceView = findViewById(R.id.activity_jubileum_view_next_distance);
-        notificationsAnnounceView = findViewById(R.id.activity_jubileum_view_notifications_announce);
         notificationsView = findViewById(R.id.activity_jubileum_view_notifications);
         notificationAddButton = findViewById(R.id.activity_jubileum_view_notifications_add);
 

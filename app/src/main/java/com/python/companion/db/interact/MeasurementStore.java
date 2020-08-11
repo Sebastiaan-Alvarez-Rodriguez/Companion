@@ -9,6 +9,10 @@ import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
 import com.python.companion.ui.jubileum.dialog.JubileumDeleteDialog;
+import com.python.companion.util.NotificationUtil;
+import com.python.companion.util.genericinterfaces.FinishListener;
+
+import java.util.List;
 
 
 public class MeasurementStore {
@@ -22,12 +26,14 @@ public class MeasurementStore {
         measurementQuery.isUniqueInstancedNamed(measurement.getNameSingular(), measurement.getNamePlural(), result -> {
             if (result == null) { // Unique-named measurement
                 measurementQuery.insert(measurement);
+                NotificationUtil.buildChannel(measurement, context);
                 callback.onSuccess();
             } else { // Another measurement with same name exists
                 showDeleteDialog(result, manager, new MeasurementStore.StoreCallback() {
                     @Override
                     public void onSuccess() {
                         measurementQuery.insert(measurement);
+                        NotificationUtil.buildChannel(measurement, context);
                         callback.onSuccess();
                     }
                     @Override
@@ -54,6 +60,18 @@ public class MeasurementStore {
         }
     }
 
+    public static void delete(@NonNull Measurement measurement, @NonNull Context context, @NonNull FinishListener listener) {
+        NotificationUtil.deleteChannel(measurement, context);
+        MeasurementQuery query = new MeasurementQuery(context);
+        query.delete(measurement, listener);
+    }
+
+    public static void delete(@NonNull List<Measurement> measurements, @NonNull Context context, @NonNull FinishListener listener) {
+        NotificationUtil.deleteChannels2(measurements, context);
+        MeasurementQuery query = new MeasurementQuery(context);
+        query.delete(measurements, listener);
+    }
+
     private static void updateInternal(@NonNull MeasurementQuery measurementQuery, @NonNull Measurement measurement, @NonNull Measurement old, @NonNull MeasurementStore.StoreCallback callback) {
         measurementQuery.update(measurement, old, success -> {
             if (success)
@@ -72,7 +90,7 @@ public class MeasurementStore {
                     showDeleteDialog(result, manager, new StoreCallback() {
                         @Override
                         public void onSuccess() {
-                            measurementQuery.delete(context, measurement, () -> updateCheckPlural(measurementQuery, measurement, old, manager, callback));
+                            delete(measurement, context, () -> updateCheckPlural(measurementQuery, measurement, old, manager, callback));
                         }
                         @Override
                         public void onFailure() {
@@ -110,7 +128,7 @@ public class MeasurementStore {
     }
 
     private static void showDeleteDialog(@NonNull MeasurementWithParentNames conflicting, @NonNull FragmentManager manager, @NonNull MeasurementStore.StoreCallback callback) {
-        JubileumDeleteDialog measurementOverrideDialog = new JubileumDeleteDialog.Builder()
+        JubileumDeleteDialog deleteDialog = new JubileumDeleteDialog.Builder()
                 .setExistsText("Measurement name already exists!")
                 .setQuestionText("Do you want to delete existing measurement?")
                 .setWarningText("Warning: Deleted measurements cannot be restored")
@@ -118,7 +136,7 @@ public class MeasurementStore {
                 .setDeleteListener(callback::onSuccess)
                 .setCancelListener(callback::onFailure)
                 .build();
-        measurementOverrideDialog.show(manager, null);
+        deleteDialog.show(manager, null);
     }
 
     /** Callback to receive final state of store operations */

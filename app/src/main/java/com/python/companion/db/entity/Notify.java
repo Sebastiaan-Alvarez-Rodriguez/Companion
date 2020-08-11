@@ -74,6 +74,11 @@ public class Notify {
         return new Notify(base.getMeasurementID(), jubileumDate, 0, MeasurementUtil.NoneMeasurementID());
     }
 
+    /** Basic copy constructor */
+    public static @NonNull Notify from(@NonNull Notify n) {
+        return new Notify(n.getNotifyID(), n.getJubileumID(), n.getNotifyDate(), n.getAmount(), n.getMeasurementID());
+    }
+
     public long getNotifyID() {
         return notifyID;
     }

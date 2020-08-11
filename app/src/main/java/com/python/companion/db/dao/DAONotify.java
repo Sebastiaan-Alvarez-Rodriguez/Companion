@@ -6,6 +6,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 
 import com.python.companion.db.entity.Notify;
@@ -28,6 +29,16 @@ public abstract class DAONotify {
 
     @Query("SELECT n.*, m.nameSingular AS measurementSingular, m.namePlural AS measurementPlural FROM Notify n LEFT JOIN Measurement m ON m.measurementID = n.measurementID WHERE jubileumID = :jubileumID")
     public abstract LiveData<List<NotifyWithMeasurementNames>> getForJubileumNamed(long jubileumID);
+
+    /** Returns all notifies with a date before or on given date */
+    @Query("SELECT * FROM Notify WHERE notifyDate <= :date")
+    public abstract List<Notify> getDues(LocalDate date);
+
+    /** Shorthand for {@link #getDues(LocalDate)}, with today as date argument (gets all due notifies on this day) */
+    @Transaction
+    public List<Notify> getDues() {
+        return getDues(LocalDate.now());
+    }
 
     /** Returns a notification for a specific jubileum (using jubileumID), where notification is scheduled on given date */
     @Query("SELECT * FROM Notify WHERE jubileumID = :jubileumID AND notifyDate = :notifyDate")

@@ -5,12 +5,13 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOMeasurement;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.interact.MeasurementStore;
 import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
-import com.python.companion.util.NotificationUtil;
 import com.python.companion.util.genericinterfaces.FinishListener;
 import com.python.companion.util.genericinterfaces.ResultListener;
 
@@ -28,28 +29,29 @@ public class MeasurementQuery {
         daoMeasurement = database.getDAOMeasurement();
     }
 
-    /** Insert a new measurement */
+    /** Insert a new measurement. Do not call this directly. Instead, use {@link MeasurementStore#insert(Measurement, FragmentManager, Context, MeasurementStore.StoreCallback)}*/
     public void insert(@NonNull Measurement measurement) {
         Executors.newSingleThreadExecutor().execute(() -> daoMeasurement.insert(measurement));
     }
 
-    public void delete(@NonNull Context context, @NonNull List<Measurement> measurements, @NonNull FinishListener listener) {
+    /** Deletes a measurement. Do not call this directly. Instead, use {@link MeasurementStore#delete(List, Context, FinishListener)} */
+    public void delete(@NonNull List<Measurement> measurements, @NonNull FinishListener listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            NotificationUtil.deleteChannels2(context, measurements);
             for (Measurement m : measurements)
                 daoMeasurement.deleteInherit(m);
             listener.onFinish();
         });
     }
 
-    public void delete(@NonNull Context context, @NonNull Measurement measurement, @NonNull FinishListener listener) {
+    /** Deletes a measurement. Do not call this directly. Instead, use {@link MeasurementStore#delete(Measurement, Context, FinishListener)} */
+    public void delete(@NonNull Measurement measurement, @NonNull FinishListener listener) {
         Executors.newSingleThreadExecutor().execute(() -> {
-            NotificationUtil.deleteChannel(context, measurement);
             daoMeasurement.deleteInherit(measurement);
             listener.onFinish();
         });
     }
 
+    /** Updates a measurement, handling inheritance. Do not call this directly. Instead, use {@link MeasurementStore#update(Measurement, Measurement, FragmentManager, Context, MeasurementStore.StoreCallback)} */
     public void update(@NonNull Measurement measurement, @NonNull Measurement old, @NonNull ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.updateInherit(measurement, old)));
     }

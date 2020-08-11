@@ -8,6 +8,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 
+import com.python.companion.R;
 import com.python.companion.db.Database;
 import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.util.NotificationUtil;
@@ -40,12 +41,12 @@ public class Platform {
     /** Registers a notification channel for all currently known jubilea. Call this function on application startup */
     public void registerJubileaChannels() {
         MeasurementQuery measurementQuery = new MeasurementQuery(database);
-        measurementQuery.getAll(list -> NotificationUtil.buildChannels(notificationManager, list));
+        measurementQuery.getAll(list -> NotificationUtil.buildChannels(list, notificationManager));
     }
 
     private PendingIntent buildPendingIntent(@NonNull Context context) {
         Intent intent = new Intent(context, PlatformReceiver.class);
-//        intent.setAction("com.python.companion.PlatformReceiver"); //action = context.getString(R.string.action_notify_administer_medication)
+        intent.setAction(context.getString(R.string.action_check_notifications));
         intent.setType("com.python.companion.PlatformReceiver");
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }

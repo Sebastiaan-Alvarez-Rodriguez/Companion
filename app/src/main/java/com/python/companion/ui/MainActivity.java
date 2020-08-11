@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         onAppStart();
     }
 
+    /** Triggered when our application starts */
     private void onAppStart() {
         Guard.init(this);
         if (!getSharedPreferences(getString(R.string.cactus_preferences), MODE_PRIVATE).contains(getString(R.string.cactus_preferences_key_together))) {

@@ -34,4 +34,6 @@
         <item>Every day until jubileum, some time before…</item>
     </string-array>
 
+    <!--Our custom Actions for PlatformReceiver-->
+    <string name="action_check_notifications">com.python.companion.action.CHECK_NOTIFICATIONS</string>
 </resources>

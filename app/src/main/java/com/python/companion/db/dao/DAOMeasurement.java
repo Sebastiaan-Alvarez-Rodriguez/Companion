@@ -15,6 +15,8 @@ import com.python.companion.db.pojo.measurement.MeasurementWithParentNames;
 
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Dao
 public abstract class DAOMeasurement {
@@ -79,6 +81,12 @@ public abstract class DAOMeasurement {
 
     @Query("SELECT * FROM Measurement WHERE measurementID = :id")
     public abstract Measurement findByID(long id);
+
+    /** Maps a stream of ID's to their measurements. ID's which are not found are mapped to {@code null} on their respective indices */
+    @Transaction
+    public List<Measurement> findByID(Stream<Long> ids) {
+        return ids.map(this::findByID).collect(Collectors.toList());
+    }
 
     @Query("SELECT m1.*, m2.nameSingular AS parentSingular, m2.namePlural AS parentPlural FROM Measurement m1 LEFT JOIN Measurement m2 ON m1.parentID = m2.measurementID WHERE m1.measurementID = :id")
     public abstract MeasurementWithParentNames findByIDNamed(long id);

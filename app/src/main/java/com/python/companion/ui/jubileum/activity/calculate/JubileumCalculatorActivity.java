@@ -36,8 +36,8 @@ import com.mikepenz.fastadapter.listeners.ItemFilterListener;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.db.constant.MeasurementQuery;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.interact.MeasurementStore;
 import com.python.companion.ui.general.customviews.ContextMenuRecyclerView;
 import com.python.companion.ui.jubileum.MeasurementContainer;
 import com.python.companion.ui.jubileum.Type;
@@ -299,8 +299,7 @@ public class JubileumCalculatorActivity extends AppCompatActivity {
                 break;
             case R.id.menu_context_jubileum_delete:
                 if (clicked.getMeasurement().getCanModify()) {
-                    MeasurementQuery query = new MeasurementQuery(this);
-                    query.delete(this, clicked.getMeasurement(), () -> {});
+                    MeasurementStore.delete(clicked.getMeasurement(), this, () -> {});
                 } else {
                     Snackbar.make(layout, "Cannot delete default type '"+clicked.getMeasurement().getNameSingular()+"'!", Snackbar.LENGTH_LONG).show();
                 }
