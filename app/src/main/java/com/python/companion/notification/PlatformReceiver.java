@@ -37,6 +37,7 @@ public class PlatformReceiver extends BroadcastReceiver {
         List<Measurement> measurements = daoMeasurement.findByID(dues.stream().map(Notify::getJubileumID));
         updateDueNotifies(dues, measurements, context);
     }
+
     /** Sets all due dates for due notifies to be on the first valid future date. Pass a list of dues and pointed measurements of equivalent size */
     private static void updateDueNotifies(List<Notify> dues, List<Measurement> dueMeasurements, Context context) {
         if (dues.size() == 0 || dues.size() != dueMeasurements.size())

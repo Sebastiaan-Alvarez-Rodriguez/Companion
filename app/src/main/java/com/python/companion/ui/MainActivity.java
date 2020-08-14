@@ -15,9 +15,10 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
 import com.python.companion.notification.Platform;
+import com.python.companion.notification.PlatformReceiver;
 import com.python.companion.security.Guard;
-import com.python.companion.ui.jubileum.dialog.TogetherDialog;
 import com.python.companion.ui.general.settings.SettingsActivity;
+import com.python.companion.ui.jubileum.dialog.TogetherDialog;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -60,8 +61,9 @@ public class MainActivity extends AppCompatActivity {
             dialog.show(getSupportFragmentManager(), null);
         }
         Platform platform = Platform.getPlatform(this);
-        platform.registerPlatformSchedule(this);
         platform.registerJubileaChannels();
+        platform.registerPlatformSchedule(this);
+        PlatformReceiver.manualCycle(this);
     }
 
     @Override

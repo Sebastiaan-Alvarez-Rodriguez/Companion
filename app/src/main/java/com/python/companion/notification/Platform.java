@@ -47,7 +47,7 @@ public class Platform {
     private PendingIntent buildPendingIntent(@NonNull Context context) {
         Intent intent = new Intent(context, PlatformReceiver.class);
         intent.setAction(context.getString(R.string.action_check_notifications));
-        intent.setType("com.python.companion.PlatformReceiver");
+        intent.setType("com.python.companion.platformreceiver");
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
