@@ -1,4 +1,4 @@
-package com.python.companion.ui.general.settings.port;
+package com.python.companion.ui.settings.port;
 
 import android.os.Bundle;
 

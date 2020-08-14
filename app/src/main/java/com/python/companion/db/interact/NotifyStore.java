@@ -46,7 +46,11 @@ public class NotifyStore {
         NotifyQuery query = new NotifyQuery(context);
         query.isUniqueInstanced(notify, conflicting -> {
             if (conflicting == null) {
-                _insert(Database.getDatabase(context).getDAONotify(), finishListener, notify);
+                _insert(Database.getDatabase(context).getDAONotify(), () -> {
+                    MeasurementQuery mq = new MeasurementQuery(context);
+                    mq.setHasNotifications(true, notify.getJubileumID());
+                    finishListener.onFinish();
+                }, notify);
             } else {
                 notify.setNotifyID(conflicting.getNotifyID());
                 query.update(notify);

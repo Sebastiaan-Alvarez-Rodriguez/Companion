@@ -46,7 +46,6 @@ import com.python.companion.db.repository.NoteRepository;
 import com.python.companion.notification.PlatformReceiver;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.MainActivity;
-import com.python.companion.ui.general.settings.SettingsActivity;
 import com.python.companion.ui.notes.category.dialog.CategorySetDialog;
 import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
@@ -276,9 +275,6 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
             case R.id.fragment_note_menu_sort_date:
                 strategy = NoteSortHandler.SORT_DATE;
                 break;
-            case R.id.fragment_note_menu_settings:
-                Intent intent = new Intent(getContext(), SettingsActivity.class);
-                startActivity(intent);
             default:
                 return super.onOptionsItemSelected(item);
         }

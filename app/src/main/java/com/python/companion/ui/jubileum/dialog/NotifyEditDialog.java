@@ -300,7 +300,7 @@ public class NotifyEditDialog extends DialogFragment {
                 LocalDate jubileumDate = MeasurementUtil.futureInterval(measurement, together, 1);
                 LocalDate specified = jubileumDate.minus(amount, selected);
                 long between = ChronoUnit.DAYS.between(specified, jubileumDate);
-                for (long x = 0; x < between; ++x) {
+                for (long x = 0; x <= between; ++x) {
                     Notify n = Notify.from(getContext(), measurement, x, MeasurementUtil.getBaseMeasurement(ChronoUnit.DAYS));
                     NotifyStore.upsert(n, getContext(), this::finishSuccess);
                 }

@@ -34,8 +34,4 @@
         </group>
         </menu>
     </item>
-    <item
-        android:id="@+id/fragment_note_menu_settings"
-        android:title="Note settings"
-        app:showAsAction="never"/>
 </menu>

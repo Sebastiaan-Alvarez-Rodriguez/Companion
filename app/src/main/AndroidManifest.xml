@@ -29,9 +29,8 @@
         <activity android:name=".ui.notes.category.activity.CategoryEditActivity" />
 
 <!--        Settings related activities -->
-        <activity android:name=".ui.general.settings.SettingsActivity" />
-        <activity android:name=".ui.general.settings.port.ImportActivity" />
-        <activity android:name=".ui.general.settings.port.ExportActivity" />
+        <activity android:name=".ui.settings.port.ImportActivity" />
+        <activity android:name=".ui.settings.port.ExportActivity" />
 
 <!--        Jubileum related activities -->
         <activity android:name=".ui.jubileum.activity.JubileumViewActivity" android:theme="@style/AppTheme.NoActionBar"/>
