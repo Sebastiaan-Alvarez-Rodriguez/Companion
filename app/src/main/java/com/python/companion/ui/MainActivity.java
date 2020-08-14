@@ -59,7 +59,9 @@ public class MainActivity extends AppCompatActivity {
                     .setFinishListener(() -> Snackbar.make(drawer, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getSupportFragmentManager(), null);
         }
-        Platform.getPlatform(this).registerJubileaChannels();
+        Platform platform = Platform.getPlatform(this);
+        platform.registerPlatformSchedule(this);
+        platform.registerJubileaChannels();
     }
 
     @Override

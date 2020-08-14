@@ -1,6 +1,5 @@
 package com.python.companion.util;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -9,8 +8,12 @@ import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.python.companion.db.Database;
 import com.python.companion.db.entity.Measurement;
+import com.python.companion.db.entity.Notify;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -99,6 +102,8 @@ public class NotificationUtil {
          */
         @CheckResult
         protected NotificationChannel reap() {
+            if (title == null)
+                throw new IllegalStateException("Must set a title (using builder.setTitle(title))!");
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID_HEADER+title, title, importance);
             channel.setDescription(description);
             channel.setShowBadge(showBadge);
@@ -106,6 +111,19 @@ public class NotificationUtil {
         }
     }
 
+    /**
+     *  Returns the channel identifier for all notifications of a given jubileum.
+     * Note that this function does not guarantee the channel already has been created.
+     * @implNote In current app, we force that all measurements get a channel as they are created, so we know certainly that channel exists
+     */
+    public static String getChannelID(@NonNull Measurement measurement) {
+        return CHANNEL_ID_HEADER+measurement.getNamePlural();
+    }
+
+    /** Returns a unique identifier for all notifications of a given jubileum */
+    public static int getNotificationID(@NonNull Measurement measurement) {
+        return (int) measurement.getMeasurementID();
+    }
 
     public static void buildChannel(@NonNull Measurement measurement, @NonNull Context context) {
         new ChannelBuilder().setTitle(measurement.getNamePlural()).setDescription("Channel to receive "+measurement.getNameSingular()+" jubilea on").build(context);
@@ -180,13 +198,34 @@ public class NotificationUtil {
     }
 
 
-    /**
-     * Constructs builder object to create notifications
-     * @see Notification.Builder
-     * @param channelTitle Title of the channel you want to post this notification on
-     * @return builder object to create notifications
-     */
-    public static Notification.Builder builder(@NonNull String channelTitle, @NonNull Context context) {
-        return new Notification.Builder(context, CHANNEL_ID_HEADER+channelTitle);
+    /** Function to generate a notification title for given notify and measurement */
+    public static String getNotificationTitle(@NonNull Notify notify, @NonNull Measurement measurement) {
+        if (notify.getAmount() == 0) // We have a jubileum right now
+            return measurement.getNameSingular()+" Jubileum";
+        else
+            return measurement.getNameSingular()+" Jubileum inbound";
+    }
+
+    /** Function to generate notification content for given notify and measurement */
+    public static String getNotificationContent(@NonNull Notify notify, @NonNull Measurement measurement, @NonNull Context context) {
+        long jubileaHad = MeasurementUtil.distanceCurrent(measurement, MeasurementUtil.getTogether(context));
+        LocalDate jubileumDate = notify.getNotifyDate().plus(notify.getAmount(), measurement);
+        if (notify.getAmount() == 0) { // We have a jubileum right now!
+            if (jubileumDate.isEqual(LocalDate.now())) {
+                return "Today is your "+jubileaHad + MeasurementUtil.getDayOfMonthSuffix((int) jubileaHad)+" "+measurement.getNameSingular()+" anniversary, congratulations!";
+            } else {
+                long dayDistance = ChronoUnit.DAYS.between(jubileumDate, LocalDate.now());
+                return "While you were gone: "+dayDistance+" "+(dayDistance == 1 ? "day" : "days")+" ago was your"+jubileaHad + MeasurementUtil.getDayOfMonthSuffix((int) jubileaHad)+" "+measurement.getNameSingular()+" anniversary, congratulations!";
+            }
+        } else {
+            Measurement expression = Database.getDatabase(context).getDAOMeasurement().findByID(notify.getMeasurementID()); // measurement used to give distance in
+            long between = expression.between(LocalDate.now(), jubileumDate); // Amount of units to the next jubileum (rounded down)
+            if (MeasurementUtil.isBaseMeasurement(measurement)) {
+                return "In "+between+" "+(between == 1 ? expression.getNameSingular() : expression.getNamePlural())+", you will have your "+jubileaHad + MeasurementUtil.getDayOfMonthSuffix((int) jubileaHad)+" "+measurement.getNameSingular()+" anniversary!";
+            } else {
+                long dayDistance = ChronoUnit.DAYS.between(LocalDate.now(), jubileumDate);
+                return "In "+between+" "+(between == 1 ? expression.getNameSingular() : expression.getNamePlural())+" ("+dayDistance+" "+(dayDistance == 1 ? "day" : "days")+"), you will have your "+jubileaHad + MeasurementUtil.getDayOfMonthSuffix((int) jubileaHad)+" "+measurement.getNameSingular()+" anniversary!";
+            }
+        }
     }
 }

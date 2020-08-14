@@ -51,12 +51,11 @@ public class Platform {
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    /** Setup main platform boot: Boots {@link PlatformReceiver} every day around approximately 00:00 */
-    public void bootPlatform(@NonNull Context context) {
+    /** Setup main platform schedule: Boots {@link PlatformReceiver} every day around approximately 00:00 */
+    public void registerPlatformSchedule(@NonNull Context context) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
         calendar.set(Calendar.HOUR_OF_DAY, 0);
-
 
         PendingIntent pendingIntent = buildPendingIntent(context);
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);

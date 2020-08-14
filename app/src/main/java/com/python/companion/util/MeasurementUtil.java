@@ -178,17 +178,17 @@ public class MeasurementUtil {
         preferences.apply();
     }
 
-    /** Converts default types (chronounits) to measurementID's, used to store them in the database */
+    /** Converts default types (chronounits) to measurementID's, used to store them in the database. Returns {@code null} if no matching ID for a ChronoUnit exists */
     public static long chronoUnitToID(@NonNull ChronoUnit unit) {
         switch (unit) {
             case DAYS:
-                return -2;
+                return (long) -2;
             case MONTHS:
-                return -3;
+                return (long) -3;
             case YEARS:
-                return -4;
+                return (long) -4;
         }
-        throw new RuntimeException("Unsupported ChronoUnit ("+unit.toString()+")");
+        throw new IllegalArgumentException("Given ChronoUnit '"+unit.name()+"' is not supported");
     }
 
     public static Measurement getBaseMeasurement(@NonNull ChronoUnit unit) {
@@ -201,6 +201,10 @@ public class MeasurementUtil {
                 return new Measurement(chronoUnitToID(unit), "Year", "Years", ChronoUnit.YEARS.getDuration(), 1, 1, chronoUnitToID(unit), ChronoUnit.YEARS, false, false);
         }
         return Measurement.template();
+    }
+
+    public static boolean isBaseMeasurement(@NonNull Measurement measurement) {
+        return measurement.getMeasurementID() > -5 && measurement.getMeasurementID() < -1;
     }
 
     public static long NoneMeasurementID() {
