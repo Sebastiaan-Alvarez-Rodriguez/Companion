@@ -54,13 +54,15 @@ public abstract class DAOMeasurement {
     @Query("SELECT * FROM Measurement")
     public abstract LiveData<List<Measurement>> getAllLive();
 
-
     /**
      * Constructed using: https://www.sqlitetutorial.net/sqlite-self-join/
      * @return List of measurements, with parent singular and plural names
      */
     @Query("SELECT m1.*, m2.nameSingular AS parentSingular, m2.namePlural AS parentPlural FROM Measurement m1 LEFT JOIN Measurement m2 ON m1.parentID = m2.measurementID")
     public abstract LiveData<List<MeasurementWithParentNames>> getAllNamedLive();
+
+    @Query("UPDATE Measurement SET hasNotifications = :hasNotifications WHERE measurementID = :measurementID")
+    public abstract void setHasNotifications(long measurementID, boolean hasNotifications);
 
     @Query("SELECT * FROM Measurement WHERE nameSingular = :nameSingular")
     public abstract Measurement getBySingular(String nameSingular);

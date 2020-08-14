@@ -43,4 +43,8 @@ public abstract class DAONotify {
     /** Returns a notification for a specific jubileum (using jubileumID), where notification is scheduled on given date */
     @Query("SELECT * FROM Notify WHERE jubileumID = :jubileumID AND notifyDate = :notifyDate")
     public abstract Notify findConflicting(long jubileumID, LocalDate notifyDate);
+
+    /** Returns {@code true} if there is at least one notification for given measurement, false otherwise*/
+    @Query("SELECT EXISTS(SELECT 1 FROM Notify WHERE jubileumID = :measurementID)")
+    public abstract boolean checkHasNotifications(long measurementID);
 }

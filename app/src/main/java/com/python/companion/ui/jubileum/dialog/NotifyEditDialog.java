@@ -30,9 +30,9 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
-import com.python.companion.db.constant.NotifyQuery;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Notify;
+import com.python.companion.db.interact.NotifyStore;
 import com.python.companion.db.repository.MeasurementRepository;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
@@ -286,29 +286,15 @@ public class NotifyEditDialog extends DialogFragment {
         if (!checkInput())
             return;
 
-        NotifyQuery query = new NotifyQuery(getContext());
-
         if (optionSpinner.getSelectedItemPosition() == 0) { // User wants notification on jubileum date
             Notify n = Notify.from(getContext(), measurement);
-            query.isUniqueInstanced(n, conflicting -> {
-                if (conflicting == null) {
-                    query.insert(this::finishSuccess, n);
-                } else {
-                    Snackbar.make(layout, "There already is a notification scheduled on this date", Snackbar.LENGTH_LONG).show();
-                }
-            });
+            NotifyStore.insert(n, getContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
         } else { // User wants notification to happen some time before jubileum date
             long amount = Long.parseLong(beforeAmount.getText().toString());
             Measurement selected = selectionExtension.getSelectedItems().iterator().next().getMeasurement();
             if (optionSpinner.getSelectedItemPosition() == 1) {
                 Notify n = Notify.from(getContext(), measurement, amount, selected);
-                query.isUniqueInstanced(n, conflicting -> {
-                    if (conflicting == null) {
-                        query.insert(this::finishSuccess, n);
-                    } else {
-                        Snackbar.make(layout, "There already is a notification scheduled on this date", Snackbar.LENGTH_LONG).show();
-                    }
-                });
+                NotifyStore.insert(n, getContext(), this::finishSuccess, error -> Snackbar.make(layout, error, Snackbar.LENGTH_LONG).show());
             } else {
                 LocalDate together = MeasurementUtil.getTogether(getContext());
                 LocalDate jubileumDate = MeasurementUtil.futureInterval(measurement, together, 1);
@@ -316,18 +302,10 @@ public class NotifyEditDialog extends DialogFragment {
                 long between = ChronoUnit.DAYS.between(specified, jubileumDate);
                 for (long x = 0; x < between; ++x) {
                     Notify n = Notify.from(getContext(), measurement, x, MeasurementUtil.getBaseMeasurement(ChronoUnit.DAYS));
-                    query.isUniqueInstanced(n, conflicting -> {
-                        if (conflicting == null) {
-                            query.insert(this::finishSuccess, n);
-                        } else {
-                            n.setNotifyID(conflicting.getNotifyID());
-                            query.update(n);
-                        }
-                    });
+                    NotifyStore.upsert(n, getContext(), this::finishSuccess);
                 }
             }
         }
-
     }
 
     private void finishSuccess() {

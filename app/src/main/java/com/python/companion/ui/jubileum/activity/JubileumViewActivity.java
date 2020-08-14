@@ -35,9 +35,9 @@ import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.mikepenz.fastadapter.utils.ComparableItemListImpl;
 import com.python.companion.R;
-import com.python.companion.db.constant.NotifyQuery;
 import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Notify;
+import com.python.companion.db.interact.NotifyStore;
 import com.python.companion.db.pojo.notify.NotifyWithMeasurementNames;
 import com.python.companion.db.repository.NotifyRepository;
 import com.python.companion.ui.jubileum.MeasurementContainer;
@@ -256,8 +256,7 @@ public class JubileumViewActivity extends AppCompatActivity implements ActionMod
     @Override
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         if (item.getItemId() == R.id.menu_activity_jubileum_view_action_delete) {
-            final NotifyQuery notifyQuery = new NotifyQuery(this);
-            notifyQuery.delete(selectionExtension.getSelectedItems().stream().map(NotifyItem::getNotify).collect(Collectors.toList()));
+            NotifyStore.delete(selectionExtension.getSelectedItems().stream().map(NotifyItem::getNotify).collect(Collectors.toList()), this, () -> {});
             mode.finish();
         }
         return true;

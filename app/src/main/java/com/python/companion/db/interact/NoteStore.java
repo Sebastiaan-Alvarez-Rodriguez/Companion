@@ -18,8 +18,8 @@ public class NoteStore {
      * Insert a given new note into the database, either when there is no name-conflict, or the user tells us we may override
      * @param note Note to store. If its {@code secure} field is set, store the note securely
      * @param secure If <code>true</code>, note will be stored securely
-     * @param finishListener Receives a call if we updated the note
-     * @param errorListener Receives a call with a description of the error if we had an error while updating (incurs no changes in database)
+     * @param finishListener Receives a call if we inserted or updated the note
+     * @param errorListener Receives a call with a description of the error if we had an error while inserting or updating (incurs no changes in database)
      */
     public static void insert(@NonNull Note note, boolean secure, @NonNull FragmentManager manager, @NonNull Context context, @NonNull FinishListener finishListener, @NonNull ErrorListener errorListener) {
         NoteQuery noteQuery = new NoteQuery(context);

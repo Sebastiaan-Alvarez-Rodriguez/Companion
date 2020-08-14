@@ -30,6 +30,10 @@ public class MeasurementQuery {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getAll()));
     }
 
+    public void setHasNotifications( boolean hasNotifications, long measurementID) {
+        Executors.newSingleThreadExecutor().execute(() -> daoMeasurement.setHasNotifications(measurementID, hasNotifications));
+    }
+
     public void isUnique(String nameSingular, String namePlural, ResultListener<Boolean> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getBySingularOrPlural(nameSingular, namePlural) == null));
     }
@@ -40,6 +44,10 @@ public class MeasurementQuery {
 
     public void isUniqueInstancedNamed(String nameSingular, String namePlural, ResultListener<MeasurementWithParentNames> listener) {
         Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.getBySingularOrPluralNamed(nameSingular, namePlural)));
+    }
+
+    public void findByID(long id, ResultListener<Measurement> listener) {
+        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMeasurement.findByID(id)));
     }
 
     public void findByIDNamed(long id, ResultListener<MeasurementWithParentNames> listener) {

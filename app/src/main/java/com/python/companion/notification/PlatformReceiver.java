@@ -57,10 +57,10 @@ public class PlatformReceiver extends BroadcastReceiver {
     /** Sends a notification to the Android system for a given measurement and notify object */
     private static void notify(Notify notify, Measurement measurement, Context context) {
         Notification.Builder builder = new Notification.Builder(context, NotificationUtil.getChannelID(measurement));
-        builder.setContentTitle(NotificationUtil.getNotificationTitle(notify, measurement));
-        builder.setContentText(NotificationUtil.getNotificationContent(notify, measurement, context));
-        builder.setSmallIcon(R.drawable.ic_cactus_outline);
-        builder.setLargeIcon(Icon.createWithResource(context, R.drawable.ic_cactus_companion_centered));
+        builder.setContentTitle(NotificationUtil.getNotificationTitle(notify, measurement))
+                .setSmallIcon(R.drawable.ic_cactus_outline)
+                .setLargeIcon(Icon.createWithResource(context, R.drawable.ic_cactus_companion_centered_small))
+                .setStyle(new Notification.BigTextStyle().bigText(NotificationUtil.getNotificationContent(notify, measurement, context)));
         NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         notificationManager.notify(NotificationUtil.getNotificationID(measurement), builder.build());
     }
@@ -93,7 +93,7 @@ public class PlatformReceiver extends BroadcastReceiver {
         updateDueNotifies(dues, measurements, context);
     }
 
-    /** Call to force a daily check. Note that any previously dismissed notifications of the user may appear again, potentially annoying users */
+    /** Call to force a daily check */
     public static void manualCycle(Context context) {
         Executors.newSingleThreadExecutor().execute(() -> onHandleCycle(getJubileaForNotifications(context), context));
     }
