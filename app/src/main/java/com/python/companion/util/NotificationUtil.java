@@ -3,7 +3,6 @@ package com.python.companion.util;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
@@ -220,9 +219,7 @@ public class NotificationUtil {
                 return "While you were gone: "+dayDistance+" "+(dayDistance == 1 ? "day" : "days")+" ago was your"+jubileaHad + MeasurementUtil.getDayOfMonthSuffix((int) jubileaHad)+" "+measurement.getNameSingular()+" anniversary, congratulations!";
             }
         } else {
-
             long between = expression.between(LocalDate.now(), jubileumDate); // Amount of units to the next jubileum (rounded down)
-            Log.e("NU", "Jubileum: "+jubileumDate.toString()+". Measurement expression: "+expression.getNamePlural()+". Units between jubileum and now: "+between);
             if (MeasurementUtil.isBaseMeasurement(measurement)) {
                 return "In "+between+" "+(between == 1 ? expression.getNameSingular() : expression.getNamePlural())+", you will have your "+jubileaHad + MeasurementUtil.getDayOfMonthSuffix((int) jubileaHad)+" "+measurement.getNameSingular()+" anniversary!";
             } else {

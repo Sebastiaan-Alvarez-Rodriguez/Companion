@@ -43,10 +43,10 @@ import com.python.companion.db.constant.CategoryQuery;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Note;
 import com.python.companion.db.repository.NoteRepository;
-import com.python.companion.notification.PlatformReceiver;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.ui.MainActivity;
 import com.python.companion.ui.notes.category.dialog.CategorySetDialog;
+import com.python.companion.ui.notes.note.activity.edit.NoteEditActivity;
 import com.python.companion.ui.notes.note.activity.view.NoteViewActivity;
 import com.python.companion.ui.notes.note.adapter.NoteItem;
 import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
@@ -103,9 +103,8 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
 
     private void prepareAdd() {
         fab.setOnClickListener(v -> {
-//            Intent intent = new Intent(getContext(), NoteEditActivity.class);
-//            startActivity(intent);
-            PlatformReceiver.manualCycle(getContext());
+            Intent intent = new Intent(getContext(), NoteEditActivity.class);
+            startActivity(intent);
         });
     }
 

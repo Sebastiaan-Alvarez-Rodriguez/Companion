@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -73,9 +74,11 @@ public class PlatformReceiver extends BroadcastReceiver {
         DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
         List<Measurement> measurements = daoMeasurement.findByID(dues.stream().map(Notify::getJubileumID));
 
+        Log.e("PR", "We have "+dues.size()+" due notifications:");
         for (int x = 0; x < dues.size(); ++x) {
             Notify due = dues.get(x);
             Measurement m = measurements.get(x);
+            Log.e("PR", "Notification on "+due.getNotifyDate()+" for "+m.getNameSingular()+" anniversaries");
             notify(due, m, context);
         }
         updateDueNotifies(dues, measurements, context);
@@ -86,9 +89,11 @@ public class PlatformReceiver extends BroadcastReceiver {
         DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
         List<Measurement> measurements = daoMeasurement.findByID(dues.stream().map(Notify::getJubileumID));
 
+        Log.e("PR", "We have "+dues.size()+" due notifications:");
         for (int x = 0; x < dues.size(); ++x) {
             Notify due = dues.get(x);
             Measurement m = measurements.get(x);
+            Log.e("PR", "Notification on "+due.getNotifyDate()+" for "+m.getNameSingular()+" anniversaries");
             notify(due, m, context);
         }
         updateDueNotifies(dues, measurements, context);
@@ -101,17 +106,33 @@ public class PlatformReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+//        android.os.Debug.waitForDebugger(); // TODO: Remove after debugging
         if (context == null || intent == null)
             return;
         String action = intent.getAction();
         if (action == null)
             return;
+        Boolean[] done = {false};
         Executors.newSingleThreadExecutor().execute(() -> {
             List<Notify> dues = getJubileaForNotifications(context);
-            if (action.equals(Intent.ACTION_BOOT_COMPLETED))
+            if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
                 onHandleBoot(dues, context);
-            else if (action.equals(context.getString(R.string.action_check_notifications)))
+            } else if (action.equals(context.getString(R.string.action_check_notifications)))
                 onHandleCycle(dues, context);
+            synchronized (PlatformReceiver.this) {
+                done[0] = true;
+                PlatformReceiver.this.notify();
+            }
         });
+
+        synchronized (PlatformReceiver.this) {
+            try {
+                while (!done[0])
+                    this.wait();
+            } catch (InterruptedException e) {
+                Log.e("PR", "Big big async trouble (PR):", e);
+            }
+        }
+        Log.e("PR", "Action completed");
     }
 }
