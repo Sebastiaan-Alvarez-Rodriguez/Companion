@@ -21,10 +21,10 @@ import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.security.Guard;
 import com.python.companion.security.password.PassGuard;
 import com.python.companion.security.password.PassResetDialog;
-import com.python.companion.ui.jubileum.dialog.TogetherDialog;
+import com.python.companion.ui.anniversary.dialog.TogetherDialog;
 import com.python.companion.ui.settings.port.ExportActivity;
 import com.python.companion.ui.settings.port.ImportActivity;
-import com.python.companion.util.MeasurementUtil;
+import com.python.companion.util.AnniversaryUtil;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -85,7 +85,7 @@ public class SettingsFragment extends Fragment {
         });
         dateView.setOnClickListener(v -> {
             TogetherDialog dialog = new TogetherDialog.Builder()
-                    .setStartDate(MeasurementUtil.getTogether(layout.getContext()))
+                    .setStartDate(AnniversaryUtil.getTogether(layout.getContext()))
                     .setFinishListener(() -> Snackbar.make(layout, "Successfully set date", Snackbar.LENGTH_LONG).show()).build();
             dialog.show(getChildFragmentManager(), null);
         });

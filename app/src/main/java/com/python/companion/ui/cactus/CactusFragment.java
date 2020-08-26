@@ -14,10 +14,10 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.python.companion.R;
-import com.python.companion.ui.jubileum.activity.JubileumSelectActivity;
-import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorActivity;
-import com.python.companion.ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity;
-import com.python.companion.util.MeasurementUtil;
+import com.python.companion.ui.anniversary.activity.AnniversarySelectActivity;
+import com.python.companion.ui.anniversary.activity.calculate.AnniversaryCalculatorActivity;
+import com.python.companion.ui.anniversary.activity.calculate.AnniversaryCalculatorSharedActivity;
+import com.python.companion.util.AnniversaryUtil;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -29,7 +29,7 @@ public class CactusFragment extends Fragment {
     private static final int REQ_SELECT = 0;
 
 
-    private FloatingActionButton jubileumButton, calculatorButton;
+    private FloatingActionButton anniversaryButton, calculatorButton;
 
     private LocalDate together, now;
     private TextView quoteView, yearView, monthView, dayView, yearTextView, monthTextView, dayTextView;
@@ -39,7 +39,7 @@ public class CactusFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         now = LocalDate.now();
-        together = MeasurementUtil.getTogether(getContext());
+        together = AnniversaryUtil.getTogether(getContext());
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -56,7 +56,7 @@ public class CactusFragment extends Fragment {
     }
 
     private void findViews(View view) {
-        jubileumButton = view.findViewById(R.id.fragment_cactus_jubileum);
+        anniversaryButton = view.findViewById(R.id.fragment_cactus_anniversary);
         calculatorButton = view.findViewById(R.id.fragment_cactus_calculator);
         quoteView = view.findViewById(R.id.fragment_cactus_quote);
         yearView = view.findViewById(R.id.fragment_cactus_years);
@@ -70,20 +70,20 @@ public class CactusFragment extends Fragment {
 
     private void prepareButtons() {
         cactusView.setOnClickListener(v -> {
-            if (jubileumButton.getVisibility() == View.INVISIBLE) {
-                jubileumButton.setVisibility(View.VISIBLE);
+            if (anniversaryButton.getVisibility() == View.INVISIBLE) {
+                anniversaryButton.setVisibility(View.VISIBLE);
                 calculatorButton.setVisibility(View.VISIBLE);
             } else {
-                jubileumButton.setVisibility(View.INVISIBLE);
+                anniversaryButton.setVisibility(View.INVISIBLE);
                 calculatorButton.setVisibility(View.INVISIBLE);
             }
         });
-        jubileumButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), JubileumCalculatorActivity.class);
+        anniversaryButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), AnniversaryCalculatorActivity.class);
             startActivity(intent);
         });
         calculatorButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), JubileumSelectActivity.class);
+            Intent intent = new Intent(getContext(), AnniversarySelectActivity.class);
             startActivityForResult(intent, REQ_SELECT);
         });
     }
@@ -116,7 +116,7 @@ public class CactusFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQ_SELECT && resultCode == RESULT_OK && data != null) {
-            Intent intent = new Intent(getContext(), JubileumCalculatorSharedActivity.class);
+            Intent intent = new Intent(getContext(), AnniversaryCalculatorSharedActivity.class);
             intent.putParcelableArrayListExtra("chosen", data.getParcelableArrayListExtra("chosen"));
             startActivity(intent);
             return;

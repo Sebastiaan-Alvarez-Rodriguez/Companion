@@ -6,7 +6,7 @@
 
     <string name="menu_notes">Notes</string>
     <string name="menu_cactus">Cactus</string>
-    <string name="menu_jubilea">Jubilea</string>
+    <string name="menu_anniversaries">Anniversaries</string>
 
     <string name="menu_settings">Settings</string>
     <string name="menu_share">Share</string>
@@ -15,8 +15,8 @@
     <!--Note preferences contain sorting prefs-->
     <string name="note_preferences">NotePrefs</string>
 
-    <!--Measurement preferences contain sorting prefs-->
-    <string name="measurement_preferences">MeasurementPrefs</string>
+    <!--Anniversary preferences contain sorting prefs-->
+    <string name="anniversary_preferences">AnniversaryPrefs</string>
 
     <!--Cactus preferences contain sorting prefs and date together-->
     <string name="cactus_preferences">DatePrefs</string>
@@ -29,9 +29,9 @@
     <!--Used in NotifyAddDialog -->
     <string-array
         name="notify_add_dialog_options">
-        <item>On the jubileum itself</item>
+        <item>On the anniversary itself</item>
         <item>Some time before…</item>
-        <item>Every day until jubileum, some time before…</item>
+        <item>Every day until anniversary, some time before…</item>
     </string-array>
 
     <!--Our custom Actions for PlatformReceiver-->

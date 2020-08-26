@@ -14,11 +14,11 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.companion.R;
-import com.python.companion.notification.Platform;
-import com.python.companion.notification.PlatformReceiver;
+import com.python.companion.message.Platform;
+import com.python.companion.message.PlatformReceiver;
 import com.python.companion.security.Guard;
 import com.python.companion.ui.settings.SettingsFragment;
-import com.python.companion.ui.jubileum.dialog.TogetherDialog;
+import com.python.companion.ui.anniversary.dialog.TogetherDialog;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,8 +36,8 @@ public class MainActivity extends AppCompatActivity {
         NavigationView navigationView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each menu should be considered as top level destinations
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_note, R.id.nav_cactus, R.id.nav_jubilea,
-                R.id.nav_settings, R.id.nav_share, R.id.nav_send)
+                R.id.nav_note, R.id.nav_cactus, R.id.nav_anniversary,
+                R.id.nav_settings)
                 .setDrawerLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             dialog.show(getSupportFragmentManager(), null);
         }
         Platform platform = Platform.getPlatform(this);
-        platform.registerJubileaChannels();
+        platform.registerAnniversariesChannels();
         platform.registerPlatformSchedule(this);
         PlatformReceiver.manualCycle(this);
     }

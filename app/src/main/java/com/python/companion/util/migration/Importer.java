@@ -11,10 +11,10 @@ import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
-import com.python.companion.db.dao.DAOMeasurement;
+import com.python.companion.db.dao.DAOAnniversary;
 import com.python.companion.db.dao.DAONote;
+import com.python.companion.db.entity.Anniversary;
 import com.python.companion.db.entity.Category;
-import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.util.ThreadUtil;
@@ -38,12 +38,12 @@ import java.util.concurrent.Executors;
  * long 32-bit #categories
  * long 32-bit #notes
  * long 32-bit #secure notes (cannot be higher than #notes)
- * long 32-bit #measurements
+ * long 32-bit #anniversaries
  * DATA-1: All categories
  * DATA-2.1: All non-secure notes
  * DATA-2.2: All secure notes
- * DATA-3: All measurements
- * Check <code>visit(Type type)</code> functions to find how categories, notes, measurements must be stored
+ * DATA-3: All anniversaries
+ * Check <code>visit(Type type)</code> functions to find how categories, notes, anniversaries must be stored
  */
 public class Importer implements EntityVisitor {
     protected MessageUnpacker unpacker;
@@ -123,12 +123,12 @@ public class Importer implements EntityVisitor {
     }
 
     /**
-     * Visit a single Measurement.
-     * Measurement fields are fetched in order of declaration.
-     * @param measurement Default measurement whose values are overridden with the values we read
+     * Visit a single Anniversary.
+     * Anniversary fields are fetched in order of declaration.
+     * @param anniversary Default anniversary whose values are overridden with the values we read
      */
     @Override
-    public void visit(@NonNull Measurement measurement) {
+    public void visit(@NonNull Anniversary anniversary) {
         try {
             long id = unpacker.unpackLong();
             String singular = unpacker.unpackString();
@@ -140,21 +140,21 @@ public class Importer implements EntityVisitor {
             ChronoUnit cornerstoneType = ChronoUnit.valueOf(unpacker.unpackString());
 //            boolean hasNotifications = unpacker.unpackBoolean(); TODO: Uncomment this line when ready
 
-            measurement.setMeasurementID(id);
-            measurement.setNameSingular(singular);
-            measurement.setNamePlural(plural);
-            measurement.setDuration(duration);
-            measurement.setAmount(amount);
-            measurement.setPrecomputedamount(precomputedamount);
-            measurement.setParentID(parentID);
-            measurement.setCornerstoneType(cornerstoneType);
-//            measurement.setHasNotifications(hasNotifications); TODO: Uncomment this line when ready
+            anniversary.setAnniversaryID(id);
+            anniversary.setNameSingular(singular);
+            anniversary.setNamePlural(plural);
+            anniversary.setDuration(duration);
+            anniversary.setAmount(amount);
+            anniversary.setPrecomputedamount(precomputedamount);
+            anniversary.setParentID(parentID);
+            anniversary.setCornerstoneType(cornerstoneType);
+//            anniversary.setHasNotifications(hasNotifications); TODO: Uncomment this line when ready
             if (migrationInterface != null)
-                ThreadUtil.runOnUIThread(migrationInterface::onMeasurementProcessed);
+                ThreadUtil.runOnUIThread(migrationInterface::onAnniversaryProcessed);
         } catch (IOException e) {
-            Log.e("Importer", "Big big error (measurement): ", e);
+            Log.e("Importer", "Big big error (anniversary): ", e);
             if (migrationInterface != null)
-                ThreadUtil.runOnUIThread(migrationInterface::onMeasurementFailed);
+                ThreadUtil.runOnUIThread(migrationInterface::onAnniversaryFailed);
         }
     }
 
@@ -245,19 +245,19 @@ public class Importer implements EntityVisitor {
         return retval;
     }
 
-    protected void jnportMeasurements(long amount) {
+    protected void jnportAnniversarys(long amount) {
         if (migrationInterface != null)
-            ThreadUtil.runOnUIThread(migrationInterface::onStartMeasurements);
+            ThreadUtil.runOnUIThread(migrationInterface::onStartAnniversarys);
 
-        DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
+        DAOAnniversary daoAnniversary = Database.getDatabase(context).getDAOAnniversary();
         for (int x = 0; x < amount; ++x) {
-            Measurement m = Measurement.template();
+            Anniversary m = Anniversary.template();
             visit(m);
-            daoMeasurement.upsert(m);
+            daoAnniversary.upsert(m);
         }
 
         if (migrationInterface != null)
-            ThreadUtil.runOnUIThread(migrationInterface::onFinishMeasurements);
+            ThreadUtil.runOnUIThread(migrationInterface::onFinishAnniversarys);
     }
 
 
@@ -275,12 +275,12 @@ public class Importer implements EntityVisitor {
                 long amountCategories = unpacker.unpackLong();
                 long amountNotes = unpacker.unpackLong();
                 long amountSecureNotes = unpacker.unpackLong();
-                long amountMeasurements = unpacker.unpackLong();
+                long amountAnniversarys = unpacker.unpackLong();
 
                 long adjustedAmountNotes = reSecure ? amountNotes : amountNotes - amountSecureNotes;
 
                 if (migrationInterface != null)
-                    ThreadUtil.runOnUIThread(() -> migrationInterface.onStatsAvailable(amountCategories, adjustedAmountNotes, amountSecureNotes, amountMeasurements));
+                    ThreadUtil.runOnUIThread(() -> migrationInterface.onStatsAvailable(amountCategories, adjustedAmountNotes, amountSecureNotes, amountAnniversarys));
 
                 jnportCategories(amountCategories);
 
@@ -290,7 +290,7 @@ public class Importer implements EntityVisitor {
                     return;
                 }
 
-                jnportMeasurements(amountMeasurements);
+                jnportAnniversarys(amountAnniversarys);
 
                 unpacker.close();
 

@@ -11,10 +11,10 @@ import androidx.fragment.app.FragmentManager;
 
 import com.python.companion.db.Database;
 import com.python.companion.db.dao.DAOCategory;
-import com.python.companion.db.dao.DAOMeasurement;
+import com.python.companion.db.dao.DAOAnniversary;
 import com.python.companion.db.dao.DAONote;
+import com.python.companion.db.entity.Anniversary;
 import com.python.companion.db.entity.Category;
-import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
 import com.python.companion.security.converters.NoteConverter;
 import com.python.companion.util.ThreadUtil;
@@ -82,21 +82,21 @@ public class Exporter implements EntityVisitor {
     }
 
     @Override
-    public void visit(@NonNull Measurement measurement) {
+    public void visit(@NonNull Anniversary anniversary) {
         try {
-            packer.packLong(measurement.getMeasurementID());
-            packer.packString(measurement.getNameSingular());
-            packer.packString(measurement.getNamePlural());
-            packer.packString(measurement.getDuration().toString());
-            packer.packLong(measurement.getAmount());
-            packer.packLong(measurement.getPrecomputedamount());
-            packer.packLong(measurement.getParentID());
-            packer.packString(measurement.getCornerstoneType().name());
-//            packer.packBoolean(measurement.hasNotifications()); TODO: Uncomment when ready
+            packer.packLong(anniversary.getAnniversaryID());
+            packer.packString(anniversary.getNameSingular());
+            packer.packString(anniversary.getNamePlural());
+            packer.packString(anniversary.getDuration().toString());
+            packer.packLong(anniversary.getAmount());
+            packer.packLong(anniversary.getPrecomputedamount());
+            packer.packLong(anniversary.getParentID());
+            packer.packString(anniversary.getCornerstoneType().name());
+//            packer.packBoolean(anniversary.hasNotifications()); TODO: Uncomment when ready
             if (migrationInterface != null)
-                ThreadUtil.runOnUIThread(migrationInterface::onMeasurementProcessed);
+                ThreadUtil.runOnUIThread(migrationInterface::onAnniversaryProcessed);
         } catch (IOException e) {
-            Log.e("Exporter", "Big problem (measurement): ", e);
+            Log.e("Exporter", "Big problem (anniversary): ", e);
             if (migrationInterface != null)
                 ThreadUtil.runOnUIThread(migrationInterface::onNoteFailed);
         }
@@ -163,17 +163,17 @@ public class Exporter implements EntityVisitor {
         return done[1];
     }
 
-    protected void exportMeasurements() {
+    protected void exportAnniversarys() {
         if (migrationInterface != null)
-            ThreadUtil.runOnUIThread(migrationInterface::onStartMeasurements);
+            ThreadUtil.runOnUIThread(migrationInterface::onStartAnniversarys);
 
-        DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
+        DAOAnniversary daoAnniversary = Database.getDatabase(context).getDAOAnniversary();
 
-        for (Measurement measurement : daoMeasurement.getAll())
-            measurement.accept(this);
+        for (Anniversary anniversary : daoAnniversary.getAll())
+            anniversary.accept(this);
 
         if (migrationInterface != null)
-            ThreadUtil.runOnUIThread(migrationInterface::onFinishMeasurements);
+            ThreadUtil.runOnUIThread(migrationInterface::onFinishAnniversarys);
     }
 
     public void export(@NonNull Uri location, boolean skipSecure) {
@@ -194,12 +194,12 @@ public class Exporter implements EntityVisitor {
                 long secureNoteAmount = skipSecure ? 0 : noteAmount - daoNote.countInsecure();
                 packer.packLong(secureNoteAmount);
 
-                DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
-                long measurementAmount = daoMeasurement.count();
-                packer.packLong(measurementAmount);
+                DAOAnniversary daoAnniversary = Database.getDatabase(context).getDAOAnniversary();
+                long anniversaryAmount = daoAnniversary.count();
+                packer.packLong(anniversaryAmount);
 
                 if (migrationInterface != null)
-                    ThreadUtil.runOnUIThread(()-> migrationInterface.onStatsAvailable(categoryAmount, noteAmount, secureNoteAmount, measurementAmount));
+                    ThreadUtil.runOnUIThread(()-> migrationInterface.onStatsAvailable(categoryAmount, noteAmount, secureNoteAmount, anniversaryAmount));
 
                 exportCategories();
 
@@ -211,7 +211,7 @@ public class Exporter implements EntityVisitor {
                     return;
                 }
 
-                exportMeasurements();
+                exportAnniversarys();
 
                 packer.close();
 

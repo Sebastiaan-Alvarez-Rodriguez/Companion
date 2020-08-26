@@ -2,8 +2,8 @@ package com.python.companion.util.migration;
 
 import androidx.annotation.NonNull;
 
+import com.python.companion.db.entity.Anniversary;
 import com.python.companion.db.entity.Category;
-import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
 
 /**
@@ -12,7 +12,7 @@ import com.python.companion.db.entity.Note;
 public interface EntityVisitor {
     void visit(@NonNull Category category);
     void visit(@NonNull Note note);
-    void visit(@NonNull Measurement measurement);
+    void visit(@NonNull Anniversary anniversary);
 
     /** Interface allowing implementing class to be visited by classes implementing {@link EntityVisitor} */
     interface Visitable {

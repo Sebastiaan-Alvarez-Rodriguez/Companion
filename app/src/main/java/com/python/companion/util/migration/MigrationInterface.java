@@ -3,7 +3,7 @@ package com.python.companion.util.migration;
 import androidx.annotation.NonNull;
 
 public interface MigrationInterface {
-    void onStatsAvailable(long categoryAmount, long notesAmount, long secureNotesAmount, long measurementAmount);
+    void onStatsAvailable(long categoryAmount, long notesAmount, long secureNotesAmount, long anniversaryAmount);
 
     void onStartCategories();
     void onCategoryProcessed();
@@ -15,10 +15,10 @@ public interface MigrationInterface {
     void onNoteFailed();
     void onFinishNotes();
 
-    void onStartMeasurements();
-    void onMeasurementProcessed();
-    void onMeasurementFailed();
-    void onFinishMeasurements();
+    void onStartAnniversarys();
+    void onAnniversaryProcessed();
+    void onAnniversaryFailed();
+    void onFinishAnniversarys();
 
     /** Called when migration successfully finished */
     void onFinishMigration();

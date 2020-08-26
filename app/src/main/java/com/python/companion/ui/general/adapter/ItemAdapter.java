@@ -10,13 +10,13 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.python.companion.ui.jubileum.adapter.item.JubileumSpinnerItem;
+import com.python.companion.ui.anniversary.adapter.item.AnniversarySpinnerItem;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generic adapter, not optimized much. Sample implementation given at {@link JubileumSpinnerItem}
+ * Generic adapter, not optimized much. Sample implementation given at {@link AnniversarySpinnerItem}
  */
 public class ItemAdapter<T extends ItemAdapter.Item<ItemAdapter.ViewHolder<T>>> extends BaseAdapter {
     protected @NonNull LayoutInflater inflater;

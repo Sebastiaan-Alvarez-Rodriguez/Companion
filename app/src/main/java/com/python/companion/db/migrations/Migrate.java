@@ -9,7 +9,7 @@ import com.python.companion.db.populators.Populator;
 public class Migrate {
 
     public static Migration[] getAll() {
-        return new Migration[]{m1_2(), m2_3(), m3_4(), m4_5()};
+        return new Migration[]{m1_2(), m2_3(), m3_4(), m4_5(), m5_6()};
     }
 
     public static Migration m1_2() {
@@ -26,8 +26,8 @@ public class Migrate {
             @Override
             public void migrate(@NonNull SupportSQLiteDatabase database) {
                 database.execSQL("BEGIN TRANSACTION;");
-                database.execSQL("DROP TABLE IF EXISTS Measurement");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Measurement` (`measurementID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT)");
+                database.execSQL("DROP TABLE IF EXISTS Anniversary");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Anniversary` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT)");
                 database.execSQL("COMMIT;");
             }
         };
@@ -38,9 +38,9 @@ public class Migrate {
             @Override
             public void migrate(@NonNull SupportSQLiteDatabase database) {
                 database.execSQL("BEGIN TRANSACTION;");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `measurementID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `jubileumDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `cornerstoneType` TEXT)");
-                database.execSQL("DROP TABLE IF EXISTS Measurement");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Measurement` (`measurementID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `anniversaryID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `anniversaryDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `cornerstoneType` TEXT)");
+                database.execSQL("DROP TABLE IF EXISTS Anniversary");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Anniversary` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
                 database.execSQL("COMMIT;");
                 Populator.populate(database);
             }
@@ -53,9 +53,9 @@ public class Migrate {
             public void migrate(@NonNull SupportSQLiteDatabase database) {
                 database.execSQL("BEGIN TRANSACTION;");
                 database.execSQL("DROP TABLE IF EXISTS Notify");
-                database.execSQL("DROP TABLE IF EXISTS Measurement");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Measurement` (`measurementID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jubileumID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `measurementID` INTEGER NOT NULL)");
+                database.execSQL("DROP TABLE IF EXISTS Anniversary");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Anniversary` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `anniversaryID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `anniversaryID` INTEGER NOT NULL)");
                 database.execSQL("COMMIT;");
                 Populator.populate(database);
             }
@@ -69,8 +69,8 @@ public class Migrate {
                 database.execSQL("BEGIN TRANSACTION;");
                 database.execSQL("DROP TABLE IF EXISTS Notify");
                 database.execSQL("DROP TABLE IF EXISTS Measurement");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Measurement` (`measurementID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
-                database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jubileumID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `measurementID` INTEGER NOT NULL)");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Anniversary` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
+                database.execSQL("CREATE TABLE IF NOT EXISTS `Message` (`messageID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `anniversaryID` INTEGER NOT NULL, `messageDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `type` TEXT)");
                 database.execSQL("COMMIT;");
                 Populator.populate(database);
             }

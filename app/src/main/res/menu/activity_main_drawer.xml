@@ -13,26 +13,12 @@
             android:icon="@drawable/ic_cactus_2"
             android:title="@string/menu_cactus" />
         <item
-            android:id="@+id/nav_jubilea"
-            android:icon="@drawable/ic_jubileum"
-            android:title="@string/menu_jubilea" />
+            android:id="@+id/nav_anniversary"
+            android:icon="@drawable/ic_anniversary"
+            android:title="@string/menu_anniversaries" />
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_menu_manage"
             android:title="@string/menu_settings" />
     </group>
-
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="@string/menu_share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="@string/menu_send" />
-        </menu>
-    </item>
-
 </menu>

@@ -62,7 +62,7 @@ public abstract class PortActivity extends AppCompatActivity implements Migratio
     private int complete, failed;
     @Override
     @CallSuper
-    public void onStatsAvailable(long categoryAmount, long notesAmount, long secureNotesAmount, long measurementAmount) {
+    public void onStatsAvailable(long categoryAmount, long notesAmount, long secureNotesAmount, long anniversaryAmount) {
         if (categoryAmount != 0) {
             barState1.setText("0");
             barStateMax1.setText(String.valueOf(categoryAmount));
@@ -81,10 +81,10 @@ public abstract class PortActivity extends AppCompatActivity implements Migratio
             barStateMax2.setText("-");
         }
 
-        if (measurementAmount != 0) {
+        if (anniversaryAmount != 0) {
             barState3.setText("0");
-            barStateMax3.setText(String.valueOf(measurementAmount));
-            bar3.setMax((int) measurementAmount);
+            barStateMax3.setText(String.valueOf(anniversaryAmount));
+            bar3.setMax((int) anniversaryAmount);
         } else {
             barState3.setText("-");
             barStateMax3.setText("-");
@@ -145,20 +145,20 @@ public abstract class PortActivity extends AppCompatActivity implements Migratio
     }
 
     @Override
-    public void onStartMeasurements() {
+    public void onStartAnniversarys() {
         complete = failed = 0;
-        infoView.setText("Processing measurements...");
+        infoView.setText("Processing anniversaries...");
     }
 
     @Override
-    public void onMeasurementProcessed() {
+    public void onAnniversaryProcessed() {
         ++complete;
         barState3.setText(String.valueOf(complete));
         bar3.setProgress(complete, true);
     }
 
     @Override
-    public void onMeasurementFailed() {
+    public void onAnniversaryFailed() {
         ++failed;
     }
 
@@ -179,7 +179,7 @@ public abstract class PortActivity extends AppCompatActivity implements Migratio
     }
 
     @Override
-    public void onFinishMeasurements() {
+    public void onFinishAnniversarys() {
         infoView.setText("");
     }
 }

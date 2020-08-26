@@ -33,15 +33,15 @@
         <activity android:name=".ui.settings.port.ImportActivity" />
         <activity android:name=".ui.settings.port.ExportActivity" />
 
-<!--        Jubileum related activities -->
-        <activity android:name=".ui.jubileum.activity.JubileumViewActivity" android:theme="@style/AppTheme.NoActionBar"/>
-        <activity android:name=".ui.jubileum.activity.JubileumEditActivity" />
-        <activity android:name=".ui.jubileum.activity.calculate.JubileumCalculatorSharedActivity" />
-        <activity android:name=".ui.jubileum.activity.JubileumSelectActivity" />
-        <activity android:name=".ui.jubileum.activity.calculate.JubileumCalculatorActivity" />
+<!--        Anniversary related activities -->
+        <activity android:name=".ui.anniversary.activity.AnniversaryViewActivity" android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".ui.anniversary.activity.AnniversaryEditActivity" />
+        <activity android:name=".ui.anniversary.activity.calculate.AnniversaryCalculatorSharedActivity" />
+        <activity android:name=".ui.anniversary.activity.AnniversarySelectActivity" />
+        <activity android:name=".ui.anniversary.activity.calculate.AnniversaryCalculatorActivity" />
 
 <!--        Notification BroadcastReceiver-->
-        <receiver android:name=".notification.PlatformReceiver"  android:exported="true">
+        <receiver android:name=".message.PlatformReceiver"  android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="com.python.companion.action.CHECK_NOTIFICATIONS"/>

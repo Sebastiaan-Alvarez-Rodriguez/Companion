@@ -100,7 +100,7 @@
         app:srcCompat="@drawable/ic_cactus_companion" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fragment_cactus_jubileum"
+        android:id="@+id/fragment_cactus_anniversary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
@@ -111,7 +111,7 @@
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_jubileum" />
+        app:srcCompat="@drawable/ic_anniversary" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fragment_cactus_calculator"
@@ -123,7 +123,7 @@
         android:clickable="true"
         app:tint="@android:color/white"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/fragment_cactus_jubileum"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_cactus_anniversary"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_cactulator" />
 </androidx.constraintlayout.widget.ConstraintLayout>

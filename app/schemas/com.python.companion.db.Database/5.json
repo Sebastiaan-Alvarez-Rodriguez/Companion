@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "abdf41a4899b43b5831b1b818c4f2a65",
+    "identityHash": "9922355a0b7b236cea4cf6a81c091aa0",
     "entities": [
       {
         "tableName": "Note",
@@ -99,12 +99,12 @@
         "foreignKeys": []
       },
       {
-        "tableName": "Measurement",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`measurementID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)",
+        "tableName": "Anniversary",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)",
         "fields": [
           {
-            "fieldPath": "measurementID",
-            "columnName": "measurementID",
+            "fieldPath": "anniversaryID",
+            "columnName": "anniversaryID",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -165,7 +165,7 @@
         ],
         "primaryKey": {
           "columnNames": [
-            "measurementID"
+            "anniversaryID"
           ],
           "autoGenerate": true
         },
@@ -173,24 +173,24 @@
         "foreignKeys": []
       },
       {
-        "tableName": "Notify",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jubileumID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `measurementID` INTEGER NOT NULL)",
+        "tableName": "Message",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `anniversaryID` INTEGER NOT NULL, `messageDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `type` TEXT)",
         "fields": [
           {
-            "fieldPath": "notifyID",
-            "columnName": "notifyID",
+            "fieldPath": "messageID",
+            "columnName": "messageID",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "jubileumID",
-            "columnName": "jubileumID",
+            "fieldPath": "anniversaryID",
+            "columnName": "anniversaryID",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "notifyDate",
-            "columnName": "notifyDate",
+            "fieldPath": "messageDate",
+            "columnName": "messageDate",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -201,15 +201,15 @@
             "notNull": true
           },
           {
-            "fieldPath": "measurementID",
-            "columnName": "measurementID",
-            "affinity": "INTEGER",
-            "notNull": true
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
           "columnNames": [
-            "notifyID"
+            "messageID"
           ],
           "autoGenerate": true
         },
@@ -220,7 +220,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'abdf41a4899b43b5831b1b818c4f2a65')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9922355a0b7b236cea4cf6a81c091aa0')"
     ]
   }
 }

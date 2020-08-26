@@ -10,13 +10,13 @@ import androidx.room.TypeConverters;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.python.companion.db.dao.DAOCategory;
-import com.python.companion.db.dao.DAOMeasurement;
+import com.python.companion.db.dao.DAOAnniversary;
 import com.python.companion.db.dao.DAONote;
-import com.python.companion.db.dao.DAONotify;
+import com.python.companion.db.dao.DAOMessage;
+import com.python.companion.db.entity.Anniversary;
 import com.python.companion.db.entity.Category;
-import com.python.companion.db.entity.Measurement;
 import com.python.companion.db.entity.Note;
-import com.python.companion.db.entity.Notify;
+import com.python.companion.db.entity.Message;
 import com.python.companion.db.migrations.Migrate;
 import com.python.companion.db.populators.Populator;
 import com.python.companion.db.typeconverters.ChronoUnitConverter;
@@ -24,7 +24,7 @@ import com.python.companion.db.typeconverters.DurationConverter;
 import com.python.companion.db.typeconverters.InstantConverter;
 import com.python.companion.db.typeconverters.LocalDateConverter;
 
-@androidx.room.Database(entities = {Note.class, Category.class, Measurement.class, Notify.class}, version = 5)
+@androidx.room.Database(entities = {Note.class, Category.class, Anniversary.class, Message.class}, version = 6)
 @TypeConverters({InstantConverter.class, DurationConverter.class, ChronoUnitConverter.class, LocalDateConverter.class})
 public abstract class Database extends RoomDatabase {
 
@@ -33,8 +33,8 @@ public abstract class Database extends RoomDatabase {
 
     public abstract DAONote getDAONote();
     public abstract DAOCategory getDAOCategory();
-    public abstract DAOMeasurement getDAOMeasurement();
-    public abstract DAONotify getDAONotify();
+    public abstract DAOAnniversary getDAOAnniversary();
+    public abstract DAOMessage getDAOMessage();
     
     /**
      * Singleton instance getter
