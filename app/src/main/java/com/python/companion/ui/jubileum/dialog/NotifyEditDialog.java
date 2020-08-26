@@ -173,20 +173,19 @@ public class NotifyEditDialog extends DialogFragment {
             return true;
         });
 
-        viewmodel.getMeasurements().observe(getViewLifecycleOwner(), measurements -> {
-            List<JubileumItemSimple> items = measurements.stream().map(JubileumItemSimple::new).collect(Collectors.toList());
-            itemAdapter.set(items);
-            if (editMode && !selectedItem) {
-                long pid = previous.getMeasurementID(); // id of previously selected measurements
-                int location = fastAdapter.getPosition(pid);
-                if (location != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
-                    selectionExtension.toggleSelection(location);
-                    fastAdapter.getItem(location).setSelected(true);
-                    fastAdapter.notifyItemChanged(location);
-                    selectedItem = true;
-                }
+
+        List<JubileumItemSimple> items = MeasurementUtil.getBaseMeasurements().stream().map(JubileumItemSimple::new).collect(Collectors.toList());
+        itemAdapter.set(items);
+        if (editMode && !selectedItem) {
+            long pid = MeasurementUtil.chronoUnitToID(previous.getType()); // id of previously selected base measurement
+            int location = fastAdapter.getPosition(pid);
+            if (location != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                selectionExtension.toggleSelection(location);
+                fastAdapter.getItem(location).setSelected(true);
+                fastAdapter.notifyItemChanged(location);
+                selectedItem = true;
             }
-        });
+        }
     }
 
     private void prepareButtons() {

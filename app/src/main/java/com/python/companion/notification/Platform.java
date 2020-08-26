@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -52,14 +51,13 @@ public class Platform {
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    /** Setup main platform schedule: Boots {@link PlatformReceiver} every day around approximately 00:00 */
+    /** Setup main platform schedule: Boots {@link PlatformReceiver} four times every day approximately */
     public void registerPlatformSchedule(@NonNull Context context) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
         calendar.set(Calendar.HOUR_OF_DAY, 0);
 
         PendingIntent pendingIntent = buildPendingIntent(context);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-        Log.e("Platform", "Setup alarm completed");
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HOUR * 6, pendingIntent);
     }
 }

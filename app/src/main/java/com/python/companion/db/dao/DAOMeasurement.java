@@ -142,6 +142,14 @@ public abstract class DAOMeasurement {
                         child.setDuration(child.getCornerstoneType().getDuration().multipliedBy(newAmount));
                     }
                     update(child);
+                    if (measurementUsedInNotify(child.getMeasurementID())) {
+                        //TODO: After child update, must refresh notifications where measurement "child" is used as expression
+                        // This indeed means painfully finding jubileum, then subtract right amount of child
+                    }
+                    if (child.getHasNotifications()) {
+                        //TODO: Must refresh notifications where measurement "child" is the jubileum
+                    }
+
                     queue.add(child);
                 }
             }
@@ -150,6 +158,9 @@ public abstract class DAOMeasurement {
         return true;
     }
 
+    @Query("SELECT EXISTS(SELECT 1 FROM Notify WHERE measurementID = :id)")
+    public abstract boolean measurementUsedInNotify(long id);
+
     @Transaction
     public void deleteInherit(@NonNull Measurement measurement) {
         for (Measurement child : findChildren(measurement.getMeasurementID())) {
@@ -157,7 +168,7 @@ public abstract class DAOMeasurement {
             child.setAmount(child.getAmount()*measurement.getAmount());
             update(child);
         }
-        delete(measurement);
+        delete(measurement); // Note: Notifications are deleted automatically
     }
 
     @Query("SELECT COUNT(*) FROM MEASUREMENT")

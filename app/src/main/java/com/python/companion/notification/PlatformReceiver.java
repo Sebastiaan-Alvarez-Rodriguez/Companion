@@ -74,11 +74,9 @@ public class PlatformReceiver extends BroadcastReceiver {
         DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
         List<Measurement> measurements = daoMeasurement.findByID(dues.stream().map(Notify::getJubileumID));
 
-        Log.e("PR", "We have "+dues.size()+" due notifications:");
         for (int x = 0; x < dues.size(); ++x) {
             Notify due = dues.get(x);
             Measurement m = measurements.get(x);
-            Log.e("PR", "Notification on "+due.getNotifyDate()+" for "+m.getNameSingular()+" anniversaries");
             notify(due, m, context);
         }
         updateDueNotifies(dues, measurements, context);
@@ -88,12 +86,9 @@ public class PlatformReceiver extends BroadcastReceiver {
     private static void onHandleCycle(List<Notify> dues, Context context) {
         DAOMeasurement daoMeasurement = Database.getDatabase(context).getDAOMeasurement();
         List<Measurement> measurements = daoMeasurement.findByID(dues.stream().map(Notify::getJubileumID));
-
-        Log.e("PR", "We have "+dues.size()+" due notifications:");
         for (int x = 0; x < dues.size(); ++x) {
             Notify due = dues.get(x);
             Measurement m = measurements.get(x);
-            Log.e("PR", "Notification on "+due.getNotifyDate()+" for "+m.getNameSingular()+" anniversaries");
             notify(due, m, context);
         }
         updateDueNotifies(dues, measurements, context);
@@ -106,7 +101,6 @@ public class PlatformReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-//        android.os.Debug.waitForDebugger(); // TODO: Remove after debugging
         if (context == null || intent == null)
             return;
         String action = intent.getAction();

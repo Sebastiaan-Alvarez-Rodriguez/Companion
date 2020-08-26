@@ -101,6 +101,7 @@ public class MeasurementUtil {
     }
 
 
+    /** Computes interval with a given list of measurements in separate thread, and returns result in provided {@code ResultListener} */
     public static void futureIntertwinedInterval(@NonNull Measurement unit, @NonNull LocalDate together, @NonNull List<Measurement> others, long interval, ResultListener<LocalDate> dateListener, ErrorListener errorListener) {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
@@ -118,6 +119,7 @@ public class MeasurementUtil {
      * @return next interval intertwined with given other units
      */
     @WorkerThread
+    @CheckResult
     public static LocalDate futureIntertwinedInterval(@NonNull Measurement unit, @NonNull LocalDate together, @NonNull List<Measurement> others, long interval) throws DateTimeException {
         ArrayList<Measurement> all = new ArrayList<>(others);
         all.add(unit);
@@ -167,6 +169,7 @@ public class MeasurementUtil {
         return futureIntertwinedInterval(unit, together, others, 1);
     }
 
+    /** Returns the currently stored date on which the user's relation started */
     public static @NonNull LocalDate getTogether(@NonNull Context context) {
         SharedPreferences preferences = context.getSharedPreferences(context.getString(R.string.cactus_preferences), Context.MODE_PRIVATE);
         return LocalDate.parse(preferences.getString(context.getString(R.string.cactus_preferences_key_together), "2017-11-08"));
@@ -178,19 +181,28 @@ public class MeasurementUtil {
         preferences.apply();
     }
 
-    /** Converts default types (chronounits) to measurementID's, used to store them in the database. Returns {@code null} if no matching ID for a ChronoUnit exists */
+    /** Converts default types (chronounits) to measurementID's */
     public static long chronoUnitToID(@NonNull ChronoUnit unit) {
         switch (unit) {
             case DAYS:
-                return (long) -2;
+                return -2;
             case MONTHS:
-                return (long) -3;
+                return -3;
             case YEARS:
-                return (long) -4;
+                return -4;
         }
         throw new IllegalArgumentException("Given ChronoUnit '"+unit.name()+"' is not supported");
     }
 
+    public static long NoneMeasurementID() {
+        return -1;
+    }
+
+    public static boolean isBaseMeasurement(@NonNull Measurement measurement) {
+        return measurement.getMeasurementID() > -5 && measurement.getMeasurementID() < -1;
+    }
+
+    /** Returns an instantiated Measurement representing inputted ChronoUnit type, which can be used as a basetype */
     public static Measurement getBaseMeasurement(@NonNull ChronoUnit unit) {
         switch (unit) {
             case DAYS:
@@ -200,19 +212,31 @@ public class MeasurementUtil {
             case YEARS:
                 return new Measurement(chronoUnitToID(unit), "Year", "Years", ChronoUnit.YEARS.getDuration(), 1, 1, chronoUnitToID(unit), ChronoUnit.YEARS, false, false);
         }
-        return Measurement.template();
+        throw new IllegalArgumentException("ChronoUnit '"+unit.name()+"' is not supported as base measurement");
     }
 
-    public static boolean isBaseMeasurement(@NonNull Measurement measurement) {
-        return measurement.getMeasurementID() > -5 && measurement.getMeasurementID() < -1;
+    public static List<Measurement> getBaseMeasurements() {
+        ArrayList<Measurement> returnList = new ArrayList<>(3);
+        returnList.add(new Measurement(chronoUnitToID(ChronoUnit.DAYS), "Day", "Days", ChronoUnit.DAYS.getDuration(), 1, 1, chronoUnitToID(ChronoUnit.DAYS), ChronoUnit.DAYS, false, false));
+        returnList.add(new Measurement(chronoUnitToID(ChronoUnit.MONTHS), "Month", "Months", ChronoUnit.MONTHS.getDuration(), 1, 1, chronoUnitToID(ChronoUnit.MONTHS), ChronoUnit.MONTHS, false, false));
+        returnList.add(new Measurement(chronoUnitToID(ChronoUnit.YEARS), "Year", "Years", ChronoUnit.YEARS.getDuration(), 1, 1, chronoUnitToID(ChronoUnit.YEARS), ChronoUnit.YEARS, false, false));
+        return returnList;
     }
 
-    public static long NoneMeasurementID() {
-        return -1;
+    /** Returns corresponding ChronoUnit represented by passed baseMeasurement. Note: Only provide base-measurements constructed with {@link #getBaseMeasurement(ChronoUnit)} */
+    public static ChronoUnit getBaseChronoUnit(@NonNull Measurement baseMeasurement) {
+        if (!isBaseMeasurement(baseMeasurement))
+            throw new IllegalArgumentException("Cannot get base ChronoUnit for non-base measurement '"+baseMeasurement.getNameSingular()+"'");
+        long id = baseMeasurement.getMeasurementID();
+        if (id == -2)
+            return ChronoUnit.DAYS;
+        else if (id == -3)
+            return ChronoUnit.MONTHS;
+        else
+            return ChronoUnit.YEARS;
     }
 
-
-    /** Returns suffix type for the "number'th" number */
+    /** Returns suffix type for the "number'th" number (e.g. 1 -> 1st, 33 -> 23rd) */
     public static String getDayOfMonthSuffix(int n) {
         if (n >= 11 && n <= 13)
             return "th";

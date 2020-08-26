@@ -11,48 +11,46 @@ import androidx.room.PrimaryKey;
 import com.python.companion.util.MeasurementUtil;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 public class Notify {
     @PrimaryKey(autoGenerate = true)
     private long notifyID;
 
-    /** ID of jubileum we have this notification for 'e.g. 42day-jubileum'*/
+    /** ID of jubileum we have this notification for*/
     @ForeignKey(entity = Measurement.class, parentColumns = "measurementID", childColumns = "jubileumID", onDelete = ForeignKey.CASCADE)
     private long jubileumID;
 
     /** Date on which we must notify the user */
     private @NonNull LocalDate notifyDate;
 
-    /** Amount of units to notify before the actual date. Used to make editing possible */
+    /** Amount of units this notification is sent before the anniversary date */
     private long amount;
 
-    /** ID of Measurement user expresses */
-    @ForeignKey(entity = Measurement.class, parentColumns = "measurementID", childColumns = "measurementID")
-    private long measurementID;
+    /** Unit type to give distance to jubileum in (e.g. notifyDate = jubileumDate - amount * type) */
+    @ForeignKey(entity = Measurement.class, parentColumns = "measurementID", childColumns = "measurementID", onDelete = ForeignKey.CASCADE)
+    private ChronoUnit type;
 
 
     @Ignore
-    public Notify(long jubileumID, @NonNull LocalDate notifyDate, long amount, long measurementID) {
+    public Notify(long jubileumID, @NonNull LocalDate notifyDate, long amount, @NonNull ChronoUnit type) {
         this.jubileumID = jubileumID;
         this.notifyDate = notifyDate;
         this.amount = amount;
-        this.measurementID = measurementID;
+        this.type = type;
     }
 
-    public Notify(long notifyID, long jubileumID, @NonNull LocalDate notifyDate, long amount, long measurementID) {
+    public Notify(long notifyID, long jubileumID, @NonNull LocalDate notifyDate, long amount, @NonNull ChronoUnit type) {
+        this(jubileumID, notifyDate, amount, type);
         this.notifyID = notifyID;
-        this.jubileumID = jubileumID;
-        this.notifyDate = notifyDate;
-        this.amount = amount;
-        this.measurementID = measurementID;
     }
 
     /**
-     * Quickly assemble a Notify instance for given base measurement's next jubileum, amount of given Measurement before
+     * Quickly assemble a Notify instance for a moment before given base measurement's next jubileum
      * @param base Measurement we make a Notify instance for
-     * @param amount Amount of Measurement to subtract from jubileum date
-     * @param picked Picked measurement, used to subtract <code>amount</code> measurements from the jubileum date
+     * @param amount Amount of units to subtract from jubileum date
+     * @param picked Unit used to subtract from jubileum date. Make sure this unit is a base type
      * @return Constructed Notify
      */
     public static @NonNull Notify from(@NonNull Context context, Measurement base, long amount, @NonNull Measurement picked) {
@@ -61,7 +59,8 @@ public class Notify {
 
         if (notifyDate.isBefore(LocalDate.now())) // If we are too late to notify for this jubileum
             notifyDate.plus(1, base); // set to the next jubileum
-        return new Notify(base.getMeasurementID(), notifyDate, amount, picked.getMeasurementID());
+
+        return new Notify(base.getMeasurementID(), notifyDate, amount, MeasurementUtil.getBaseChronoUnit(picked));
     }
 
     /**
@@ -71,12 +70,7 @@ public class Notify {
      */
     public static @NonNull Notify from(@NonNull Context context, Measurement base) {
         LocalDate jubileumDate = MeasurementUtil.futureInterval(base, MeasurementUtil.getTogether(context), 1);
-        return new Notify(base.getMeasurementID(), jubileumDate, 0, MeasurementUtil.NoneMeasurementID());
-    }
-
-    /** Basic copy constructor */
-    public static @NonNull Notify from(@NonNull Notify n) {
-        return new Notify(n.getNotifyID(), n.getJubileumID(), n.getNotifyDate(), n.getAmount(), n.getMeasurementID());
+        return new Notify(base.getMeasurementID(), jubileumDate, 0, ChronoUnit.DAYS);
     }
 
     public long getNotifyID() {
@@ -111,11 +105,11 @@ public class Notify {
         this.amount = amount;
     }
 
-    public long getMeasurementID() {
-        return measurementID;
+    public ChronoUnit getType() {
+        return type;
     }
 
-    public void setMeasurementID(long measurementID) {
-        this.measurementID = measurementID;
+    public void setType(ChronoUnit type) {
+        this.type = type;
     }
 }
