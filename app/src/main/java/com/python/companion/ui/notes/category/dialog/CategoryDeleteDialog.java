@@ -13,7 +13,6 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
@@ -21,11 +20,10 @@ import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 
 @SuppressWarnings("WeakerAccess")
-public class CategoryDeleteDialog extends DialogFragment {
-
-    @SuppressWarnings("unused")
+public class CategoryDeleteDialog extends FixedDialogFragment {
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
         private DialogAcceptListener dialogAcceptListener = null;

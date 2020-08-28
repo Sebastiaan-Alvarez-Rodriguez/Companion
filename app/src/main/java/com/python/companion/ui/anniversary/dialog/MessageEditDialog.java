@@ -15,7 +15,6 @@ import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -34,9 +33,10 @@ import com.python.companion.db.entity.Anniversary;
 import com.python.companion.db.entity.Message;
 import com.python.companion.db.interact.MessageStore;
 import com.python.companion.db.repository.AnniversaryRepository;
+import com.python.companion.ui.anniversary.adapter.item.AnniversaryItemSimple;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
-import com.python.companion.ui.anniversary.adapter.item.AnniversaryItemSimple;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 import com.python.companion.util.AnniversaryUtil;
 
 import java.time.LocalDate;
@@ -46,14 +46,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("WeakerAccess")
-public class MessageEditDialog extends DialogFragment {
-
-    @SuppressWarnings("unused")
+public class MessageEditDialog extends FixedDialogFragment {
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
         private DialogAcceptListener dialogAcceptListener = null;
 
-        private String questionString = "";
         private Anniversary anniversary;
 
         private @Nullable
@@ -74,8 +71,8 @@ public class MessageEditDialog extends DialogFragment {
             return this;
         }
 
-        public Builder setPrevious(@NonNull Message notify) {
-            this.previous = notify;
+        public Builder setPrevious(@NonNull Message message) {
+            this.previous = message;
             return this;
         }
 
@@ -136,18 +133,18 @@ public class MessageEditDialog extends DialogFragment {
     }
 
     protected void findGlobalViews(View view) {
-        layout = view.findViewById(R.id.dialog_notify_layout);
-        optionSpinner = view.findViewById(R.id.dialog_notify_option_spinner);
-        beforeLayout = view.findViewById(R.id.dialog_notify_before_layout);
-        beforeAmount = beforeLayout.findViewById(R.id.dialog_notify_before_amount);
-        list = beforeLayout.findViewById(R.id.dialog_notify_before_anniversary_list);
+        layout = view.findViewById(R.id.dialog_message_layout);
+        optionSpinner = view.findViewById(R.id.dialog_message_option_spinner);
+        beforeLayout = view.findViewById(R.id.dialog_message_before_layout);
+        beforeAmount = beforeLayout.findViewById(R.id.dialog_message_before_amount);
+        list = beforeLayout.findViewById(R.id.dialog_message_before_anniversary_list);
 
-        cancelButton = view.findViewById(R.id.dialog_notify_cancel);
-        acceptButton = view.findViewById(R.id.dialog_notify_accept);
+        cancelButton = view.findViewById(R.id.dialog_message_cancel);
+        acceptButton = view.findViewById(R.id.dialog_message_accept);
     }
 
     protected void setMainOptions() {
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(), R.array.notify_add_dialog_options, android.R.layout.simple_spinner_item);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(), R.array.message_add_dialog_options, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         optionSpinner.setAdapter(adapter);
     }

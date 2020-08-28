@@ -12,21 +12,20 @@ import android.widget.TextView;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 
 import kotlin.text.Charsets;
 
-public class PassDialog extends DialogFragment {
+public class PassDialog extends FixedDialogFragment {
 
     public interface VerifyInterface {
         boolean verify(byte[] password);
     }
 
-//    @SuppressWarnings("unused")
     public static class Builder {
         private DialogCancelListener dialogCancelListener;
         private DialogAcceptValueListener<Boolean> dialogAcceptListener;

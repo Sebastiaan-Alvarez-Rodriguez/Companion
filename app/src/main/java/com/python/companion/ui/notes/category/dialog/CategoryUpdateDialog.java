@@ -12,7 +12,6 @@ import androidx.annotation.CallSuper;
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.constant.CategoryQuery;
@@ -20,12 +19,12 @@ import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
 import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 import com.skydoves.colorpickerview.ColorPickerDialog;
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
 @SuppressWarnings("WeakerAccess")
-public class CategoryUpdateDialog extends DialogFragment {
-    @SuppressWarnings("unused")
+public class CategoryUpdateDialog extends FixedDialogFragment {
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
         private DialogAcceptValueListener<Category> dialogAcceptListener = null;

@@ -10,7 +10,6 @@
         android:layout_height="120dp"
         android:background="@color/colorPrimaryDark"
         android:gravity="center"
-        android:minWidth="600dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_menu_merge"
         android:tint="@android:color/white"

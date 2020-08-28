@@ -10,15 +10,15 @@ import android.widget.TextView;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.entity.Note;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 
 @SuppressWarnings("WeakerAccess")
-public class NoteOverrideDialog extends DialogFragment {
+public class NoteOverrideDialog extends FixedDialogFragment {
 
     @SuppressWarnings("unused")
     public static class Builder {

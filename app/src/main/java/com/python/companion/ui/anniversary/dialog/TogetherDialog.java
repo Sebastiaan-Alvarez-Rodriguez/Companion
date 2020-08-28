@@ -10,19 +10,18 @@ import android.widget.Button;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 import com.python.companion.ui.general.picker.GoodDatePicker;
 import com.python.companion.util.AnniversaryUtil;
 
 import java.time.LocalDate;
 
 @SuppressWarnings("WeakerAccess")
-public class TogetherDialog extends DialogFragment {
-    @SuppressWarnings("unused")
+public class TogetherDialog extends FixedDialogFragment {
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;
         private DialogAcceptListener dialogAcceptListener = null;

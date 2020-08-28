@@ -61,7 +61,7 @@ public class PlatformReceiver extends BroadcastReceiver {
         daoMessage.update(dues.toArray(new Message[0])); // Schedules next notifies
     }
 
-    /** Sends a notification to the Android system for a given anniversary and notify object */
+    /** Sends a notification to the Android system for a given anniversary and message object */
     private static void notify(Message notify, Anniversary anniversary, Context context) {
         Notification.Builder builder = new Notification.Builder(context, MessageUtil.getChannelID(anniversary));
         builder.setContentTitle(MessageUtil.getNotificationTitle(notify, anniversary))
@@ -99,7 +99,7 @@ public class PlatformReceiver extends BroadcastReceiver {
         updateDueNotifies(dues, anniversaries, context);
     }
 
-    /** Call to force a daily check */
+    /** Call to force a check */
     public static void manualCycle(Context context) {
         Executors.newSingleThreadExecutor().execute(() -> onHandleCycle(getAnniversariesForNotifications(context), context));
     }
@@ -132,6 +132,5 @@ public class PlatformReceiver extends BroadcastReceiver {
                 Log.e("PR", "Big big async trouble (PR):", e);
             }
         }
-        Log.e("PR", "Action completed");
     }
 }

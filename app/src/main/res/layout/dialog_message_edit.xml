@@ -1,13 +1,26 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/dialog_notify_layout"
+    android:id="@+id/dialog_message_layout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:minWidth="400dp">
+    android:layout_height="wrap_content">
 
+    <ImageView
+        android:id="@+id/dialog_message_edit_header"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@color/colorPrimaryDark"
+        android:gravity="center"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_cactus_companion_centered_small"
+        android:tint="@android:color/white"
+        android:tintMode="src_in"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    
     <TextView
-        android:id="@+id/dialog_notify_question"
+        android:id="@+id/dialog_message_question"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -17,33 +30,33 @@
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/dialog_message_edit_header"/>
 
     <Spinner
-        android:id="@+id/dialog_notify_option_spinner"
+        android:id="@+id/dialog_message_option_spinner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="@+id/dialog_notify_question"
-        app:layout_constraintStart_toStartOf="@+id/dialog_notify_question"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_notify_question" />
+        app:layout_constraintEnd_toEndOf="@+id/dialog_message_question"
+        app:layout_constraintStart_toStartOf="@+id/dialog_message_question"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_message_question" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/dialog_notify_before_layout"
+        android:id="@+id/dialog_message_before_layout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         android:minHeight="160dp"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/dialog_notify_cancel"
-        app:layout_constraintEnd_toEndOf="@+id/dialog_notify_option_spinner"
-        app:layout_constraintStart_toStartOf="@+id/dialog_notify_option_spinner"
-        app:layout_constraintTop_toBottomOf="@+id/dialog_notify_option_spinner">
+        app:layout_constraintBottom_toTopOf="@+id/dialog_message_cancel"
+        app:layout_constraintEnd_toEndOf="@+id/dialog_message_option_spinner"
+        app:layout_constraintStart_toStartOf="@+id/dialog_message_option_spinner"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_message_option_spinner">
 
         <EditText
-            android:id="@+id/dialog_notify_before_amount"
+            android:id="@+id/dialog_message_before_amount"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:ems="3"
@@ -57,31 +70,31 @@
             tools:text="30" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/dialog_notify_before_anniversary_list"
+            android:id="@+id/dialog_message_before_anniversary_list"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/dialog_notify_before_amount_txt1"
-            app:layout_constraintStart_toEndOf="@+id/dialog_notify_before_amount"
+            app:layout_constraintEnd_toStartOf="@+id/dialog_message_before_amount_txt1"
+            app:layout_constraintStart_toEndOf="@+id/dialog_message_before_amount"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/dialog_notify_before_amount_txt1"
+            android:id="@+id/dialog_message_before_amount_txt1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:text="before"
             android:textSize="24sp"
-            app:layout_constraintBottom_toBottomOf="@+id/dialog_notify_before_amount"
+            app:layout_constraintBottom_toBottomOf="@+id/dialog_message_before_amount"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/dialog_notify_before_amount" />
+            app:layout_constraintTop_toTopOf="@+id/dialog_message_before_amount" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button
-        android:id="@+id/dialog_notify_accept"
+        android:id="@+id/dialog_message_accept"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
@@ -96,7 +109,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/dialog_notify_cancel"
+        android:id="@+id/dialog_message_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"

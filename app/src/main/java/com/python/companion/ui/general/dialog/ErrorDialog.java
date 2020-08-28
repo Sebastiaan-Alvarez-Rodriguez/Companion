@@ -10,13 +10,10 @@ import android.widget.TextView;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 
-public class ErrorDialog extends DialogFragment {
-
-    @SuppressWarnings("unused")
+public class ErrorDialog extends FixedDialogFragment {
     public static class Builder {
         private DialogAcceptListener dialogAcceptListener = null;
 

@@ -9,14 +9,14 @@ import android.widget.Button;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 
 @SuppressWarnings("WeakerAccess")
-public class PassResetDialog extends DialogFragment {
+public class PassResetDialog extends FixedDialogFragment {
 
     @SuppressWarnings("unused")
     public static class Builder {

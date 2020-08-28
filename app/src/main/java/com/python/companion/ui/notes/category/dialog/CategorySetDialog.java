@@ -11,7 +11,6 @@ import android.widget.TextView;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -26,21 +25,21 @@ import com.mikepenz.fastadapter.extensions.ExtensionsFactories;
 import com.mikepenz.fastadapter.select.SelectExtension;
 import com.mikepenz.fastadapter.select.SelectExtensionFactory;
 import com.python.companion.R;
-import com.python.companion.db.repository.CategoryRepository;
 import com.python.companion.db.constant.NoteQuery;
 import com.python.companion.db.entity.Category;
-import com.python.companion.ui.notes.category.adapter.CategoryItem;
-import com.python.companion.ui.notes.note.adapter.NoteItem;
+import com.python.companion.db.repository.CategoryRepository;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
+import com.python.companion.ui.notes.category.adapter.CategoryItem;
+import com.python.companion.ui.notes.note.adapter.NoteItem;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("WeakerAccess")
-public class CategorySetDialog extends DialogFragment {
-    @SuppressWarnings("unused")
+public class CategorySetDialog extends FixedDialogFragment {
     public static class Builder {
         private Set<NoteItem> selectedNotes = null;
         private DialogCancelListener dialogCancelListener = null;

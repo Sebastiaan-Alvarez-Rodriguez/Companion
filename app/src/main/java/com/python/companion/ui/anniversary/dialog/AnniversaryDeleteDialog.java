@@ -10,15 +10,15 @@ import android.widget.TextView;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.db.interact.AnniversaryStore;
 import com.python.companion.db.pojo.anniversary.AnniversaryWithParentNames;
 import com.python.companion.ui.general.dialog.DialogAcceptListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 
-public class AnniversaryDeleteDialog extends DialogFragment {
+public class AnniversaryDeleteDialog extends FixedDialogFragment {
 
     public static class Builder {
         private DialogCancelListener dialogCancelListener = null;

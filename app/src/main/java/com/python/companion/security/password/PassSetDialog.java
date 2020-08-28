@@ -11,15 +11,15 @@ import android.widget.TextView;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 
 import com.python.companion.R;
 import com.python.companion.ui.general.dialog.DialogAcceptValueListener;
 import com.python.companion.ui.general.dialog.DialogCancelListener;
+import com.python.companion.ui.general.dialog.FixedDialogFragment;
 
 import kotlin.text.Charsets;
 
-public class PassSetDialog extends DialogFragment {
+public class PassSetDialog extends FixedDialogFragment {
 
 //    @SuppressWarnings("unused")
     public static class Builder {
