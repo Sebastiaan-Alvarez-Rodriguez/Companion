@@ -1,6 +1,5 @@
 package com.python.companion.ui.notes.note.activity.edit;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
@@ -76,11 +75,16 @@ public class NoteEditActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        new AlertDialog.Builder(this)
-                .setMessage("Go back without saving?")
-                .setNegativeButton("Cancel", (DialogInterface.OnClickListener) (dialog1, which) -> dialog1.dismiss())
-                .setPositiveButton("Go back", (DialogInterface.OnClickListener) (dialog12, which) -> finish())
-                .setOnCancelListener((DialogInterface.OnCancelListener) dialog -> finish())
-                .show();
+        if (editMode && noteName.getText().toString().equals(note.getName()) && noteContent.getText().toString().equals(note.getContent()))
+            super.onBackPressed();
+        else if (noteName.getText().length() == 0 && noteContent.getText().length() == 0)
+            super.onBackPressed();
+        else
+            new AlertDialog.Builder(this)
+                    .setMessage("Go back without saving?")
+                    .setNegativeButton("Cancel", (dialog1, which) -> dialog1.dismiss())
+                    .setPositiveButton("Go back", (dialog12, which) -> finish())
+                    .setOnCancelListener(dialog -> finish())
+                    .show();
     }
 }
