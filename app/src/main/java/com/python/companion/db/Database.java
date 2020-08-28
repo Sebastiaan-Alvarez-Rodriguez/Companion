@@ -18,7 +18,7 @@ import com.python.companion.db.entity.Category;
 import com.python.companion.db.entity.Note;
 import com.python.companion.db.entity.Message;
 import com.python.companion.db.migrations.Migrate;
-import com.python.companion.db.populators.Populator;
+import com.python.companion.db.populators.AnniversaryPopulator;
 import com.python.companion.db.typeconverters.ChronoUnitConverter;
 import com.python.companion.db.typeconverters.DurationConverter;
 import com.python.companion.db.typeconverters.InstantConverter;
@@ -50,7 +50,7 @@ public abstract class Database extends RoomDatabase {
                             .addCallback(new Callback() {
                                 @Override
                                 public void onCreate(@NonNull SupportSQLiteDatabase db) {
-                                    Populator.populate(db);
+                                    AnniversaryPopulator.populate(db);
                                 }
                             })
                             .build();

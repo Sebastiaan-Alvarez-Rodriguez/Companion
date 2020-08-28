@@ -1,6 +1,5 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_category_edit_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -15,19 +14,9 @@
         android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <include
-        android:id="@+id/activity_category_edit_current"
-        layout="@layout/item_category"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_toolbar" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        app:popupTheme="@style/AppTheme.PopupOverlay"/>
 
     <TextView
         android:id="@+id/activity_category_edit_text"
@@ -38,7 +27,7 @@
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_current" />
+        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_toolbar" />
 
     <ImageView
         android:id="@+id/activity_category_edit_add_new"
@@ -49,6 +38,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/activity_category_edit_new"
         app:srcCompat="@drawable/ic_add" />
+
+    <com.python.companion.ui.general.customviews.ContextMenuRecyclerView
+        android:id="@+id/activity_category_edit_list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/activity_category_edit_new"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_text" />
 
     <TextView
         android:id="@+id/activity_category_edit_color"
@@ -73,19 +75,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/activity_category_edit_add_new"
         app:layout_constraintStart_toEndOf="@+id/activity_category_edit_color" />
-
-    <com.python.companion.ui.general.customviews.ContextMenuRecyclerView
-        android:id="@+id/activity_category_edit_list"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/activity_category_edit_new"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activity_category_edit_text" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -102,6 +102,7 @@ public class CategoryDeleteDialog extends FixedDialogFragment {
         deleteButton.setOnClickListener(v -> {
             NoteQuery noteQuery = new NoteQuery(getContext());
             String defaultName = "";
+            // Below code first migrates all notes having our category to default category, then deletes our category
             @ColorInt int defaultColor = ContextCompat.getColor(getContext(), R.color.colorPrimary);
             noteQuery.updateEntireCategory(category.getCategoryName(), defaultName, defaultColor, x -> {});
 

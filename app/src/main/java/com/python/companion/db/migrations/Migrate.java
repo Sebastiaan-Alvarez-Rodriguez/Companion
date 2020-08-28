@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import com.python.companion.db.populators.Populator;
+import com.python.companion.db.populators.AnniversaryPopulator;
 
 public class Migrate {
 
@@ -42,7 +42,7 @@ public class Migrate {
                 database.execSQL("DROP TABLE IF EXISTS Anniversary");
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Anniversary` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
                 database.execSQL("COMMIT;");
-                Populator.populate(database);
+                AnniversaryPopulator.populate(database);
             }
         };
     }
@@ -57,7 +57,7 @@ public class Migrate {
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Anniversary` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Notify` (`notifyID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `anniversaryID` INTEGER NOT NULL, `notifyDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `anniversaryID` INTEGER NOT NULL)");
                 database.execSQL("COMMIT;");
-                Populator.populate(database);
+                AnniversaryPopulator.populate(database);
             }
         };
     }
@@ -72,7 +72,7 @@ public class Migrate {
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Anniversary` (`anniversaryID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nameSingular` TEXT NOT NULL, `namePlural` TEXT NOT NULL, `duration` INTEGER, `amount` INTEGER NOT NULL, `precomputedamount` INTEGER NOT NULL, `parentID` INTEGER NOT NULL, `cornerstoneType` TEXT, `hasNotifications` INTEGER NOT NULL, `canModify` INTEGER NOT NULL)");
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Message` (`messageID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `anniversaryID` INTEGER NOT NULL, `messageDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `type` TEXT)");
                 database.execSQL("COMMIT;");
-                Populator.populate(database);
+                AnniversaryPopulator.populate(database);
             }
         };
     }

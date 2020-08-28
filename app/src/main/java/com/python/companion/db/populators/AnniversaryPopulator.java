@@ -9,7 +9,7 @@ import com.python.companion.util.AnniversaryUtil;
 
 import java.time.temporal.ChronoUnit;
 
-public class Populator {
+public class AnniversaryPopulator {
     public static void populate(@NonNull SupportSQLiteDatabase db) {
         long day_duration = DurationConverter.durationToDays(ChronoUnit.DAYS.getDuration());
         long month_duration = DurationConverter.durationToDays(ChronoUnit.MONTHS.getDuration());

@@ -17,7 +17,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -89,20 +88,16 @@ public class MessageEditDialog extends FixedDialogFragment {
     protected RecyclerView list;
     protected Button cancelButton, acceptButton;
 
-    protected @NonNull
-    Anniversary anniversary;
+    protected @NonNull Anniversary anniversary;
 
     protected @Nullable DialogCancelListener cancelListener;
     protected @Nullable DialogAcceptListener overrideListener;
 
-    protected AnniversaryViewModel viewmodel;
-
     protected FastAdapter<AnniversaryItemSimple> fastAdapter;
     protected SelectExtension<AnniversaryItemSimple> selectionExtension;
 
-    protected @Nullable
-    Message previous;
-    protected boolean editMode, selectedItem;
+    protected @Nullable Message previous;
+    protected boolean editMode, selectedInitial;
 
     protected MessageEditDialog(@Nullable DialogCancelListener cancelListener, @Nullable DialogAcceptListener overrideListener, @NonNull Anniversary anniversary, @Nullable Message previous) {
         this.cancelListener = cancelListener;
@@ -110,13 +105,12 @@ public class MessageEditDialog extends FixedDialogFragment {
         this.anniversary = anniversary;
         this.previous = previous;
         this.editMode = previous != null;
-        this.selectedItem = false;
+        this.selectedInitial = false;
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        viewmodel = new ViewModelProvider(this).get(AnniversaryViewModel.class);
         return inflater.inflate(R.layout.dialog_message_edit, container);
     }
 
@@ -176,14 +170,14 @@ public class MessageEditDialog extends FixedDialogFragment {
 
         List<AnniversaryItemSimple> items = AnniversaryUtil.getBaseAnniversaries().stream().map(AnniversaryItemSimple::new).collect(Collectors.toList());
         itemAdapter.set(items);
-        if (editMode && !selectedItem) {
+        if (editMode && !selectedInitial) {
             long pid = AnniversaryUtil.chronoUnitToID(previous.getType()); // id of previously selected base anniversary
             int location = fastAdapter.getPosition(pid);
             if (location != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                 selectionExtension.toggleSelection(location);
                 fastAdapter.getItem(location).setSelected(true);
                 fastAdapter.notifyItemChanged(location);
-                selectedItem = true;
+                selectedInitial = true;
             }
         }
     }
