@@ -22,7 +22,7 @@
         android:clickable="true"
         app:srcCompat="@drawable/ic_add"
         app:tint="@android:color/white"
-        android:backgroundTint="@color/colorPrimary"
-        android:backgroundTintMode="src_in"
+        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTintMode="src_in"
         android:layout_gravity="bottom|end"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -25,11 +25,10 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
         android:layout_marginEnd="24dp"
-        android:backgroundTint="@color/colorPrimary"
-        android:backgroundTintMode="src_in"
+        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTintMode="src_in"
         android:clickable="true"
         app:tint="@android:color/white"
-        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/fragment_anniversary_jcalculator"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_cactulator" />
@@ -40,11 +39,9 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="32dp"
-        android:backgroundTint="@color/colorPrimary"
-        android:backgroundTintMode="src_in"
-        android:clickable="true"
+        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTintMode="src_in"
         app:tint="@android:color/white"
-        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/fragment_anniversary_add"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_anniversary" />
@@ -59,7 +56,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_add"
         app:tint="@android:color/white"
-        android:backgroundTint="@color/colorPrimary"
-        android:backgroundTintMode="src_in"/>
+        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTintMode="src_in"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

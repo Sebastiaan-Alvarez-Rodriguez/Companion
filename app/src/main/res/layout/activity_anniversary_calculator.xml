@@ -107,8 +107,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_add"
-        android:backgroundTint="@color/colorPrimary"
-        android:backgroundTintMode="src_in"
+        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTintMode="src_in"
         app:tint="@android:color/white"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
