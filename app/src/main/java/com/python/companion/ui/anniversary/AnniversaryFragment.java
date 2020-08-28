@@ -51,7 +51,6 @@ import com.python.companion.ui.anniversary.activity.calculate.AnniversaryCalcula
 import com.python.companion.ui.anniversary.activity.calculate.AnniversaryCalculatorSharedActivity;
 import com.python.companion.ui.anniversary.adapter.AnniversarySortHandler;
 import com.python.companion.ui.anniversary.adapter.item.AnniversaryItem;
-import com.python.companion.ui.notes.note.adapter.NoteSortHandler;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -233,7 +232,8 @@ public class AnniversaryFragment extends Fragment implements ActionMode.Callback
         searchView = (SearchView) menu.findItem(R.id.fragment_anniversary_search).getActionView();
         setListFiltering();
         @IdRes int id;
-        if (getContext().getSharedPreferences(getString(R.string.anniversary_preferences), Context.MODE_PRIVATE).getInt("anniversarySort", NoteSortHandler.SORT_DATE) == AnniversarySortHandler.SORT_ALPHA)
+        @AnniversarySortHandler.AnniversarySortStrategy int strategy = searchView.getContext().getSharedPreferences(getString(R.string.anniversary_preferences), Context.MODE_PRIVATE).getInt("AnniversarySort", AnniversarySortHandler.SORT_ALPHA);
+        if (strategy == AnniversarySortHandler.SORT_ALPHA)
             id = R.id.fragment_anniversary_sort_alpha;
         else
             id = R.id.fragment_anniversary_sort_duration;
