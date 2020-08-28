@@ -61,6 +61,11 @@ public class Note implements EntityVisitor.Visitable {
         favorite = false;
     }
 
+    @Ignore
+    public Note(@NonNull Note other) {
+        this(other.name, other.content, new Category(other.category), other.secure, other.iv, other.modified, other.type, other.favorite);
+    }
+
     /**
      * Returns a basic note template, with no fields filled with something intelligent.
      * Use this only if you will fill in all fields yourself at a later time

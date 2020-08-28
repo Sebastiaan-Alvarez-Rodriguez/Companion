@@ -4,6 +4,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 
 import com.python.companion.util.migration.EntityVisitor;
 
@@ -15,6 +16,11 @@ public class Category implements EntityVisitor.Visitable {
     public Category(@NonNull String categoryName, int categoryColor) {
         this.categoryName = categoryName;
         this.categoryColor = categoryColor;
+    }
+
+    @Ignore
+    public Category(@NonNull Category other) {
+        this(other.categoryName, other.categoryColor);
     }
 
     public @NonNull String getCategoryName() {

@@ -172,7 +172,7 @@ public abstract class Guard {
      * @param callback Called when decryption had success
     * @param errorListener Called when fatal error occurred
      */
-    public synchronized void decrypt(@NonNull Note note, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback,  @NonNull ErrorListener errorListener) {
+    public synchronized void decrypt(@NonNull final Note note, @NonNull FragmentManager fragmentManager, @NonNull Context context, @NonNull DecryptedCallback callback,  @NonNull ErrorListener errorListener) {
         if (note.getIv() == null) {
             errorListener.onError("Note has no iv set");
             return;
@@ -240,7 +240,6 @@ public abstract class Guard {
      * Encrypts multiple data objects at once. Make absolutely sure the streams are of even length.
      * @see Guard#encryptInternal(Note, EncryptedCallback)
      */
-    @SuppressWarnings({"unused"})
     protected synchronized void encryptInternal(@NonNull Stream<Note> notes, @NonNull EncryptedCallback callback, @NonNull ResultListener<Stream<Note>> finishListener, @NonNull ErrorListener errorListener) {
         Iterator<Note> noteIt = notes.iterator();
 
@@ -268,15 +267,14 @@ public abstract class Guard {
      * Decrypt given String using key in Android KeyStore with given alias, and return content in a {@link DecryptedCallback}
      */
     @SuppressWarnings("ConstantConditions")
-    protected synchronized void decryptInternal(@NonNull Note note, @NonNull DecryptedCallback callback) {
+    protected synchronized void decryptInternal(@NonNull final Note note, @NonNull DecryptedCallback callback) {
         try {
             String plaintext = dec(note.getContent(), note.getIv(), note.getName());
-
-            note.setContent(plaintext);
-            note.setIv(null);
-            note.setSecure(false);
-
-            callback.onDecrypted(note);
+            Note decrypted = new Note(note);
+            decrypted.setContent(plaintext);
+            decrypted.setIv(null);
+            decrypted.setSecure(false);
+            callback.onDecrypted(decrypted);
         } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
             Log.e("decrypt", "Exception: ", e);
             callback.onDecryptFailure();
@@ -296,13 +294,13 @@ public abstract class Guard {
             Note note = noteIt.next();
             try {
                 String plain = dec(note.getContent(), note.getIv(), note.getName());
+                Note decrypted = new Note(note);
+                decrypted.setContent(plain);
+                decrypted.setIv(null);
+                decrypted.setSecure(false);
 
-                note.setContent(plain);
-                note.setIv(null);
-                note.setSecure(false);
-
-                callback.onDecrypted(note);
-                stream.accept(note);
+                callback.onDecrypted(decrypted);
+                stream.accept(decrypted);
             } catch (InvalidKeyException | UnrecoverableEntryException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | IOException e) {
                 Log.e("decrypt", "Exception: ", e);
                 callback.onDecryptFailure();

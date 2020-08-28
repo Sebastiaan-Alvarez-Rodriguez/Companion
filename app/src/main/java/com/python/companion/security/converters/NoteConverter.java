@@ -121,7 +121,7 @@ public class NoteConverter {
         }
 
 
-        public void decrypt(@NonNull Note note) {
+        public void decrypt(@NonNull final Note note) {
             if (!note.isSecure() || note.getIv() == null) {
                 if (errorListener != null)
                     errorListener.onError("Note already plaintext");

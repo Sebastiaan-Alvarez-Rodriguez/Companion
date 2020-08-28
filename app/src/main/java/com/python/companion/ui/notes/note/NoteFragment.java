@@ -140,7 +140,6 @@ public class NoteFragment extends Fragment implements ActionMode.Callback {
                 if (n.isSecure()) {
                     NoteConverter.Decrypter.from(getChildFragmentManager(), getContext())
                             .setOnFinishListener(note -> {
-                                n.setSecure(true);
                                 intent.putExtra("note", new NoteContainer(n));
                                 intent.putExtra("plaintext", note.getContent());
                                 startActivity(intent);
