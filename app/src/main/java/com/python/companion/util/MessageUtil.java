@@ -202,7 +202,7 @@ public class MessageUtil {
             long between = expression.between(LocalDate.now(), anniversaryDate); // Amount of units to the next anniversary (rounded down)
             if (between <= 0)
                 return (-between) +" "+ ((-between) == 1 ? expression.getNameSingular() : expression.getNamePlural()) + " ago, you had your " + anniversariesHad + AnniversaryUtil.getDayOfMonthSuffix((int) anniversariesHad) + " " + anniversary.getNameSingular() + " anniversary, but we could not reach you in time!";
-            return "In " + between + " " + (between == 1 ? expression.getNameSingular() : expression.getNamePlural()) + ", you will have your " + anniversariesHad + AnniversaryUtil.getDayOfMonthSuffix((int) anniversariesHad) + " " + anniversary.getNameSingular() + " anniversary!";
+            return "In " + between + " " + (between == 1 ? expression.getNameSingular() : expression.getNamePlural()) + ", you will have your " + (anniversariesHad+1) + AnniversaryUtil.getDayOfMonthSuffix((int) (anniversariesHad+1)) + " " + anniversary.getNameSingular() + " anniversary!";
 
         }
     }

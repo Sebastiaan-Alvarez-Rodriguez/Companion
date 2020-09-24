@@ -1,4 +1,4 @@
-package com.python.companion.message;
+package com.python.companion.platform;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -54,7 +54,7 @@ public class PlatformReceiver extends BroadcastReceiver {
             Anniversary m = dueAnniversaries.get(x);
             LocalDate d = due.getMessageDate(), now = LocalDate.now();
             long passed = m.between(d, now); // Number of anniversaries passed between notify- and boot time
-            due.setMessageDate(d.plus(passed+1, m)); // Update next date to the first plausible time in the future
+            due.setMessageDate(d.plus(passed+1, m)); // Update next date to the first time in the future
         }
 
         DAOMessage daoMessage = Database.getDatabase(context).getDAOMessage();

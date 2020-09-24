@@ -1,4 +1,4 @@
-package com.python.companion.message;
+package com.python.companion.platform;
 
 import android.app.AlarmManager;
 import android.app.NotificationManager;

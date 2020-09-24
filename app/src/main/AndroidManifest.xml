@@ -41,7 +41,7 @@
         <activity android:name=".ui.anniversary.activity.calculate.AnniversaryCalculatorActivity" />
 
 <!--        Notification BroadcastReceiver-->
-        <receiver android:name=".message.PlatformReceiver"  android:exported="true">
+        <receiver android:name=".platform.PlatformReceiver"  android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="com.python.companion.action.CHECK_NOTIFICATIONS"/>
