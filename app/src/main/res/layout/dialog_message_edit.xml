@@ -48,8 +48,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        android:minHeight="160dp"
+        android:minHeight="220dp"
         android:visibility="invisible"
+        tools:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/dialog_message_cancel"
         app:layout_constraintEnd_toEndOf="@+id/dialog_message_option_spinner"
         app:layout_constraintStart_toStartOf="@+id/dialog_message_option_spinner"
@@ -64,7 +65,7 @@
             android:inputType="number"
             android:singleLine="true"
             android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/dialog_message_before_anniversary_list"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="30" />
@@ -75,7 +76,8 @@
             android:layout_height="0dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toTopOf="@+id/dialog_message_before_countdown"
             app:layout_constraintEnd_toStartOf="@+id/dialog_message_before_amount_txt1"
             app:layout_constraintStart_toEndOf="@+id/dialog_message_before_amount"
             app:layout_constraintTop_toTopOf="parent" />
@@ -90,6 +92,16 @@
             app:layout_constraintBottom_toBottomOf="@+id/dialog_message_before_amount"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/dialog_message_before_amount" />
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/dialog_message_before_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Count down dialy to anniversary"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

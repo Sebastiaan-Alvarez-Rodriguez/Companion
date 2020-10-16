@@ -23,7 +23,12 @@ public class MessageQuery {
     }
 
     public void isUniqueInstanced(@NonNull Message message, ResultListener<Message> listener) {
-        Executors.newSingleThreadExecutor().execute(() -> listener.onResult(daoMessage.findConflicting(message.getAnniversaryID(), message.getMessageDate())));
+        Executors.newSingleThreadExecutor().execute(() -> {
+            if (message.hasCountdown())
+                listener.onResult(daoMessage.findCountdown(message.getAnniversaryID()));
+            else
+                listener.onResult(daoMessage.findConflicting(message.getAnniversaryID(), message.getMessageDate()));
+        });
     }
 
     public void checkHasNotifications(long anniversaryID, ResultListener<Boolean> listener) {

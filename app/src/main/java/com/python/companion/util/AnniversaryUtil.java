@@ -62,6 +62,14 @@ public class AnniversaryUtil {
         return unit.addTo(together, intervalsBefore + interval);
     }
 
+    public static boolean isAnniversaryOnDate(@NonNull TemporalUnit unit, @NonNull LocalDate together, @NonNull LocalDate date) {
+        long intervals = unit.between(together, date);
+        return together.plus(intervals, unit).isEqual(date);
+    }
+    public static boolean isAnniversaryToday(@NonNull TemporalUnit unit, @NonNull LocalDate together) {
+        return isAnniversaryOnDate(unit, together, LocalDate.now());
+    }
+
     private static long gcd_binary(long a, long b) {
         if (a == 0)
             return b;

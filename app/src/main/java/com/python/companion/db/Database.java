@@ -24,7 +24,7 @@ import com.python.companion.db.typeconverters.DurationConverter;
 import com.python.companion.db.typeconverters.InstantConverter;
 import com.python.companion.db.typeconverters.LocalDateConverter;
 
-@androidx.room.Database(entities = {Note.class, Category.class, Anniversary.class, Message.class}, version = 6)
+@androidx.room.Database(entities = {Note.class, Category.class, Anniversary.class, Message.class}, version = 7)
 @TypeConverters({InstantConverter.class, DurationConverter.class, ChronoUnitConverter.class, LocalDateConverter.class})
 public abstract class Database extends RoomDatabase {
 

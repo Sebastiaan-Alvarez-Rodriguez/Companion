@@ -16,6 +16,7 @@ import com.python.companion.db.dao.DAOAnniversary;
 import com.python.companion.db.dao.DAOMessage;
 import com.python.companion.db.entity.Anniversary;
 import com.python.companion.db.entity.Message;
+import com.python.companion.util.AnniversaryUtil;
 import com.python.companion.util.MessageUtil;
 
 import java.time.LocalDate;
@@ -52,9 +53,24 @@ public class PlatformReceiver extends BroadcastReceiver {
         for (int x = 0; x < dues.size(); ++x) {
             Message due = dues.get(x);
             Anniversary m = dueAnniversaries.get(x);
-            LocalDate d = due.getMessageDate(), now = LocalDate.now();
-            long passed = m.between(d, now); // Number of anniversaries passed between notify- and boot time
-            due.setMessageDate(d.plus(passed+1, m)); // Update next date to the first time in the future
+            LocalDate now = LocalDate.now();
+            if (due.hasCountdown()) { // If message is of countdown type, then we should set the notification for tomorrow, unless the anniversary is today
+
+                // if (anniversary is today)
+                //    schedule next message for getAmount() units before futureInterval
+                // else
+                //    schedule next message for tomorrow
+                if (AnniversaryUtil.isAnniversaryToday(m, AnniversaryUtil.getTogether(context))) {
+                    LocalDate nextAnniversary = AnniversaryUtil.futureInterval(m, AnniversaryUtil.getTogether(context), 1);
+                    due.setMessageDate(nextAnniversary.minus(due.getAmount(), due.getType()));
+                } else {
+                    due.setMessageDate(LocalDate.now().plusDays(1));
+                }
+            } else {
+                LocalDate d = due.getMessageDate();
+                long passed = m.between(d, now); // Number of anniversaries passed between notify- and boot time
+                due.setMessageDate(d.plus(passed + 1, m)); // Update next date to the first time in the future
+            }
         }
 
         DAOMessage daoMessage = Database.getDatabase(context).getDAOMessage();

@@ -31,7 +31,6 @@
         name="message_add_dialog_options">
         <item>On the anniversary itself</item>
         <item>Some time before…</item>
-        <item>Every day until anniversary, some time before…</item>
     </string-array>
 
     <!--Our custom Actions for PlatformReceiver-->

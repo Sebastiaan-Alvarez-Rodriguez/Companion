@@ -51,6 +51,7 @@ import com.python.companion.ui.anniversary.activity.calculate.AnniversaryCalcula
 import com.python.companion.ui.anniversary.activity.calculate.AnniversaryCalculatorSharedActivity;
 import com.python.companion.ui.anniversary.adapter.AnniversarySortHandler;
 import com.python.companion.ui.anniversary.adapter.item.AnniversaryItem;
+import com.python.companion.util.AnniversaryUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -167,7 +168,7 @@ public class AnniversaryFragment extends Fragment implements ActionMode.Callback
     }
 
     private void setListUpdates() {
-        anniversaryViewModel.getAnniversarys().observe(getViewLifecycleOwner(), anniversaries -> {
+        anniversaryViewModel.getAnniversaries().observe(getViewLifecycleOwner(), anniversaries -> {
             List<AnniversaryItem> list = anniversaries.parallelStream().map(AnniversaryItem::new).collect(Collectors.toList());
 
             FastAdapterDiffUtil.INSTANCE.set(itemAdapter, list, new DiffCallback<AnniversaryItem>() {
@@ -276,7 +277,7 @@ public class AnniversaryFragment extends Fragment implements ActionMode.Callback
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         if (item.getItemId() == R.id.fragment_anniversary_action_delete) {
 //            mUndoHelper.remove(findViewById(android.R.id.content), "Item removed", "Undo", Snackbar.LENGTH_LONG, selectExtension.selections)
-            AnniversaryStore.delete(selectionExtension.getSelectedItems().stream().map(AnniversaryItem::getAnniversary).collect(Collectors.toList()), getContext(), () -> {});
+            AnniversaryStore.delete(selectionExtension.getSelectedItems().stream().map(AnniversaryItem::getAnniversary).filter(anniversary -> !AnniversaryUtil.isBaseAnniversary(anniversary)).collect(Collectors.toList()), getContext(), () -> {});
             mode.finish();
         }
         return true;
@@ -308,7 +309,7 @@ public class AnniversaryFragment extends Fragment implements ActionMode.Callback
         }
 
 
-        public LiveData<List<AnniversaryWithParentNames>> getAnniversarys() {
+        public LiveData<List<AnniversaryWithParentNames>> getAnniversaries() {
             if (anniversaries == null)
                 anniversaries = anniversaryRepository.getAnniversarysNamed();
             return anniversaries;

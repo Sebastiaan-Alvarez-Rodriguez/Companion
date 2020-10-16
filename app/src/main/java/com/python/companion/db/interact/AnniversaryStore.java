@@ -183,7 +183,7 @@ public class AnniversaryStore {
                     List<Message> messages = daoMessage.getMessagesForAnniversary(a.getAnniversaryID());
                     for (int x = 0; x < messages.size(); ++x) {
                         Message old1 = messages.get(x);
-                        Message cur = Message.from(context, a, old1.getAmount(), old1.getType());
+                        Message cur = Message.from(context, a, old1.getAmount(), old1.getType(), old1.hasCountdown());
                         cur.setMessageID(old1.getMessageID());
                         messages.set(x, cur);
                     }

@@ -90,10 +90,10 @@ public class MessageItem extends AbstractItem<ViewHolder<MessageItem>> {
 
         @Override
         public void bindView(@NotNull MessageItem item, @NotNull List<Object> list) {
-            Message notify = item.getMessage();
-            long amount = notify.getAmount();
+            Message message = item.getMessage();
+            long amount = message.getAmount();
             if (amount >= 1)
-                nameView.setText(notify.getAmount() + " "+(notify.getAmount() == 1 ? item.getAnniversarySingular() : item.getAnniversaryPlural())+" before");
+                nameView.setText(message.getAmount() + " "+(message.getAmount() == 1 ? item.getAnniversarySingular() : item.getAnniversaryPlural())+" before"+(message.hasCountdown() ? " (with countdown)" : ""));
             else
                 nameView.setText("On anniversary date itself");
         }

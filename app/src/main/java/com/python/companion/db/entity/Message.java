@@ -35,16 +35,20 @@ public class Message {
     /** Unit type to give distance to anniversary in (e.g. MessageDate = anniversary_date - amount * type) */
     private ChronoUnit type;
 
+    /** {@code true} if we count down every day from given messagedate to the anniversary*/
+    private boolean countdown;
+
     @Ignore
-    public Message(long anniversaryID, @NonNull LocalDate MessageDate, long amount, @NonNull ChronoUnit type) {
+    public Message(long anniversaryID, @NonNull LocalDate MessageDate, long amount, @NonNull ChronoUnit type, boolean countdown) {
         this.anniversaryID = anniversaryID;
         this.messageDate = MessageDate;
         this.amount = amount;
         this.type = type;
+        this.countdown = countdown;
     }
 
-    public Message(long messageID, long anniversaryID, @NonNull LocalDate messageDate, long amount, @NonNull ChronoUnit type) {
-        this(anniversaryID, messageDate, amount, type);
+    public Message(long messageID, long anniversaryID, @NonNull LocalDate messageDate, long amount, @NonNull ChronoUnit type, boolean countdown) {
+        this(anniversaryID, messageDate, amount, type, countdown);
         this.messageID = messageID;
     }
 
@@ -53,19 +57,20 @@ public class Message {
      * @param base Anniversary we make a Message for
      * @param amount Amount of units to subtract from anniversary date
      * @param picked Unit used to subtract from anniversary date. Note: Make sure this unit is a base type
+     * @param countdown Denotes whether constructed message will be a countdown message, providing a message every day until anniversary date
      * @return Constructed Message
      */
-    public static @NonNull Message from(@NonNull Context context, Anniversary base, long amount, @NonNull Anniversary picked) {
+    public static @NonNull Message from(@NonNull Context context, Anniversary base, long amount, @NonNull Anniversary picked, boolean countdown) {
         LocalDate anniversaryDate = AnniversaryUtil.futureInterval(base, AnniversaryUtil.getTogether(context), 1);
         LocalDate MessageDate = anniversaryDate.minus(amount, picked);
 
         if (MessageDate.isBefore(LocalDate.now())) // If we are too late to Message for this anniversary
             MessageDate.plus(1, base); // set to the next anniversary
 
-        return new Message(base.getAnniversaryID(), MessageDate, amount, AnniversaryUtil.getBaseChronoUnit(picked));
+        return new Message(base.getAnniversaryID(), MessageDate, amount, AnniversaryUtil.getBaseChronoUnit(picked), countdown);
     }
-    public static @NonNull Message from(@NonNull Context context, Anniversary base, long amount, @NonNull ChronoUnit picked) {
-        return from(context, base, amount, AnniversaryUtil.getBaseAnniversary(picked));
+    public static @NonNull Message from(@NonNull Context context, Anniversary base, long amount, @NonNull ChronoUnit picked, boolean countdown) {
+        return from(context, base, amount, AnniversaryUtil.getBaseAnniversary(picked), countdown);
     }
 
     /**
@@ -73,9 +78,9 @@ public class Message {
      * @param Anniversary Anniversary we make a Message for
      * @return Constructed Message
      */
-    public static @NonNull Message from(@NonNull Context context, Anniversary Anniversary) {
+    public static @NonNull Message from(@NonNull Context context, Anniversary Anniversary, boolean countdown) {
         LocalDate anniversaryDate = AnniversaryUtil.futureInterval(Anniversary, AnniversaryUtil.getTogether(context), 1);
-        return new Message(Anniversary.getAnniversaryID(), anniversaryDate, 0, ChronoUnit.DAYS);
+        return new Message(Anniversary.getAnniversaryID(), anniversaryDate, 0, ChronoUnit.DAYS, countdown);
     }
 
     public long getMessageID() {
@@ -116,5 +121,13 @@ public class Message {
 
     public void setType(ChronoUnit type) {
         this.type = type;
+    }
+
+    public boolean hasCountdown() {
+        return countdown;
+    }
+
+    public void setCountdown(boolean countdown) {
+        this.countdown = countdown;
     }
 }

@@ -9,7 +9,7 @@ import com.python.companion.db.populators.AnniversaryPopulator;
 public class Migrate {
 
     public static Migration[] getAll() {
-        return new Migration[]{m1_2(), m2_3(), m3_4(), m4_5(), m5_6()};
+        return new Migration[]{m1_2(), m2_3(), m3_4(), m4_5(), m5_6(), m6_7()};
     }
 
     public static Migration m1_2() {
@@ -73,6 +73,15 @@ public class Migrate {
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Message` (`messageID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `anniversaryID` INTEGER NOT NULL, `messageDate` INTEGER NOT NULL, `amount` INTEGER NOT NULL, `type` TEXT)");
                 database.execSQL("COMMIT;");
                 AnniversaryPopulator.populate(database);
+            }
+        };
+    }
+
+    public static Migration m6_7() {
+        return new Migration(6, 7) {
+            @Override
+            public void migrate(@NonNull SupportSQLiteDatabase database) {
+                database.execSQL("ALTER TABLE Message ADD COLUMN countdown INTEGER DEFAULT 0 NOT NULL");
             }
         };
     }
