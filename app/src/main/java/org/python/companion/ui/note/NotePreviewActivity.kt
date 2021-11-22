@@ -1,4 +1,4 @@
-package org.python.companion.ui.activity
+package org.python.companion.ui.note
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
