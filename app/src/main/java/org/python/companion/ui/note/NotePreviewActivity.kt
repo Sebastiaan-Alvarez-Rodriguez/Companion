@@ -33,7 +33,7 @@ class NotePreviewActivity : ComponentActivity() {
                 CompanionTheme {
                     // A surface container using the 'background' color from the theme
                     Surface(color = MaterialTheme.colors.background) {
-                        Note(noteContext.note)
+                        SingleNoteBody(noteContext.note)
                     }
                 }
             }
@@ -42,12 +42,7 @@ class NotePreviewActivity : ComponentActivity() {
 
 @Composable
 fun Note(note: Note) {
-    // remember calculates the value passed to it only during the first composition.
-    // It then returns the same value for every subsequent composition.
-    val scrollState = rememberScrollState()
-    Column(modifier = Modifier.scrollable(state = scrollState, orientation = Orientation.Vertical)) {
-        Text(text = note.content)
-    }
+
 }
 
 @Preview(showBackground = true)

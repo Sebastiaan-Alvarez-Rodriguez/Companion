@@ -17,9 +17,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import org.python.companion.datatype.Anniversary
+import org.python.companion.datatype.Note
+import org.python.companion.datatype.NoteParcel
+import org.python.companion.ui.anniversary.AnniversaryBody
+import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
+import org.python.companion.ui.note.NoteBody
+import org.python.companion.ui.note.SingleNoteBody
 import org.python.companion.ui.theme.CompanionTheme
+import timber.log.Timber
 
 
 // Basic UI: https://developer.android.com/jetpack/compose/tutorial
@@ -63,53 +71,50 @@ fun CompanionNavHost(navController: NavHostController, modifier: Modifier = Modi
         modifier = modifier
     ) {
         composable(CompanionScreen.Cactus.name) { // Overview
-            OverviewBody(
-                onClickSeeAllAccounts = { navController.navigate(Accounts.name) },
-                onClickSeeAllBills = { navController.navigate(Bills.name) },
-                onAccountClick = { name ->
-                    navigateToSingleAccount(navController, name)
-                },
-            )
+            CactusBody(onCactusClick = { })
         }
         composable(CompanionScreen.Note.name) { // Accounts
-            AccountsBody(accounts = UserData.accounts) { name ->
-                navigateToSingleAccount(navController = navController, accountName = name)
-            }
+            NoteBody(noteList = emptyList(),
+                { note -> navigateToSingleNote(navController = navController, note = note) },
+                { Note -> })
         }
-        composable(CompanionScreen.Settings.name) { // Bills
-            BillsBody(bills = UserData.bills)
+        composable(CompanionScreen.Anniversaries.name) { // Bills
+            AnniversaryBody(anniversaryList = emptyList(),
+                {anniversary -> navigateToSingleAnniversary(navController = navController, anniversary = anniversary) },
+                {anniversary -> })
         }
-        val accountsName = Accounts.name
+        val noteTabName = CompanionScreen.Note.name
         composable(
-            route = "$accountsName/{name}",
+            route = "$noteTabName/{note}",
             arguments = listOf(
-                navArgument("name") {
-                    type = NavType.StringType
+                navArgument("note") {
+                    type = NavType.ParcelableType(NoteParcel::class.java)
                 }
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "rally://$accountsName/{name}"
+                    uriPattern = "companion://$noteTabName/{note.name}"
                 }
             ),
         ) { entry ->
-            val accountName = entry.arguments?.getString("name")
-            val account = UserData.getAccount(accountName)
-            SingleAccountBody(account = account)
+            val noteParcel: NoteParcel? = entry.arguments?.getParcelable("note")
+            if (noteParcel == null) {
+                Timber.e("Navhost $noteTabName/{note} got null note.")
+            } else {
+                SingleNoteBody(note = noteParcel.member)
+            }
         }
     }
 }
 
-private fun navigateToSingleAccount(navController: NavHostController, accountName: String) {
-    navController.navigate("${Accounts.name}/$accountName")
+private fun navigateToSingleNote(navController: NavHostController, note: Note) {
+    navController.navigate("${CompanionScreen.Note.name}/${note.name}")
 }
 
-
-
-@Composable
-fun ContentScreen() {
-    Greeting("Test")
+private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: Anniversary) {
+    navController.navigate("${CompanionScreen.Anniversaries.name}/${anniversary.name}")
 }
+
 
 @Composable
 fun Greeting(name: String) {

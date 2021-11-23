@@ -1,19 +1,22 @@
 package org.python.companion.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class CompanionScreen (
     val icon: ImageVector,
 ) {
     Note(
-        icon = Icons.Filled.PieChart,
+        icon = Icons.Filled.Notifications,
     ),
     Cactus(
-        icon = Icons.Filled.AttachMoney,
+        icon = Icons.Filled.ShoppingCart,
     ),
-    Settings(
-        icon = Icons.Filled.MoneyOff,
+    Anniversaries(
+        icon = Icons.Filled.DateRange,
     );
 
     companion object {
@@ -21,7 +24,7 @@ enum class CompanionScreen (
             when (route?.substringBefore("/")) {
                 Note.name -> Note
                 Cactus.name -> Cactus
-                Settings.name -> Settings
+                Anniversaries.name -> Anniversaries
                 null -> Note
                 else -> throw IllegalArgumentException("Route $route is not recognized.")
             }
