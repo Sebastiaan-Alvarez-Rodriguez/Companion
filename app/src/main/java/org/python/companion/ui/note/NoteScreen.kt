@@ -1,8 +1,11 @@
 package org.python.companion.ui.note
 
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -15,6 +18,13 @@ import androidx.compose.ui.unit.dp
 import org.python.companion.datatype.Note
 
 
+/**
+ * Overview screen for all notes.
+ * @param noteList List of notes to display.
+ * @param onNewClick Lambda to perform on new-note button clicks.
+ * @param onNoteClick Lambda to perform on note clicks.
+ * @param onFavoriteClick Lambda to perform on note favorite clicks.
+ */
 @Composable
 fun NoteBody(
     noteList: List<Note>,
@@ -49,6 +59,12 @@ fun NoteBody(
     }
 }
 
+/**
+ * Composition for a single note item.
+ * @param note Note to diplay.
+ * @param onNoteClick Lambda to perform on note clicks.
+ * @param onFavoriteClick Lambda to perform on note favorite clicks.
+ */
 @Composable
 fun NoteItem(
     note: Note,
@@ -114,6 +130,26 @@ fun SingleNoteBody(note: String) {
     ) {
         Column {
             Text(text = note) // TODO: Need to collect note from a repository, and display obtained content here.
+        }
+    }
+}
+
+
+/**
+ * Detail screen for editing a single note.
+ * @param note Title of the passed note.
+ */
+@Composable
+fun EditNoteBody(note: String?) {
+    val title = if (note == null) "" else "Note title loaded"
+    val content = if (note == null) "" else "Oh hi note"
+
+    val scrollState = rememberScrollState()
+    Card(
+        elevation = 5.dp,
+    ) {
+        Column(modifier = Modifier.scrollable(state = scrollState, orientation = Orientation.Vertical)){
+            Text(text = content)
         }
     }
 }
