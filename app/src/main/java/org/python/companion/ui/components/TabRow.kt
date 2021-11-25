@@ -14,6 +14,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,8 +33,12 @@ fun CompanionTabRow(
     onTabSelected: (CompanionScreen) -> Unit,
     currentScreen: CompanionScreen
 ) {
-    Surface {
-        Column(Modifier.selectableGroup()) {
+    Surface(
+        Modifier
+            .height(TabHeight)
+            .fillMaxWidth()
+    ) {
+        Row(Modifier.selectableGroup()) {
             allScreens.forEach { screen ->
                 CompanionTab(
                     text = screen.name,

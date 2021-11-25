@@ -19,9 +19,9 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import org.python.companion.R
 import org.python.companion.datatype.Anniversary
-import org.python.companion.datatype.Note
 
 
 @Composable
@@ -31,7 +31,7 @@ fun AnniversaryBody(
     onFavoriteClick: (Anniversary) -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val defaultPadding = dimensionResource(id = R.dimen.DEFAULT_PADDING)
+    val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
     LazyColumn (
         modifier = Modifier
             .verticalScroll(scrollState)
@@ -50,7 +50,7 @@ fun AnniversaryItem(
     onAnniversaryClick: (Anniversary) -> Unit,
     onFavoriteClick: (Anniversary) -> Unit) {
 
-    val defaultPadding = dimensionResource(id = R.dimen.DEFAULT_PADDING)
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Row(
         modifier = Modifier
             .padding(defaultPadding)

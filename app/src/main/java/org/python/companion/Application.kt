@@ -1,9 +1,10 @@
 package org.python.companion
 
+import android.app.Application
 import org.python.companion.logging.ReleaseTree
 import timber.log.Timber
 
-class Application : android.app.Application() {
+class CompanionApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {

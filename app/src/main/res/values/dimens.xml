@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="DEFAULT_PADDING">12</dimen>
+    <dimen name="padding_default">12</dimen>
 </resources>
