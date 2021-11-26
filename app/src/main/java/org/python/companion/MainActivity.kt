@@ -24,6 +24,7 @@ import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
+import org.python.companion.ui.note.EditNoteBody
 import org.python.companion.ui.note.NoteBody
 import org.python.companion.ui.note.SingleNoteBody
 import org.python.companion.ui.theme.CompanionTheme
@@ -84,6 +85,7 @@ fun CompanionNavHost(navController: NavHostController, modifier: Modifier = Modi
                 {anniversary -> navigateToSingleAnniversary(navController = navController, anniversary = anniversary) },
                 {anniversary -> })
         }
+
         val noteTabName = CompanionScreen.Note.name
         composable(
             route = "$noteTabName/view/{note}",
@@ -100,7 +102,7 @@ fun CompanionNavHost(navController: NavHostController, modifier: Modifier = Modi
         ) { entry ->
             val noteName = entry.arguments?.getString("note")
             if (noteName == null) {
-                Timber.e("Navcontroller navigation - note name == null")
+                Timber.e("Navcontroller navigation view note - note name == null")
             } else {
                 SingleNoteBody(note = noteName)
             }
@@ -112,9 +114,30 @@ fun CompanionNavHost(navController: NavHostController, modifier: Modifier = Modi
                     uriPattern = "companion://$noteTabName/create"
                 }
             )
-        ) { entry ->
-            //TODO: go to some view for creating a node
+        ) {
             Timber.d("Creating a new note")
+            EditNoteBody(note = null)
+        }
+        composable(
+            route = "$noteTabName/edit/{note}",
+            arguments = listOf(
+                navArgument("note") {
+                    type = NavType.StringType
+                }
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "companion://$noteTabName/edit/{note}"
+                }
+            ),
+        ) { entry ->
+            Timber.d("Edit an existing note")
+            val noteName = entry.arguments?.getString("note")
+            if (noteName == null) {
+                Timber.e("Navcontroller navigation edit note - note name == null")
+            } else {
+                EditNoteBody(note = null)
+            }
         }
     }
 }

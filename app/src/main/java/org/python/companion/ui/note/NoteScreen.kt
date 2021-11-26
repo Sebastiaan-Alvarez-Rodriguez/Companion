@@ -6,14 +6,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.ImeOptions
 import androidx.compose.ui.unit.dp
 import org.python.companion.datatype.Note
 
@@ -38,7 +41,7 @@ fun NoteBody(
     Box(
         Modifier
             .fillMaxSize()
-            .padding(10.dp)
+            .padding(defaultPadding)
     ) {
         LazyColumn(
             modifier = Modifier
@@ -141,15 +144,35 @@ fun SingleNoteBody(note: String) {
  */
 @Composable
 fun EditNoteBody(note: String?) {
-    val title = if (note == null) "" else "Note title loaded"
-    val content = if (note == null) "" else "Oh hi note"
+    var title by remember { mutableStateOf(if (note == null) "" else "Note title loaded") }
+    var content by remember { mutableStateOf(if (note == null) "" else "Oh hi note") }
+
+    val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
 
     val scrollState = rememberScrollState()
     Card(
+        modifier = Modifier.fillMaxSize(),
         elevation = 5.dp,
     ) {
-        Column(modifier = Modifier.scrollable(state = scrollState, orientation = Orientation.Vertical)){
-            Text(text = content)
+        Column(modifier = Modifier
+            .scrollable(state = scrollState, orientation = Orientation.Vertical)
+            .fillMaxSize()){
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Title") },
+                singleLine = true,
+            )
+            Spacer(Modifier.width(defaultPadding))
+            OutlinedTextField(
+                modifier = Modifier.fillMaxSize(),
+                value = content,
+                onValueChange = { content = it },
+                label = { Text("Content") },
+                singleLine = false
+            )
+
         }
     }
 }
