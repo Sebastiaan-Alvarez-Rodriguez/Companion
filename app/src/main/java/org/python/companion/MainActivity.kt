@@ -116,7 +116,7 @@ fun CompanionNavHost(navController: NavHostController, modifier: Modifier = Modi
             )
         ) {
             Timber.d("Creating a new note")
-            EditNoteBody(note = null)
+            EditNoteBody(note = null, onSaveClick = { navController.navigateUp() })
         }
         composable(
             route = "$noteTabName/edit/{note}",
@@ -136,7 +136,7 @@ fun CompanionNavHost(navController: NavHostController, modifier: Modifier = Modi
             if (noteName == null) {
                 Timber.e("Navcontroller navigation edit note - note name == null")
             } else {
-                EditNoteBody(note = null)
+                EditNoteBody(note = null, onSaveClick = { navController.navigateUp() })
             }
         }
     }
@@ -148,8 +148,10 @@ private fun navigateToSingleNote(navController: NavHostController, note: String)
 private fun navigateToCreateNote(navController: NavHostController) = navController.navigate("${CompanionScreen.Note.name}/create")
 
 private fun navigateToEditNote(navController: NavHostController, note: Note) = navigateToEditNote(navController, note.name)
-private fun navigateToEditNote(navController: NavHostController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note")
+private fun navigateToEditNote(navController: NavHostController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
 
+private fun navigateToPreviewNote(navController: NavHostController, note: Note) = navigateToEditNote(navController, note.name)
+private fun navigateToPreviewNote(navController: NavHostController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note")
 
 private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: Anniversary) = navigateToSingleAnniversary(navController, anniversary.name)
 private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: String) = navController.navigate("${CompanionScreen.Anniversaries.name}/${anniversary}")

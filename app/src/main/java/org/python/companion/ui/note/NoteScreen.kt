@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -15,8 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.ImeOptions
 import androidx.compose.ui.unit.dp
 import org.python.companion.datatype.Note
 
@@ -141,9 +138,10 @@ fun SingleNoteBody(note: String) {
 /**
  * Detail screen for editing a single note.
  * @param note Title of the passed note.
+ * @param onSaveClick Lambda executed when the user hits the save button.
  */
 @Composable
-fun EditNoteBody(note: String?) {
+fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
     var title by remember { mutableStateOf(if (note == null) "" else "Note title loaded") }
     var content by remember { mutableStateOf(if (note == null) "" else "Oh hi note") }
 
@@ -156,14 +154,21 @@ fun EditNoteBody(note: String?) {
     ) {
         Column(modifier = Modifier
             .scrollable(state = scrollState, orientation = Orientation.Vertical)
-            .fillMaxSize()){
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Title") },
-                singleLine = true,
-            )
+            .fillMaxSize()
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    singleLine = true,
+                )
+                Spacer(Modifier.width(defaultPadding))
+                Button(onClick = { onSaveClick(Note(title, content)) }) {
+                    Text(text = "Save")
+                }
+            }
             Spacer(Modifier.width(defaultPadding))
             OutlinedTextField(
                 modifier = Modifier.fillMaxSize(),
