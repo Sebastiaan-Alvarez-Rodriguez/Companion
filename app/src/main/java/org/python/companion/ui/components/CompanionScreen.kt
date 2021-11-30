@@ -15,7 +15,7 @@ enum class CompanionScreen (
     Cactus(
         icon = Icons.Filled.ShoppingCart,
     ),
-    Anniversaries(
+    Anniversary(
         icon = Icons.Filled.DateRange,
     );
 
@@ -24,7 +24,7 @@ enum class CompanionScreen (
             when (route?.substringBefore("/")) {
                 Note.name -> Note
                 Cactus.name -> Cactus
-                Anniversaries.name -> Anniversaries
+                Anniversary.name -> Anniversary
                 null -> Note
                 else -> throw IllegalArgumentException("Route $route is not recognized.")
             }

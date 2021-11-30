@@ -8,16 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
+import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
 import org.python.companion.datatype.Anniversary
 import org.python.companion.datatype.Note
 import org.python.companion.ui.anniversary.AnniversaryBody
@@ -43,7 +41,10 @@ class MainActivity : ComponentActivity() {
                 val backstackEntry = navController.currentBackStackEntryAsState()
                 val currentScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
-                // A surface container using the 'background' color from the theme
+                val noteState = NoteState.rememberState(navController = navController)
+                val cactusState = CactusState.rememberState(navController = navController)
+                val anniversaryState = AnniversaryState.rememberState(navController = navController)
+//                 A surface container using the 'background' color from the theme
 //                Surface(color = MaterialTheme.colors.background) {
                     Scaffold(
                         topBar = {
@@ -54,9 +55,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     ) { innerPadding ->
-                        CompanionNavHost(navController, modifier = Modifier.padding(innerPadding))
+                        CompanionNavHost(
+                            appNavController = navController,
+                            noteState = noteState,
+                            cactusState = cactusState,
+                            anniversaryState = anniversaryState,
+                            modifier = Modifier.padding(innerPadding)
+                        )
                     }
-
 //                }
             }
         }
@@ -65,97 +71,155 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun CompanionNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+fun CompanionNavHost(
+    appNavController: NavHostController,
+    noteState: NoteState,
+    cactusState: CactusState,
+    anniversaryState: AnniversaryState,
+    modifier: Modifier = Modifier
+) {
     NavHost(
-        navController = navController,
-        startDestination = CompanionScreen.Cactus.name,
+        navController = appNavController,
+        startDestination = "cactus",
         modifier = modifier
     ) {
-        composable(CompanionScreen.Cactus.name) { // Overview
-            CactusBody(onCactusClick = { })
-        }
-        composable(CompanionScreen.Note.name) { // Accounts
-            NoteBody(noteList = emptyList(),
-                { navigateToCreateNote(navController = navController) },
-                { note -> navigateToSingleNote(navController = navController, note = note) },
-                { Note -> })
-        }
-        composable(CompanionScreen.Anniversaries.name) { // Bills
-            AnniversaryBody(anniversaryList = emptyList(),
-                {anniversary -> navigateToSingleAnniversary(navController = navController, anniversary = anniversary) },
-                {anniversary -> })
-        }
+        with(cactusState) { cactusGraph() }
+        with(noteState) { noteGraph() }
+        with(anniversaryState) { anniversaryGraph() }
+    }
+}
 
+class NoteState(private val navController: NavHostController) {
+    fun NavGraphBuilder.noteGraph() {
         val noteTabName = CompanionScreen.Note.name
-        composable(
-            route = "$noteTabName/view/{note}",
-            arguments = listOf(
-                navArgument("note") {
-                    type = NavType.StringType
-                }
-            ),
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = "companion://$noteTabName/view/{note}"
-                }
-            ),
-        ) { entry ->
-            val noteName = entry.arguments?.getString("note")
-            if (noteName == null) {
-                Timber.e("Navcontroller navigation view note - note name == null")
-            } else {
-                SingleNoteBody(note = noteName)
+        navigation(startDestination = noteTabName, route = "note") {
+            composable(noteTabName) {
+                NoteBody(noteList = emptyList(),
+                    { navigateToCreateNote(navController = navController) },
+                    { note -> navigateToSingleNote(navController = navController, note = note) },
+                    { Note -> })
             }
-        }
-        composable(
-            route = "$noteTabName/create",
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = "companion://$noteTabName/create"
+            composable(
+                route = "$noteTabName/view/{note}",
+                arguments = listOf(
+                    navArgument("note") {
+                        type = NavType.StringType
+                    }
+                ),
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "companion://$noteTabName/view/{note}"
+                    }
+                ),
+            ) { entry ->
+                val noteName = entry.arguments?.getString("note")
+                if (noteName == null) {
+                    Timber.e("Navcontroller navigation view note - note name == null")
+                } else {
+                    SingleNoteBody(note = noteName)
                 }
-            )
-        ) {
-            Timber.d("Creating a new note")
-            EditNoteBody(note = null, onSaveClick = { navController.navigateUp() })
-        }
-        composable(
-            route = "$noteTabName/edit/{note}",
-            arguments = listOf(
-                navArgument("note") {
-                    type = NavType.StringType
-                }
-            ),
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = "companion://$noteTabName/edit/{note}"
-                }
-            ),
-        ) { entry ->
-            Timber.d("Edit an existing note")
-            val noteName = entry.arguments?.getString("note")
-            if (noteName == null) {
-                Timber.e("Navcontroller navigation edit note - note name == null")
-            } else {
+            }
+            composable(
+                route = "$noteTabName/create",
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "companion://$noteTabName/create"
+                    }
+                )
+            ) {
+                Timber.d("Creating a new note")
                 EditNoteBody(note = null, onSaveClick = { navController.navigateUp() })
             }
+            composable(
+                route = "$noteTabName/edit/{note}",
+                arguments = listOf(
+                    navArgument("note") {
+                        type = NavType.StringType
+                    }
+                ),
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "companion://$noteTabName/edit/{note}"
+                    }
+                ),
+            ) { entry ->
+                Timber.d("Edit an existing note")
+                val noteName = entry.arguments?.getString("note")
+                if (noteName == null) {
+                    Timber.e("Navcontroller navigation edit note - note name == null")
+                } else {
+                    EditNoteBody(note = null, onSaveClick = { navController.navigateUp() })
+                }
+            }
+        }
+    }
+
+    private fun navigateToSingleNote(navController: NavController, note: Note) = navigateToSingleNote(navController, note.name)
+    private fun navigateToSingleNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/view/$note")
+
+    private fun navigateToCreateNote(navController: NavController) = navController.navigate("${CompanionScreen.Note.name}/create")
+
+    private fun navigateToEditNote(navController: NavController, note: Note) = navigateToEditNote(navController, note.name)
+    private fun navigateToEditNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
+
+    private fun navigateToPreviewNote(navController: NavController, note: Note) = navigateToEditNote(navController, note.name)
+    private fun navigateToPreviewNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note")
+
+    companion object {
+        @Composable
+        fun rememberState(
+            navController: NavHostController = rememberNavController(),
+        ) = remember(navController) {
+            NoteState(navController)
         }
     }
 }
 
-private fun navigateToSingleNote(navController: NavHostController, note: Note) = navigateToSingleNote(navController, note.name)
-private fun navigateToSingleNote(navController: NavHostController, note: String) = navController.navigate("${CompanionScreen.Note.name}/view/$note")
+class CactusState(private val navController: NavHostController) {
+    fun NavGraphBuilder.cactusGraph() {
+        val cactusTabName = CompanionScreen.Cactus.name
+        navigation(startDestination = cactusTabName, route = "cactus") {
+            composable(cactusTabName) { // Overview
+                CactusBody(onCactusClick = { })
+            }
+        }
+    }
 
-private fun navigateToCreateNote(navController: NavHostController) = navController.navigate("${CompanionScreen.Note.name}/create")
+    companion object {
+        @Composable
+        fun rememberState(
+            navController: NavHostController = rememberNavController(),
+        ) = remember(navController) {
+            CactusState(navController)
+        }
+    }
+}
 
-private fun navigateToEditNote(navController: NavHostController, note: Note) = navigateToEditNote(navController, note.name)
-private fun navigateToEditNote(navController: NavHostController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
+class AnniversaryState(private val navController: NavHostController) {
+    fun NavGraphBuilder.anniversaryGraph() {
+        val anniversaryTabName = CompanionScreen.Anniversary.name
+        navigation(startDestination = anniversaryTabName, route = "anniversary") {
+            composable(anniversaryTabName) { // Overview
+                AnniversaryBody(anniversaryList = emptyList(),
+                    {anniversary -> navigateToSingleAnniversary(navController = navController, anniversary = anniversary) },
+                    {anniversary -> })
+            }
+        }
+    }
 
-private fun navigateToPreviewNote(navController: NavHostController, note: Note) = navigateToEditNote(navController, note.name)
-private fun navigateToPreviewNote(navController: NavHostController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note")
+    private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: Anniversary) = navigateToSingleAnniversary(navController, anniversary.name)
+    private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: String) = navController.navigate("${CompanionScreen.Anniversary.name}/${anniversary}")
 
-private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: Anniversary) = navigateToSingleAnniversary(navController, anniversary.name)
-private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: String) = navController.navigate("${CompanionScreen.Anniversaries.name}/${anniversary}")
 
+    companion object {
+        @Composable
+        fun rememberState(
+            navController: NavHostController = rememberNavController(),
+        ) = remember(navController) {
+            AnniversaryState(navController)
+        }
+    }
+}
 
 
 @Composable

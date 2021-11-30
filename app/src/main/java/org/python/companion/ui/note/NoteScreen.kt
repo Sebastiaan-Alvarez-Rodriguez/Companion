@@ -155,17 +155,23 @@ fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
         Column(modifier = Modifier
             .scrollable(state = scrollState, orientation = Orientation.Vertical)
             .fillMaxSize()
+            .padding(defaultPadding)
         ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier,
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Title") },
                     singleLine = true,
                 )
                 Spacer(Modifier.width(defaultPadding))
-                Button(onClick = { onSaveClick(Note(title, content)) }) {
+                Button(
+                    modifier = Modifier,
+                    onClick = { onSaveClick(Note(title, content)) }) {
                     Text(text = "Save")
                 }
             }
