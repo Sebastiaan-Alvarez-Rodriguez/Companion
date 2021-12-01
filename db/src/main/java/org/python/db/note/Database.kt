@@ -1,15 +1,16 @@
-package org.python.backend.note
+package org.python.db.note
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import org.python.backend.note.daos.NoteDao
-import org.python.backend.note.entities.RoomNote
+import org.python.db.note.daos.NoteDao
+import org.python.db.note.entities.RoomNote
 
 @Database(entities = [RoomNote::class], version = 1)
 abstract class NoteDatabase : RoomDatabase() {
-    abstract fun noteDao(): NoteDao
+    abstract val noteDao: NoteDao
+
     companion object {
         @Volatile
         private var INSTANCE: NoteDatabase? = null

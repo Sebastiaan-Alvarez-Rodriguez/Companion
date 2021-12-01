@@ -1,4 +1,4 @@
-package org.python.companion.datatype
+package org.python.backend.datatype
 
 sealed class Secured<T>(member: T, secure: Boolean)
 

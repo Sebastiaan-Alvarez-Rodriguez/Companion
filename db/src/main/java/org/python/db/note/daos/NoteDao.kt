@@ -1,8 +1,8 @@
-package org.python.backend.note.daos
+package org.python.db.note.daos
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import org.python.backend.note.entities.RoomNote
+import org.python.db.note.entities.RoomNote
 
 @Dao
 interface NoteDao {

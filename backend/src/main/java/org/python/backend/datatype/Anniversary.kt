@@ -1,3 +1,3 @@
-package org.python.companion.datatype
+package org.python.backend.datatype
 
 data class Anniversary(val name: String)
