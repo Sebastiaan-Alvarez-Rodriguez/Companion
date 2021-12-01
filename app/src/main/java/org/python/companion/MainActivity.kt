@@ -16,8 +16,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import org.python.backend.note.entities.RoomNote
 import org.python.companion.datatype.Anniversary
-import org.python.companion.datatype.Note
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
@@ -154,15 +154,15 @@ class NoteState(private val navController: NavHostController) {
         }
     }
 
-    private fun navigateToSingleNote(navController: NavController, note: Note) = navigateToSingleNote(navController, note.name)
+    private fun navigateToSingleNote(navController: NavController, note: RoomNote) = navigateToSingleNote(navController, note.name)
     private fun navigateToSingleNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/view/$note")
 
     private fun navigateToCreateNote(navController: NavController) = navController.navigate("${CompanionScreen.Note.name}/create")
 
-    private fun navigateToEditNote(navController: NavController, note: Note) = navigateToEditNote(navController, note.name)
+    private fun navigateToEditNote(navController: NavController, note: RoomNote) = navigateToEditNote(navController, note.name)
     private fun navigateToEditNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
 
-    private fun navigateToPreviewNote(navController: NavController, note: Note) = navigateToEditNote(navController, note.name)
+    private fun navigateToPreviewNote(navController: NavController, note: RoomNote) = navigateToEditNote(navController, note.name)
     private fun navigateToPreviewNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note")
 
     companion object {

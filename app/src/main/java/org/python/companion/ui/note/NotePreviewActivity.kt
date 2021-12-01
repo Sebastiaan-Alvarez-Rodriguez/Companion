@@ -8,7 +8,6 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
-import org.python.companion.datatype.Note
 import org.python.companion.ui.theme.CompanionTheme
 import timber.log.Timber
 

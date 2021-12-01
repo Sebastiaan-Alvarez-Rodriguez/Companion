@@ -9,11 +9,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 enum class CompanionScreen (
     val icon: ImageVector,
 ) {
-    Note(
-        icon = Icons.Filled.Notifications,
-    ),
     Cactus(
         icon = Icons.Filled.ShoppingCart,
+    ),
+    Note(
+        icon = Icons.Filled.Notifications,
     ),
     Anniversary(
         icon = Icons.Filled.DateRange,

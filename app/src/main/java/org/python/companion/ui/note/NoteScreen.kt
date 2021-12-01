@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import org.python.companion.datatype.Note
+import org.python.backend.note.entities.RoomNote
 
 
 /**
@@ -27,10 +27,10 @@ import org.python.companion.datatype.Note
  */
 @Composable
 fun NoteBody(
-    noteList: List<Note>,
+    noteList: List<RoomNote>,
     onNewClick: () -> Unit,
-    onNoteClick: (Note) -> Unit,
-    onFavoriteClick: (Note) -> Unit
+    onNoteClick: (RoomNote) -> Unit,
+    onFavoriteClick: (RoomNote) -> Unit
 ) {
     val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
@@ -67,9 +67,9 @@ fun NoteBody(
  */
 @Composable
 fun NoteItem(
-    note: Note,
-    onNoteClick: (Note) -> Unit,
-    onFavoriteClick: (Note) -> Unit) {
+    note: RoomNote,
+    onNoteClick: (RoomNote) -> Unit,
+    onFavoriteClick: (RoomNote) -> Unit) {
 
     val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
     Card(
@@ -141,7 +141,7 @@ fun SingleNoteBody(note: String) {
  * @param onSaveClick Lambda executed when the user hits the save button.
  */
 @Composable
-fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
+fun EditNoteBody(note: String?, onSaveClick: (RoomNote) -> Unit) {
     var title by remember { mutableStateOf(if (note == null) "" else "Note title loaded") }
     var content by remember { mutableStateOf(if (note == null) "" else "Oh hi note") }
 
@@ -171,7 +171,7 @@ fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
                 Spacer(Modifier.width(defaultPadding))
                 Button(
                     modifier = Modifier,
-                    onClick = { onSaveClick(Note(title, content)) }) {
+                    onClick = { onSaveClick(RoomNote(title, content)) }) {
                     Text(text = "Save")
                 }
             }
