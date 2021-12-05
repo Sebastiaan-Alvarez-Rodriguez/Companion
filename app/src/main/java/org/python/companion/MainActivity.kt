@@ -3,11 +3,14 @@ package org.python.companion
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,12 +29,14 @@ import org.python.companion.ui.note.EditNoteBody
 import org.python.companion.ui.note.NoteBody
 import org.python.companion.ui.note.SingleNoteBody
 import org.python.companion.ui.theme.CompanionTheme
+import org.python.companion.viewmodels.NoteViewModel
 import timber.log.Timber
 
 
-// Basic UI: https://developer.android.com/jetpack/compose/tutorial
-// Navigation: https://developer.android.com/codelabs/jetpack-compose-navigation?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fcompose%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fjetpack-compose-navigation#0
 class MainActivity : ComponentActivity() {
+
+    private val noteViewModel by viewModels<NoteViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -41,28 +46,28 @@ class MainActivity : ComponentActivity() {
                 val backstackEntry = navController.currentBackStackEntryAsState()
                 val currentScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
-                val noteState = NoteState.rememberState(navController = navController)
+                val noteState = NoteState.rememberState(navController = navController, noteViewModel = noteViewModel)
                 val cactusState = CactusState.rememberState(navController = navController)
                 val anniversaryState = AnniversaryState.rememberState(navController = navController)
-//                 A surface container using the 'background' color from the theme
+//                A surface container using the 'background' color from the theme
 //                Surface(color = MaterialTheme.colors.background) {
-                    Scaffold(
-                        topBar = {
-                            CompanionTabRow(
-                                allScreens = allScreens,
-                                onTabSelected = { screen -> navController.navigate(screen.name) },
-                                currentScreen = currentScreen
-                            )
-                        }
-                    ) { innerPadding ->
-                        CompanionNavHost(
-                            appNavController = navController,
-                            noteState = noteState,
-                            cactusState = cactusState,
-                            anniversaryState = anniversaryState,
-                            modifier = Modifier.padding(innerPadding)
+                Scaffold(
+                    topBar = {
+                        CompanionTabRow(
+                            allScreens = allScreens,
+                            onTabSelected = { screen -> navController.navigate(screen.name) },
+                            currentScreen = currentScreen
                         )
                     }
+                ) { innerPadding ->
+                    CompanionNavHost(
+                        appNavController = navController,
+                        noteState = noteState,
+                        cactusState = cactusState,
+                        anniversaryState = anniversaryState,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
 //                }
             }
         }
@@ -89,12 +94,16 @@ fun CompanionNavHost(
     }
 }
 
-class NoteState(private val navController: NavHostController) {
+
+
+class NoteState(private val navController: NavHostController, private val noteViewModel: NoteViewModel) {
     fun NavGraphBuilder.noteGraph() {
         val noteTabName = CompanionScreen.Note.name
+
         navigation(startDestination = noteTabName, route = "note") {
             composable(noteTabName) {
-                NoteBody(noteList = emptyList(),
+                val notes by noteViewModel.notes.collectAsState()
+                NoteBody(notes = notes,
                     { navigateToCreateNote(navController = navController) },
                     { note -> navigateToSingleNote(navController = navController, note = note) },
                     { Note -> })
@@ -128,7 +137,10 @@ class NoteState(private val navController: NavHostController) {
                 )
             ) {
                 Timber.d("Creating a new note")
-                EditNoteBody(note = null, onSaveClick = { navController.navigateUp() })
+                EditNoteBody(note = null, onSaveClick = {
+                    //TODO: Add save handling here
+                    navController.navigateUp()
+                })
             }
             composable(
                 route = "$noteTabName/edit/{note}",
@@ -167,11 +179,8 @@ class NoteState(private val navController: NavHostController) {
 
     companion object {
         @Composable
-        fun rememberState(
-            navController: NavHostController = rememberNavController(),
-        ) = remember(navController) {
-            NoteState(navController)
-        }
+        fun rememberState(navController: NavHostController = rememberNavController(), noteViewModel: NoteViewModel) =
+            remember(navController) { NoteState(navController, noteViewModel) }
     }
 }
 

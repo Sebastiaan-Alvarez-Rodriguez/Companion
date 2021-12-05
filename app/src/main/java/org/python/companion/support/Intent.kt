@@ -1,4 +1,4 @@
-package org.python.companion.ui.support
+package org.python.companion.support
 
 import android.os.Parcelable
 import java.util.*

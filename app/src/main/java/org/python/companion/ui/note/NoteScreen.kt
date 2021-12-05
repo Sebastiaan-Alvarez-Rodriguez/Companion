@@ -1,10 +1,11 @@
 package org.python.companion.ui.note
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
+import kotlinx.coroutines.flow.Flow
 import org.python.backend.datatype.Note
 
 
@@ -27,13 +33,14 @@ import org.python.backend.datatype.Note
  */
 @Composable
 fun NoteBody(
-    noteList: List<Note>,
+    notes: Flow<PagingData<Note>>,
     onNewClick: () -> Unit,
     onNoteClick: (Note) -> Unit,
     onFavoriteClick: (Note) -> Unit
 ) {
     val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
+    val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
 
     Box(
         Modifier
@@ -47,7 +54,13 @@ fun NoteBody(
             contentPadding = PaddingValues(defaultPadding),
             verticalArrangement = Arrangement.spacedBy(defaultPadding),
         ) {
-            items(noteList) { note -> NoteItem(note, onNoteClick, onFavoriteClick) }
+            items(items=items) { note ->
+                if (note != null)
+                    NoteItem(note, onNoteClick, onFavoriteClick)
+            }
+            if(items.itemCount == 0) {
+                item { EmptyContent() }
+            }
         }
         FloatingActionButton(
             onClick = onNewClick,
@@ -56,6 +69,16 @@ fun NoteBody(
         ) {
             Text("+")
         }
+    }
+}
+
+@Composable
+private fun LazyItemScope.EmptyContent() {
+    Box(
+        modifier = Modifier.fillParentMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = "No notes yet")
     }
 }
 
@@ -79,6 +102,7 @@ fun NoteItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(defaultPadding)
+                .clickable { onNoteClick(note) }
                 // Regard the whole row as one semantics node. This way each row will receive focus as
                 // a whole and the focus bounds will be around the whole row content. The semantics
                 // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
@@ -94,22 +118,6 @@ fun NoteItem(
                 Icon(Icons.Filled.Favorite, contentDescription = null)
             }
         }
-
-//    Row(
-//        modifier = Modifier
-//            .padding(defaultPadding)
-//            .semantics(mergeDescendants = true) {},
-////        onClick = { onNoteClick(note) }
-//    ) {
-//        IconButton(
-//            onClick = { onFavoriteClick(note) },
-//            modifier = Modifier
-//                .align(Alignment.Top)
-//                .clearAndSetSemantics {}
-//        ) {
-//            Icon(Icons.Filled.Favorite, contentDescription = null)
-//        }
-//    }
     }
 }
 
@@ -153,7 +161,6 @@ fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
         elevation = 5.dp,
     ) {
         Column(modifier = Modifier
-            .scrollable(state = scrollState, orientation = Orientation.Vertical)
             .fillMaxSize()
             .padding(defaultPadding)
         ) {
@@ -177,7 +184,9 @@ fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
             }
             Spacer(Modifier.width(defaultPadding))
             OutlinedTextField(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .scrollable(state = scrollState, orientation = Orientation.Vertical)
+                    .fillMaxSize(),
                 value = content,
                 onValueChange = { content = it },
                 label = { Text("Content") },

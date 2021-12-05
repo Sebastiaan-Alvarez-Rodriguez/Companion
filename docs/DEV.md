@@ -20,7 +20,8 @@ UI:
 Room:
  + [repository tutorial](https://www.raywenderlich.com/24509368-repository-pattern-with-jetpack-compose#toc-anchor-012)
  + [room livedata](https://levelup.gitconnected.com/using-room-in-jetpack-compose-d2b6b674d3a5)
- + [room docs](https://developer.android.com/jetpack/androidx/releases/room#groovy)
+ + [room docs](https://developer.android.com/jetpack/androidx/releases/room)
+ + [**legacy** room tips](https://medium.com/androiddevelopers/7-pro-tips-for-room-fbadea4bfbd1)
 
 Kotlin:
  + [structured async](https://kotlinlang.org/docs/composing-suspending-functions.html#structured-concurrency-with-async)

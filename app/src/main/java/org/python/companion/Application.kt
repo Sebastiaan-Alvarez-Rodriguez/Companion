@@ -1,10 +1,10 @@
 package org.python.companion
 
-import android.app.Application
+import org.python.backend.BackendInjector
 import org.python.companion.logging.ReleaseTree
 import timber.log.Timber
 
-class CompanionApplication : Application() {
+class CompanionApplication : BackendInjector() {
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {
