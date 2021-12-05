@@ -7,7 +7,7 @@
 # Local properties are only interesting to this machine, do not upload
 /local.properties
 
-/build
+/build/
 /captures
 
 .externalNativeBuild
