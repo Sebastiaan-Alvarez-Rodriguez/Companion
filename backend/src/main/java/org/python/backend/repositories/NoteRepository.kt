@@ -11,7 +11,13 @@ class NoteRepository(private val noteStore: NoteStore) {
 
     val allNotes : Flow<PagingData<Note>> = noteStore.getAllNotes()
 
-    suspend fun add(note: Note) = noteStore.add(note)
+    /**
+     * Adds a note. If a conflict exists, skips adding proposed item.
+     * @return `true` on success, `false` on conflict.
+     */
+    suspend fun add(note: Note): Boolean = noteStore.add(note)
+
+//    suspend fun upsert(note: Note): Boolean = noteStore.upsert(note)
 
     suspend fun update(note: Note) = noteStore.update(note)
 

@@ -14,11 +14,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import org.python.backend.datatype.Anniversary
 import org.python.backend.datatype.Note
 import org.python.companion.ui.anniversary.AnniversaryBody
@@ -39,6 +41,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        noteViewModel.load()
         setContent {
             CompanionTheme {
                 val allScreens = CompanionScreen.values().toList()
@@ -137,9 +141,17 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 )
             ) {
                 Timber.d("Creating a new note")
-                EditNoteBody(note = null, onSaveClick = {
-                    //TODO: Add save handling here
-                    navController.navigateUp()
+                EditNoteBody(note = null, onSaveClick = { note ->
+                    noteViewModel.with {
+                        //TODO: Add save handling here
+                        val success = noteViewModel.add(note)
+                        Timber.d("New note was a success? $success")
+                        if (!success) {
+                            //TODO: override dialog
+                        } else {
+                            navController.navigateUp()
+                        }
+                    }
                 })
             }
             composable(

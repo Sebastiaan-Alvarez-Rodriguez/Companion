@@ -16,10 +16,13 @@ UI:
     - Also check [here](https://developer.android.com/jetpack/compose/layouts/basics)
       for basic layout help.
  + [navigation](https://developer.android.com/jetpack/compose/navigation)
+ + [simple color picker](https://stackoverflow.com/a/69116990)
+ + [dialogs](https://stackoverflow.com/questions/68852110/)
 
 Room:
  + [repository tutorial](https://www.raywenderlich.com/24509368-repository-pattern-with-jetpack-compose#toc-anchor-012)
  + [room livedata](https://levelup.gitconnected.com/using-room-in-jetpack-compose-d2b6b674d3a5)
+ + [room relations](https://developer.android.com/training/data-storage/room/relationships)
  + [room docs](https://developer.android.com/jetpack/androidx/releases/room)
  + [**legacy** room tips](https://medium.com/androiddevelopers/7-pro-tips-for-room-fbadea4bfbd1)
 

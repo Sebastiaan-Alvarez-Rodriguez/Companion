@@ -12,15 +12,20 @@ class NoteStore(database: NoteDatabase) {
 
     fun getAllNotes(): Flow<PagingData<Note>> = pagingNote { noteDao.getAll() }
 
-    suspend fun add(note: Note) {
-        noteDao.insert(note.toRoom())
+    suspend fun add(note: Note): Boolean {
+        return try {
+            noteDao.add(note.toRoom());
+            true;
+        } catch (e: android.database.sqlite.SQLiteConstraintException) {
+            false;
+        } catch (e: Exception) {
+            false;
+        }
     }
-    suspend fun update(note: Note) {
-        noteDao.update(note.toRoom())
-    }
-    suspend fun delete(note: Note) {
-        noteDao.delete(note.toRoom())
-    }
+
+    suspend fun update(note: Note) = noteDao.update(note.toRoom())
+
+    suspend fun delete(note: Note) = noteDao.delete(note.toRoom())
 }
 
 private fun pagingNote(block: () -> PagingSource<Int, RoomNote>): Flow<PagingData<Note>> =

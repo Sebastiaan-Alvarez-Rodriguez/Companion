@@ -4,8 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.python.backend.datatype.Note
 import org.python.companion.CompanionApplication
 import org.python.companion.support.Util
@@ -23,16 +26,24 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    /**
+     * Function to load viewModel data.
+     * The loading state can be retrieved with [isLoading].
+     */
     fun load() = Util.effect(viewModelScope) {
         _isLoading.value = true
         allNotes.value = noteRepository.allNotes
         _isLoading.value = false
     }
 
+    suspend fun add(note: Note): Boolean = noteRepository.add(note)
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val notes: StateFlow<Flow<PagingData<Note>>> =
-        search.flatMapLatest { search -> notes(search) }
-            .stateInViewModel(viewModelScope, initialValue = emptyFlow())
+    val notes: StateFlow<Flow<PagingData<Note>>> = search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
+
+    fun with(func: suspend CoroutineScope.() -> Unit): Job {
+        return viewModelScope.launch { func() }
+    }
 
     private fun notes(search: String?) = when {
         search.isNullOrEmpty() -> allNotes
