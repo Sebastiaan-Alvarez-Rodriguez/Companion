@@ -17,6 +17,12 @@ class NoteRepository(private val noteStore: NoteStore) {
      */
     suspend fun add(note: Note): Boolean = noteStore.add(note)
 
+    /**
+     * Rerieves a note by name.
+     * @return found note on succes, `null` if no such name exists.
+     */
+    suspend fun getByName(name: String): Note? = noteStore.getByName(name)
+
 //    suspend fun upsert(note: Note): Boolean = noteStore.upsert(note)
 
     suspend fun update(note: Note) = noteStore.update(note)

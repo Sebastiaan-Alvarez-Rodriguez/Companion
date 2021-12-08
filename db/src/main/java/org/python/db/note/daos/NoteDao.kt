@@ -10,7 +10,7 @@ interface NoteDao {
     fun getAll(): PagingSource<Int, RoomNote>
 
     @Query("SELECT * from RoomNote where name = :name")
-    fun getByName(name: String): RoomNote
+    suspend fun getByName(name: String): RoomNote?
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun add(item: RoomNote)

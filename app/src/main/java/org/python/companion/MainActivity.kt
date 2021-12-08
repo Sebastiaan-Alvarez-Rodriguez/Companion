@@ -29,6 +29,7 @@ import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.EditNoteBody
 import org.python.companion.ui.note.NoteBody
+import org.python.companion.ui.note.NoteOverrideDialog
 import org.python.companion.ui.note.SingleNoteBody
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.NoteViewModel
@@ -144,10 +145,19 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 EditNoteBody(note = null, onSaveClick = { note ->
                     noteViewModel.with {
                         //TODO: Add save handling here
-                        val success = noteViewModel.add(note)
-                        Timber.d("New note was a success? $success")
-                        if (!success) {
-                            //TODO: override dialog
+//                        val success = noteViewModel.add(note)
+                        val conflict = noteViewModel.getbyName(note.name)
+                        Timber.d("New note has conflict: ${conflict!=null}")
+                        if (conflict != null) {
+                            NoteOverrideDialog(
+                                currentNote = note,
+                                overridenNote = conflict,
+                                onDismiss = {},
+                                onNegativeClick = {},
+                                onPositiveClick = {
+                                    // TODO: Override old note
+                                }
+                            )
                         } else {
                             navController.navigateUp()
                         }

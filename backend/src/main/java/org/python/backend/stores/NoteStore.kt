@@ -23,6 +23,8 @@ class NoteStore(database: NoteDatabase) {
         }
     }
 
+    suspend fun getByName(name: String): Note? = noteDao.getByName(name)?.toUI()
+
     suspend fun update(note: Note) = noteDao.update(note.toRoom())
 
     suspend fun delete(note: Note) = noteDao.delete(note.toRoom())

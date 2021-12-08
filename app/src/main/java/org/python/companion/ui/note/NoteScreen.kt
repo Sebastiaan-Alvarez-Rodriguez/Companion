@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -15,7 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -197,4 +201,45 @@ fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
     }
 }
 
-//fun OverrideDialog() TODO!
+@Composable
+fun NoteOverrideDialog(
+    currentNote: Note,
+    overridenNote: Note,
+    onDismiss: () -> Unit,
+    onPositiveClick: () -> Unit,
+    onNegativeClick: () -> Unit
+) { //TODO!
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            elevation = 8.dp,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+
+            Column(modifier = Modifier.padding(8.dp)) {
+
+                Text(
+                    text = "Name ${currentNote.name} already in use",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(8.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                NoteItem(note = overridenNote, onNoteClick = {}, onFavoriteClick = {})
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    TextButton(onClick = onNegativeClick) {
+                        Text(text = "CANCEL")
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    TextButton(onClick = onPositiveClick) {
+                        Text(text = "OVERRIDE")
+                    }
+                }
+            }
+        }
+    }
+}

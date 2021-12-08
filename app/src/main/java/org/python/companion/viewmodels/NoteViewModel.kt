@@ -38,6 +38,9 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun add(note: Note): Boolean = noteRepository.add(note)
 
+    suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
+    suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<Note>>> = search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
