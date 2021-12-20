@@ -37,6 +37,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun add(note: Note): Boolean = noteRepository.add(note)
+    suspend fun upsert(note: Note): Unit = noteRepository.upsert(note)
 
     suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)

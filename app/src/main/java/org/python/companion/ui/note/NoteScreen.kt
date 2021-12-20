@@ -20,12 +20,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.datatype.Note
+import org.python.companion.NoteState
+import org.python.companion.support.Util
+import org.python.companion.viewmodels.NoteViewModel
 
 
 /**
@@ -150,54 +155,64 @@ fun SingleNoteBody(note: String) {
 /**
  * Detail screen for editing a single note.
  * @param note Title of the passed note.
+ * @param overrideState
  * @param onSaveClick Lambda executed when the user hits the save button.
  */
 @Composable
-fun EditNoteBody(note: String?, onSaveClick: (Note) -> Unit) {
+fun EditNoteBody(
+    note: String?,
+    overrideDialogMiniState: NoteOverrideDialogMiniState,
+    onSaveClick: (Note) -> Unit,
+    onOverrideAcceptClick: (Note) -> Unit
+) {
     var title by remember { mutableStateOf(if (note == null) "" else "Note title loaded") }
     var content by remember { mutableStateOf(if (note == null) "" else "Oh hi note") }
 
     val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
 
     val scrollState = rememberScrollState()
-    Card(
-        modifier = Modifier.fillMaxSize(),
-        elevation = 5.dp,
-    ) {
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(defaultPadding)
+    Box {
+        Card(
+            modifier = Modifier.fillMaxSize(),
+            elevation = 5.dp,
         ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    modifier = Modifier,
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Title") },
-                    singleLine = true,
-                )
-                Spacer(Modifier.width(defaultPadding))
-                Button(
-                    modifier = Modifier,
-                    onClick = { onSaveClick(Note(title, content)) }) {
-                    Text(text = "Save")
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(defaultPadding)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        modifier = Modifier,
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.width(defaultPadding))
+                    Button(
+                        modifier = Modifier,
+                        onClick = { onSaveClick(Note(title, content)) }) {
+                        Text(text = "Save")
+                    }
                 }
-            }
-            Spacer(Modifier.width(defaultPadding))
-            OutlinedTextField(
-                modifier = Modifier
-                    .scrollable(state = scrollState, orientation = Orientation.Vertical)
-                    .fillMaxSize(),
-                value = content,
-                onValueChange = { content = it },
-                label = { Text("Content") },
-                singleLine = false
-            )
+                Spacer(Modifier.width(defaultPadding))
+                OutlinedTextField(
+                    modifier = Modifier
+                        .scrollable(state = scrollState, orientation = Orientation.Vertical)
+                        .fillMaxSize(),
+                    value = content,
+                    onValueChange = { content = it },
+                    label = { Text("Content") },
+                    singleLine = false
+                )
 
+            }
         }
+        if (overrideDialogMiniState.open)
+            NoteOverrideDialog(overrideDialogMiniState.currentNote!!, overrideDialogMiniState.overridenNote!!, {}, { onOverrideAcceptClick(Note(title, content)) }, {})
     }
 }
 
@@ -208,7 +223,7 @@ fun NoteOverrideDialog(
     onDismiss: () -> Unit,
     onPositiveClick: () -> Unit,
     onNegativeClick: () -> Unit
-) { //TODO!
+) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             elevation = 8.dp,
@@ -241,5 +256,16 @@ fun NoteOverrideDialog(
                 }
             }
         }
+    }
+}
+
+class NoteOverrideDialogMiniState(
+    public val currentNote: Note?,
+    public val overridenNote: Note?,
+    open: Boolean) : Util.DialogMiniState(open) {
+    companion object {
+        @Composable
+        fun rememberState(currentNote: Note?, overridenNote: Note?, open: Boolean) =
+            remember(open) {  NoteOverrideDialogMiniState(currentNote, overridenNote, open) }
     }
 }

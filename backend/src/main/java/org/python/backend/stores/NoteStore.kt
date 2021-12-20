@@ -12,6 +12,8 @@ class NoteStore(database: NoteDatabase) {
 
     fun getAllNotes(): Flow<PagingData<Note>> = pagingNote { noteDao.getAll() }
 
+    suspend fun getByName(name: String): Note? = noteDao.getByName(name)?.toUI()
+
     suspend fun add(note: Note): Boolean {
         return try {
             noteDao.add(note.toRoom());
@@ -23,7 +25,7 @@ class NoteStore(database: NoteDatabase) {
         }
     }
 
-    suspend fun getByName(name: String): Note? = noteDao.getByName(name)?.toUI()
+    suspend fun upsert(note: Note): Unit = noteDao.upsert(note.toRoom())
 
     suspend fun update(note: Note) = noteDao.update(note.toRoom())
 

@@ -16,4 +16,5 @@ object Util {
     fun <T> Flow<T>.stateInViewModel(scope: CoroutineScope, initialValue : T): StateFlow<T> =
         stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
 
+    abstract class DialogMiniState(public val open: Boolean) {}
 }

@@ -14,24 +14,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
 import org.python.backend.datatype.Anniversary
 import org.python.backend.datatype.Note
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
-import org.python.companion.ui.note.EditNoteBody
-import org.python.companion.ui.note.NoteBody
-import org.python.companion.ui.note.NoteOverrideDialog
-import org.python.companion.ui.note.SingleNoteBody
+import org.python.companion.ui.note.*
+import org.python.companion.ui.splash.SplashActor
 import org.python.companion.ui.theme.CompanionTheme
+import org.python.companion.viewmodels.AnniversaryViewModel
 import org.python.companion.viewmodels.NoteViewModel
 import timber.log.Timber
 
@@ -39,11 +36,11 @@ import timber.log.Timber
 class MainActivity : ComponentActivity() {
 
     private val noteViewModel by viewModels<NoteViewModel>()
+    private val anniversaryViewModel by viewModels<AnniversaryViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        noteViewModel.load()
         setContent {
             CompanionTheme {
                 val allScreens = CompanionScreen.values().toList()
@@ -53,27 +50,37 @@ class MainActivity : ComponentActivity() {
 
                 val noteState = NoteState.rememberState(navController = navController, noteViewModel = noteViewModel)
                 val cactusState = CactusState.rememberState(navController = navController)
-                val anniversaryState = AnniversaryState.rememberState(navController = navController)
-//                A surface container using the 'background' color from the theme
-//                Surface(color = MaterialTheme.colors.background) {
-                Scaffold(
-                    topBar = {
-                        CompanionTabRow(
-                            allScreens = allScreens,
-                            onTabSelected = { screen -> navController.navigate(screen.name) },
-                            currentScreen = currentScreen
-                        )
+                val anniversaryState = AnniversaryState.rememberState(navController = navController, anniversaryViewModel = anniversaryViewModel)
+
+                NavHost(navController = navController,
+                    startDestination = "splash_screen") {
+                    composable("splash_screen") {
+                        SplashActor(navController = navController) {
+                            noteViewModel.load()
+                            anniversaryViewModel.load()
+                        }
                     }
-                ) { innerPadding ->
-                    CompanionNavHost(
-                        appNavController = navController,
-                        noteState = noteState,
-                        cactusState = cactusState,
-                        anniversaryState = anniversaryState,
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    // Main Screen
+                    composable("main_screen") {
+                        Scaffold(
+                            topBar = {
+                                CompanionTabRow(
+                                    allScreens = allScreens,
+                                    onTabSelected = { screen -> navController.navigate(screen.name) },
+                                    currentScreen = currentScreen
+                                )
+                            }
+                        ) { innerPadding ->
+                            CompanionNavHost(
+                                appNavController = navController,
+                                noteState = noteState,
+                                cactusState = cactusState,
+                                anniversaryState = anniversaryState,
+                                modifier = Modifier.padding(innerPadding)
+                            )
+                        }
+                    }
                 }
-//                }
             }
         }
     }
@@ -142,27 +149,28 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 )
             ) {
                 Timber.d("Creating a new note")
-                EditNoteBody(note = null, onSaveClick = { note ->
-                    noteViewModel.with {
-                        //TODO: Add save handling here
-//                        val success = noteViewModel.add(note)
-                        val conflict = noteViewModel.getbyName(note.name)
-                        Timber.d("New note has conflict: ${conflict!=null}")
-                        if (conflict != null) {
-                            NoteOverrideDialog(
-                                currentNote = note,
-                                overridenNote = conflict,
-                                onDismiss = {},
-                                onNegativeClick = {},
-                                onPositiveClick = {
-                                    // TODO: Override old note
-                                }
-                            )
-                        } else {
-                            navController.navigateUp()
+                var noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
+                EditNoteBody(
+                    note = null,
+                    overrideDialogMiniState = noteOverrideDialogMiniState,
+                    onSaveClick = { note ->
+                        noteViewModel.with {
+                            val conflict = noteViewModel.getbyName(note.name)
+                            Timber.d("New note has conflict: ${conflict!=null}")
+                            if (conflict == null) {
+                                val success = noteViewModel.add(note)
+                                navController.navigateUp()
+                            } else {
+                                noteOverrideDialogMiniState = NoteOverrideDialogMiniState(note, conflict, true)
+                            }
+                        }
+                    },
+                    onOverrideAcceptClick = { note ->
+                        noteViewModel.with {
+                            noteViewModel.upsert(note)
                         }
                     }
-                })
+                )
             }
             composable(
                 route = "$noteTabName/edit/{note}",
@@ -182,7 +190,17 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 if (noteName == null) {
                     Timber.e("Navcontroller navigation edit note - note name == null")
                 } else {
-                    EditNoteBody(note = null, onSaveClick = { navController.navigateUp() })
+                    val saveNote: (Note) -> Unit = {
+                        /* TODO: Save note */
+                        navController.navigateUp()
+                    }
+                    val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
+                    EditNoteBody(
+                        note = null,
+                        overrideDialogMiniState = noteOverrideDialogMiniState,
+                        onSaveClick = saveNote,
+                        onOverrideAcceptClick = { /* TODO: Override noteOverrideDialogMiniState.overridenNote with note in this lambda */ }
+                    )
                 }
             }
         }
@@ -226,29 +244,41 @@ class CactusState(private val navController: NavHostController) {
     }
 }
 
-class AnniversaryState(private val navController: NavHostController) {
+class AnniversaryState(private val navController: NavHostController, private val anniversaryViewModel: AnniversaryViewModel) {
     fun NavGraphBuilder.anniversaryGraph() {
         val anniversaryTabName = CompanionScreen.Anniversary.name
         navigation(startDestination = anniversaryTabName, route = "anniversary") {
             composable(anniversaryTabName) { // Overview
-                AnniversaryBody(anniversaryList = emptyList(),
-                    {anniversary -> navigateToSingleAnniversary(navController = navController, anniversary = anniversary) },
-                    {anniversary -> })
+                val anniversaries by anniversaryViewModel.anniversaries.collectAsState()
+
+                AnniversaryBody(anniversaryList = anniversaries,
+                    onNewClick = { navigateToCreateAnniversary(navController) },
+                    onAnniversaryClick = {anniversary -> navigateToSingleAnniversary(navController = navController, anniversary = anniversary) },
+                    onFavoriteClick = {anniversary -> })
+            }
+            composable(
+                route = "$anniversaryTabName/create",
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "companion://$anniversaryTabName/create"
+                    }
+                )
+            ) {
+                Timber.d("Creating a new anniversary")
+                // TODO: Implement anniversary creation
             }
         }
     }
 
+    private fun navigateToCreateAnniversary(navController: NavHostController) = navController.navigate("${CompanionScreen.Anniversary.name}/create")
     private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: Anniversary) = navigateToSingleAnniversary(navController, anniversary.name)
     private fun navigateToSingleAnniversary(navController: NavHostController, anniversary: String) = navController.navigate("${CompanionScreen.Anniversary.name}/${anniversary}")
 
 
     companion object {
         @Composable
-        fun rememberState(
-            navController: NavHostController = rememberNavController(),
-        ) = remember(navController) {
-            AnniversaryState(navController)
-        }
+        fun rememberState(navController: NavHostController = rememberNavController(), anniversaryViewModel: AnniversaryViewModel)
+        = remember(navController) { AnniversaryState(navController, anniversaryViewModel) }
     }
 }
 
