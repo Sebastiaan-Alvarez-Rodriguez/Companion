@@ -1,4 +1,4 @@
-package org.python.db.note.entities
+package org.python.db.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

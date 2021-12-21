@@ -1,8 +1,8 @@
-package org.python.db.note.daos
+package org.python.db.daos
 
 import androidx.paging.PagingSource
 import androidx.room.*
-import org.python.db.note.entities.RoomNote
+import org.python.db.entities.RoomNote
 
 @Dao
 interface NoteDao {

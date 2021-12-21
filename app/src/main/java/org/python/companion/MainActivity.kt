@@ -44,9 +44,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             CompanionTheme {
                 val allScreens = CompanionScreen.values().toList()
+                val initialScreen = CompanionScreen.Cactus
                 val navController = rememberNavController()
                 val backstackEntry = navController.currentBackStackEntryAsState()
-                val currentScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
+//                val currentScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
                 val noteState = NoteState.rememberState(navController = navController, noteViewModel = noteViewModel)
                 val cactusState = CactusState.rememberState(navController = navController)
@@ -67,7 +68,7 @@ class MainActivity : ComponentActivity() {
                                 CompanionTabRow(
                                     allScreens = allScreens,
                                     onTabSelected = { screen -> navController.navigate(screen.name) },
-                                    currentScreen = currentScreen
+                                    currentScreen = initialScreen
                                 )
                             }
                         ) { innerPadding ->

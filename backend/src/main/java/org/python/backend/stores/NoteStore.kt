@@ -4,10 +4,10 @@ import androidx.paging.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.python.backend.datatype.Note
-import org.python.db.note.NoteDatabase
-import org.python.db.note.entities.RoomNote
+import org.python.db.CompanionDatabase
+import org.python.db.entities.RoomNote
 
-class NoteStore(database: NoteDatabase) {
+class NoteStore(database: CompanionDatabase) {
     private val noteDao = database.noteDao
 
     fun getAllNotes(): Flow<PagingData<Note>> = pagingNote { noteDao.getAll() }
