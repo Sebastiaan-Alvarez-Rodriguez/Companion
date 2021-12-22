@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.python.backend.datatype.Note
 import org.python.companion.CompanionApplication
-import org.python.companion.support.Util
-import org.python.companion.support.Util.stateInViewModel
+import org.python.companion.support.UiUtil
+import org.python.companion.support.UiUtil.stateInViewModel
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
@@ -30,7 +30,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
      * Function to load viewModel data.
      * The loading state can be retrieved with [isLoading].
      */
-    fun load() = Util.effect(viewModelScope) {
+    fun load() = UiUtil.effect(viewModelScope) {
         _isLoading.value = true
         allNotes.value = noteRepository.allNotes
         _isLoading.value = false

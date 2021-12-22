@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.python.backend.datatype.Anniversary
 import org.python.backend.datatype.Note
@@ -46,10 +47,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             CompanionTheme {
                 val allScreens = CompanionScreen.values().toList()
-                val initialScreen = CompanionScreen.Cactus
                 val navController = rememberNavController()
-//                val backstackEntry = navController.currentBackStackEntryAsState()
-//                val currentScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
+                val backstackEntry = navController.currentBackStackEntryAsState()
+                val selectedTabScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
                 val noteState = NoteState.rememberState(navController = navController, noteViewModel = noteViewModel)
                 val cactusState = CactusState.rememberState(navController = navController)
@@ -59,8 +59,10 @@ class MainActivity : ComponentActivity() {
                     topBar = {
                         CompanionTabRow(
                             allScreens = allScreens,
-                            onTabSelected = { screen -> navController.navigate(screen.name) },
-                            currentScreen = initialScreen
+                            onTabSelected = { screen ->
+                                    Timber.w("Got tab selected: ${screen.name}")
+                                     navController.navigate(screen.name) },
+                            currentScreen = selectedTabScreen
                         )
                     }
                 ) { innerPadding ->
@@ -71,7 +73,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("splash_screen") {
                             val splashScreenFunc = remember {
-                                SplashBuilder(navController = navController, destination = "cactus").build {
+                                SplashBuilder(navController = navController, destination = CompanionScreen.Cactus.name).build {
                                     noteViewModel.load()
                                     anniversaryViewModel.load()
                                 }

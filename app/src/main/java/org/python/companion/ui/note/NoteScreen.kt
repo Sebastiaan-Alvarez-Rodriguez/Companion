@@ -1,12 +1,12 @@
 package org.python.companion.ui.note
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -14,23 +14,22 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import org.python.backend.datatype.Note
-import org.python.companion.NoteState
-import org.python.companion.support.Util
-import org.python.companion.viewmodels.NoteViewModel
+import org.python.companion.support.UiUtil
 
 
 /**
@@ -158,6 +157,7 @@ fun SingleNoteBody(note: String) {
  * @param overrideState
  * @param onSaveClick Lambda executed when the user hits the save button.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EditNoteBody(
     note: String?,
@@ -170,7 +170,6 @@ fun EditNoteBody(
 
     val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
 
-    val scrollState = rememberScrollState()
     Box {
         Card(
             modifier = Modifier.fillMaxSize(),
@@ -199,14 +198,20 @@ fun EditNoteBody(
                     }
                 }
                 Spacer(Modifier.width(defaultPadding))
+                val relocation = remember { BringIntoViewRequester() }
+                val scope = rememberCoroutineScope()
+
                 OutlinedTextField(
                     modifier = Modifier
-                        .scrollable(state = scrollState, orientation = Orientation.Vertical)
-                        .fillMaxSize(),
+                        .bringIntoViewRequester(relocation)
+                        .onFocusEvent {
+                            if (it.isFocused) scope.launch { delay(300); relocation.bringIntoView() }
+                        }
+                        .fillMaxWidth(),
                     value = content,
                     onValueChange = { content = it },
                     label = { Text("Content") },
-                    singleLine = false
+                    singleLine = false,
                 )
 
             }
@@ -260,9 +265,9 @@ fun NoteOverrideDialog(
 }
 
 class NoteOverrideDialogMiniState(
-    public val currentNote: Note?,
-    public val overridenNote: Note?,
-    open: Boolean) : Util.DialogMiniState(open) {
+    val currentNote: Note?,
+    val overridenNote: Note?,
+    open: Boolean) : UiUtil.DialogMiniState(open) {
     companion object {
         @Composable
         fun rememberState(currentNote: Note?, overridenNote: Note?, open: Boolean) =

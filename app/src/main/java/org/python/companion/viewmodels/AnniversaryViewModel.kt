@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.python.backend.datatype.Anniversary
 import org.python.companion.CompanionApplication
-import org.python.companion.support.Util
-import org.python.companion.support.Util.stateInViewModel
+import org.python.companion.support.UiUtil
+import org.python.companion.support.UiUtil.stateInViewModel
 
 class AnniversaryViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoading = MutableStateFlow(true)
@@ -30,7 +30,7 @@ class AnniversaryViewModel(application: Application) : AndroidViewModel(applicat
      * Function to load viewModel data.
      * The loading state can be retrieved with [isLoading].
      */
-    fun load() = Util.effect(viewModelScope) {
+    fun load() = UiUtil.effect(viewModelScope) {
         _isLoading.value = true
         allAnniversaries.value = anniversaryRepository.allAnniversaries
         _isLoading.value = false

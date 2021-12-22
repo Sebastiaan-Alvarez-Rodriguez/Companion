@@ -25,8 +25,8 @@ enum class CompanionScreen (
                 Note.name -> Note
                 Cactus.name -> Cactus
                 Anniversary.name -> Anniversary
-                null -> Note
-                else -> throw IllegalArgumentException("Route $route is not recognized.")
+                null -> Cactus
+                else -> Cactus
             }
     }
 }

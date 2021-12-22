@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import org.python.companion.R
-import org.python.companion.support.Util
+import org.python.companion.support.UiUtil
 import java.lang.IllegalStateException
 import kotlin.random.Random
 
@@ -111,7 +111,7 @@ private fun SplashActor(
         if (timeToHandle > 0)
             delay(timeToHandle)
 
-        Util.navigatePop(navController, destination)
+        UiUtil.navigatePop(navController, destination)
         }
 
     // Image

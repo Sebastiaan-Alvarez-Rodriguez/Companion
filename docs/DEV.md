@@ -29,3 +29,11 @@ Room:
 
 Kotlin:
  + [structured async](https://kotlinlang.org/docs/composing-suspending-functions.html#structured-concurrency-with-async)
+
+
+## Issues
+Current issue list:
+ 1. Creating notes longer than the keyboard make the cursor go under the keyboard.
+    Unsolved problem in Android community, see:
+    https://issuetracker.google.com/issues/192043120?pli=1
+    https://askandroidquestions.com/2021/08/19/jetpack-compose-textfield-soft-keyboard-obscures-text-entry/
