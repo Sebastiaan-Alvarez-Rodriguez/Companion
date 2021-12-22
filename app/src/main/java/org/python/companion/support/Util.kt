@@ -1,5 +1,6 @@
 package org.python.companion.support
 
+import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -17,4 +18,24 @@ object Util {
         stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
 
     abstract class DialogMiniState(public val open: Boolean) {}
+
+    fun navigateReplaceStartRoute(navController: NavController, newHomeRoute: String) {
+        with (navController) {
+            popBackStack(graph.startDestinationId, true)
+            graph.setStartDestination(newHomeRoute)
+            navigate(newHomeRoute)
+        }
+    }
+
+    /**
+     * Navigate to a new destination, simultaneously removing the current entry from the backstack.
+     * @param navController
+     * @param newRoute New route path to follow.
+     */
+    fun navigatePop(navController: NavController, newRoute: String) {
+        with (navController) {
+            popBackStack()
+            navigate(newRoute)
+        }
+    }
 }

@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.python.backend.datatype.Anniversary
 import org.python.backend.datatype.Note
@@ -25,8 +24,11 @@ import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
-import org.python.companion.ui.note.*
-import org.python.companion.ui.splash.SplashActor
+import org.python.companion.ui.note.EditNoteBody
+import org.python.companion.ui.note.NoteBody
+import org.python.companion.ui.note.NoteOverrideDialogMiniState
+import org.python.companion.ui.note.SingleNoteBody
+import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
 import org.python.companion.viewmodels.NoteViewModel
@@ -68,11 +70,13 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("splash_screen") {
-                            SplashActor(navController = navController,
-                                destination = "cactus") {
-                                noteViewModel.load()
-                                anniversaryViewModel.load()
+                            val splashScreenFunc = remember {
+                                SplashBuilder(navController = navController, destination = "cactus").build {
+                                    noteViewModel.load()
+                                    anniversaryViewModel.load()
+                                }
                             }
+                            splashScreenFunc()
                         }
                         with(cactusState) { cactusGraph() }
                         with(noteState) { noteGraph() }
