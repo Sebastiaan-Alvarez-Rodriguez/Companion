@@ -46,40 +46,37 @@ class MainActivity : ComponentActivity() {
                 val allScreens = CompanionScreen.values().toList()
                 val initialScreen = CompanionScreen.Cactus
                 val navController = rememberNavController()
-                val backstackEntry = navController.currentBackStackEntryAsState()
+//                val backstackEntry = navController.currentBackStackEntryAsState()
 //                val currentScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
                 val noteState = NoteState.rememberState(navController = navController, noteViewModel = noteViewModel)
                 val cactusState = CactusState.rememberState(navController = navController)
                 val anniversaryState = AnniversaryState.rememberState(navController = navController, anniversaryViewModel = anniversaryViewModel)
 
-                NavHost(navController = navController,
-                    startDestination = "splash_screen") {
-                    composable("splash_screen") {
-                        SplashActor(navController = navController) {
-                            noteViewModel.load()
-                            anniversaryViewModel.load()
-                        }
+                Scaffold(
+                    topBar = {
+                        CompanionTabRow(
+                            allScreens = allScreens,
+                            onTabSelected = { screen -> navController.navigate(screen.name) },
+                            currentScreen = initialScreen
+                        )
                     }
-                    // Main Screen
-                    composable("main_screen") {
-                        Scaffold(
-                            topBar = {
-                                CompanionTabRow(
-                                    allScreens = allScreens,
-                                    onTabSelected = { screen -> navController.navigate(screen.name) },
-                                    currentScreen = initialScreen
-                                )
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "splash_screen",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable("splash_screen") {
+                            SplashActor(navController = navController,
+                                destination = "cactus") {
+                                noteViewModel.load()
+                                anniversaryViewModel.load()
                             }
-                        ) { innerPadding ->
-                            CompanionNavHost(
-                                appNavController = navController,
-                                noteState = noteState,
-                                cactusState = cactusState,
-                                anniversaryState = anniversaryState,
-                                modifier = Modifier.padding(innerPadding)
-                            )
                         }
+                        with(cactusState) { cactusGraph() }
+                        with(noteState) { noteGraph() }
+                        with(anniversaryState) { anniversaryGraph() }
                     }
                 }
             }
@@ -87,25 +84,25 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-@Composable
-fun CompanionNavHost(
-    appNavController: NavHostController,
-    noteState: NoteState,
-    cactusState: CactusState,
-    anniversaryState: AnniversaryState,
-    modifier: Modifier = Modifier
-) {
-    NavHost(
-        navController = appNavController,
-        startDestination = "cactus",
-        modifier = modifier
-    ) {
-        with(cactusState) { cactusGraph() }
-        with(noteState) { noteGraph() }
-        with(anniversaryState) { anniversaryGraph() }
-    }
-}
+/*
+        Scaffold(
+            topBar = {
+                CompanionTabRow(
+                    allScreens = allScreens,
+                    onTabSelected = { screen -> navController.navigate(screen.name) },
+                    currentScreen = currentScreen
+                )
+            }
+        ) { innerPadding ->
+            CompanionNavHost(
+                appNavController = navController,
+                noteState = noteState,
+                cactusState = cactusState,
+                anniversaryState = anniversaryState,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+*/
 
 
 
