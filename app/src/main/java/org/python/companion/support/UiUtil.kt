@@ -1,5 +1,6 @@
 package org.python.companion.support
 
+import androidx.compose.runtime.MutableState
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,7 @@ object UiUtil {
     fun <T> Flow<T>.stateInViewModel(scope: CoroutineScope, initialValue : T): StateFlow<T> =
         stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
 
-    abstract class DialogMiniState(public val open: Boolean) {}
+    abstract class DialogMiniState(val open: MutableState<Boolean>)
 
     fun navigateReplaceStartRoute(navController: NavController, newHomeRoute: String) {
         with (navController) {

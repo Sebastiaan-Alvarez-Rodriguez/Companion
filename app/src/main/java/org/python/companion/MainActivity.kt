@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.*
@@ -90,28 +87,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/*
-        Scaffold(
-            topBar = {
-                CompanionTabRow(
-                    allScreens = allScreens,
-                    onTabSelected = { screen -> navController.navigate(screen.name) },
-                    currentScreen = currentScreen
-                )
-            }
-        ) { innerPadding ->
-            CompanionNavHost(
-                appNavController = navController,
-                noteState = noteState,
-                cactusState = cactusState,
-                anniversaryState = anniversaryState,
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
-*/
-
-
-
 class NoteState(private val navController: NavHostController, private val noteViewModel: NoteViewModel) {
     fun NavGraphBuilder.noteGraph() {
         val noteTabName = CompanionScreen.Note.name
@@ -165,14 +140,17 @@ class NoteState(private val navController: NavHostController, private val noteVi
                                 val success = noteViewModel.add(note)
                                 navController.navigateUp()
                             } else {
-                                noteOverrideDialogMiniState = NoteOverrideDialogMiniState(note, conflict, true)
+                                noteOverrideDialogMiniState.open(note, conflict)
                             }
                         }
                     },
                     onOverrideAcceptClick = { note ->
+                        Timber.d("Overriding note ${note.name}...")
                         noteViewModel.with {
                             noteViewModel.upsert(note)
                         }
+                        noteOverrideDialogMiniState.close()
+                        navController.navigateUp()
                     }
                 )
             }

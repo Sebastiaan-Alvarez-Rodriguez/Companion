@@ -1,5 +1,6 @@
 package org.python.companion.ui.note
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -160,19 +161,23 @@ fun SingleNoteBody(note: String) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EditNoteBody(
-    note: String?,
+    note: Note?,
     overrideDialogMiniState: NoteOverrideDialogMiniState,
     onSaveClick: (Note) -> Unit,
     onOverrideAcceptClick: (Note) -> Unit
 ) {
-    var title by remember { mutableStateOf(if (note == null) "" else "Note title loaded") }
-    var content by remember { mutableStateOf(if (note == null) "" else "Oh hi note") }
+    var title by remember { mutableStateOf(note?.name ?: "") }
+    var content by remember { mutableStateOf(note?.content ?: "") }
+    val changed = lazy { (note != null && (title != note.name || content != note.content)) ||
+            (note == null && (title != "" || content != ""))}
 
     val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
 
     Box {
         Card(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(defaultPadding),
             elevation = 5.dp,
         ) {
             Column(modifier = Modifier
@@ -216,8 +221,22 @@ fun EditNoteBody(
 
             }
         }
-        if (overrideDialogMiniState.open)
-            NoteOverrideDialog(overrideDialogMiniState.currentNote!!, overrideDialogMiniState.overridenNote!!, {}, { onOverrideAcceptClick(Note(title, content)) }, {})
+        if (overrideDialogMiniState.open.value)
+            NoteOverrideDialog(
+                overrideDialogMiniState.currentNote.value!!,
+                overrideDialogMiniState.overridenNote.value!!,
+                {},
+                { onOverrideAcceptClick(Note(title, content)) },
+                {}
+            )
+
+        BackHandler(enabled = overrideDialogMiniState.open.value) {
+            overrideDialogMiniState.close()
+        }
+
+        BackHandler(enabled = changed.value) {
+            // TODO: Are you sure you want to go back?
+        }
     }
 }
 
@@ -265,12 +284,25 @@ fun NoteOverrideDialog(
 }
 
 class NoteOverrideDialogMiniState(
-    val currentNote: Note?,
-    val overridenNote: Note?,
-    open: Boolean) : UiUtil.DialogMiniState(open) {
+    val currentNote: MutableState<Note?>,
+    val overridenNote: MutableState<Note?>,
+    open: MutableState<Boolean>) : UiUtil.DialogMiniState(open) {
+
+    fun open(currentNote: Note, overridenNote: Note): Unit {
+        open.value = true
+        this.currentNote.value = currentNote
+        this.overridenNote.value = overridenNote
+    }
+
+    fun close(): Unit {
+        open.value = false
+        currentNote.value = null
+        overridenNote.value = null
+    }
+
     companion object {
         @Composable
         fun rememberState(currentNote: Note?, overridenNote: Note?, open: Boolean) =
-            remember(open) {  NoteOverrideDialogMiniState(currentNote, overridenNote, open) }
+            remember(open) {  NoteOverrideDialogMiniState(mutableStateOf(currentNote), mutableStateOf(overridenNote), mutableStateOf(open)) }
     }
 }
