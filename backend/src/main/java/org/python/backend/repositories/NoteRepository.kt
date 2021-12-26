@@ -26,7 +26,7 @@ class NoteRepository(private val noteStore: NoteStore) {
     /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
     suspend fun upsert(note: Note): Unit = noteStore.upsert(note)
 
-    suspend fun update(note: Note) = noteStore.update(note)
+    suspend fun update(note: Note): Unit = noteStore.update(note)
 
-    suspend fun delete(note: Note) = noteStore.delete(note)
+    suspend fun delete(note: Note): Unit = noteStore.delete(note)
 }

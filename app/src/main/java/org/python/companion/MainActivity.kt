@@ -97,7 +97,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 NoteBody(notes = notes,
                     { navigateToCreateNote(navController = navController) },
                     { note -> navigateToSingleNote(navController = navController, note = note) },
-                    { Note -> })
+                    { note -> })
             }
             composable(
                 route = "$noteTabName/view/{note}",
@@ -114,9 +114,14 @@ class NoteState(private val navController: NavHostController, private val noteVi
             ) { entry ->
                 val noteName = entry.arguments?.getString("note")
                 if (noteName == null) {
-                    Timber.e("Navcontroller navigation view note - note name == null")
+                    Timber.e("View note: Navcontroller navigation - note name == null")
                 } else {
-                    SingleNoteBody(note = noteName)
+                    var note by remember { mutableStateOf<Note?>(null) }
+                    noteViewModel.with {
+                        note = noteViewModel.getbyName(noteName)!!
+                    }
+                    if (note != null)
+                        SingleNoteBody(note = note!!)
                 }
             }
             composable(
@@ -127,15 +132,15 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     }
                 )
             ) {
-                Timber.d("Creating a new note")
-                var noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
+                Timber.d("New note: Creating")
+                val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
                 EditNoteBody(
                     note = null,
                     overrideDialogMiniState = noteOverrideDialogMiniState,
                     onSaveClick = { note ->
                         noteViewModel.with {
                             val conflict = noteViewModel.getbyName(note.name)
-                            Timber.d("New note has conflict: ${conflict!=null}")
+                            Timber.d("New note: conflict: ${conflict!=null}")
                             if (conflict == null) {
                                 val success = noteViewModel.add(note)
                                 navController.navigateUp()
@@ -145,7 +150,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                         }
                     },
                     onOverrideAcceptClick = { note ->
-                        Timber.d("Overriding note ${note.name}...")
+                        Timber.d("New note: Overriding ${note.name}...")
                         noteViewModel.with {
                             noteViewModel.upsert(note)
                         }
@@ -167,22 +172,47 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     }
                 ),
             ) { entry ->
-                Timber.d("Edit an existing note")
+                Timber.d("Edit note: Editing")
                 val noteName = entry.arguments?.getString("note")
                 if (noteName == null) {
-                    Timber.e("Navcontroller navigation edit note - note name == null")
+                    Timber.e("Edit note: Navcontroller navigation: note name == null")
                 } else {
-                    val saveNote: (Note) -> Unit = {
-                        /* TODO: Save note */
-                        navController.navigateUp()
-                    }
                     val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
-                    EditNoteBody(
-                        note = null,
-                        overrideDialogMiniState = noteOverrideDialogMiniState,
-                        onSaveClick = saveNote,
-                        onOverrideAcceptClick = { /* TODO: Override noteOverrideDialogMiniState.overridenNote with note in this lambda */ }
-                    )
+                    var existingNote by remember { mutableStateOf<Note?>(null) }
+                    noteViewModel.with {
+                        existingNote = noteViewModel.getbyName(noteName)!!
+                    }
+                    if (existingNote != null) {
+                        EditNoteBody(
+                            note = existingNote,
+                            overrideDialogMiniState = noteOverrideDialogMiniState,
+                            onSaveClick = { note ->
+                                noteViewModel.with {
+                                    // If note name == same as before, there is no conflict. Otherwise, we must check.
+                                    val conflict: Note? =
+                                        if (note.name == noteName) null else noteViewModel.getbyName(
+                                            note.name
+                                        )
+                                    Timber.d("Edit note: edited note has changed name=${note.name != noteName}, now conflict: ${conflict != null}")
+                                    if (conflict == null) {
+                                        val success = noteViewModel.update(note)
+                                        navController.navigateUp()
+                                    } else {
+                                        noteOverrideDialogMiniState.open(note, conflict)
+                                    }
+                                }
+                            },
+                            onOverrideAcceptClick = { note ->
+                                Timber.d("Edit note: Overriding note (old name=${noteName}) (new name=${note.name})")
+                                noteViewModel.with {
+                                    noteViewModel.delete(existingNote!!)
+                                    noteViewModel.upsert(note)
+                                }
+                                noteOverrideDialogMiniState.close()
+                                navController.navigateUp()
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -195,9 +225,6 @@ class NoteState(private val navController: NavHostController, private val noteVi
 
     private fun navigateToEditNote(navController: NavController, note: Note) = navigateToEditNote(navController, note.name)
     private fun navigateToEditNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
-
-    private fun navigateToPreviewNote(navController: NavController, note: Note) = navigateToEditNote(navController, note.name)
-    private fun navigateToPreviewNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note")
 
     companion object {
         @Composable

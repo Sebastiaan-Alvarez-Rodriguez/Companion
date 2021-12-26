@@ -16,12 +16,12 @@ class NoteStore(database: CompanionDatabase) {
 
     suspend fun add(note: Note): Boolean {
         return try {
-            noteDao.add(note.toRoom());
-            true;
+            noteDao.add(note.toRoom())
+            true
         } catch (e: android.database.sqlite.SQLiteConstraintException) {
-            false;
+            false
         } catch (e: Exception) {
-            false;
+            false
         }
     }
 
@@ -37,11 +37,13 @@ private fun pagingNote(block: () -> PagingSource<Int, RoomNote>): Flow<PagingDat
 
 
 private fun Note.toRoom() = RoomNote(
+    id = id,
     name = name,
     content = content,
 )
 
 private fun RoomNote.toUI() = Note(
+    id = id,
     name = name,
     content = content,
 )

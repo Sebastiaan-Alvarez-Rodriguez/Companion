@@ -13,13 +13,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import org.python.companion.R
 import org.python.companion.support.UiUtil
-import java.lang.IllegalStateException
 import kotlin.random.Random
 
 
@@ -121,7 +120,7 @@ private fun SplashActor(
             contentDescription = "Logo",
             modifier = Modifier
                 .scale(scale.value)
-                .defaultMinSize(minWidth = 256.dp, minHeight = 256.dp)
+                .defaultMinSize(minWidth = dimensionResource(id = R.dimen.splash_image_min_width), minHeight = dimensionResource(id = R.dimen.splash_image_min_height))
                 .fillMaxSize(0.9f))
     }
 }

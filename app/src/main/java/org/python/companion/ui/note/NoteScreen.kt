@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -30,12 +31,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.python.backend.datatype.Note
+import org.python.companion.R
 import org.python.companion.support.UiUtil
 
 
 /**
  * Overview screen for all notes.
- * @param noteList List of notes to display.
+ * @param notes List of notes to display.
  * @param onNewClick Lambda to perform on new-note button clicks.
  * @param onNoteClick Lambda to perform on note clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
@@ -47,7 +49,7 @@ fun NoteBody(
     onNoteClick: (Note) -> Unit,
     onFavoriteClick: (Note) -> Unit
 ) {
-    val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
 
@@ -103,7 +105,7 @@ fun NoteItem(
     onNoteClick: (Note) -> Unit,
     onFavoriteClick: (Note) -> Unit) {
 
-    val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Card(
         elevation = 5.dp,
     ) {
@@ -135,18 +137,31 @@ fun NoteItem(
  * @param note Title of the passed note.
  */
 @Composable
-fun SingleNoteBody(note: String) {
-    // remember calculates the value passed to it only during the first composition.
-    // It then returns the same value for every subsequent composition.
-//    val scrollState = rememberScrollState()
-//    Column(modifier = Modifier.scrollable(state = scrollState, orientation = Orientation.Vertical)) {
-//        Text(text = note) // TODO: Need to collect note from a repository, and display obtained content here.
-//    }
-    Card(
-        elevation = 5.dp,
-    ) {
-        Column {
-            Text(text = note) // TODO: Need to collect note from a repository, and display obtained content here.
+fun SingleNoteBody(note: Note) {
+    val title by remember { mutableStateOf(note.name) }
+    val content by remember { mutableStateOf(note.content) }
+
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
+    Column(modifier = Modifier.padding(defaultPadding)) {
+        Card(elevation = 5.dp) {
+            Column(modifier = Modifier.padding(defaultPadding)) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = title)
+                    Spacer(Modifier.width(defaultPadding))
+                    Button(onClick = { }) {
+                        Text(text = "Do something")
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(defaultPadding))
+        Card(elevation = 5.dp) {
+            Text(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding))
         }
     }
 }
@@ -155,8 +170,9 @@ fun SingleNoteBody(note: String) {
 /**
  * Detail screen for editing a single note.
  * @param note Title of the passed note.
- * @param overrideState
+ * @param overrideDialogMiniState
  * @param onSaveClick Lambda executed when the user hits the save button.
+ * @param onOverrideAcceptClick Lambda executed when the user hits the override button.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -171,7 +187,9 @@ fun EditNoteBody(
     val changed = lazy { (note != null && (title != note.name || content != note.content)) ||
             (note == null && (title != "" || content != ""))}
 
-    val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
+    val createNoteObject: () -> Note = { note?.copy(name = title, content = content) ?: Note(name = title, content = content) }
+
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
     Box {
         Card(
@@ -189,7 +207,6 @@ fun EditNoteBody(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        modifier = Modifier,
                         value = title,
                         onValueChange = { title = it },
                         label = { Text("Title") },
@@ -197,8 +214,7 @@ fun EditNoteBody(
                     )
                     Spacer(Modifier.width(defaultPadding))
                     Button(
-                        modifier = Modifier,
-                        onClick = { onSaveClick(Note(title, content)) }) {
+                        onClick = { onSaveClick(createNoteObject()) }) {
                         Text(text = "Save")
                     }
                 }
@@ -218,7 +234,6 @@ fun EditNoteBody(
                     label = { Text("Content") },
                     singleLine = false,
                 )
-
             }
         }
         if (overrideDialogMiniState.open.value)
@@ -226,7 +241,7 @@ fun EditNoteBody(
                 overrideDialogMiniState.currentNote.value!!,
                 overrideDialogMiniState.overridenNote.value!!,
                 {},
-                { onOverrideAcceptClick(Note(title, content)) },
+                { onOverrideAcceptClick(createNoteObject()) },
                 {}
             )
 
@@ -288,13 +303,13 @@ class NoteOverrideDialogMiniState(
     val overridenNote: MutableState<Note?>,
     open: MutableState<Boolean>) : UiUtil.DialogMiniState(open) {
 
-    fun open(currentNote: Note, overridenNote: Note): Unit {
+    fun open(currentNote: Note, overridenNote: Note) {
         open.value = true
         this.currentNote.value = currentNote
         this.overridenNote.value = overridenNote
     }
 
-    fun close(): Unit {
+    fun close() {
         open.value = false
         currentNote.value = null
         overridenNote.value = null
