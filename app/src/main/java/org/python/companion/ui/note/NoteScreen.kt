@@ -190,6 +190,35 @@ fun NoteItem(
 }
 
 /**
+ * NoteScreen settings screen, where users can change several settings.
+ * @param onExportClick Lambda to perform on note export clicks.
+ * @param onImportClick Lambda to perform on note import clicks.
+ */
+@Composable
+fun NoteScreenSettings(
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit
+) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
+    Card(elevation = 5.dp) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Button(modifier = Modifier.fillMaxWidth().padding(defaultPadding), onClick = onExportClick) {
+                Text(text = "Export")
+            }
+            Button(modifier = Modifier.fillMaxWidth().padding(defaultPadding), onClick = onImportClick) {
+                Text(text = "Import")
+            }
+        }
+    }
+}
+
+@Composable
+fun NoteScreenSettingsTransfers(exporting: Boolean) {
+
+}
+
+/**
  * Detail screen for a single note.
  * @param note Title of the passed note.
  */

@@ -23,7 +23,6 @@ import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
-import org.python.companion.ui.note.NoteScreenList
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
@@ -86,23 +85,38 @@ class MainActivity : ComponentActivity() {
 }
 
 class NoteState(private val navController: NavHostController, private val noteViewModel: NoteViewModel) {
-    fun NavGraphBuilder.noteGraph() {
-        val noteTabName = CompanionScreen.Note.name
+    val noteTabName = CompanionScreen.Note.name
 
+    fun NavGraphBuilder.noteGraph() {
         navigation(startDestination = noteTabName, route = "note") {
             composable(noteTabName) {
                 val notes by noteViewModel.notes.collectAsState()
                 NoteScreen(
                     noteScreenHeaderStruct = NoteScreenHeaderStruct(
                         onSearchClick = { /* TODO */ },
-                        onSettingsClick = { /* TODO */ }
+                        onSettingsClick = { navigateToNoteSettings(navController = navController) }
                     ),
                     noteScreenListStruct = NoteScreenListStruct(
                         notes = notes,
-                        { navigateToCreateNote(navController = navController) },
-                        { note -> navigateToSingleNote(navController = navController, note = note) },
-                        { note -> }
+                        onNewClick = { navigateToNoteCreate(navController = navController) },
+                        onNoteClick = { note -> navigateToNoteSingle(navController = navController, note = note) },
+                        onFavoriteClick = { note -> }
                     )
+                )
+            }
+
+            composable(
+                route = "$noteTabName/settings",
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "companion://$noteTabName/settings"
+                    }
+                )
+            ) {
+                Timber.d("Note Settings")
+                NoteScreenSettings(
+                    onExportClick = { /* TODO */ },
+                    onImportClick = { /* TODO */ }
                 )
             }
             composable(
@@ -129,7 +143,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     if (note != null)
                         NoteViewBody(
                             note = note!!,
-                            onEditClick = { navigateToEditNote(navController = navController, note = it) },
+                            onEditClick = { navigateToNoteEdit(navController = navController, note = it) },
                             onDeleteClick = {
                                 noteViewModel.with {
                                     noteViewModel.delete(it)
@@ -232,13 +246,14 @@ class NoteState(private val navController: NavHostController, private val noteVi
         }
     }
 
-    private fun navigateToSingleNote(navController: NavController, note: Note) = navigateToSingleNote(navController, note.name)
-    private fun navigateToSingleNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/view/$note")
+    private fun navigateToNoteSettings(navController: NavController) = navController.navigate("$noteTabName/settings")
+    private fun navigateToNoteSingle(navController: NavController, note: Note) = navigateToNoteSingle(navController, note.name)
+    private fun navigateToNoteSingle(navController: NavController, note: String) = navController.navigate("$noteTabName/view/$note")
 
-    private fun navigateToCreateNote(navController: NavController) = navController.navigate("${CompanionScreen.Note.name}/create")
+    private fun navigateToNoteCreate(navController: NavController) = navController.navigate("$noteTabName/create")
 
-    private fun navigateToEditNote(navController: NavController, note: Note) = navigateToEditNote(navController, note.name)
-    private fun navigateToEditNote(navController: NavController, note: String) = navController.navigate("${CompanionScreen.Note.name}/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
+    private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.name)
+    private fun navigateToNoteEdit(navController: NavController, note: String) = navController.navigate("$noteTabName/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
 
     companion object {
         @Composable
