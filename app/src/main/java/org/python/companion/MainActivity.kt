@@ -25,7 +25,7 @@ import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.EditNoteBody
 import org.python.companion.ui.note.NoteBody
 import org.python.companion.ui.note.NoteOverrideDialogMiniState
-import org.python.companion.ui.note.SingleNoteBody
+import org.python.companion.ui.note.NoteViewBody
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
@@ -118,10 +118,18 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 } else {
                     var note by remember { mutableStateOf<Note?>(null) }
                     noteViewModel.with {
-                        note = noteViewModel.getbyName(noteName)!!
+                        note = noteViewModel.getbyName(noteName)
                     }
                     if (note != null)
-                        SingleNoteBody(note = note!!)
+                        NoteViewBody(
+                            note = note!!,
+                            onEditClick = { navigateToEditNote(navController = navController, note = it) },
+                            onDeleteClick = {
+                                noteViewModel.with {
+                                    noteViewModel.delete(it)
+                                }
+                                navController.navigateUp()
+                            })
                 }
             }
             composable(

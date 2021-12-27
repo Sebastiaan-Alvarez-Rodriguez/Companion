@@ -95,7 +95,7 @@ private fun LazyItemScope.EmptyContent() {
 
 /**
  * Composition for a single note item.
- * @param note Note to diplay.
+ * @param note Note to display.
  * @param onNoteClick Lambda to perform on note clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
  */
@@ -137,9 +137,13 @@ fun NoteItem(
  * @param note Title of the passed note.
  */
 @Composable
-fun SingleNoteBody(note: Note) {
+fun NoteViewBody(
+    note: Note,
+    onEditClick: ((Note) -> Unit)? = null,
+    onDeleteClick: ((Note) -> Unit)? = null) {
     val title by remember { mutableStateOf(note.name) }
     val content by remember { mutableStateOf(note.content) }
+    val anyOptionsEnabled = onEditClick != null || onDeleteClick != null
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
@@ -152,9 +156,22 @@ fun SingleNoteBody(note: Note) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(text = title)
-                    Spacer(Modifier.width(defaultPadding))
-                    Button(onClick = { }) {
-                        Text(text = "Do something")
+                }
+                if (anyOptionsEnabled) {
+                    Spacer(Modifier.height(defaultPadding))
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (onEditClick != null)
+                            Button(onClick = { onEditClick(note) }) {
+                                Text(text = "Edit")
+                            }
+                        if (onDeleteClick != null)
+                            Button(onClick = {onDeleteClick(note) }) {
+                                Text(text = "Delete")
+                            }
                     }
                 }
             }
