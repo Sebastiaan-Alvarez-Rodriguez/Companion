@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +37,69 @@ import org.python.companion.R
 import org.python.companion.support.UiUtil
 
 
+@Composable
+fun NoteScreen(
+    noteScreenHeaderStruct: NoteScreenHeaderStruct,
+    noteScreenListStruct: NoteScreenListStruct
+) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
+    Column(modifier = Modifier.padding(defaultPadding)) {
+        NoteScreenHeader(noteScreenHeaderStruct)
+        Spacer(modifier = Modifier.height(defaultPadding))
+        NoteScreenList(noteScreenListStruct)
+    }
+}
+
+class NoteScreenHeaderStruct(val onSettingsClick: () -> Unit, val onSearchClick: () -> Unit)
+
+@Composable
+fun NoteScreenHeader(noteScreenHeaderStruct: NoteScreenHeaderStruct) =
+    NoteScreenHeader(
+        onSettingsClick = noteScreenHeaderStruct.onSettingsClick,
+        onSearchClick = noteScreenHeaderStruct.onSearchClick
+    )
+
+@Composable
+fun NoteScreenHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit) {
+    val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
+    Card(elevation = 5.dp) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSettingsClick() }) {
+                Icon(Icons.Filled.Settings, "Settings")
+            }
+            Spacer(modifier = Modifier.width(defaultPadding))
+            IconButton(
+                modifier = Modifier.padding(tinyPadding),
+                onClick = { onSearchClick() }) {
+                Icon(Icons.Filled.Search, "Search")
+            }
+        }
+    }
+}
+
+class NoteScreenListStruct(
+    val notes: Flow<PagingData<Note>>,
+    val onNewClick: () -> Unit,
+    val onNoteClick: (Note) -> Unit,
+    val onFavoriteClick: (Note) -> Unit
+)
+
+@Composable
+fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
+    NoteScreenList(
+        notes = noteScreenListStruct.notes,
+        onNewClick = noteScreenListStruct.onNewClick,
+        onNoteClick = noteScreenListStruct.onNoteClick,
+        onFavoriteClick = noteScreenListStruct.onFavoriteClick
+    )
+
 /**
  * Overview screen for all notes.
  * @param notes List of notes to display.
@@ -43,7 +108,7 @@ import org.python.companion.support.UiUtil
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
  */
 @Composable
-fun NoteBody(
+fun NoteScreenList(
     notes: Flow<PagingData<Note>>,
     onNewClick: () -> Unit,
     onNoteClick: (Note) -> Unit,
@@ -53,15 +118,9 @@ fun NoteBody(
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .padding(defaultPadding)
-    ) {
+    Box(Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier
-                .semantics { contentDescription = "Note Screen" }
-                .padding(defaultPadding),
+            modifier = Modifier.semantics { contentDescription = "Note Screen" },
             contentPadding = PaddingValues(defaultPadding),
             verticalArrangement = Arrangement.spacedBy(defaultPadding),
         ) {
@@ -106,9 +165,7 @@ fun NoteItem(
     onFavoriteClick: (Note) -> Unit) {
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Card(
-        elevation = 5.dp,
-    ) {
+    Card(elevation = 5.dp) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -178,11 +235,12 @@ fun NoteViewBody(
         }
         Spacer(Modifier.height(defaultPadding))
         Card(elevation = 5.dp) {
-            Text(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding))
+            Text(text = content, modifier = Modifier
+                .fillMaxWidth()
+                .padding(defaultPadding))
         }
     }
 }
-
 
 /**
  * Detail screen for editing a single note.

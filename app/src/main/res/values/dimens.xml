@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="padding_tiny">3dp</dimen>
+    <dimen name="padding_small">6dp</dimen>
     <dimen name="padding_default">12dp</dimen>
 
     <dimen name="splash_image_min_width">256dp</dimen>

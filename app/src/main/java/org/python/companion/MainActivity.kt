@@ -22,10 +22,8 @@ import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
-import org.python.companion.ui.note.EditNoteBody
-import org.python.companion.ui.note.NoteBody
-import org.python.companion.ui.note.NoteOverrideDialogMiniState
-import org.python.companion.ui.note.NoteViewBody
+import org.python.companion.ui.note.*
+import org.python.companion.ui.note.NoteScreenList
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
@@ -94,10 +92,18 @@ class NoteState(private val navController: NavHostController, private val noteVi
         navigation(startDestination = noteTabName, route = "note") {
             composable(noteTabName) {
                 val notes by noteViewModel.notes.collectAsState()
-                NoteBody(notes = notes,
-                    { navigateToCreateNote(navController = navController) },
-                    { note -> navigateToSingleNote(navController = navController, note = note) },
-                    { note -> })
+                NoteScreen(
+                    noteScreenHeaderStruct = NoteScreenHeaderStruct(
+                        onSearchClick = { /* TODO */ },
+                        onSettingsClick = { /* TODO */ }
+                    ),
+                    noteScreenListStruct = NoteScreenListStruct(
+                        notes = notes,
+                        { navigateToCreateNote(navController = navController) },
+                        { note -> navigateToSingleNote(navController = navController, note = note) },
+                        { note -> }
+                    )
+                )
             }
             composable(
                 route = "$noteTabName/view/{note}",
