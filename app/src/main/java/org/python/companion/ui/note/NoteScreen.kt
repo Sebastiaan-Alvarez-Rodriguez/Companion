@@ -3,7 +3,6 @@ package org.python.companion.ui.note
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
@@ -25,21 +24,19 @@ import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.datatype.Note
 import org.python.companion.R
-import timber.log.Timber
 
 
 @Composable
 fun NoteScreen(
     noteScreenHeaderStruct: NoteScreenHeaderStruct,
     noteScreenListStruct: NoteScreenListStruct,
-    listState: LazyListState = rememberLazyListState()
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
     Column(modifier = Modifier.padding(defaultPadding)) {
         NoteScreenHeader(noteScreenHeaderStruct)
         Spacer(modifier = Modifier.height(defaultPadding))
-        NoteScreenList(noteScreenListStruct, listState = listState)
+        NoteScreenList(noteScreenListStruct)
     }
 }
 
@@ -85,14 +82,13 @@ class NoteScreenListStruct(
 )
 
 @Composable
-fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct, listState: LazyListState = rememberLazyListState()) =
+fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
     NoteScreenList(
         notes = noteScreenListStruct.notes,
         isLoading = noteScreenListStruct.isLoading,
         onNewClick = noteScreenListStruct.onNewClick,
         onNoteClick = noteScreenListStruct.onNoteClick,
-        onFavoriteClick = noteScreenListStruct.onFavoriteClick,
-        listState = listState
+        onFavoriteClick = noteScreenListStruct.onFavoriteClick
     )
 
 /**
@@ -109,51 +105,47 @@ fun NoteScreenList(
     isLoading: Boolean,
     onNewClick: () -> Unit,
     onNoteClick: (Note) -> Unit,
-    onFavoriteClick: (Note) -> Unit,
-    listState: LazyListState = rememberLazyListState()
+    onFavoriteClick: (Note) -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
+    val listState: LazyListState = rememberLazyListState()
 
-    Timber.d("List state redraw. " +
-            "first_visible=${listState.firstVisibleItemIndex}, " +
-            "offset=${listState.firstVisibleItemScrollOffset}, " +
-            "layoutInfo=${listState}")
-
-    Box(Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().semantics { contentDescription = "Note Screen" },
-            contentPadding = PaddingValues(defaultPadding),
-            verticalArrangement = Arrangement.spacedBy(defaultPadding),
-            state = listState,
-        ) {
-            when {
-                isLoading -> item { LoadingContent() }
-                items.itemCount == 0 -> item { EmptyContent() }
-                else -> {
+    when {
+        isLoading -> LoadingContent()
+        items.itemCount == 0 -> EmptyContent()
+        else -> {
+            Box(Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .semantics { contentDescription = "Note Screen" },
+                    contentPadding = PaddingValues(defaultPadding),
+                    verticalArrangement = Arrangement.spacedBy(defaultPadding),
+                    state = listState,
+                ) {
                     items(items = items) { note ->
                         if (note != null)
                             NoteItem(note, onNoteClick, onFavoriteClick)
                     }
                 }
+                FloatingActionButton(
+                    onClick = onNewClick,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                ) {
+                    Text("+")
+                }
             }
-
-        }
-        FloatingActionButton(
-            onClick = onNewClick,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-        ) {
-            Text("+")
         }
     }
 }
 
 @Composable
-private fun LazyItemScope.LoadingContent() {
+private fun LoadingContent() {
     Box(
-        modifier = Modifier.fillParentMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
@@ -161,9 +153,9 @@ private fun LazyItemScope.LoadingContent() {
 }
 
 @Composable
-private fun LazyItemScope.EmptyContent() {
+private fun EmptyContent() {
     Box(
-        modifier = Modifier.fillParentMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = "No notes yet")

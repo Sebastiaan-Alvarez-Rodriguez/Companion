@@ -4,8 +4,12 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
-import kotlinx.coroutines.*
+import androidx.paging.cachedIn
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.python.backend.datatype.Note
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
@@ -14,13 +18,13 @@ import org.python.companion.support.UiUtil.stateInViewModel
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
 
-    private val allNotes = MutableStateFlow(emptyFlow<PagingData<Note>>())
+    private val allNotes = MutableStateFlow(emptyFlow<PagingData<Note>>().cachedIn(viewModelScope))
     private val searchNotes = MutableStateFlow(emptyFlow<PagingData<Note>>())
 
     private val _search = MutableStateFlow(null as String?)
-    val search: StateFlow<String?> = _search
-
     private val _isLoading = MutableStateFlow(true)
+
+    val search: StateFlow<String?> = _search
     val isLoading: StateFlow<Boolean> = _isLoading
 
     /**
@@ -29,7 +33,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun load() = UiUtil.effect(viewModelScope) {
         _isLoading.value = true
-        allNotes.value = noteRepository.allNotes()
+        allNotes.value = noteRepository.allNotes().cachedIn(viewModelScope)
         _isLoading.value = false
     }
 
