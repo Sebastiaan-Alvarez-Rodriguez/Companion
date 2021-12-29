@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 import org.python.backend.datatype.Note
 import org.python.companion.R
 import org.python.companion.support.UiUtil
+import timber.log.Timber
 
 
 @Composable
@@ -117,10 +119,16 @@ fun NoteScreenList(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
+    val listState = rememberLazyListState(1, 1)
+    Timber.d("List state redraw. " +
+            "first_visible=${listState.firstVisibleItemIndex}, " +
+            "offset=${listState.firstVisibleItemScrollOffset}, " +
+            "layoutInfo=${listState}")
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier.semantics { contentDescription = "Note Screen" },
+            state = listState,
+            modifier = Modifier.fillMaxSize().semantics { contentDescription = "Note Screen" },
             contentPadding = PaddingValues(defaultPadding),
             verticalArrangement = Arrangement.spacedBy(defaultPadding),
         ) {
