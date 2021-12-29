@@ -29,7 +29,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun load() = UiUtil.effect(viewModelScope) {
         _isLoading.value = true
-        allNotes.value = noteRepository.allNotes
+        allNotes.value = noteRepository.allNotes()
         _isLoading.value = false
     }
 

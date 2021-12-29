@@ -16,8 +16,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.paging.PagingData
-import kotlinx.coroutines.flow.StateFlow
 import org.python.backend.datatype.Anniversary
 import org.python.backend.datatype.Note
 import org.python.companion.ui.anniversary.AnniversaryBody
@@ -93,6 +91,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
         navigation(startDestination = noteTabName, route = "note") {
             composable(noteTabName) {
                 val notes by noteViewModel.notes.collectAsState()
+                val isLoading by noteViewModel.isLoading.collectAsState()
                 NoteScreen(
                     noteScreenHeaderStruct = NoteScreenHeaderStruct(
                         onSearchClick = { /* TODO */ },
@@ -100,6 +99,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     ),
                     noteScreenListStruct = NoteScreenListStruct(
                         notes = notes,
+                        isLoading = isLoading,
                         onNewClick = { navigateToNoteCreate(navController = navController) },
                         onNoteClick = { note -> navigateToNoteSingle(navController = navController, note = note) },
                         onFavoriteClick = { note -> }
@@ -143,7 +143,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                         note = noteViewModel.getbyName(noteName)
                     }
                     if (note != null)
-                        NoteViewBody(
+                        NoteScreenViewSingle(
                             note = note!!,
                             onEditClick = { navigateToNoteEdit(navController = navController, note = it) },
                             onDeleteClick = {
@@ -164,7 +164,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
             ) {
                 Timber.d("New note: Creating")
                 val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
-                EditNoteBody(
+                NoteScreenEdit(
                     note = null,
                     overrideDialogMiniState = noteOverrideDialogMiniState,
                     onSaveClick = { note ->
@@ -213,7 +213,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                         existingNote = noteViewModel.getbyName(noteName)!!
                     }
                     if (existingNote != null) {
-                        EditNoteBody(
+                        NoteScreenEdit(
                             note = existingNote,
                             overrideDialogMiniState = noteOverrideDialogMiniState,
                             onSaveClick = { note ->
@@ -248,14 +248,42 @@ class NoteState(private val navController: NavHostController, private val noteVi
         }
     }
 
-    private fun navigateToNoteSettings(navController: NavController) = navController.navigate("$noteTabName/settings")
+    private fun navigateToNoteSettings(navController: NavController) =
+        navController.navigate("$noteTabName/settings") {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     private fun navigateToNoteSingle(navController: NavController, note: Note) = navigateToNoteSingle(navController, note.name)
-    private fun navigateToNoteSingle(navController: NavController, note: String) = navController.navigate("$noteTabName/view/$note")
+    private fun navigateToNoteSingle(navController: NavController, note: String) =
+        navController.navigate("$noteTabName/view/$note") {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
 
-    private fun navigateToNoteCreate(navController: NavController) = navController.navigate("$noteTabName/create")
+    private fun navigateToNoteCreate(navController: NavController) =
+        navController.navigate("$noteTabName/create") {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
 
     private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.name)
-    private fun navigateToNoteEdit(navController: NavController, note: String) = navController.navigate("$noteTabName/edit/$note") //{ popUpTo(CompanionScreen.Note.name) }
+    private fun navigateToNoteEdit(navController: NavController, note: String) =
+        navController.navigate("$noteTabName/edit/$note") {
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
 
     companion object {
         @Composable

@@ -9,7 +9,7 @@ import org.python.db.CompanionDatabase
 class NoteRepository(private val noteStore: NoteStore) {
     constructor(companionDatabase: CompanionDatabase) : this(NoteStore(companionDatabase))
 
-    val allNotes : Flow<PagingData<Note>> = noteStore.getAllNotes()
+    fun allNotes() : Flow<PagingData<Note>> = noteStore.getAllNotes()
 
     /**
      * Rerieves a note by name.
