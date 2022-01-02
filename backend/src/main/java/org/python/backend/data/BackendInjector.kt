@@ -1,8 +1,8 @@
-package org.python.backend
+package org.python.backend.data
 
 import android.app.Application
-import org.python.backend.repositories.AnniversaryRepository
-import org.python.backend.repositories.NoteRepository
+import org.python.backend.data.repositories.AnniversaryRepository
+import org.python.backend.data.repositories.NoteRepository
 import org.python.db.CompanionDatabase
 
 open class BackendInjector : Application() {

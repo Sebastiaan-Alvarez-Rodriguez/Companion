@@ -1,4 +1,4 @@
-package org.python.backend.datatype
+package org.python.backend.data.datatype
 
 import java.time.Duration
 import java.time.Instant

@@ -16,8 +16,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import org.python.backend.datatype.Anniversary
-import org.python.backend.datatype.Note
+import org.python.backend.data.datatype.Anniversary
+import org.python.backend.data.datatype.Note
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen

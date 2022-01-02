@@ -1,9 +1,9 @@
-package org.python.backend.repositories
+package org.python.backend.data.repositories
 
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
-import org.python.backend.datatype.Anniversary
-import org.python.backend.stores.AnniversaryStore
+import org.python.backend.data.datatype.Anniversary
+import org.python.backend.data.stores.AnniversaryStore
 import org.python.db.CompanionDatabase
 
 class AnniversaryRepository(private val anniversaryStore: AnniversaryStore) {

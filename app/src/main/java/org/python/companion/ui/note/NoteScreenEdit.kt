@@ -17,7 +17,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.python.backend.datatype.Note
+import org.python.backend.data.datatype.Note
 import org.python.companion.R
 
 

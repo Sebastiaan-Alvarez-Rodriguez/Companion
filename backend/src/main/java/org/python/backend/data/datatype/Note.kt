@@ -1,4 +1,4 @@
-package org.python.backend.datatype
+package org.python.backend.data.datatype
 
 data class Note(val id: Long = 0, val name: String, val content: String) {
     override fun equals(other: Any?): Boolean {

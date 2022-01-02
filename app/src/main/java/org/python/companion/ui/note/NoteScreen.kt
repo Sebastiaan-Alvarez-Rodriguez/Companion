@@ -22,7 +22,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
-import org.python.backend.datatype.Note
+import org.python.backend.data.datatype.Note
 import org.python.companion.R
 
 

@@ -9,7 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.python.backend.datatype.Anniversary
+import org.python.backend.data.datatype.Anniversary
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel

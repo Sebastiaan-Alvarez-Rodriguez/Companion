@@ -1,9 +1,9 @@
-package org.python.backend.repositories
+package org.python.backend.data.repositories
 
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
-import org.python.backend.datatype.Note
-import org.python.backend.stores.NoteStore
+import org.python.backend.data.datatype.Note
+import org.python.backend.data.stores.NoteStore
 import org.python.db.CompanionDatabase
 
 class NoteRepository(private val noteStore: NoteStore) {

@@ -1,9 +1,9 @@
-package org.python.backend.stores
+package org.python.backend.data.stores
 
 import androidx.paging.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.python.backend.datatype.Anniversary
+import org.python.backend.data.datatype.Anniversary
 import org.python.db.CompanionDatabase
 import org.python.db.entities.RoomAnniversary
 

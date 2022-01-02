@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import org.python.backend.datatype.Note
+import org.python.backend.data.datatype.Note
 import org.python.companion.support.UiUtil
 
 @Composable
