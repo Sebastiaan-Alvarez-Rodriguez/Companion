@@ -54,6 +54,12 @@ class PassActor(sharedPreferences: SharedPreferences) : SecurityActor(sharedPref
     }
 
     @Synchronized override fun verify(token: VerificationToken): VerificationMessage {
-        return 
+        if (!hasCredentials())
+//            TODO: return a message "non-set credentials"
+        if (token !is PasswordVerificationToken)
+            throw IllegalArgumentException("Password actor requires password verification token")
+        val given: PasswordVerificationToken = token
+        lazy val known =
+        given.toString() ==
     }
 }
