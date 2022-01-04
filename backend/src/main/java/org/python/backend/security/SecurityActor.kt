@@ -1,7 +1,6 @@
 package org.python.backend.security
 
 import android.content.SharedPreferences
-import java.lang.IllegalArgumentException
 
 abstract class SecurityActor(
     protected val sharedPreferences: SharedPreferences,
@@ -55,11 +54,17 @@ class PassActor(sharedPreferences: SharedPreferences) : SecurityActor(sharedPref
 
     @Synchronized override fun verify(token: VerificationToken): VerificationMessage {
         if (!hasCredentials())
-//            TODO: return a message "non-set credentials"
+            return VerificationMessage.createNoInit()
+
         if (token !is PasswordVerificationToken)
             throw IllegalArgumentException("Password actor requires password verification token")
+
         val given: PasswordVerificationToken = token
-        lazy val known =
-        given.toString() ==
+        val known = sharedPreferences.getString(pass_storage_key, null)
+            ?: throw IllegalStateException("Could not collect known password from system.")
+
+        if (given.equals(known))
+            return VerificationMessage.createCorrect()
+        return VerificationMessage.createIncorrect()
     }
 }

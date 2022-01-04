@@ -10,21 +10,12 @@ const val TYPE_BIO = 1
 @IntDef(TYPE_PASS, TYPE_BIO)
 annotation class SecurityType
 
-class SecurityProvider {
-//    init {
-//        var preferences: SharedPreferences? = context.getSharedPreferences(
-//            context.getString(R.string.pref_security),
-//            Context.MODE_PRIVATE
-//        )
-//    }
-
-    companion object {
-        fun getActor(@SecurityType type: Int): SecurityActor {
-            return when(type) {
-                TYPE_PASS -> PassSecurityActor
-                TYPE_BIO -> BioSecurityActor
-                else -> throw IllegalArgumentException("Illegal security type '$type' specified.")
-            }
+object SecurityProvider {
+    fun getActor(@SecurityType type: Int): SecurityActor {
+        return when(type) {
+            TYPE_PASS -> PassActor()
+            TYPE_BIO -> TODO("I must be implemented")
+            else -> throw IllegalArgumentException("Illegal security type '$type' specified.")
         }
     }
 }

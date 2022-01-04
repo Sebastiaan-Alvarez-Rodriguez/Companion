@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
+import org.python.backend.security.VerificationToken
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
@@ -31,9 +32,9 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
      * Function to load viewModel data.
      * The loading state can be retrieved with [isLoading].
      */
-    fun load() = UiUtil.effect(viewModelScope) {
+    fun load(token: VerificationToken?) = UiUtil.effect(viewModelScope) {
         _isLoading.value = true
-        allNotes.value = noteRepository.allNotes().cachedIn(viewModelScope)
+        allNotes.value = noteRepository.allNotes(token).cachedIn(viewModelScope)
         _isLoading.value = false
     }
 

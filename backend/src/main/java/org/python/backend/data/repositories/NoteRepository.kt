@@ -4,12 +4,18 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.stores.NoteStore
+import org.python.backend.security.VerificationToken
 import org.python.db.CompanionDatabase
 
 class NoteRepository(private val noteStore: NoteStore) {
     constructor(companionDatabase: CompanionDatabase) : this(NoteStore(companionDatabase))
 
-    fun allNotes() : Flow<PagingData<Note>> = noteStore.getAllNotes()
+    fun allNotes(token: VerificationToken?) : Flow<PagingData<Note>> {
+        return when (token) {
+            null -> noteStore.getAllNotes()
+            else -> noteStore.getAllNotesWithSecure()
+        }
+    }
 
     /**
      * Rerieves a note by name.

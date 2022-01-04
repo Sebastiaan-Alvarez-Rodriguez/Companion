@@ -12,6 +12,8 @@ class NoteStore(database: CompanionDatabase) {
 
     fun getAllNotes(): Flow<PagingData<Note>> = pagingNote { noteDao.getAll() }
 
+    fun getAllNotesWithSecure(): Flow<PagingData<Note>> = pagingNote { noteDao.getAllWithSecure() }
+
     suspend fun getByName(name: String): Note? = noteDao.getByName(name)?.toUI()
 
     suspend fun add(note: Note): Boolean {
@@ -40,10 +42,12 @@ private fun Note.toRoom() = RoomNote(
     id = id,
     name = name,
     content = content,
+    secure = secure
 )
 
 private fun RoomNote.toUI() = Note(
     id = id,
     name = name,
     content = content,
+    secure = secure
 )

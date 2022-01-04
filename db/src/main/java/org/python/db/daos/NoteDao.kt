@@ -6,10 +6,14 @@ import org.python.db.entities.RoomNote
 
 @Dao
 interface NoteDao {
-    @Query("SELECT * from RoomNote")
+    @Query("select * from RoomNote where secure == 0")
     fun getAll(): PagingSource<Int, RoomNote>
 
-    @Query("SELECT * from RoomNote where name = :name")
+    @Query("select * from RoomNote")
+    fun getAllWithSecure(): PagingSource<Int, RoomNote>
+
+    // TODO: Allow searching secure notes when token is present and valid.
+    @Query("select * from RoomNote where secure == 0 and name = :name")
     suspend fun getByName(name: String): RoomNote?
 
     @Insert(onConflict = OnConflictStrategy.ABORT)

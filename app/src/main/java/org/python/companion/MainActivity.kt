@@ -18,6 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.python.backend.data.datatype.Anniversary
 import org.python.backend.data.datatype.Note
+import org.python.backend.security.VerificationToken
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
@@ -68,8 +69,8 @@ class MainActivity : ComponentActivity() {
                         composable("splash_screen") {
                             val splashScreenFunc = remember {
                                 SplashBuilder(navController = navController, destination = CompanionScreen.Cactus.name).build {
-                                    noteViewModel.load()
-                                    anniversaryViewModel.load()
+                                    noteState.load()
+                                    anniversaryState.load()
                                 }
                             }
                             splashScreenFunc()
@@ -84,8 +85,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class NoteState(private val navController: NavHostController, private val noteViewModel: NoteViewModel) {
-    val noteTabName = CompanionScreen.Note.name
+class NoteState(
+    private val navController: NavHostController,
+    private val noteViewModel: NoteViewModel,
+    private val securityToken: VerificationToken? = null
+) {
+    private val noteTabName = CompanionScreen.Note.name
+    //var securityToken: MutableState<VerificationToken?> = remember { mutableStateOf(null) }
+
+    fun load() {
+        noteViewModel.load(securityToken)
+    }
 
     fun NavGraphBuilder.noteGraph() {
         navigation(startDestination = noteTabName, route = "note") {
@@ -285,6 +295,10 @@ class CactusState(private val navController: NavHostController) {
 }
 
 class AnniversaryState(private val navController: NavHostController, private val anniversaryViewModel: AnniversaryViewModel) {
+    fun load() {
+        anniversaryViewModel.load()
+    }
+
     fun NavGraphBuilder.anniversaryGraph() {
         val anniversaryTabName = CompanionScreen.Anniversary.name
         navigation(startDestination = anniversaryTabName, route = "anniversary") {

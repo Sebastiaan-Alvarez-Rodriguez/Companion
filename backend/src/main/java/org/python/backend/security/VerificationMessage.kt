@@ -3,13 +3,23 @@ package org.python.backend.security
 import androidx.annotation.IntDef
 
 
+/** input correct */
 const val SEC_CORRECT = 0
+
+/** input incorrect */
 const val SEC_INCORRECT = 1
+
+/** input could not be validated (e.g. fingerprint misreading) */
 const val SEC_BADINPUT = 2
+
+/** too many retries, authentication locked */
 const val SEC_LOCKED = 3
 
+/** authentication method not initialized */
+const val SEC_NOINIT = 4
+
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
-@IntDef(SEC_CORRECT, SEC_INCORRECT, SEC_BADINPUT, SEC_LOCKED)
+@IntDef(SEC_CORRECT, SEC_INCORRECT, SEC_BADINPUT, SEC_LOCKED, SEC_NOINIT)
 annotation class VerificationType
 
 /**
@@ -20,6 +30,8 @@ annotation class VerificationType
 class VerificationMessage(@VerificationType val type: Int, val body: VerificationStatusBody? = null) {
     companion object {
         fun createCorrect() = VerificationMessage(SEC_CORRECT)
+        fun createIncorrect(body: VerificationStatusBody? = null) = VerificationMessage(SEC_INCORRECT, body)
+        fun createNoInit(body: VerificationStatusBody? = null) = VerificationMessage(SEC_NOINIT, body)
     }
 }
 
