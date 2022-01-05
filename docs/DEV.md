@@ -30,6 +30,8 @@ Room:
 Kotlin:
  + [structured async](https://kotlinlang.org/docs/composing-suspending-functions.html#structured-concurrency-with-async)
 
+Security:
+ + [biometrics](https://www.raywenderlich.com/18782293-android-biometric-api-getting-started)
 
 ## Issues
 Current issue list:
