@@ -9,7 +9,7 @@ const val SEC_CORRECT = 0
 /** input incorrect */
 const val SEC_INCORRECT = 1
 
-/** input could not be validated (e.g. fingerprint misreading) */
+/** input could not be validated (e.g. fingerprint misreading, biometric timeout) */
 const val SEC_BADINPUT = 2
 
 /** too many retries, authentication locked */
@@ -18,8 +18,13 @@ const val SEC_LOCKED = 3
 /** authentication method not initialized */
 const val SEC_NOINIT = 4
 
+/** actor unavailable (e.g. fingerprint hardware already used by other app) */
+const val SEC_UNAVAILABLE = 5
+
+/** Other error */
+const val SEC_OTHER = -1
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
-@IntDef(SEC_CORRECT, SEC_INCORRECT, SEC_BADINPUT, SEC_LOCKED, SEC_NOINIT)
+@IntDef(SEC_CORRECT, SEC_INCORRECT, SEC_BADINPUT, SEC_LOCKED, SEC_NOINIT, SEC_OTHER)
 annotation class VerificationType
 
 /**
@@ -31,7 +36,10 @@ class VerificationMessage(@VerificationType val type: Int, val body: Verificatio
     companion object {
         fun createCorrect() = VerificationMessage(SEC_CORRECT)
         fun createIncorrect(body: VerificationStatusBody? = null) = VerificationMessage(SEC_INCORRECT, body)
+        fun createBadInput(body: VerificationStatusBody? = null) = VerificationMessage(SEC_BADINPUT, body)
         fun createNoInit(body: VerificationStatusBody? = null) = VerificationMessage(SEC_NOINIT, body)
+        fun createUnavailable(body: VerificationStatusBody? = null) = VerificationMessage(SEC_NOINIT, body)
+        fun createOther(body: VerificationStatusBody? = null) = VerificationMessage(SEC_OTHER, body)
     }
 }
 
@@ -47,4 +55,7 @@ object StatusBody {
     class IncorrectBody(userMessage: String?) : VerificationStatusBody(userMessage ?: "Incorrect credentials.")
     class BadInputBody(userMessage: String?) : VerificationStatusBody(userMessage ?: "Could not read input.")
     class LockedBody(userMessage: String?) : VerificationStatusBody(userMessage ?: "Too many retries. Try again later.")
+    class NoInitBody(userMessage: String?) : VerificationStatusBody(userMessage ?: "Authentication method not setup.")
+    class UnavailableBody(userMessage: String?) : VerificationStatusBody(userMessage ?: "Authentication unavailable.")
+    class OtherBody(userMessage: String?) : VerificationStatusBody(userMessage ?: "An uncategorized problem occurred.")
 }

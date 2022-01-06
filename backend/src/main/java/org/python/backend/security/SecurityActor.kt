@@ -3,9 +3,18 @@ package org.python.backend.security
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.suspendCancellableCoroutine
+import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 abstract class SecurityActor(@SecurityType protected val type: Int) {
     companion object {
@@ -27,23 +36,35 @@ abstract class SecurityActor(@SecurityType protected val type: Int) {
      * In such cases, caller must pass a verification object.
      * @param oldToken Optional object to call with verify-call. Required if a credential exists.
      * @param newToken Credentials to set.
-     * @return status object. If 'correct', credentials were set/updated. Failure indication otherwise.
+     * @param onResult status object. If 'correct', credentials were set/updated. Failure indication otherwise.
      */
-    abstract fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken): VerificationMessage
-
+    abstract suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage
     /**
      * Verifies given token for correctness.
      * @param token Token to verify.
-     * @return message indicating verification result status.
+     * @param onResult Lambda executed when verification is completed.
+     * Passed message indicates verification result status.
      */
-    abstract fun verify(token: VerificationToken): VerificationMessage
+    abstract suspend fun verify(token: VerificationToken): VerificationMessage
 }
 
-class BioActor(protected val context: Context) : SecurityActor(TYPE_BIO) {
-    constructor(activity: Activity) : this(activity.baseContext)
+class BioActor(
+    private val activity: FragmentActivity,
+    private var biometricPromptInfo: BiometricPrompt.PromptInfo =
+        BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Log in")
+            .setSubtitle("Log in to continue")
+            .setDescription("")
+            .setAllowedAuthenticators(BiometricManager.Authenticators.DEVICE_CREDENTIAL or BiometricManager.Authenticators.BIOMETRIC_WEAK)
+            .build()
+) : SecurityActor(TYPE_BIO) {
+
+    fun updateBiometricPromptInfo(biometricPromptInfo: BiometricPrompt.PromptInfo) {
+        this.biometricPromptInfo = biometricPromptInfo
+    }
 
     override fun actorAvailable(): VerificationMessage {
-        val biometricManager = BiometricManager.from(context)
+        val biometricManager = BiometricManager.from(activity.baseContext)
         val status = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)
         return when (status) {
             BiometricManager.BIOMETRIC_SUCCESS -> VerificationMessage.createCorrect()
@@ -76,22 +97,61 @@ class BioActor(protected val context: Context) : SecurityActor(TYPE_BIO) {
 
     override fun hasCredentials(): Boolean = actorAvailable().type == SEC_CORRECT
 
-    override fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage = VerificationMessage.createCorrect()
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage = VerificationMessage.createCorrect()
 
-    override fun verify(token: VerificationToken): VerificationMessage {
-        // https://www.raywenderlich.com/18782293-android-biometric-api-getting-started
-        // TODO: Below code should likely not be here
-        val builder = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(title)
-            .setSubtitle(subtitle)
-            .setDescription(description)
+    override suspend fun verify(token: VerificationToken): VerificationMessage {
+        return CoroutineUtil.awaitCallback { verify(token, it) }
+    }
 
-        builder.apply {
-            if (allowDeviceCredential) setDeviceCredentialAllowed(true)
-            else setNegativeButtonText("Cancel")
+    private fun verify(token: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
+        initBiometricPrompt(
+            activity = activity,
+            onError = { errorCode, message ->
+                callback.onResult(when (errorCode) {
+                    BiometricPrompt.ERROR_LOCKOUT_PERMANENT, BiometricPrompt.ERROR_CANCELED,
+                    BiometricPrompt.ERROR_USER_CANCELED, BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                    BiometricPrompt.ERROR_TIMEOUT ->
+                        VerificationMessage.createBadInput(body = StatusBody.BadInputBody(message))
+                    BiometricPrompt.ERROR_LOCKOUT ->
+                        VerificationMessage.createIncorrect(body = StatusBody.LockedBody(message))
+                    BiometricPrompt.ERROR_HW_UNAVAILABLE ->
+                        VerificationMessage.createUnavailable(body = StatusBody.UnavailableBody(message))
+//                    BiometricPrompt.ERROR_UNABLE_TO_PROCESS
+                    BiometricPrompt.ERROR_NO_BIOMETRICS ->
+                        VerificationMessage.createNoInit(body = StatusBody.NoInitBody(message))
+                    else ->
+                        VerificationMessage.createOther(body = StatusBody.OtherBody(message))
+                })
+            },
+            onSucces = { result -> callback.onResult(VerificationMessage.createCorrect())
+            }
+        ).authenticate(biometricPromptInfo)
+    }
+
+    private fun initBiometricPrompt(
+        activity: FragmentActivity,
+        onError: (Int, String) -> Unit,
+        onSucces: (BiometricPrompt.AuthenticationResult) -> Unit
+    ): BiometricPrompt {
+        val executor = ContextCompat.getMainExecutor(activity)
+        val callback = object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                onError(errorCode, errString.toString())
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                Timber.w("Biometric: Authentication failed for an unknown reason")
+            }
+
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                onSucces(result)
+            }
         }
 
-        val prompt = builder.build()
+        return BiometricPrompt(activity, executor, callback)
     }
 }
 
@@ -106,40 +166,44 @@ class PassActor(protected val sharedPreferences: SharedPreferences) : SecurityAc
 
     override fun actorAvailable(): VerificationMessage = VerificationMessage.createCorrect()
 
-    @Synchronized override fun hasCredentials(): Boolean {
+    override fun hasCredentials(): Boolean {
         return sharedPreferences.contains(pass_storage_key)
     }
 
-    @Synchronized override fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage {
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage =
+        CoroutineUtil.awaitCallback { setCredentials(oldToken, newToken, it) }
+
+    private fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
         if (hasCredentials()) {
             val result = when (oldToken) {
                 null -> throw IllegalArgumentException("Existing credentials detected. Caller must provide old verification token for verification.")
                 else -> verify(oldToken)
             }
             if (result.type != SEC_CORRECT)
-                return result
+                return callback.onResult(result)
         }
 
         val preferencesEditor = sharedPreferences.edit()
         preferencesEditor.putString(pass_storage_key, newToken.toString())
         preferencesEditor.apply()
 
-        return VerificationMessage.createCorrect()
+        return callback.onResult(VerificationMessage.createCorrect())
     }
 
-    @Synchronized override fun verify(token: VerificationToken): VerificationMessage {
+    override suspend fun verify(token: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
         if (!hasCredentials())
-            return VerificationMessage.createNoInit()
+            return callback.onResult(VerificationMessage.createNoInit())
 
         if (token !is PasswordVerificationToken)
             throw IllegalArgumentException("Password actor requires password verification token")
 
         val given: PasswordVerificationToken = token
         val known = sharedPreferences.getString(pass_storage_key, null)
-            ?: throw IllegalStateException("Could not collect known password from system.")
+            ?: return callback.onResult(VerificationMessage.createNoInit())
 
-        if (given.equals(known))
-            return VerificationMessage.createCorrect()
-        return VerificationMessage.createIncorrect()
+        callback.onResult(when (given.equals(known)) {
+            true -> VerificationMessage.createCorrect()
+            false -> VerificationMessage.createIncorrect()
+        })
     }
 }
