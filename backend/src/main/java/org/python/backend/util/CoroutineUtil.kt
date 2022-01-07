@@ -1,5 +1,6 @@
 package org.python.backend.util
 
+import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -14,4 +15,14 @@ object CoroutineUtil {
                 override fun onResult(result: T) = cont.resume(result)
             })
         }
+
+    suspend fun <T> awaitSuspendingCallback(block: suspend (Callback<T>) -> Unit) : T {
+        return suspendCoroutine { cont: Continuation<T> ->
+            suspend {
+                block(object : Callback<T> {
+                    override fun onResult(result: T) = cont.resume(result)
+                })
+            }
+        }
+    }
 }

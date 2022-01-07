@@ -3,18 +3,12 @@ package org.python.backend.security
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.suspendCancellableCoroutine
 import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 abstract class SecurityActor(@SecurityType protected val type: Int) {
     companion object {
@@ -36,7 +30,8 @@ abstract class SecurityActor(@SecurityType protected val type: Int) {
      * In such cases, caller must pass a verification object.
      * @param oldToken Optional object to call with verify-call. Required if a credential exists.
      * @param newToken Credentials to set.
-     * @param onResult status object. If 'correct', credentials were set/updated. Failure indication otherwise.
+     * @return Message providing status.
+     * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
     abstract suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage
     /**
@@ -155,7 +150,7 @@ class BioActor(
     }
 }
 
-class PassActor(protected val sharedPreferences: SharedPreferences) : SecurityActor(TYPE_PASS) {
+class PassActor(private val sharedPreferences: SharedPreferences) : SecurityActor(TYPE_PASS) {
 
     constructor(context: Context) : this(context.getSharedPreferences(security_storage, Context.MODE_PRIVATE))
     constructor(activity: Activity) : this(activity.baseContext)
@@ -170,10 +165,11 @@ class PassActor(protected val sharedPreferences: SharedPreferences) : SecurityAc
         return sharedPreferences.contains(pass_storage_key)
     }
 
-    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage =
-        CoroutineUtil.awaitCallback { setCredentials(oldToken, newToken, it) }
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage {
+        return CoroutineUtil.awaitSuspendingCallback { setCredentials(oldToken, newToken, it) }
+    }
 
-    private fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
+    private suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
         if (hasCredentials()) {
             val result = when (oldToken) {
                 null -> throw IllegalArgumentException("Existing credentials detected. Caller must provide old verification token for verification.")
@@ -190,7 +186,11 @@ class PassActor(protected val sharedPreferences: SharedPreferences) : SecurityAc
         return callback.onResult(VerificationMessage.createCorrect())
     }
 
-    override suspend fun verify(token: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
+    override suspend fun verify(token: VerificationToken): VerificationMessage {
+        return CoroutineUtil.awaitCallback { verify(token, it) }
+    }
+
+    private fun verify(token: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
         if (!hasCredentials())
             return callback.onResult(VerificationMessage.createNoInit())
 

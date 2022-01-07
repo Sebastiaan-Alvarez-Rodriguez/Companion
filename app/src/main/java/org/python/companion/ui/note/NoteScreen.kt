@@ -75,7 +75,9 @@ fun NoteScreenHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit) {
 
 class NoteScreenListStruct(
     val notes: Flow<PagingData<Note>>,
+    val securityText: String?,
     val isLoading: Boolean,
+    val onSecurityClick: () -> Unit,
     val onNewClick: () -> Unit,
     val onNoteClick: (Note) -> Unit,
     val onFavoriteClick: (Note) -> Unit
@@ -85,7 +87,9 @@ class NoteScreenListStruct(
 fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
     NoteScreenList(
         notes = noteScreenListStruct.notes,
+        securityText = noteScreenListStruct.securityText,
         isLoading = noteScreenListStruct.isLoading,
+        onSecurityClick = noteScreenListStruct.onSecurityClick,
         onNewClick = noteScreenListStruct.onNewClick,
         onNoteClick = noteScreenListStruct.onNoteClick,
         onFavoriteClick = noteScreenListStruct.onFavoriteClick
@@ -94,7 +98,10 @@ fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
 /**
  * Overview screen for all notes.
  * @param notes List of notes to display.
+ * @param securityText Security login/logout text to write.
+ * If **null**, no security item should be displayed.
  * @param isLoading If set, displays a loading screen.
+ * @param onSecurityClick Lambda to perform on security login/logout clicks.
  * @param onNewClick Lambda to perform on new-note button clicks.
  * @param onNoteClick Lambda to perform on note clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
@@ -102,7 +109,9 @@ fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
 @Composable
 fun NoteScreenList(
     notes: Flow<PagingData<Note>>,
+    securityText: String?,
     isLoading: Boolean,
+    onSecurityClick: () -> Unit,
     onNewClick: () -> Unit,
     onNoteClick: (Note) -> Unit,
     onFavoriteClick: (Note) -> Unit
@@ -112,9 +121,10 @@ fun NoteScreenList(
     val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
     val listState: LazyListState = rememberLazyListState()
 
+    val minimumNumNotes = if (securityText != null) 1 else 0
     when {
         isLoading -> LoadingContent()
-        items.itemCount == 0 -> EmptyContent()
+        items.itemCount == minimumNumNotes -> EmptyContent()
         else -> {
             Box(Modifier.fillMaxSize()) {
                 LazyColumn(
@@ -125,6 +135,10 @@ fun NoteScreenList(
                     verticalArrangement = Arrangement.spacedBy(defaultPadding),
                     state = listState,
                 ) {
+                    if (securityText != null)
+                    item {
+                        SecurityClickItem(securityText, onSecurityClick)
+                    }
                     items(items = items) { note ->
                         if (note != null)
                             NoteItem(note, onNoteClick, onFavoriteClick)
@@ -186,8 +200,7 @@ fun NoteItem(
                 // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
                 // we'd have to define the semantics properties explicitly.
                 .semantics(mergeDescendants = true) {},
-        )
-        {
+        ) {
             Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
             Spacer(modifier = Modifier.weight(1f))
             Text(note.name)
@@ -195,6 +208,19 @@ fun NoteItem(
             IconButton(onClick = { onFavoriteClick(note) }) {
                 Icon(Icons.Filled.Favorite, contentDescription = null)
             }
+        }
+    }
+}
+
+@Composable
+fun SecurityClickItem(text: String, onClick: () -> Unit) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+    Card(elevation = 5.dp, modifier = Modifier.padding(bottom = 5.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(defaultPadding).clickable { onClick() }
+        ) {
+            Text(text)
         }
     }
 }
