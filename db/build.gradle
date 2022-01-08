@@ -42,13 +42,11 @@ android {
 }
 
 dependencies {
-    implementation "androidx.core:core-ktx:1.7.0" // used $android_kotlin_version
-    implementation 'androidx.appcompat:appcompat:1.4.0'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.paging:paging-common-ktx:3.1.0'
+    implementation "androidx.core:core-ktx:$android_kt_core_version"
+    implementation "androidx.paging:paging-common-ktx:$paging_version"
 
     implementation "androidx.room:room-ktx:$room_version"
-//    implementation "androidx.room:room-paging:$room_version" // new
+//    implementation "androidx.room:room-paging:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
     testImplementation 'junit:junit:4.+'
