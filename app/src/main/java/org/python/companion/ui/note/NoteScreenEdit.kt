@@ -41,7 +41,7 @@ fun NoteScreenEdit(
     val changed = lazy { (note != null && (title != note.name || content != note.content)) ||
             (note == null && (title != "" || content != ""))}
 
-    val createNoteObject: () -> Note = { note?.copy(name = title, content = content) ?: Note(name = title, content = content) }
+    val createNoteObject: () -> Note = { note?.copy(name = title, content = content) ?: Note(name = title, content = content, secure = /* TODO: allow user to set security */ false) }
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
