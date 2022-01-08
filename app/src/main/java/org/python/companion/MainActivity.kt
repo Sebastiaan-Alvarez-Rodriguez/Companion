@@ -1,7 +1,7 @@
 package org.python.companion
 
+import android.content.Context
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
@@ -11,6 +11,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,7 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.python.backend.data.datatype.Anniversary
 import org.python.backend.data.datatype.Note
-import org.python.backend.security.VerificationToken
+import org.python.backend.security.*
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
@@ -31,7 +32,7 @@ import org.python.companion.viewmodels.NoteViewModel
 import timber.log.Timber
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val noteViewModel by viewModels<NoteViewModel>()
     private val anniversaryViewModel by viewModels<AnniversaryViewModel>()
 
@@ -45,7 +46,10 @@ class MainActivity : ComponentActivity() {
                 val backstackEntry = navController.currentBackStackEntryAsState()
                 val selectedTabScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
-                val noteState = NoteState.rememberState(navController = navController, noteViewModel = noteViewModel)
+                val noteState = NoteState.rememberState(
+                    navController = navController,
+                    authState = AuthenticationMiniState.rememberState(this),
+                    noteViewModel = noteViewModel)
                 val cactusState = CactusState.rememberState(navController = navController)
                 val anniversaryState = AnniversaryState.rememberState(navController = navController, anniversaryViewModel = anniversaryViewModel)
 
@@ -84,15 +88,55 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+class AuthenticationMiniState(var securityActor: SecurityActor) {
+    var authenticated: Boolean = false
+        private set
+    var token: VerificationToken? = null
+        private set
+
+    constructor(activity: FragmentActivity) : this(
+        securityActor = SecurityProvider.getActor(
+            type = activity
+                .baseContext
+                .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
+                .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default),
+            activity = activity)
+    )
+
+    suspend fun authenticate(securityToken: VerificationToken? = null): VerificationMessage {
+        val msg = securityActor.verify(securityToken)
+        if (msg.type == SEC_CORRECT) {
+            authenticated = true
+            token = securityToken
+        }
+        return msg
+    }
+
+    fun reset() {
+        token = null
+        authenticated = false
+    }
+
+    companion object {
+        @Composable
+        fun rememberState(securityActor: SecurityActor) =
+            remember(securityActor) { AuthenticationMiniState(securityActor) }
+
+        @Composable
+        fun rememberState(activity: FragmentActivity) =
+            remember(activity) { AuthenticationMiniState(activity) }
+    }
+}
+
 class NoteState(
     private val navController: NavHostController,
     private val noteViewModel: NoteViewModel,
-    private val securityToken: VerificationToken? = null
+    private val authState: AuthenticationMiniState
 ) {
     private val noteTabName = CompanionScreen.Note.name
 
     fun load() {
-        noteViewModel.load(securityToken)
+        noteViewModel.load(authState.token)
     }
 
     fun NavGraphBuilder.noteGraph() {
@@ -114,15 +158,22 @@ class NoteState(
                         onNoteClick = { note -> navigateToNoteSingle(navController = navController, note = note) },
                         onFavoriteClick = { note -> },
                         securityStruct = if (hasSecureNotes) {
-                            if (securityToken != null)
+                            if (authState.authenticated)
                                 NoteScreenListSecurityStruct(
                                     securityText = "Lock secure notes.",
-                                    onSecurityClick = { /* TODO */ }
+                                    onSecurityClick = { authState.reset() }
                                 )
                             else
                                 NoteScreenListSecurityStruct(
                                     securityText = "Unlock secure notes.",
-                                    onSecurityClick = { /* TODO */ }
+                                    onSecurityClick = {
+                                        when (authState.securityActor.type) {
+                                            TYPE_PASS -> TODO("Show dialog")
+                                            TYPE_BIO -> noteViewModel.with {
+                                                authState.authenticate()
+                                            }
+                                        }
+                                    }
                                 )
                         } else {
                             null
@@ -283,8 +334,11 @@ class NoteState(
 
     companion object {
         @Composable
-        fun rememberState(navController: NavHostController = rememberNavController(), noteViewModel: NoteViewModel) =
-            remember(navController) { NoteState(navController, noteViewModel) }
+        fun rememberState(
+            navController: NavHostController = rememberNavController(),
+            authState: AuthenticationMiniState,
+            noteViewModel: NoteViewModel) =
+            remember(navController) { NoteState(navController, noteViewModel, authState) }
     }
 }
 

@@ -134,9 +134,10 @@ fun NoteScreenList(
                     verticalArrangement = Arrangement.spacedBy(defaultPadding),
                     state = listState,
                 ) {
-                    if (securityStruct != null)
-                    item {
-                        SecurityClickItem(securityStruct)
+                    if (securityStruct != null) {
+                        item {
+                            SecurityClickItem(securityStruct)
+                        }
                     }
                     items(items = items) { note ->
                         if (note != null)

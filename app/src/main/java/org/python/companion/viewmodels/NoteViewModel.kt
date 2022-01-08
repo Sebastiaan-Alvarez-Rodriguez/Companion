@@ -31,10 +31,9 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     val isLoading: StateFlow<Boolean> = _isLoading
 
     /**
-     * Function to load viewModel data.
-     * The loading state can be retrieved with [isLoading].
+     * Function to load viewModel data. The loading state can be retrieved with [isLoading].
      */
-    fun load(token: VerificationToken?) = UiUtil.effect(viewModelScope) {
+    fun load(token: VerificationToken? = null) = UiUtil.effect(viewModelScope) {
         _isLoading.value = true
         allNotes.value = noteRepository.allNotes(token).cachedIn(viewModelScope)
         _isLoading.value = false

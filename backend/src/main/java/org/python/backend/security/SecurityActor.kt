@@ -3,6 +3,7 @@ package org.python.backend.security
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.IntDef
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
@@ -10,9 +11,18 @@ import androidx.fragment.app.FragmentActivity
 import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
 
-abstract class SecurityActor(@SecurityType protected val type: Int) {
+const val TYPE_PASS = 0
+const val TYPE_BIO = 1
+
+@kotlin.annotation.Retention(AnnotationRetention.SOURCE)
+@IntDef(TYPE_PASS, TYPE_BIO)
+annotation class SecurityType
+
+abstract class SecurityActor(@SecurityType val type: Int) {
     companion object {
         const val security_storage = "SECURITY_ACTOR_STORAGE"
+        const val preferred_actor_key = "SECURITY_ACTOR_PREFERRED"
+        const val preferred_actor_default = TYPE_PASS
     }
 
     /**
@@ -36,11 +46,10 @@ abstract class SecurityActor(@SecurityType protected val type: Int) {
     abstract suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage
     /**
      * Verifies given token for correctness.
-     * @param token Token to verify.
-     * @param onResult Lambda executed when verification is completed.
-     * Passed message indicates verification result status.
+     * @param token Token to verify. Can be <code>null</code>, as some actors do not need anything from users.
+     * @return message indicating verification result status.
      */
-    abstract suspend fun verify(token: VerificationToken): VerificationMessage
+    abstract suspend fun verify(token: VerificationToken? = null): VerificationMessage
 }
 
 internal class BioActor(
@@ -94,11 +103,10 @@ internal class BioActor(
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage = VerificationMessage.createCorrect()
 
-    override suspend fun verify(token: VerificationToken): VerificationMessage {
-        return CoroutineUtil.awaitCallback { verify(token, it) }
-    }
+    override suspend fun verify(token: VerificationToken?): VerificationMessage =
+        CoroutineUtil.awaitCallback { verify(it) }
 
-    private fun verify(token: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
+    private fun verify(callback: CoroutineUtil.Callback<VerificationMessage>) {
         initBiometricPrompt(
             activity = activity,
             onError = { errorCode, message ->
@@ -111,7 +119,6 @@ internal class BioActor(
                         VerificationMessage.createIncorrect(body = StatusBody.LockedBody(message))
                     BiometricPrompt.ERROR_HW_UNAVAILABLE ->
                         VerificationMessage.createUnavailable(body = StatusBody.UnavailableBody(message))
-//                    BiometricPrompt.ERROR_UNABLE_TO_PROCESS
                     BiometricPrompt.ERROR_NO_BIOMETRICS ->
                         VerificationMessage.createNoInit(body = StatusBody.NoInitBody(message))
                     else ->
@@ -186,15 +193,14 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
         return callback.onResult(VerificationMessage.createCorrect())
     }
 
-    override suspend fun verify(token: VerificationToken): VerificationMessage {
-        return CoroutineUtil.awaitCallback { verify(token, it) }
-    }
+    override suspend fun verify(token: VerificationToken?): VerificationMessage =
+        CoroutineUtil.awaitCallback { verify(token, it) }
 
-    private fun verify(token: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
+    private fun verify(token: VerificationToken?, callback: CoroutineUtil.Callback<VerificationMessage>) {
         if (!hasCredentials())
             return callback.onResult(VerificationMessage.createNoInit())
 
-        if (token !is PasswordVerificationToken)
+        if (token == null || token !is PasswordVerificationToken)
             throw IllegalArgumentException("Password actor requires password verification token")
 
         val given: PasswordVerificationToken = token
