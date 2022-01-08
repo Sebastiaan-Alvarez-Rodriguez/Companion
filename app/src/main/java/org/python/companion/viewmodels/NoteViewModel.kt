@@ -25,6 +25,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _search = MutableStateFlow(null as String?)
     private val _isLoading = MutableStateFlow(true)
 
+    val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes() }
+
     val search: StateFlow<String?> = _search
     val isLoading: StateFlow<Boolean> = _isLoading
 

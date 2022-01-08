@@ -10,12 +10,18 @@ import org.python.db.CompanionDatabase
 class NoteRepository(private val noteStore: NoteStore) {
     constructor(companionDatabase: CompanionDatabase) : this(NoteStore(companionDatabase))
 
+    /**
+     * @param token If set, also fetches secure notes from the collection.
+     * @return All notes to be found in the collection.
+     */
     fun allNotes(token: VerificationToken?) : Flow<PagingData<Note>> {
         return when (token) {
             null -> noteStore.getAllNotes()
             else -> noteStore.getAllNotesWithSecure()
         }
     }
+
+    fun hasSecureNotes(): Flow<Boolean> = noteStore.hasSecureNotes()
 
     /**
      * Rerieves a note by name.

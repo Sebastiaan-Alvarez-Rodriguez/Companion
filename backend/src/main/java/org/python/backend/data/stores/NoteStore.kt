@@ -14,6 +14,8 @@ class NoteStore(database: CompanionDatabase) {
 
     fun getAllNotesWithSecure(): Flow<PagingData<Note>> = pagingNote { noteDao.getAllWithSecure() }
 
+    fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()
+
     suspend fun getByName(name: String): Note? = noteDao.getByName(name)?.toUI()
 
     suspend fun add(note: Note): Boolean {

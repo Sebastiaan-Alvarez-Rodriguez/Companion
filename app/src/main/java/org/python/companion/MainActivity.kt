@@ -32,7 +32,6 @@ import timber.log.Timber
 
 
 class MainActivity : ComponentActivity() {
-
     private val noteViewModel by viewModels<NoteViewModel>()
     private val anniversaryViewModel by viewModels<AnniversaryViewModel>()
 
@@ -91,7 +90,6 @@ class NoteState(
     private val securityToken: VerificationToken? = null
 ) {
     private val noteTabName = CompanionScreen.Note.name
-    //var securityToken: MutableState<VerificationToken?> = remember { mutableStateOf(null) }
 
     fun load() {
         noteViewModel.load(securityToken)
@@ -102,6 +100,8 @@ class NoteState(
             composable(noteTabName) {
                 val notes by noteViewModel.notes.collectAsState()
                 val isLoading by noteViewModel.isLoading.collectAsState()
+                val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
+
                 NoteScreen(
                     noteScreenHeaderStruct = NoteScreenHeaderStruct(
                         onSearchClick = { /* TODO */ },
@@ -113,6 +113,20 @@ class NoteState(
                         onNewClick = { navigateToNoteCreate(navController = navController) },
                         onNoteClick = { note -> navigateToNoteSingle(navController = navController, note = note) },
                         onFavoriteClick = { note -> },
+                        securityStruct = if (hasSecureNotes) {
+                            if (securityToken != null)
+                                NoteScreenListSecurityStruct(
+                                    securityText = "Lock secure notes.",
+                                    onSecurityClick = { /* TODO */ }
+                                )
+                            else
+                                NoteScreenListSecurityStruct(
+                                    securityText = "Unlock secure notes.",
+                                    onSecurityClick = { /* TODO */ }
+                                )
+                        } else {
+                            null
+                        },
                     )
                 )
             }

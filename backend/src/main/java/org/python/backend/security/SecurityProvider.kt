@@ -1,7 +1,7 @@
 package org.python.backend.security
 
 import androidx.annotation.IntDef
-import java.lang.IllegalArgumentException
+import androidx.fragment.app.FragmentActivity
 
 const val TYPE_PASS = 0
 const val TYPE_BIO = 1
@@ -11,10 +11,10 @@ const val TYPE_BIO = 1
 annotation class SecurityType
 
 object SecurityProvider {
-    fun getActor(@SecurityType type: Int): SecurityActor {
+    fun getActor(@SecurityType type: Int, activity: FragmentActivity): SecurityActor {
         return when(type) {
-            TYPE_PASS -> PassActor()
-            TYPE_BIO -> TODO("I must be implemented")
+            TYPE_PASS -> PassActor(activity)
+            TYPE_BIO -> BioActor(activity)
             else -> throw IllegalArgumentException("Illegal security type '$type' specified.")
         }
     }

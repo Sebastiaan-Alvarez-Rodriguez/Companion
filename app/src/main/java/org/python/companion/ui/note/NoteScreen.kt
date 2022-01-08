@@ -75,53 +75,52 @@ fun NoteScreenHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit) {
 
 class NoteScreenListStruct(
     val notes: Flow<PagingData<Note>>,
-    val securityText: String?,
     val isLoading: Boolean,
-    val onSecurityClick: () -> Unit,
     val onNewClick: () -> Unit,
     val onNoteClick: (Note) -> Unit,
-    val onFavoriteClick: (Note) -> Unit
+    val onFavoriteClick: (Note) -> Unit,
+    val securityStruct: NoteScreenListSecurityStruct?
 )
 
+class NoteScreenListSecurityStruct(
+    val securityText: String,
+    val onSecurityClick: () -> Unit
+)
 @Composable
 fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
     NoteScreenList(
         notes = noteScreenListStruct.notes,
-        securityText = noteScreenListStruct.securityText,
         isLoading = noteScreenListStruct.isLoading,
-        onSecurityClick = noteScreenListStruct.onSecurityClick,
         onNewClick = noteScreenListStruct.onNewClick,
         onNoteClick = noteScreenListStruct.onNoteClick,
-        onFavoriteClick = noteScreenListStruct.onFavoriteClick
+        onFavoriteClick = noteScreenListStruct.onFavoriteClick,
+        securityStruct = noteScreenListStruct.securityStruct
     )
 
 /**
  * Overview screen for all notes.
  * @param notes List of notes to display.
- * @param securityText Security login/logout text to write.
- * If **null**, no security item should be displayed.
  * @param isLoading If set, displays a loading screen.
- * @param onSecurityClick Lambda to perform on security login/logout clicks.
  * @param onNewClick Lambda to perform on new-note button clicks.
  * @param onNoteClick Lambda to perform on note clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
+ * @param securityStruct Security item state struct. Pass **null** to hide security item.
  */
 @Composable
 fun NoteScreenList(
     notes: Flow<PagingData<Note>>,
-    securityText: String?,
     isLoading: Boolean,
-    onSecurityClick: () -> Unit,
     onNewClick: () -> Unit,
     onNoteClick: (Note) -> Unit,
-    onFavoriteClick: (Note) -> Unit
+    onFavoriteClick: (Note) -> Unit,
+    securityStruct: NoteScreenListSecurityStruct?
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
     val listState: LazyListState = rememberLazyListState()
 
-    val minimumNumNotes = if (securityText != null) 1 else 0
+    val minimumNumNotes = if (securityStruct != null) 1 else 0
     when {
         isLoading -> LoadingContent()
         items.itemCount == minimumNumNotes -> EmptyContent()
@@ -135,9 +134,9 @@ fun NoteScreenList(
                     verticalArrangement = Arrangement.spacedBy(defaultPadding),
                     state = listState,
                 ) {
-                    if (securityText != null)
+                    if (securityStruct != null)
                     item {
-                        SecurityClickItem(securityText, onSecurityClick)
+                        SecurityClickItem(securityStruct)
                     }
                     items(items = items) { note ->
                         if (note != null)
@@ -212,6 +211,12 @@ fun NoteItem(
     }
 }
 
+@Composable
+fun SecurityClickItem(securityStruct: NoteScreenListSecurityStruct) =
+    SecurityClickItem(
+        text = securityStruct.securityText,
+        onClick = securityStruct.onSecurityClick,
+    )
 @Composable
 fun SecurityClickItem(text: String, onClick: () -> Unit) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)

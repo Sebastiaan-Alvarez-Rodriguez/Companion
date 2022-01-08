@@ -2,6 +2,7 @@ package org.python.db.daos
 
 import androidx.paging.PagingSource
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 import org.python.db.entities.RoomNote
 
 @Dao
@@ -15,6 +16,9 @@ interface NoteDao {
     // TODO: Allow searching secure notes when token is present and valid.
     @Query("select * from RoomNote where secure == 0 and name = :name")
     suspend fun getByName(name: String): RoomNote?
+
+    @Query("select exists(select 1 from RoomNote where secure != 0)")
+    fun hasSecureNotes(): Flow<Boolean>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun add(item: RoomNote)

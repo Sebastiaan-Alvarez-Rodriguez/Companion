@@ -43,7 +43,7 @@ abstract class SecurityActor(@SecurityType protected val type: Int) {
     abstract suspend fun verify(token: VerificationToken): VerificationMessage
 }
 
-class BioActor(
+internal class BioActor(
     private val activity: FragmentActivity,
     private var biometricPromptInfo: BiometricPrompt.PromptInfo =
         BiometricPrompt.PromptInfo.Builder()
@@ -150,7 +150,7 @@ class BioActor(
     }
 }
 
-class PassActor(private val sharedPreferences: SharedPreferences) : SecurityActor(TYPE_PASS) {
+internal class PassActor(private val sharedPreferences: SharedPreferences) : SecurityActor(TYPE_PASS) {
 
     constructor(context: Context) : this(context.getSharedPreferences(security_storage, Context.MODE_PRIVATE))
     constructor(activity: Activity) : this(activity.baseContext)
