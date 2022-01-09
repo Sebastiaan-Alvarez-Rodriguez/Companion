@@ -18,6 +18,7 @@ class NoteStore(database: CompanionDatabase) {
 
     suspend fun getByName(name: String): Note? = noteDao.getByName(name)?.toUI()
 
+    suspend fun setFavorite(note: Note, favorite: Boolean) = noteDao.setFavorite(note.id, favorite)
     suspend fun add(note: Note): Boolean {
         return try {
             noteDao.add(note.toRoom())

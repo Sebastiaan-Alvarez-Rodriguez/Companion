@@ -30,6 +30,14 @@ class NoteRepository(private val noteStore: NoteStore) {
     suspend fun getByName(name: String): Note? = noteStore.getByName(name)
 
     /**
+     * Sets note to be a regular or favored note.
+     * @param note to set value for.
+     * @param favorite new favored status.
+     */
+    suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteStore.setFavorite(note, favorite)
+
+
+    /**
      * Adds a note. If a conflict exists, skips adding proposed item.
      * @return `true` on success, `false` on conflict.
      */

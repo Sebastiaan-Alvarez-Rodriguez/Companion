@@ -30,9 +30,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     val search: StateFlow<String?> = _search
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    /**
-     * Function to load viewModel data. The loading state can be retrieved with [isLoading].
-     */
+    /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
     fun load(token: VerificationToken? = null) = UiUtil.effect(viewModelScope) {
         _isLoading.value = true
         allNotes.value = noteRepository.allNotes(token).cachedIn(viewModelScope)
@@ -45,8 +43,12 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun delete(note: Note): Unit = noteRepository.delete(note)
 
+
     suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)
+
+    /** Sets a note to be or not be favored */
+    suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<Note>>> = search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())

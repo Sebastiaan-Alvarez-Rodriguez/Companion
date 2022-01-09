@@ -156,7 +156,11 @@ class NoteState(
                         isLoading = isLoading,
                         onNewClick = { navigateToNoteCreate(navController = navController) },
                         onNoteClick = { note -> navigateToNoteSingle(navController = navController, note = note) },
-                        onFavoriteClick = { note -> },
+                        onFavoriteClick = { note ->
+                            noteViewModel.with {
+                                noteViewModel.setFavorite(note, !note.favorite)
+                            }
+                        },
                         securityStruct = if (hasSecureNotes) {
                             if (authState.authenticated)
                                 NoteScreenListSecurityStruct(
@@ -278,11 +282,11 @@ class NoteState(
                     }
                 ),
             ) { entry ->
-//                Timber.d("Edit note: Editing")
                 val noteName = entry.arguments?.getString("note")
                 if (noteName == null) {
                     Timber.e("Edit note: Navcontroller navigation: note name == null")
                 } else {
+                    Timber.d("Edit note: Editing")
                     val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
                     var existingNote by remember { mutableStateOf<Note?>(null) }
                     noteViewModel.with {
