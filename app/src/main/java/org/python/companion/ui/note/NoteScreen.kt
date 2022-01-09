@@ -121,11 +121,11 @@ fun NoteScreenList(
     val listState: LazyListState = rememberLazyListState()
 
     val minimumNumNotes = if (securityStruct != null) 1 else 0
-    when {
-        isLoading -> LoadingContent()
-        items.itemCount == minimumNumNotes -> EmptyContent()
-        else -> {
-            Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
+        when {
+            isLoading -> LoadingContent()
+            items.itemCount == minimumNumNotes -> EmptyContent()
+            else -> {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -144,14 +144,13 @@ fun NoteScreenList(
                             NoteItem(note, onNoteClick, onFavoriteClick)
                     }
                 }
-                FloatingActionButton(
-                    onClick = onNewClick,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                ) {
-                    Text("+")
-                }
             }
+        }
+        FloatingActionButton(
+            onClick = onNewClick,
+            modifier = Modifier.align(Alignment.BottomEnd)
+        ) {
+            Text("+")
         }
     }
 }
