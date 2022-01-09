@@ -46,7 +46,8 @@ private fun Note.toRoom() = RoomNote(
     name = name,
     content = content,
     favorite = favorite,
-    secure = secure
+    secure = secure,
+    iv = iv
 )
 
 private fun RoomNote.toUI() = Note(
@@ -54,5 +55,6 @@ private fun RoomNote.toUI() = Note(
     name = name,
     content = content,
     favorite = favorite,
-    secure = secure
+    secure = secure,
+    iv = iv
 )

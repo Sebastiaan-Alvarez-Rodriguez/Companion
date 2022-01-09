@@ -10,7 +10,8 @@ data class RoomNote(
     val name: String,
     val content: String,
     val favorite: Boolean,
-    val secure: Boolean
+    val secure: Boolean,
+    val iv: ByteArray
 ) {
     override fun equals(other: Any?): Boolean {
         if (other !is RoomNote)

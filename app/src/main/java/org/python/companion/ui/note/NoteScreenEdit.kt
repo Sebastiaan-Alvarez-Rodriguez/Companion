@@ -8,6 +8,7 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
@@ -20,7 +21,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.companion.R
-import timber.log.Timber
 
 
 /**
@@ -41,12 +41,13 @@ fun NoteScreenEdit(
     var title by remember { mutableStateOf(note?.name ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
     var favorite by remember { mutableStateOf(note?.favorite ?: false)}
+    var secure by remember { mutableStateOf(note?.secure ?: false)}
 
     val changed = lazy {
         if (note == null)
-            title != "" || content != "" || favorite
+            title != "" || content != "" || favorite || secure
         else
-            title != note.name || content != note.content || favorite != note.favorite
+            title != note.name || content != note.content || favorite != note.favorite || secure != note.secure
     }
 
     val createNoteObject: () -> Note = {
@@ -54,12 +55,12 @@ fun NoteScreenEdit(
             name = title,
             content = content,
             favorite = favorite,
-            secure = /* TODO: allow user to set security */ false) ?:
+            secure = secure) ?:
         Note(
             name = title,
             content = content,
             favorite = favorite,
-            secure = /* TODO: allow user to set security */ false
+            secure = secure
         )
     }
 
@@ -79,19 +80,18 @@ fun NoteScreenEdit(
                     Row {
                         IconButton(
                             modifier = Modifier.padding(smallPadding),
-                            onClick = {
-                                favorite = !favorite
-                                Timber.d("setting favorite to value $favorite")
-                            }) {
+                            onClick = { favorite = !favorite }) {
                             Icon(
                                 imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Favorite"
+                                contentDescription = if (favorite) "Stop favoring" else "Favorite"
                             )
                         }
                         IconButton(
                             modifier = Modifier.padding(smallPadding),
-                            onClick = { /* TODO: Handle security */ }) {
-                            Icon(Icons.Outlined.Lock, "Secure")
+                            onClick = { secure = !secure }) {
+                            Icon(
+                                imageVector = if (secure) Icons.Filled.Lock else Icons.Outlined.Lock,
+                                contentDescription =if (secure) "Stop securing" else "Secure")
                         }
                     }
                     Spacer(Modifier.width(defaultPadding))
