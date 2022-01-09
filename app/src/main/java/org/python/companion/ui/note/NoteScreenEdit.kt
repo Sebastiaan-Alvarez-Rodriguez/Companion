@@ -5,10 +5,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.companion.R
+import timber.log.Timber
 
 
 /**
@@ -38,41 +40,77 @@ fun NoteScreenEdit(
 ) {
     var title by remember { mutableStateOf(note?.name ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
-    val changed = lazy { (note != null && (title != note.name || content != note.content)) ||
-            (note == null && (title != "" || content != ""))}
+    var favorite by remember { mutableStateOf(note?.favorite ?: false)}
 
-    val createNoteObject: () -> Note = { note?.copy(name = title, content = content) ?: Note(name = title, content = content, secure = /* TODO: allow user to set security */ false) }
+    val changed = lazy {
+        if (note == null)
+            title != "" || content != "" || favorite
+        else
+            title != note.name || content != note.content || favorite != note.favorite
+    }
+
+    val createNoteObject: () -> Note = {
+        note?.copy(
+            name = title,
+            content = content,
+            favorite = favorite,
+            secure = /* TODO: allow user to set security */ false) ?:
+        Note(
+            name = title,
+            content = content,
+            favorite = favorite,
+            secure = /* TODO: allow user to set security */ false
+        )
+    }
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-
+    val smallPadding = dimensionResource(id = R.dimen.padding_small)
     Box {
         Card(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(defaultPadding),
+            modifier = Modifier.fillMaxSize().padding(defaultPadding),
             elevation = 5.dp,
         ) {
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(defaultPadding)
-            ) {
+            Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = title,
-                        onValueChange = { title = it },
-                        label = { Text("Title") },
-                        singleLine = true,
-                    )
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row {
+                        IconButton(
+                            modifier = Modifier.padding(smallPadding),
+                            onClick = {
+                                favorite = !favorite
+                                Timber.d("setting favorite to value $favorite")
+                            }) {
+                            Icon(
+                                imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Favorite"
+                            )
+                        }
+                        IconButton(
+                            modifier = Modifier.padding(smallPadding),
+                            onClick = { /* TODO: Handle security */ }) {
+                            Icon(Icons.Outlined.Lock, "Secure")
+                        }
+                    }
                     Spacer(Modifier.width(defaultPadding))
+
                     Button(
                         onClick = { onSaveClick(createNoteObject()) }) {
                         Text(text = "Save")
                     }
                 }
-                Spacer(Modifier.width(defaultPadding))
+                Spacer(Modifier.height(defaultPadding))
+                OutlinedTextField(
+                    value = title,
+                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    singleLine = true,
+                )
+                Spacer(Modifier.height(defaultPadding))
+
                 val relocation = remember { BringIntoViewRequester() }
                 val scope = rememberCoroutineScope()
 

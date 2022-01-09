@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -185,8 +186,8 @@ private fun EmptyContent() {
 fun NoteItem(
     note: Note,
     onNoteClick: (Note) -> Unit,
-    onFavoriteClick: (Note) -> Unit) {
-
+    onFavoriteClick: (Note) -> Unit
+) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Card(elevation = 5.dp) {
         Row(
@@ -205,7 +206,10 @@ fun NoteItem(
             Text(note.name)
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { onFavoriteClick(note) }) {
-                Icon(Icons.Filled.Favorite, contentDescription = null)
+                Icon(
+                    imageVector = if (note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Favorite"
+                )
             }
         }
     }

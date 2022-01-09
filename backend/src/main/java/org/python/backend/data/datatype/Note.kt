@@ -1,10 +1,22 @@
 package org.python.backend.data.datatype
 
-data class Note(val id: Long = 0, val name: String, val content: String, val secure: Boolean) {
+import org.python.db.entities.RoomNote
+
+data class Note(
+    val id: Long = 0,
+    val name: String,
+    val content: String,
+    val favorite: Boolean,
+    val secure: Boolean) {
+
     override fun equals(other: Any?): Boolean {
-        if (other !is Note)
+        if (other !is RoomNote)
             return false
-        return this.id == other.id
+        return id == other.id &&
+                name == other.name &&
+                content == other.content &&
+                favorite == other.favorite &&
+                secure == other.favorite
     }
 
     override fun hashCode(): Int {

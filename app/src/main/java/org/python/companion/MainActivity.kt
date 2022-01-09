@@ -243,6 +243,7 @@ class NoteState(
                     note = null,
                     overrideDialogMiniState = noteOverrideDialogMiniState,
                     onSaveClick = { note ->
+                        Timber.d("Found new note: ${note.name}, ${note.content}, ${note.id}, ${note.favorite}")
                         noteViewModel.with {
                             val conflict = noteViewModel.getbyName(note.name)
                             Timber.d("New note: conflict: ${conflict!=null}")
@@ -277,7 +278,7 @@ class NoteState(
                     }
                 ),
             ) { entry ->
-                Timber.d("Edit note: Editing")
+//                Timber.d("Edit note: Editing")
                 val noteName = entry.arguments?.getString("note")
                 if (noteName == null) {
                     Timber.e("Edit note: Navcontroller navigation: note name == null")
@@ -292,6 +293,7 @@ class NoteState(
                             note = existingNote,
                             overrideDialogMiniState = noteOverrideDialogMiniState,
                             onSaveClick = { note ->
+                                Timber.d("Found new note: ${note.name}, ${note.content}, ${note.id}, ${note.favorite}")
                                 noteViewModel.with {
                                     // If note name == same as before, there is no conflict. Otherwise, we must check.
                                     val conflict: Note? =

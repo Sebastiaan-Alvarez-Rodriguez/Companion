@@ -48,13 +48,13 @@ fun NoteScreenViewSingle(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (onEditClick != null)
-                            Button(onClick = { onEditClick(note) }) {
-                                Text(text = "Edit")
-                            }
                         if (onDeleteClick != null)
                             Button(onClick = {onDeleteClick(note) }) {
                                 Text(text = "Delete")
+                            }
+                        if (onEditClick != null)
+                            Button(onClick = { onEditClick(note) }) {
+                                Text(text = "Edit")
                             }
                     }
                 }
