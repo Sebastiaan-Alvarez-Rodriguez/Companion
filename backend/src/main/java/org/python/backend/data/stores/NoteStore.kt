@@ -12,6 +12,7 @@ class NoteStore(database: CompanionDatabase) {
 
     fun getAllNotes(): Flow<PagingData<Note>> = pagingNote { noteDao.getAll() }
 
+    //TODO: Decrypt secure notes
     fun getAllNotesWithSecure(): Flow<PagingData<Note>> = pagingNote { noteDao.getAllWithSecure() }
 
     fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()

@@ -252,8 +252,10 @@ class NoteState(
                             val conflict = noteViewModel.getbyName(note.name)
                             Timber.d("New note: conflict: ${conflict!=null}")
                             if (conflict == null) {
-                                val success = noteViewModel.add(note)
-                                navController.navigateUp()
+                                if (noteViewModel.add(note))
+                                    navController.navigateUp()
+                                else
+                                    TODO("Let user know there was a problem while adding note")
                             } else {
                                 noteOverrideDialogMiniState.open(note, conflict)
                             }

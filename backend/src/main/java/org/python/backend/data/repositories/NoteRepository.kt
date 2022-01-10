@@ -42,27 +42,34 @@ class NoteRepository(private val noteStore: NoteStore) {
      * Adds a note. If a conflict exists, skips adding proposed item.
      * @return `true` on success, `false` on conflict.
      */
-    suspend fun add(note: Note): Boolean = noteStore.add(secureToStorage(note))
+    suspend fun add(note: Note): Boolean = secureToStorage(note)?.let { noteStore.add(it) } ?: false
 
     /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
-    suspend fun upsert(note: Note): Unit = noteStore.upsert(secureToStorage(note))
+    suspend fun upsert(note: Note): Boolean = secureToStorage(note)?.let { noteStore.upsert(it); true } ?: false
 
-    suspend fun update(note: Note): Unit = noteStore.update(secureToStorage(note))
+    suspend fun update(note: Note): Boolean = secureToStorage(note)?.let { noteStore.update(it); true } ?: false
 
-    suspend fun delete(note: Note): Unit = noteStore.delete(note)
+    suspend fun delete(note: Note): Unit = noteStore.delete(secureDelete(note))
 
 
-    private fun secureToStorage(note: Note): Note {
+    private fun secureToStorage(note: Note): Note? {
         if (note.secure) {
-            val encrypted = Securer.encrypt(data = note.content, alias = note.name)
+            val encrypted = Securer.encrypt(data = note.content, alias = note.name) ?: return null
             return note.copy(content = encrypted.dataString(), iv = encrypted.iv)
         }
         return note
     }
-    private fun secureToUI(note: Note): Note {
+    private fun secureToUI(note: Note): Note? {
         if (note.secure) {
-            // TODO: Decryption
+            val decrypted = Securer.decrypt(data = note.content, iv = note.iv, alias = note.name) ?: return null
+            return note.copy(content = decrypted)
         }
+        return note
+    }
+
+    private fun secureDelete(note: Note): Note {
+        if (note.secure)
+            Securer.deleteAlias(note.name)
         return note
     }
 }
