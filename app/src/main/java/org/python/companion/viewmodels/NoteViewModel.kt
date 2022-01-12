@@ -38,8 +38,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun add(note: Note): Boolean = noteRepository.add(note)
-    suspend fun upsert(note: Note): Unit = noteRepository.upsert(note)
-    suspend fun update(note: Note): Unit = noteRepository.update(note)
+    suspend fun upsert(note: Note): Boolean = noteRepository.upsert(note)
+    suspend fun update(note: Note): Boolean = noteRepository.update(note)
 
     suspend fun delete(note: Note): Unit = noteRepository.delete(note)
 

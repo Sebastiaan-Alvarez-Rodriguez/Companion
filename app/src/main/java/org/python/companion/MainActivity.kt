@@ -164,18 +164,15 @@ class NoteState(
                         securityStruct = if (hasSecureNotes) {
                             if (authState.authenticated)
                                 NoteScreenListSecurityStruct(
-                                    securityText = "Lock secure notes.",
+                                    securityText = "Lock secure notes",
                                     onSecurityClick = { authState.reset() }
                                 )
                             else
                                 NoteScreenListSecurityStruct(
-                                    securityText = "Unlock secure notes.",
+                                    securityText = "Unlock secure notes",
                                     onSecurityClick = {
-                                        when (authState.securityActor.type) {
-                                            TYPE_PASS -> TODO("Show dialog")
-                                            TYPE_BIO -> noteViewModel.with {
-                                                authState.authenticate()
-                                            }
+                                        noteViewModel.with {
+                                            authState.authenticate()
                                         }
                                     }
                                 )

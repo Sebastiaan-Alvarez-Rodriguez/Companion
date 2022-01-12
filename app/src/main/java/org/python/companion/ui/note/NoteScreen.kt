@@ -224,10 +224,11 @@ fun SecurityClickItem(securityStruct: NoteScreenListSecurityStruct) =
 @Composable
 fun SecurityClickItem(text: String, onClick: () -> Unit) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Card(elevation = 5.dp, modifier = Modifier.padding(bottom = 5.dp)) {
+    Card(elevation = 5.dp) {
         Row(
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(defaultPadding).clickable { onClick() }
+            modifier = Modifier.padding(defaultPadding).clickable { onClick() }.fillMaxWidth()
         ) {
             Text(text)
         }

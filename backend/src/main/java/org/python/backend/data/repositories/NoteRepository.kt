@@ -1,7 +1,9 @@
 package org.python.backend.data.repositories
 
 import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.stores.NoteStore
 import org.python.backend.security.Securer
@@ -18,7 +20,7 @@ class NoteRepository(private val noteStore: NoteStore) {
     fun allNotes(token: VerificationToken?) : Flow<PagingData<Note>> {
         return when (token) {
             null -> noteStore.getAllNotes()
-            else -> noteStore.getAllNotesWithSecure()
+            else -> noteStore.getAllNotesWithSecure().map { page -> page.map { secureToUI(it)?: throw IllegalStateException("Could not decrypt notes") } }
         }
     }
 

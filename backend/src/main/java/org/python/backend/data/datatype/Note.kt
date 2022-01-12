@@ -6,7 +6,7 @@ data class Note(
     val content: String,
     val favorite: Boolean,
     val secure: Boolean,
-    val iv: ByteArray) {
+    val iv: ByteArray = ByteArray(0)) {
 
     override fun equals(other: Any?): Boolean {
         if (other !is Note)
