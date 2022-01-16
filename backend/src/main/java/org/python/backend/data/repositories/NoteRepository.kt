@@ -49,7 +49,7 @@ class NoteRepository(private val noteStore: NoteStore) {
     /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
     suspend fun upsert(note: Note): Boolean = secureToStorage(note)?.let { noteStore.upsert(it); true } ?: false
 
-    suspend fun update(note: Note): Boolean = secureToStorage(note)?.let { noteStore.update(it); true } ?: false
+    suspend fun update(oldNote: Note, updatedNote: Note): Boolean = secureUpdate(oldNote, updatedNote)?.let { noteStore.update(it); true } ?: false
 
     suspend fun delete(note: Note): Unit = noteStore.delete(secureDelete(note))
 
@@ -61,6 +61,12 @@ class NoteRepository(private val noteStore: NoteStore) {
         }
         return note
     }
+    private fun secureUpdate(oldNote: Note, updatedNote: Note): Note? {
+        if (oldNote.secure && oldNote.name != updatedNote.name) // other alias.
+            secureDelete(oldNote)
+        return secureToStorage(updatedNote)
+    }
+
     private fun secureToUI(note: Note): Note? {
         if (note.secure) {
             val decrypted = Securer.decrypt(data = note.content, iv = note.iv, alias = note.name) ?: return null

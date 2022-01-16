@@ -322,12 +322,10 @@ class NoteState(
                                 noteViewModel.with {
                                     // If note name == same as before, there is no conflict. Otherwise, we must check.
                                     val conflict: Note? =
-                                        if (note.name == noteName) null else noteViewModel.getbyName(
-                                            note.name
-                                        )
+                                        if (note.name == noteName) null else noteViewModel.getbyName(note.name)
                                     Timber.d("Edit note: edited note has changed name=${note.name != noteName}, now conflict: ${conflict != null}")
                                     if (conflict == null) {
-                                        val success = noteViewModel.update(note)
+                                        val success = noteViewModel.update(existingNote!!, note)
                                         navController.navigateUp()
                                     } else {
                                         noteOverrideDialogMiniState.open(note, conflict)

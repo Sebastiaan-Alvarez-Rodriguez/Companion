@@ -64,6 +64,12 @@ object Securer {
     fun decrypt(data: String, iv: ByteArray, alias: String): String? =
         decrypt(Base64.decode(data, Base64.DEFAULT), iv, alias)
 
+    fun changeAlias(oldKey: String, updatedData: String, updatedKey: String): Boolean {
+        if (oldKey == updatedKey)
+            return true
+        deleteAlias(oldKey)
+        return encrypt(updatedData, updatedKey) != null
+    }
     /**
      * Deletes the given alias key from the keystore.
      * @note Warning: This is a destructive, non-recoverable operation.
