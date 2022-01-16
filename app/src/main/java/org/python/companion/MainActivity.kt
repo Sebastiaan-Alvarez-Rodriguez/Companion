@@ -19,7 +19,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.python.backend.data.datatype.Anniversary
 import org.python.backend.data.datatype.Note
-import org.python.backend.security.*
+import org.python.backend.security.SecurityActor
+import org.python.backend.security.SecurityProvider
+import org.python.backend.security.VerificationMessage
+import org.python.backend.security.VerificationToken
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
@@ -105,7 +108,7 @@ class AuthenticationMiniState(var securityActor: SecurityActor) {
 
     suspend fun authenticate(securityToken: VerificationToken? = null): VerificationMessage {
         val msg = securityActor.verify(securityToken)
-        if (msg.type == SEC_CORRECT) {
+        if (msg.type == VerificationMessage.SEC_CORRECT) {
             authenticated = true
             token = securityToken
         }
@@ -146,8 +149,10 @@ class NoteState(
                 val isLoading by noteViewModel.isLoading.collectAsState()
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
 
+                val passwordDialogMiniState = PasswordDialogMiniState.rememberState()
+
                 NoteScreen(
-                    noteScreenHeaderStruct = NoteScreenHeaderStruct(
+                    noteScreenListHeaderStruct = NoteScreenListHeaderStruct(
                         onSearchClick = { /* TODO */ },
                         onSettingsClick = { navigateToNoteSettings(navController = navController) }
                     ),
@@ -171,14 +176,31 @@ class NoteState(
                                 NoteScreenListSecurityStruct(
                                     securityText = "Unlock secure notes",
                                     onSecurityClick = {
-                                        noteViewModel.with {
-                                            authState.authenticate()
+                                        when (authState.securityActor.type) {
+                                            SecurityActor.TYPE_PASS -> { passwordDialogMiniState.open() }
+                                            SecurityActor.TYPE_BIO -> noteViewModel.with {
+                                                authState.authenticate()
+                                            }
                                         }
                                     }
                                 )
                         } else {
                             null
                         },
+                    ),
+                    passwordDialogStruct = PasswordDialogStruct(
+                        state = passwordDialogMiniState,
+                        onDismiss = { passwordDialogMiniState.close() },
+                        onNegativeClick = { passwordDialogMiniState.close() },
+                        onPositiveClick = {
+                            noteViewModel.with {
+                                val msg = authState.authenticate(it)
+                                when (msg.type) {
+                                    VerificationMessage.SEC_CORRECT -> passwordDialogMiniState.close()
+                                    else -> passwordDialogMiniState.stateMessage.value = msg.body?.userMessage
+                                }
+                            }
+                        }
                     )
                 )
             }
@@ -286,7 +308,7 @@ class NoteState(
                     Timber.e("Edit note: Navcontroller navigation: note name == null")
                 } else {
                     Timber.d("Edit note: Editing")
-                    val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
+                    val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState()
                     var existingNote by remember { mutableStateOf<Note?>(null) }
                     noteViewModel.with {
                         existingNote = noteViewModel.getbyName(noteName)!!

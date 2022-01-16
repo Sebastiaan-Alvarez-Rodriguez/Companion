@@ -20,7 +20,7 @@ import org.python.companion.support.UiUtil
 @Composable
 fun NoteOverrideDialog(
     currentNote: Note,
-    overridenNote: Note,
+    overriddenNote: Note,
     onDismiss: () -> Unit,
     onPositiveClick: () -> Unit,
     onNegativeClick: () -> Unit
@@ -40,7 +40,7 @@ fun NoteOverrideDialog(
                     modifier = Modifier.padding(8.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                NoteItem(note = overridenNote, onNoteClick = {}, onFavoriteClick = {})
+                NoteItem(note = overriddenNote, onNoteClick = {}, onFavoriteClick = {})
 
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -62,25 +62,31 @@ fun NoteOverrideDialog(
 
 class NoteOverrideDialogMiniState(
     val currentNote: MutableState<Note?>,
-    val overridenNote: MutableState<Note?>,
+    val overriddenNote: MutableState<Note?>,
     open: MutableState<Boolean>
 ) : UiUtil.DialogMiniState(open) {
 
-    fun open(currentNote: Note, overridenNote: Note) {
+    fun open(currentNote: Note, overriddenNote: Note) {
         open.value = true
         this.currentNote.value = currentNote
-        this.overridenNote.value = overridenNote
+        this.overriddenNote.value = overriddenNote
     }
 
     fun close() {
         open.value = false
         currentNote.value = null
-        overridenNote.value = null
+        overriddenNote.value = null
     }
 
     companion object {
         @Composable
-        fun rememberState(currentNote: Note?, overridenNote: Note?, open: Boolean) =
-            remember(open) {  NoteOverrideDialogMiniState(mutableStateOf(currentNote), mutableStateOf(overridenNote), mutableStateOf(open)) }
+        fun rememberState(currentNote: Note? = null, overriddenNote: Note? = null, open: Boolean = false) =
+            remember(open) {
+                NoteOverrideDialogMiniState(
+                    mutableStateOf(currentNote),
+                    mutableStateOf(overriddenNote),
+                    mutableStateOf(open)
+                )
+            }
     }
 }

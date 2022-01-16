@@ -24,34 +24,61 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
+import org.python.backend.security.PasswordVerificationToken
 import org.python.companion.R
 
 
 @Composable
 fun NoteScreen(
-    noteScreenHeaderStruct: NoteScreenHeaderStruct,
+    noteScreenListHeaderStruct: NoteScreenListHeaderStruct,
+    noteScreenListStruct: NoteScreenListStruct,
+    passwordDialogStruct: PasswordDialogStruct,
+) {
+    NoteScreenPasswordDialog(passwordDialogStruct)
+    NoteScreenList(noteScreenListHeaderStruct, noteScreenListStruct)
+}
+
+class PasswordDialogStruct(
+    val state: PasswordDialogMiniState,
+    val onDismiss: () -> Unit,
+    val onNegativeClick: () -> Unit,
+    val onPositiveClick: (PasswordVerificationToken) -> Unit,
+)
+@Composable
+fun NoteScreenPasswordDialog(passwordDialogStruct: PasswordDialogStruct) {
+        SecurityPasswordDialog(
+            onDismiss = passwordDialogStruct.onDismiss,
+            onNegativeClick = passwordDialogStruct.onNegativeClick,
+            onPositiveClick = passwordDialogStruct.onPositiveClick,
+            state = passwordDialogStruct.state,
+        )
+}
+
+@Composable
+fun NoteScreenList(
+    noteScreenListHeaderStruct: NoteScreenListHeaderStruct,
     noteScreenListStruct: NoteScreenListStruct,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
     Column(modifier = Modifier.padding(defaultPadding)) {
-        NoteScreenHeader(noteScreenHeaderStruct)
+        NoteScreenListHeader(noteScreenListHeaderStruct)
         Spacer(modifier = Modifier.height(defaultPadding))
         NoteScreenList(noteScreenListStruct)
     }
 }
 
-class NoteScreenHeaderStruct(val onSettingsClick: () -> Unit, val onSearchClick: () -> Unit)
+class NoteScreenListHeaderStruct(val onSettingsClick: () -> Unit, val onSearchClick: () -> Unit)
 
 @Composable
-fun NoteScreenHeader(noteScreenHeaderStruct: NoteScreenHeaderStruct) =
-    NoteScreenHeader(
-        onSettingsClick = noteScreenHeaderStruct.onSettingsClick,
-        onSearchClick = noteScreenHeaderStruct.onSearchClick
+fun NoteScreenListHeader(noteScreenListHeaderStruct: NoteScreenListHeaderStruct) =
+    NoteScreenListHeader(
+        onSettingsClick = noteScreenListHeaderStruct.onSettingsClick,
+        onSearchClick = noteScreenListHeaderStruct.onSearchClick
     )
 
 @Composable
-fun NoteScreenHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit) {
+fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 

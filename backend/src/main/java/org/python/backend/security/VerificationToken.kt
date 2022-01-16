@@ -19,7 +19,7 @@ abstract class VerificationToken(@SecurityType val type: Int) {
     companion object {
         fun fromString(@SecurityType type: Int, string: String): VerificationToken {
             return when (type) {
-                TYPE_PASS -> PasswordVerificationToken.fromString(string)
+                SecurityActor.TYPE_PASS -> PasswordVerificationToken.fromString(string)
                 else -> throw IllegalArgumentException("Unknown security type '$type' provided.")
             }
         }
@@ -27,7 +27,7 @@ abstract class VerificationToken(@SecurityType val type: Int) {
 }
 
 @Suppress("EqualsOrHashCode")
-class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToken(TYPE_PASS) {
+class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToken(SecurityActor.TYPE_PASS) {
     /**
      * Password builder.
      * @note Updating values from an instance in multiple threads is explicitly not supported.
@@ -35,7 +35,7 @@ class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToke
     class PassBuilder : VerificationToken.Builder() {
         private var pass: ByteBuffer? = null
 
-        fun with(password: ByteBuffer, salt: ByteArray?): PassBuilder {
+        fun with(password: ByteBuffer, salt: ByteArray? = null): PassBuilder {
             pass = Hasher.argon(password = password, salt = salt)
             return this
         }

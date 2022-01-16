@@ -16,7 +16,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -33,7 +32,7 @@ fun AnniversaryBody(
     onAnniversaryClick: (Anniversary) -> Unit,
     onFavoriteClick: (Anniversary) -> Unit
 ) {
-    val defaultPadding = 12.dp //dimensionResource(id = R.dimen.padding_default)
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<Anniversary> = anniversaryList.collectAsLazyPagingItems()
     Box(

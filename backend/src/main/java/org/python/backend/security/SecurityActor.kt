@@ -11,15 +11,14 @@ import androidx.fragment.app.FragmentActivity
 import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
 
-const val TYPE_PASS = 0
-const val TYPE_BIO = 1
-
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
-@IntDef(TYPE_PASS, TYPE_BIO)
+@IntDef(SecurityActor.TYPE_PASS, SecurityActor.TYPE_BIO)
 annotation class SecurityType
 
 abstract class SecurityActor(@SecurityType val type: Int) {
     companion object {
+        const val TYPE_PASS = 0
+        const val TYPE_BIO = 1
         const val security_storage = "SECURITY_ACTOR_STORAGE"
         const val preferred_actor_key = "SECURITY_ACTOR_PREFERRED"
         const val preferred_actor_default = TYPE_PASS
@@ -99,7 +98,7 @@ internal class BioActor(
         }
     }
 
-    override fun hasCredentials(): Boolean = actorAvailable().type == SEC_CORRECT
+    override fun hasCredentials(): Boolean = actorAvailable().type == VerificationMessage.SEC_CORRECT
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage = VerificationMessage.createCorrect()
 
@@ -182,7 +181,7 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
                 null -> throw IllegalArgumentException("Existing credentials detected. Caller must provide old verification token for verification.")
                 else -> verify(oldToken)
             }
-            if (result.type != SEC_CORRECT)
+            if (result.type != VerificationMessage.SEC_CORRECT)
                 return callback.onResult(result)
         }
 
