@@ -62,8 +62,12 @@ class NoteRepository(private val noteStore: NoteStore) {
         return note
     }
     private fun secureUpdate(oldNote: Note, updatedNote: Note): Note? {
-        if (oldNote.secure && oldNote.name != updatedNote.name) // other alias.
-            secureDelete(oldNote)
+        if (oldNote.secure) {
+            if (oldNote.name != updatedNote.name) // alias change -> remove keystore alias
+                secureDelete(oldNote)
+            else if (!updatedNote.secure) // no longer secured -> remove keystore alias
+                secureDelete(oldNote)
+        }
         return secureToStorage(updatedNote)
     }
 
