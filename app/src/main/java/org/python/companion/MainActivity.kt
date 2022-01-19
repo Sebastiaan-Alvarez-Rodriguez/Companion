@@ -194,10 +194,18 @@ class NoteState(
                         onNegativeClick = { passwordDialogMiniState.close() },
                         onPositiveClick = {
                             noteViewModel.with {
+                                passwordDialogMiniState.state.value = LoadState.STATE_LOADING
                                 val msg = authState.authenticate(it)
-                                when (msg.type) {
-                                    VerificationMessage.SEC_CORRECT -> passwordDialogMiniState.close()
-                                    else -> passwordDialogMiniState.stateMessage.value = msg.body?.userMessage
+                                passwordDialogMiniState.state.value = when (msg.type) {
+                                    VerificationMessage.SEC_CORRECT -> {
+                                        passwordDialogMiniState.close()
+                                        LoadState.STATE_OK
+                                    }
+                                    else -> {
+                                        passwordDialogMiniState.stateMessage.value =
+                                            msg.body?.userMessage
+                                        LoadState.STATE_FAILED
+                                    }
                                 }
                             }
                         }
