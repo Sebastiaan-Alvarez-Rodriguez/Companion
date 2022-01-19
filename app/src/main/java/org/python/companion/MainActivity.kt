@@ -51,7 +51,7 @@ class MainActivity : FragmentActivity() {
 
                 val noteState = NoteState.rememberState(
                     navController = navController,
-                    authState = AuthenticationMiniState.rememberState(this),
+                    authState = AuthenticationState.rememberState(this, noteViewModel),
                     noteViewModel = noteViewModel)
                 val cactusState = CactusState.rememberState(navController = navController)
                 val anniversaryState = AnniversaryState.rememberState(navController = navController, anniversaryViewModel = anniversaryViewModel)
@@ -91,20 +91,52 @@ class MainActivity : FragmentActivity() {
     }
 }
 
-class AuthenticationMiniState(var securityActor: SecurityActor) {
+class AuthenticationState(var securityActor: SecurityActor, private val viewmodel: NoteViewModel) {
     var authenticated: Boolean = false
         private set
     var token: VerificationToken? = null
         private set
 
-    constructor(activity: FragmentActivity) : this(
+    constructor(activity: FragmentActivity, viewmodel: NoteViewModel) : this(
         securityActor = SecurityProvider.getActor(
             type = activity
                 .baseContext
                 .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
                 .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default),
-            activity = activity)
+            activity = activity),
+        viewmodel = viewmodel
     )
+
+    @Composable
+    fun Dialog() {
+        when (securityActor.type) {
+            SecurityActor.TYPE_BIO -> viewmodel.with { authenticate() }
+            SecurityActor.TYPE_PASS -> {
+                val passwordDialogMiniState = PasswordDialogMiniState.rememberState()
+                passwordDialogMiniState.Dialog(
+                    onDismiss = { passwordDialogMiniState.close() },
+                    onNegativeClick = { passwordDialogMiniState.close() },
+                    onPositiveClick = {
+                        viewmodel.with {
+                            passwordDialogMiniState.state.value = LoadState.STATE_LOADING
+                            val msg = authenticate(it)
+                            passwordDialogMiniState.state.value = when (msg.type) {
+                                VerificationMessage.SEC_CORRECT -> {
+                                    passwordDialogMiniState.close()
+                                    LoadState.STATE_OK
+                                }
+                                else -> {
+                                    passwordDialogMiniState.stateMessage.value =
+                                        msg.body?.userMessage
+                                    LoadState.STATE_FAILED
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
 
     suspend fun authenticate(securityToken: VerificationToken? = null): VerificationMessage {
         val msg = securityActor.verify(securityToken)
@@ -122,19 +154,43 @@ class AuthenticationMiniState(var securityActor: SecurityActor) {
 
     companion object {
         @Composable
-        fun rememberState(securityActor: SecurityActor) =
-            remember(securityActor) { AuthenticationMiniState(securityActor) }
+        fun rememberState(securityActor: SecurityActor, viewmodel: NoteViewModel) =
+            remember(securityActor) { AuthenticationState(securityActor, viewmodel) }
 
         @Composable
-        fun rememberState(activity: FragmentActivity) =
-            remember(activity) { AuthenticationMiniState(activity) }
+        fun rememberState(activity: FragmentActivity, viewmodel: NoteViewModel) =
+            remember(activity) { AuthenticationState(activity, viewmodel) }
     }
 }
 
+/*
+passwordDialogStruct = PasswordDialogStruct(
+                        state = passwordDialogMiniState,
+                        onDismiss = { passwordDialogMiniState.close() },
+                        onNegativeClick = { passwordDialogMiniState.close() },
+                        onPositiveClick = {
+                            noteViewModel.with {
+                                passwordDialogMiniState.state.value = LoadState.STATE_LOADING
+                                val msg = authState.authenticate(it)
+                                passwordDialogMiniState.state.value = when (msg.type) {
+                                    VerificationMessage.SEC_CORRECT -> {
+                                        passwordDialogMiniState.close()
+                                        LoadState.STATE_OK
+                                    }
+                                    else -> {
+                                        passwordDialogMiniState.stateMessage.value =
+                                            msg.body?.userMessage
+                                        LoadState.STATE_FAILED
+                                    }
+                                }
+                            }
+                        }
+                    )
+ */
 class NoteState(
     private val navController: NavHostController,
     private val noteViewModel: NoteViewModel,
-    private val authState: AuthenticationMiniState
+    private val authState: AuthenticationState
 ) {
     private val noteTabName = CompanionScreen.Note.name
 
@@ -188,28 +244,7 @@ class NoteState(
                             null
                         },
                     ),
-                    passwordDialogStruct = PasswordDialogStruct(
-                        state = passwordDialogMiniState,
-                        onDismiss = { passwordDialogMiniState.close() },
-                        onNegativeClick = { passwordDialogMiniState.close() },
-                        onPositiveClick = {
-                            noteViewModel.with {
-                                passwordDialogMiniState.state.value = LoadState.STATE_LOADING
-                                val msg = authState.authenticate(it)
-                                passwordDialogMiniState.state.value = when (msg.type) {
-                                    VerificationMessage.SEC_CORRECT -> {
-                                        passwordDialogMiniState.close()
-                                        LoadState.STATE_OK
-                                    }
-                                    else -> {
-                                        passwordDialogMiniState.stateMessage.value =
-                                            msg.body?.userMessage
-                                        LoadState.STATE_FAILED
-                                    }
-                                }
-                            }
-                        }
-                    )
+                    authState = authState,
                 )
             }
 
@@ -369,7 +404,7 @@ class NoteState(
         @Composable
         fun rememberState(
             navController: NavHostController = rememberNavController(),
-            authState: AuthenticationMiniState,
+            authState: AuthenticationState,
             noteViewModel: NoteViewModel) =
             remember(navController) { NoteState(navController, noteViewModel, authState) }
     }

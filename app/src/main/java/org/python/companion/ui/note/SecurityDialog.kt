@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import org.python.backend.security.PasswordVerificationToken
+import org.python.backend.security.VerificationToken
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import timber.log.Timber
@@ -144,23 +145,49 @@ fun SecurityPasswordDialogOk() {
     }
 }
 
+abstract class SecurityDialogState(open: MutableState<Boolean>) : UiUtil.DialogMiniState(open) {
+    @Composable
+    abstract fun Dialog(
+        onDismiss: () -> Unit,
+        onNegativeClick: () -> Unit,
+        onPositiveClick: (VerificationToken) -> Unit
+    )
+
+    abstract fun open()
+
+    abstract fun close()
+}
+
 class PasswordDialogMiniState(
     val stateMessage: MutableState<String?>,
     val state: MutableState<Int>,
     val pass: MutableState<String>,
     val passVisible: MutableState<Boolean>,
     open: MutableState<Boolean>
-) : UiUtil.DialogMiniState(open) {
-
-    fun open() {
+) : SecurityDialogState(open) {
+    override fun open() {
         open.value = true
         state.value = LoadState.STATE_READY
     }
 
-    fun close() {
+    override fun close() {
         open.value = false
         stateMessage.value = null
         pass.value = ""
+    }
+
+    @Composable
+    override fun Dialog(
+        onDismiss: () -> Unit,
+        onNegativeClick: () -> Unit,
+        onPositiveClick: (VerificationToken) -> Unit
+    ) {
+        SecurityPasswordDialog(
+            onDismiss = onDismiss,
+            onNegativeClick = onNegativeClick,
+            onPositiveClick = onPositiveClick,
+            state = this,
+        )
     }
 
     companion object {

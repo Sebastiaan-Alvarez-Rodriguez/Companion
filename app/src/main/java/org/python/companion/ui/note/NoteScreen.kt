@@ -24,7 +24,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
-import org.python.backend.security.PasswordVerificationToken
+import org.python.companion.AuthenticationState
 import org.python.companion.R
 
 
@@ -32,35 +32,20 @@ import org.python.companion.R
 fun NoteScreen(
     noteScreenListHeaderStruct: NoteScreenListHeaderStruct,
     noteScreenListStruct: NoteScreenListStruct,
-    passwordDialogStruct: PasswordDialogStruct,
+    authState: AuthenticationState,
 ) {
-    NoteScreenPasswordDialog(passwordDialogStruct)
-    NoteScreenList(noteScreenListHeaderStruct, noteScreenListStruct)
-}
-
-class PasswordDialogStruct(
-    val state: PasswordDialogMiniState,
-    val onDismiss: () -> Unit,
-    val onNegativeClick: () -> Unit,
-    val onPositiveClick: (PasswordVerificationToken) -> Unit,
-)
-@Composable
-fun NoteScreenPasswordDialog(passwordDialogStruct: PasswordDialogStruct) {
-        SecurityPasswordDialog(
-            onDismiss = passwordDialogStruct.onDismiss,
-            onNegativeClick = passwordDialogStruct.onNegativeClick,
-            onPositiveClick = passwordDialogStruct.onPositiveClick,
-            state = passwordDialogStruct.state,
-        )
+    NoteScreenList(noteScreenListHeaderStruct, noteScreenListStruct, authState)
 }
 
 @Composable
 fun NoteScreenList(
     noteScreenListHeaderStruct: NoteScreenListHeaderStruct,
     noteScreenListStruct: NoteScreenListStruct,
+    authState: AuthenticationState,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
+    authState.Dialog()
     Column(modifier = Modifier.padding(defaultPadding)) {
         NoteScreenListHeader(noteScreenListHeaderStruct)
         Spacer(modifier = Modifier.height(defaultPadding))
@@ -255,7 +240,10 @@ fun SecurityClickItem(text: String, onClick: () -> Unit) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(defaultPadding).clickable { onClick() }.fillMaxWidth()
+            modifier = Modifier
+                .padding(defaultPadding)
+                .clickable { onClick() }
+                .fillMaxWidth()
         ) {
             Text(text)
         }
