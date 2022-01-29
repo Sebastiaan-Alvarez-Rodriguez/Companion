@@ -1,19 +1,16 @@
-package org.python.companion.ui.note
+package org.python.companion.ui.note.security
 
-import androidx.annotation.IntDef
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,19 +23,64 @@ import androidx.compose.ui.window.Dialog
 import org.python.backend.security.PasswordVerificationToken
 import org.python.backend.security.VerificationToken
 import org.python.companion.R
-import org.python.companion.support.UiUtil
-import timber.log.Timber
+import org.python.companion.support.LoadState
+import org.python.companion.support.LoadingState
+import org.python.companion.support.UiUtil.SimpleLoading
+import org.python.companion.support.UiUtil.SimpleOk
 import java.nio.ByteBuffer
 
-object LoadState {
-    const val STATE_READY = 0
-    const val STATE_LOADING = 1
-    const val STATE_OK = 2
-    const val STATE_FAILED = 3
+
+class PasswordDialogMiniState(
+    val state: MutableState<Int>,
+    val stateMessage: MutableState<String?>,
+    val pass: MutableState<String>,
+    val passVisible: MutableState<Boolean>,
+    open: MutableState<Boolean>
+) : SecurityDialogState(open) {
+    override fun open() {
+        open.value = true
+        state.value = LoadState.STATE_READY
+    }
+
+    override fun close() {
+        open.value = false
+        stateMessage.value = null
+        pass.value = ""
+    }
+
+    @Composable
+    override fun Dialog(
+        onDismiss: () -> Unit,
+        onNegativeClick: () -> Unit,
+        onPositiveClick: (VerificationToken) -> Unit
+    ) {
+        SecurityPasswordDialog(
+            onDismiss = onDismiss,
+            onNegativeClick = onNegativeClick,
+            onPositiveClick = onPositiveClick,
+            state = this,
+        )
+    }
+
+    companion object {
+        @Composable
+        fun rememberState(
+            stateMessage: String? = null,
+            @LoadingState state: Int = LoadState.STATE_OK,
+            passVisible: Boolean = false,
+            open: Boolean = false
+        ) =
+            remember(open) {
+                PasswordDialogMiniState(
+                    state = mutableStateOf(state),
+                    stateMessage = mutableStateOf(stateMessage),
+                    pass = mutableStateOf(""),
+                    passVisible = mutableStateOf(passVisible),
+                    open = mutableStateOf(open)
+                )
+            }
+    }
 }
-@kotlin.annotation.Retention(AnnotationRetention.SOURCE)
-@IntDef(LoadState.STATE_READY, LoadState.STATE_LOADING, LoadState.STATE_OK, LoadState.STATE_FAILED)
-annotation class LoadingState
 
 @Composable
 fun SecurityPasswordDialog(
@@ -47,7 +89,6 @@ fun SecurityPasswordDialog(
     onPositiveClick: (PasswordVerificationToken) -> Unit,
     state: PasswordDialogMiniState
 ) {
-    Timber.w("Security dialog: open=${state.open}, pass=${state.pass}, state=$state")
     if (state.open.value)
         Dialog(onDismissRequest = onDismiss) {
             Card(
@@ -56,16 +97,16 @@ fun SecurityPasswordDialog(
             ) {
                 when(state.state.value) {
                     LoadState.STATE_READY -> SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state)
-                    LoadState.STATE_LOADING -> SecurityPasswordDialogLoading()
+                    LoadState.STATE_LOADING -> SimpleLoading()
                     LoadState.STATE_FAILED -> SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state)
-                    LoadState.STATE_OK -> SecurityPasswordDialogOk()
+                    LoadState.STATE_OK -> SimpleOk()
                 }
             }
         }
 }
 
 @Composable
-fun SecurityPasswordDialogReady(
+private fun SecurityPasswordDialogReady(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
     state: PasswordDialogMiniState
@@ -122,90 +163,5 @@ fun SecurityPasswordDialogReady(
                 Text(text = "SUBMIT")
             }
         }
-    }
-}
-
-@Composable
-fun SecurityPasswordDialogLoading() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-fun SecurityPasswordDialogOk() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
-    }
-}
-
-abstract class SecurityDialogState(open: MutableState<Boolean>) : UiUtil.DialogMiniState(open) {
-    @Composable
-    abstract fun Dialog(
-        onDismiss: () -> Unit,
-        onNegativeClick: () -> Unit,
-        onPositiveClick: (VerificationToken) -> Unit
-    )
-
-    abstract fun open()
-
-    abstract fun close()
-}
-
-class PasswordDialogMiniState(
-    val stateMessage: MutableState<String?>,
-    val state: MutableState<Int>,
-    val pass: MutableState<String>,
-    val passVisible: MutableState<Boolean>,
-    open: MutableState<Boolean>
-) : SecurityDialogState(open) {
-    override fun open() {
-        open.value = true
-        state.value = LoadState.STATE_READY
-    }
-
-    override fun close() {
-        open.value = false
-        stateMessage.value = null
-        pass.value = ""
-    }
-
-    @Composable
-    override fun Dialog(
-        onDismiss: () -> Unit,
-        onNegativeClick: () -> Unit,
-        onPositiveClick: (VerificationToken) -> Unit
-    ) {
-        SecurityPasswordDialog(
-            onDismiss = onDismiss,
-            onNegativeClick = onNegativeClick,
-            onPositiveClick = onPositiveClick,
-            state = this,
-        )
-    }
-
-    companion object {
-        @Composable
-        fun rememberState(
-            stateMessage: String? = null,
-            @LoadingState state: Int = LoadState.STATE_OK,
-            open: Boolean = false,
-            passVisible: Boolean = false
-        ) =
-            remember(open) {
-                PasswordDialogMiniState(
-                    stateMessage = mutableStateOf(stateMessage),
-                    state = mutableStateOf(state),
-                    open = mutableStateOf(open),
-                    pass = mutableStateOf(""),
-                    passVisible = mutableStateOf(passVisible)
-                )
-            }
     }
 }

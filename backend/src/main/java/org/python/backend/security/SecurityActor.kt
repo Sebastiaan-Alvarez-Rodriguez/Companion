@@ -19,9 +19,11 @@ abstract class SecurityActor(@SecurityType val type: Int) {
     companion object {
         const val TYPE_PASS = 0
         const val TYPE_BIO = 1
+        /* Indicates that user has not yet set a preference */
+        const val TYPE_UNDEFINED = -1
         const val security_storage = "SECURITY_ACTOR_STORAGE"
         const val preferred_actor_key = "SECURITY_ACTOR_PREFERRED"
-        const val preferred_actor_default = TYPE_PASS
+        const val preferred_actor_default = TYPE_UNDEFINED
     }
 
     /**

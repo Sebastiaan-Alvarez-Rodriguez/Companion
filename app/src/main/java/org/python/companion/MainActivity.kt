@@ -23,11 +23,14 @@ import org.python.backend.security.SecurityActor
 import org.python.backend.security.SecurityProvider
 import org.python.backend.security.VerificationMessage
 import org.python.backend.security.VerificationToken
+import org.python.companion.support.LoadState
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
+import org.python.companion.ui.note.security.PasswordDialogMiniState
+import org.python.companion.ui.note.security.SecurityDialogStateHolder
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
@@ -126,8 +129,7 @@ class AuthenticationState(var securityActor: SecurityActor, private val viewmode
                                     LoadState.STATE_OK
                                 }
                                 else -> {
-                                    passwordDialogMiniState.stateMessage.value =
-                                        msg.body?.userMessage
+                                    passwordDialogMiniState.stateMessage.value = msg.body?.userMessage
                                     LoadState.STATE_FAILED
                                 }
                             }
@@ -163,30 +165,6 @@ class AuthenticationState(var securityActor: SecurityActor, private val viewmode
     }
 }
 
-/*
-passwordDialogStruct = PasswordDialogStruct(
-                        state = passwordDialogMiniState,
-                        onDismiss = { passwordDialogMiniState.close() },
-                        onNegativeClick = { passwordDialogMiniState.close() },
-                        onPositiveClick = {
-                            noteViewModel.with {
-                                passwordDialogMiniState.state.value = LoadState.STATE_LOADING
-                                val msg = authState.authenticate(it)
-                                passwordDialogMiniState.state.value = when (msg.type) {
-                                    VerificationMessage.SEC_CORRECT -> {
-                                        passwordDialogMiniState.close()
-                                        LoadState.STATE_OK
-                                    }
-                                    else -> {
-                                        passwordDialogMiniState.stateMessage.value =
-                                            msg.body?.userMessage
-                                        LoadState.STATE_FAILED
-                                    }
-                                }
-                            }
-                        }
-                    )
- */
 class NoteState(
     private val navController: NavHostController,
     private val noteViewModel: NoteViewModel,
@@ -205,7 +183,7 @@ class NoteState(
                 val isLoading by noteViewModel.isLoading.collectAsState()
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
 
-                val passwordDialogMiniState = PasswordDialogMiniState.rememberState()
+                var securityDialogHolder = SecurityDialogStateHolder.create()
 
                 NoteScreen(
                     noteScreenListHeaderStruct = NoteScreenListHeaderStruct(
@@ -233,10 +211,11 @@ class NoteState(
                                     securityText = "Unlock secure notes",
                                     onSecurityClick = {
                                         when (authState.securityActor.type) {
-                                            SecurityActor.TYPE_PASS -> { passwordDialogMiniState.open() }
                                             SecurityActor.TYPE_BIO -> noteViewModel.with {
                                                 authState.authenticate()
                                             }
+                                            SecurityActor.TYPE_PASS -> securityDialogHolder.dialogStates[authState.securityActor.type]?.open()
+                                            SecurityActor.TYPE_UNDEFINED -> { TODO("Open the picker dialog, then setup dialog, then either save note or do a login") }
                                         }
                                     }
                                 )
