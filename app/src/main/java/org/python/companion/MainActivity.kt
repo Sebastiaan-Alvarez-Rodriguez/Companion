@@ -101,10 +101,11 @@ class AuthenticationUIState(
     @Composable
     fun Dialog() {
         if (open.value) {
-            when (authState.securityActor.type) {
-                SecurityActor.TYPE_UNDEFINED -> DialogSetup()
+            when (authState.securityActor?.type) {
+                SecurityActor.TYPE_UNDEFINED, null -> DialogSetup()
                 SecurityActor.TYPE_BIO -> DialogBio()
                 SecurityActor.TYPE_PASS -> DialogPassword()
+                else -> {throw RuntimeException("AuthUIState: How did you get here?")}
             }
         }
     }
@@ -195,19 +196,18 @@ class AuthenticationUIState(
     }
 }
 
-class AuthenticationState(var securityActor: SecurityActor, private val activity: FragmentActivity) {
+class AuthenticationState(var securityActor: SecurityActor?, private val activity: FragmentActivity) {
     var authenticated: Boolean = false
         private set
     var token: VerificationToken? = null
         private set
 
-    constructor(activity: FragmentActivity, viewmodel: NoteViewModel) : this(
-        securityActor = SecurityProvider.getActor(
-            type = activity
-                .baseContext
-                .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
-                .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default),
-            activity = activity),
+    constructor(activity: FragmentActivity) : this(
+        securityActor =
+            when (loadPreferredActor(activity)) {
+                SecurityActor.TYPE_UNDEFINED -> null
+                else -> SecurityProvider.getActor(loadPreferredActor(activity), activity)
+            },
         activity = activity
     )
 
@@ -225,7 +225,8 @@ class AuthenticationState(var securityActor: SecurityActor, private val activity
     }
 
     suspend fun authenticate(securityToken: VerificationToken? = null): VerificationMessage {
-        val msg = securityActor.verify(securityToken)
+        val msg = securityActor?.verify(securityToken)
+            ?: return VerificationMessage.createOther(StatusBody.OtherBody("Did not initialize security actor"))
         if (msg.type == VerificationMessage.SEC_CORRECT) {
             authenticated = true
             token = securityToken
@@ -241,7 +242,13 @@ class AuthenticationState(var securityActor: SecurityActor, private val activity
     companion object {
         @Composable
         fun rememberState(activity: FragmentActivity, viewmodel: NoteViewModel) =
-            remember(activity) { AuthenticationState(activity, viewmodel) }
+            remember(activity) { AuthenticationState(activity) }
+
+        private fun loadPreferredActor(activity: FragmentActivity): @SecurityType Int =
+            activity
+                .baseContext
+                .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
+                .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default)
     }
 }
 
@@ -264,6 +271,35 @@ class NoteState(
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
 
                 val authUIState = AuthenticationUIState.rememberState(authState, noteViewModel)
+
+                val securityStruct = if (hasSecureNotes) {
+                    Timber.w("Authstate authed: ${authState.authenticated}")
+                    if (authState.authenticated)
+                        NoteScreenListSecurityStruct(
+                            securityText = "Lock secure notes",
+                            onSecurityClick = {
+                                Timber.w("Authstate disable busy: ${authState.authenticated}")
+                                authState.reset()
+                                Timber.w("Authstate disable complete: ${authState.authenticated}")
+                            }
+                        )
+                    else
+                        NoteScreenListSecurityStruct(
+                            securityText = "Unlock secure notes",
+                            onSecurityClick = {
+                                when (authState.securityActor?.type) {
+                                    SecurityActor.TYPE_BIO -> noteViewModel.with {
+                                        authUIState.close()
+                                        authState.authenticate()
+                                    }
+                                    SecurityActor.TYPE_PASS -> authUIState.open()
+                                    else -> { authUIState.open() }
+                                }
+                            }
+                        )
+                } else {
+                    null
+                }
                 NoteScreen(
                     noteScreenListHeaderStruct = NoteScreenListHeaderStruct(
                         onSearchClick = { /* TODO */ },
@@ -279,29 +315,7 @@ class NoteState(
                                 noteViewModel.setFavorite(note, !note.favorite)
                             }
                         },
-                        securityStruct = if (hasSecureNotes) {
-                            if (authState.authenticated)
-                                NoteScreenListSecurityStruct(
-                                    securityText = "Lock secure notes",
-                                    onSecurityClick = { authState.reset() }
-                                )
-                            else
-                                NoteScreenListSecurityStruct(
-                                    securityText = "Unlock secure notes",
-                                    onSecurityClick = {
-                                        when (authState.securityActor.type) {
-                                            SecurityActor.TYPE_BIO -> noteViewModel.with {
-                                                authUIState.close()
-                                                authState.authenticate()
-                                            }
-                                            SecurityActor.TYPE_PASS -> authUIState.open()
-                                            SecurityActor.TYPE_UNDEFINED -> { authUIState.open() }
-                                        }
-                                    }
-                                )
-                        } else {
-                            null
-                        },
+                        securityStruct = securityStruct,
                     ),
                     authUIState = authUIState,
                 )

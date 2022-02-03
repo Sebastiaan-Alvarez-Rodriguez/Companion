@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentActivity
 import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
 
+@Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE)
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
 @IntDef(SecurityActor.TYPE_PASS, SecurityActor.TYPE_BIO)
 annotation class SecurityType
