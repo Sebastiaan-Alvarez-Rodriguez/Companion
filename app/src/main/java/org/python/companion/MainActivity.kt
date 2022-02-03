@@ -19,18 +19,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.python.backend.data.datatype.Anniversary
 import org.python.backend.data.datatype.Note
-import org.python.backend.security.SecurityActor
-import org.python.backend.security.SecurityProvider
-import org.python.backend.security.VerificationMessage
-import org.python.backend.security.VerificationToken
+import org.python.backend.security.*
 import org.python.companion.support.LoadState
+import org.python.companion.support.UiUtil
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
 import org.python.companion.ui.note.security.PasswordDialogMiniState
-import org.python.companion.ui.note.security.SecurityDialogStateHolder
+import org.python.companion.ui.note.security.PasswordSetupDialogMiniState
+import org.python.companion.ui.note.security.SecurityDialogPickMiniState
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
@@ -94,7 +93,109 @@ class MainActivity : FragmentActivity() {
     }
 }
 
-class AuthenticationState(var securityActor: SecurityActor, private val viewmodel: NoteViewModel) {
+class AuthenticationUIState(
+    open: MutableState<Boolean>,
+    val authState: AuthenticationState,
+    private val viewmodel: NoteViewModel
+) : UiUtil.DialogMiniState(open) {
+    @Composable
+    fun Dialog() {
+        if (open.value) {
+            when (authState.securityActor.type) {
+                SecurityActor.TYPE_UNDEFINED -> DialogSetup()
+                SecurityActor.TYPE_BIO -> DialogBio()
+                SecurityActor.TYPE_PASS -> DialogPassword()
+            }
+        }
+    }
+
+    /** Setup dialog: Warning - should only call when it is certain that the user has not picked a type yet. */
+    @Composable
+    private fun DialogSetup() {
+        val pickedState = remember { mutableStateOf(SecurityActor.TYPE_UNDEFINED) }
+        when (pickedState.value) {
+            SecurityActor.TYPE_UNDEFINED -> DialogSetupPick(pickedActorType = pickedState)
+            SecurityActor.TYPE_BIO -> {}
+            SecurityActor.TYPE_PASS -> {
+                DialogSetupPassword()
+            }
+        }
+    }
+
+    @Composable
+    private fun DialogSetupPick(pickedActorType: MutableState<Int>) {
+        val securityPickerState = SecurityDialogPickMiniState.rememberState()
+        securityPickerState.Dialog(
+            onDismiss = { securityPickerState.close() },
+            onNegativeClick = { securityPickerState.close() },
+            onPositiveClick = { type -> when(type) {
+                SecurityActor.TYPE_BIO -> viewmodel.with {
+                    pickedActorType.value = type
+                    securityPickerState.close()
+                    authState.changeSecurityActor(type)
+                }
+                SecurityActor.TYPE_PASS -> {
+                    pickedActorType.value = type
+                    securityPickerState.close()
+                }
+                else -> Timber.e("SecuritySetup: User picked unacceptable type $type")
+            }
+            }
+        )
+        securityPickerState.open()
+    }
+
+    @Composable
+    private fun DialogSetupPassword() {
+        val passwordSetupDialogState = PasswordSetupDialogMiniState.rememberState()
+        passwordSetupDialogState.Dialog(
+            onDismiss = { passwordSetupDialogState.close() },
+            onNegativeClick = { passwordSetupDialogState.close() },
+            onPositiveClick = { token -> TODO("Store token") }
+        )
+        passwordSetupDialogState.open()
+    }
+
+    @Composable
+    private fun DialogBio() { viewmodel.with { authState.authenticate() } }
+
+    @Composable
+    private fun DialogPassword() {
+        val passwordDialogMiniState = PasswordDialogMiniState.rememberState()
+        passwordDialogMiniState.Dialog(
+            onDismiss = { passwordDialogMiniState.close() },
+            onNegativeClick = { passwordDialogMiniState.close() },
+            onPositiveClick = {
+                viewmodel.with {
+                    passwordDialogMiniState.state.value = LoadState.STATE_LOADING
+                    val msg = authState.authenticate(it)
+                    passwordDialogMiniState.state.value = when (msg.type) {
+                        VerificationMessage.SEC_CORRECT -> {
+                            passwordDialogMiniState.close()
+                            LoadState.STATE_OK
+                        }
+                        else -> {
+                            passwordDialogMiniState.stateMessage.value = msg.body?.userMessage
+                            LoadState.STATE_FAILED
+                        }
+                    }
+                    close()
+                }
+            }
+        )
+    }
+
+    companion object {
+        @Composable
+        fun rememberState(
+            authState: AuthenticationState,
+            viewmodel: NoteViewModel,
+            open: Boolean = false
+        ) = remember(open) { AuthenticationUIState(mutableStateOf(open), authState, viewmodel) }
+    }
+}
+
+class AuthenticationState(var securityActor: SecurityActor, private val activity: FragmentActivity) {
     var authenticated: Boolean = false
         private set
     var token: VerificationToken? = null
@@ -107,37 +208,20 @@ class AuthenticationState(var securityActor: SecurityActor, private val viewmode
                 .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
                 .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default),
             activity = activity),
-        viewmodel = viewmodel
+        activity = activity
     )
 
-    @Composable
-    fun Dialog() {
-        when (securityActor.type) {
-            SecurityActor.TYPE_BIO -> viewmodel.with { authenticate() }
-            SecurityActor.TYPE_PASS -> {
-                val passwordDialogMiniState = PasswordDialogMiniState.rememberState()
-                passwordDialogMiniState.Dialog(
-                    onDismiss = { passwordDialogMiniState.close() },
-                    onNegativeClick = { passwordDialogMiniState.close() },
-                    onPositiveClick = {
-                        viewmodel.with {
-                            passwordDialogMiniState.state.value = LoadState.STATE_LOADING
-                            val msg = authenticate(it)
-                            passwordDialogMiniState.state.value = when (msg.type) {
-                                VerificationMessage.SEC_CORRECT -> {
-                                    passwordDialogMiniState.close()
-                                    LoadState.STATE_OK
-                                }
-                                else -> {
-                                    passwordDialogMiniState.stateMessage.value = msg.body?.userMessage
-                                    LoadState.STATE_FAILED
-                                }
-                            }
-                        }
-                    }
-                )
-            }
-        }
+    suspend fun changeSecurityActor(@SecurityType newType: Int) {
+        activity.baseContext
+            .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE).edit()
+            .putInt(SecurityActor.preferred_actor_key, newType)
+            .commit()
+        securityActor = SecurityProvider.getActor(
+            type = activity
+                .baseContext
+                .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
+                .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default),
+            activity = activity)
     }
 
     suspend fun authenticate(securityToken: VerificationToken? = null): VerificationMessage {
@@ -155,10 +239,6 @@ class AuthenticationState(var securityActor: SecurityActor, private val viewmode
     }
 
     companion object {
-        @Composable
-        fun rememberState(securityActor: SecurityActor, viewmodel: NoteViewModel) =
-            remember(securityActor) { AuthenticationState(securityActor, viewmodel) }
-
         @Composable
         fun rememberState(activity: FragmentActivity, viewmodel: NoteViewModel) =
             remember(activity) { AuthenticationState(activity, viewmodel) }
@@ -183,8 +263,7 @@ class NoteState(
                 val isLoading by noteViewModel.isLoading.collectAsState()
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
 
-                var securityDialogHolder = SecurityDialogStateHolder.create()
-
+                val authUIState = AuthenticationUIState.rememberState(authState, noteViewModel)
                 NoteScreen(
                     noteScreenListHeaderStruct = NoteScreenListHeaderStruct(
                         onSearchClick = { /* TODO */ },
@@ -212,10 +291,11 @@ class NoteState(
                                     onSecurityClick = {
                                         when (authState.securityActor.type) {
                                             SecurityActor.TYPE_BIO -> noteViewModel.with {
+                                                authUIState.close()
                                                 authState.authenticate()
                                             }
-                                            SecurityActor.TYPE_PASS -> securityDialogHolder.dialogStates[authState.securityActor.type]?.open()
-                                            SecurityActor.TYPE_UNDEFINED -> { TODO("Open the picker dialog, then setup dialog, then either save note or do a login") }
+                                            SecurityActor.TYPE_PASS -> authUIState.open()
+                                            SecurityActor.TYPE_UNDEFINED -> { authUIState.open() }
                                         }
                                     }
                                 )
@@ -223,7 +303,7 @@ class NoteState(
                             null
                         },
                     ),
-                    authState = authState,
+                    authUIState = authUIState,
                 )
             }
 
