@@ -20,16 +20,13 @@ import androidx.navigation.compose.rememberNavController
 import org.python.backend.data.datatype.Anniversary
 import org.python.backend.data.datatype.Note
 import org.python.backend.security.*
-import org.python.companion.support.LoadState
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
-import org.python.companion.ui.note.security.PasswordDialogMiniState
-import org.python.companion.ui.note.security.PasswordSetupDialogMiniState
-import org.python.companion.ui.note.security.SecurityDialogPickMiniState
+import org.python.companion.ui.note.security.SecurityDialogView
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
@@ -102,88 +99,28 @@ class AuthenticationUIState(
     fun Dialog() {
         if (open.value) {
             when (authState.securityActor?.type) {
-                SecurityActor.TYPE_UNDEFINED, null -> DialogSetup()
-                SecurityActor.TYPE_BIO -> DialogBio()
-                SecurityActor.TYPE_PASS -> DialogPassword()
-                else -> {throw RuntimeException("AuthUIState: How did you get here?")}
-            }
-        }
-    }
-
-    /** Setup dialog: Warning - should only call when it is certain that the user has not picked a type yet. */
-    @Composable
-    private fun DialogSetup() {
-        val pickedState = remember { mutableStateOf(SecurityActor.TYPE_UNDEFINED) }
-        when (pickedState.value) {
-            SecurityActor.TYPE_UNDEFINED -> DialogSetupPick(pickedActorType = pickedState)
-            SecurityActor.TYPE_BIO -> {}
-            SecurityActor.TYPE_PASS -> {
-                DialogSetupPassword()
-            }
-        }
-    }
-
-    @Composable
-    private fun DialogSetupPick(pickedActorType: MutableState<Int>) {
-        val securityPickerState = SecurityDialogPickMiniState.rememberState()
-        securityPickerState.Dialog(
-            onDismiss = { securityPickerState.close() },
-            onNegativeClick = { securityPickerState.close() },
-            onPositiveClick = { type -> when(type) {
-                SecurityActor.TYPE_BIO -> viewmodel.with {
-                    pickedActorType.value = type
-                    securityPickerState.close()
-                    authState.changeSecurityActor(type)
-                }
-                SecurityActor.TYPE_PASS -> {
-                    pickedActorType.value = type
-                    securityPickerState.close()
-                }
-                else -> Timber.e("SecuritySetup: User picked unacceptable type $type")
-            }
-            }
-        )
-        securityPickerState.open()
-    }
-
-    @Composable
-    private fun DialogSetupPassword() {
-        val passwordSetupDialogState = PasswordSetupDialogMiniState.rememberState()
-        passwordSetupDialogState.Dialog(
-            onDismiss = { passwordSetupDialogState.close() },
-            onNegativeClick = { passwordSetupDialogState.close() },
-            onPositiveClick = { token -> TODO("Store token") }
-        )
-        passwordSetupDialogState.open()
-    }
-
-    @Composable
-    private fun DialogBio() { viewmodel.with { authState.authenticate() } }
-
-    @Composable
-    private fun DialogPassword() {
-        val passwordDialogMiniState = PasswordDialogMiniState.rememberState()
-        passwordDialogMiniState.Dialog(
-            onDismiss = { passwordDialogMiniState.close() },
-            onNegativeClick = { passwordDialogMiniState.close() },
-            onPositiveClick = {
-                viewmodel.with {
-                    passwordDialogMiniState.state.value = LoadState.STATE_LOADING
-                    val msg = authState.authenticate(it)
-                    passwordDialogMiniState.state.value = when (msg.type) {
-                        VerificationMessage.SEC_CORRECT -> {
-                            passwordDialogMiniState.close()
-                            LoadState.STATE_OK
-                        }
-                        else -> {
-                            passwordDialogMiniState.stateMessage.value = msg.body?.userMessage
-                            LoadState.STATE_FAILED
-                        }
+                SecurityActor.TYPE_UNDEFINED, null -> SecurityDialogView.DialogSetup(
+                    onDismiss = {},
+                    onPositiveClick = { newType -> viewmodel.with { authState.changeSecurityActor(newType) } }
+                )
+                else -> {
+                    val pickedState = remember { mutableStateOf(SecurityActor.TYPE_UNDEFINED) }
+                    when (pickedState.value) {
+                        SecurityActor.TYPE_UNDEFINED -> SecurityDialogView.DialogPick(
+                            pickedActorType = pickedState,
+                            onDismiss = { pickedState.value = SecurityActor.TYPE_UNDEFINED}
+                        )
+                        SecurityActor.TYPE_BIO -> SecurityDialogView.DialogBio(authState, viewmodel)
+                        SecurityActor.TYPE_PASS -> SecurityDialogView.DialogPassword(
+                            authState,
+                            viewmodel,
+                            onDismiss = { pickedState.value = SecurityActor.TYPE_UNDEFINED},
+                            onSuccess = { close() }
+                        )
                     }
-                    close()
                 }
             }
-        )
+        }
     }
 
     companion object {
