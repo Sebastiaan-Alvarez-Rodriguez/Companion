@@ -28,6 +28,7 @@ object LoadState {
     const val STATE_OK = 2
     const val STATE_FAILED = 3
 }
+@Target(AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE)
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
 @IntDef(LoadState.STATE_READY, LoadState.STATE_LOADING, LoadState.STATE_OK, LoadState.STATE_FAILED)
 annotation class LoadingState

@@ -19,16 +19,6 @@ import timber.log.Timber
 annotation class SecurityType
 
 interface SecurityInterface {
-    companion object {
-        const val TYPE_PASS = 0
-        const val TYPE_BIO = 1
-        /* Indicates that user has not yet set a preference */
-        const val TYPE_UNDEFINED = -1
-        const val security_storage = "SECURITY_ACTOR_STORAGE"
-        const val preferred_actor_key = "SECURITY_ACTOR_PREFERRED"
-        const val preferred_actor_default = TYPE_UNDEFINED
-    }
-
     /** security type being implemented by this actor */
     val type: @SecurityType Int
 
@@ -50,13 +40,14 @@ interface SecurityInterface {
      * @return Message providing status.
      * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
-    abstract suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage
+    suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage
+
     /**
      * Verifies given token for correctness.
      * @param token Token to verify. Can be <code>null</code>, as some actors do not need anything from users.
      * @return message indicating verification result status.
      */
-    abstract suspend fun verify(token: VerificationToken? = null): VerificationMessage
+    suspend fun verify(token: VerificationToken? = null): VerificationMessage
 }
 
 class SecurityActor : SecurityInterface {
@@ -69,6 +60,10 @@ class SecurityActor : SecurityInterface {
             TYPE_BIO -> BioActor(activity)
             else -> null
         }
+    }
+
+    fun logout() {
+        authenticated.value = false
     }
 
     private fun setAuthenticated(newValue: Boolean) = authenticated.update { newValue }
@@ -248,7 +243,7 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
 
         val preferencesEditor = sharedPreferences.edit()
         preferencesEditor.putString(pass_storage_key, newToken.toString())
-        preferencesEditor.apply()
+        preferencesEditor.commit()
 
         return callback.onResult(VerificationMessage.createCorrect())
     }

@@ -1,7 +1,6 @@
 package org.python.companion.ui.security
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -13,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.backend.security.SecurityActor
 import org.python.backend.security.VerificationMessage
+import org.python.companion.support.LoadState
 import org.python.companion.viewmodels.SecurityViewModel
 
 
@@ -21,7 +21,6 @@ class SecurityState(
     private val navController: NavHostController,
     private val securityViewModel: SecurityViewModel
 ) {
-    private val navigationStart = "securitydialog"
     fun NavGraphBuilder.securityGraph() {
         navigation(startDestination = navigationStart, route = "sec") {
             dialog("pick") {
@@ -51,14 +50,23 @@ class SecurityState(
                     return@dialog
                 }
 
+                var state by remember { mutableStateOf(LoadState.STATE_READY) }
+                var stateMessage by remember { mutableStateOf<String?>(null) }
+
                 if (securityViewModel.securityActor.hasCredentials()) {
                     SecurityPasswordDialogContent(
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { token ->
+                            state = LoadState.STATE_LOADING
                             securityViewModel.viewModelScope.launch {
                                 val msgSec = securityViewModel.securityActor.verify(token)
-                                if (msgSec.type == VerificationMessage.SEC_CORRECT)
+                                if (msgSec.type == VerificationMessage.SEC_CORRECT) {
+                                    state = LoadState.STATE_OK
                                     navController.navigateUp()
+                                } else {
+                                    state = LoadState.STATE_FAILED
+                                    stateMessage = msgSec.body?.userMessage
+                                }
                             }
                         }
                     )
@@ -66,12 +74,20 @@ class SecurityState(
                     SecurityDialogSetupPasswordContent(
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { token ->
+                            state = LoadState.STATE_LOADING
                             securityViewModel.viewModelScope.launch {
                                 val msgSet = securityViewModel.securityActor.setCredentials(null, token)
-                                if (msgSet.type == VerificationMessage.SEC_CORRECT)
+                                if (msgSet.type == VerificationMessage.SEC_CORRECT) {
+                                    state = LoadState.STATE_OK
                                     navController.navigateUp()
+                                } else {
+                                    state = LoadState.STATE_FAILED
+                                    stateMessage = msgSet.body?.userMessage
+                                }
                             }
-                        }
+                        },
+                        state = state,
+                        stateMessage = stateMessage
                     )
                 }
             }
@@ -82,10 +98,12 @@ class SecurityState(
         }
     }
 
-    private fun navigateToBio(navController: NavController) = navController.navigate("$navigationStart/bio")
-    private fun navigateToPass(navController: NavController) = navController.navigate("$navigationStart/pass")
-
     companion object {
+        private val navigationStart = "securitydialog"
+        fun navigateToSecurityPick(navController: NavController) = navController.navigate(navigationStart)
+        private fun navigateToBio(navController: NavController) = navController.navigate("$navigationStart/bio")
+        private fun navigateToPass(navController: NavController) = navController.navigate("$navigationStart/pass")
+
         @Composable
         fun rememberState(
             activity: FragmentActivity,

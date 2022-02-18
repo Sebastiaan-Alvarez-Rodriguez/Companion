@@ -7,65 +7,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import org.python.backend.security.SecurityActor
 import org.python.companion.R
-import org.python.companion.support.LoadState
-import org.python.companion.support.LoadingState
-
-class SecurityDialogPickMiniState(
-    val state: MutableState<Int>,
-    val stateMessage: MutableState<String?>,
-    open: MutableState<Boolean>
-) : SecurityDialogPickState(open) {
-    override fun open() {
-        open.value = true
-        state.value = LoadState.STATE_READY
-    }
-
-    override fun close() {
-        open.value = false
-        stateMessage.value = null
-    }
-
-    @Composable
-    override fun Dialog(
-        onDismiss: () -> Unit,
-        onNegativeClick: () -> Unit,
-        onPositiveClick: (Int) -> Unit
-    ) {
-        SecurityPickDialog(
-            onDismiss = onDismiss,
-            onNegativeClick = onNegativeClick,
-            onPositiveClick = onPositiveClick,
-            headerText = stateMessage.value,
-        )
-    }
-
-    companion object {
-        @Composable
-        fun rememberState(
-            stateMessage: String? = null,
-            @LoadingState state: Int = LoadState.STATE_OK,
-            open: Boolean = false
-        ) = remember(open) {
-                SecurityDialogPickMiniState(
-                    state = mutableStateOf(state),
-                    stateMessage = mutableStateOf(stateMessage),
-                    open = mutableStateOf(open)
-                )
-            }
-    }
-}
 
 @Composable
 fun SecurityPickDialogContent(

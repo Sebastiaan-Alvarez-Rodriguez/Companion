@@ -11,13 +11,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
-import org.python.backend.security.VerificationToken
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
+    val securityActor = (application as CompanionApplication).securityActor
+
+    val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
+    var authenticated = securityActor.authenticated.stateInViewModel(viewModelScope, false)
 
     private val allNotes = MutableStateFlow(emptyFlow<PagingData<Note>>().cachedIn(viewModelScope))
     private val searchNotes = MutableStateFlow(emptyFlow<PagingData<Note>>())
@@ -25,18 +28,18 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _search = MutableStateFlow(null as String?)
     private val _isLoading = MutableStateFlow(true)
 
-    val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes() }
 
     val search: StateFlow<String?> = _search
     val isLoading: StateFlow<Boolean> = _isLoading
 
     /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
-    fun load(token: VerificationToken? = null) = UiUtil.effect(viewModelScope) {
-        _isLoading.value = true
-        allNotes.value = noteRepository.allNotes(token).cachedIn(viewModelScope)
-        _isLoading.value = false
+    fun load() {
+        UiUtil.effect(viewModelScope) {
+            _isLoading.value = true
+            allNotes.value = noteRepository.allNotes().cachedIn(viewModelScope)
+            _isLoading.value = false
+        }
     }
-
     suspend fun add(note: Note): Boolean = noteRepository.add(note)
     suspend fun upsert(note: Note): Boolean = noteRepository.upsert(note)
     suspend fun update(oldNote: Note, updateNote: Note): Boolean = noteRepository.update(oldNote, updateNote)

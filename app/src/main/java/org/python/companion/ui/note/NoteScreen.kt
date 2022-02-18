@@ -24,7 +24,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
-import org.python.companion.AuthenticationUIState
 import org.python.companion.R
 
 
@@ -32,20 +31,16 @@ import org.python.companion.R
 fun NoteScreen(
     noteScreenListHeaderStruct: NoteScreenListHeaderStruct,
     noteScreenListStruct: NoteScreenListStruct,
-    authUIState: AuthenticationUIState,
 ) {
-    NoteScreenList(noteScreenListHeaderStruct, noteScreenListStruct, authUIState)
+    NoteScreenList(noteScreenListHeaderStruct, noteScreenListStruct)
 }
 
 @Composable
 fun NoteScreenList(
     noteScreenListHeaderStruct: NoteScreenListHeaderStruct,
     noteScreenListStruct: NoteScreenListStruct,
-    authUIState: AuthenticationUIState,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-
-    authUIState.Dialog()
     Column(modifier = Modifier.padding(defaultPadding)) {
         NoteScreenListHeader(noteScreenListHeaderStruct)
         Spacer(modifier = Modifier.height(defaultPadding))

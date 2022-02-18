@@ -1,6 +1,5 @@
 package org.python.companion
 
-import android.content.Context
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -19,14 +18,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.python.backend.data.datatype.Anniversary
 import org.python.backend.data.datatype.Note
-import org.python.backend.security.*
-import org.python.companion.support.UiUtil
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
-import org.python.companion.ui.security.SecurityDialogView
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
@@ -52,12 +48,12 @@ class MainActivity : FragmentActivity() {
                 val selectedTabScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
                 val securityState = SecurityState.rememberState(
+                    activity = this,
                     navController = navController,
                     securityViewModel = securityViewModel
                 )
                 val noteState = NoteState.rememberState(
                     navController = navController,
-                    authState = AuthenticationState.rememberState(this, noteViewModel),
                     noteViewModel = noteViewModel
                 )
                 val cactusState = CactusState.rememberState(navController = navController)
@@ -102,115 +98,14 @@ class MainActivity : FragmentActivity() {
     }
 }
 
-class AuthenticationUIState(
-    open: MutableState<Boolean>,
-    val authState: AuthenticationState,
-    private val viewmodel: NoteViewModel
-) : UiUtil.DialogMiniState(open) {
-    @Composable
-    fun Dialog() {
-        if (open.value) {
-            when (authState.securityActor?.type) {
-                SecurityActor.TYPE_UNDEFINED, null -> SecurityDialogView.DialogSetup(
-                    onDismiss = {},
-                    onPositiveClick = { newType -> viewmodel.with { authState.changeSecurityActor(newType) } }
-                )
-                else -> {
-                    val pickedState = remember { mutableStateOf(SecurityActor.TYPE_UNDEFINED) }
-                    when (pickedState.value) {
-                        SecurityActor.TYPE_UNDEFINED -> SecurityDialogView.DialogPick(
-                            pickedActorType = pickedState,
-                            onDismiss = { pickedState.value = SecurityActor.TYPE_UNDEFINED}
-                        )
-                        SecurityActor.TYPE_BIO -> SecurityDialogView.DialogBio(authState, viewmodel)
-                        SecurityActor.TYPE_PASS -> SecurityDialogView.DialogPassword(
-                            authState,
-                            viewmodel,
-                            onDismiss = { pickedState.value = SecurityActor.TYPE_UNDEFINED},
-                            onSuccess = { close() }
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    companion object {
-        @Composable
-        fun rememberState(
-            authState: AuthenticationState,
-            viewmodel: NoteViewModel,
-            open: Boolean = false
-        ) = remember(open) { AuthenticationUIState(mutableStateOf(open), authState, viewmodel) }
-    }
-}
-
-class AuthenticationState(var securityActor: SecurityActor?, private val activity: FragmentActivity) {
-    var authenticated: Boolean = false
-        private set
-    var token: VerificationToken? = null
-        private set
-
-    constructor(activity: FragmentActivity) : this(
-        securityActor =
-            when (loadPreferredActor(activity)) {
-                SecurityActor.TYPE_UNDEFINED -> null
-                else -> SecurityProvider.getActor(loadPreferredActor(activity), activity)
-            },
-        activity = activity
-    )
-
-    suspend fun changeSecurityActor(@SecurityType newType: Int) {
-        activity.baseContext
-            .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE).edit()
-            .putInt(SecurityActor.preferred_actor_key, newType)
-            .commit()
-        securityActor = SecurityProvider.getActor(
-            type = activity
-                .baseContext
-                .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
-                .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default),
-            activity = activity)
-    }
-
-    suspend fun authenticate(securityToken: VerificationToken? = null): VerificationMessage {
-        val msg = securityActor?.verify(securityToken)
-            ?: return VerificationMessage.createOther(StatusBody.OtherBody("Did not initialize security actor"))
-        if (msg.type == VerificationMessage.SEC_CORRECT) {
-            authenticated = true
-            token = securityToken
-        }
-        return msg
-    }
-
-    fun reset() {
-        token = null
-        authenticated = false
-    }
-
-    companion object {
-        @Composable
-        fun rememberState(activity: FragmentActivity, viewmodel: NoteViewModel) =
-            remember(activity) { AuthenticationState(activity) }
-
-        private fun loadPreferredActor(activity: FragmentActivity): @SecurityType Int =
-            activity
-                .baseContext
-                .getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE)
-                .getInt(SecurityActor.preferred_actor_key, SecurityActor.preferred_actor_default)
-    }
-}
-
 class NoteState(
     private val navController: NavHostController,
     private val noteViewModel: NoteViewModel,
-    private val authState: AuthenticationState
+
 ) {
     private val noteTabName = CompanionScreen.Note.name
 
-    fun load() {
-        noteViewModel.load(authState.token)
-    }
+    fun load() = noteViewModel.load()
 
     fun NavGraphBuilder.noteGraph() {
         navigation(startDestination = noteTabName, route = "note") {
@@ -218,33 +113,23 @@ class NoteState(
                 val notes by noteViewModel.notes.collectAsState()
                 val isLoading by noteViewModel.isLoading.collectAsState()
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
-
-                val authUIState = AuthenticationUIState.rememberState(authState, noteViewModel)
+                val hasAuthenticated by noteViewModel.authenticated.collectAsState()
 
                 val securityStruct = if (hasSecureNotes) {
-                    Timber.w("Authstate authed: ${authState.authenticated}")
-                    if (authState.authenticated)
+                    Timber.w("Authstate authed: ${noteViewModel.authenticated}")
+                    if (hasAuthenticated)
                         NoteScreenListSecurityStruct(
                             securityText = "Lock secure notes",
                             onSecurityClick = {
-                                Timber.w("Authstate disable busy: ${authState.authenticated}")
-                                authState.reset()
-                                Timber.w("Authstate disable complete: ${authState.authenticated}")
+                                Timber.w("Authstate disable busy: $hasAuthenticated")
+                                noteViewModel.securityActor.logout()
+                                Timber.w("Authstate disable complete: $hasAuthenticated")
                             }
                         )
                     else
                         NoteScreenListSecurityStruct(
                             securityText = "Unlock secure notes",
-                            onSecurityClick = {
-                                when (authState.securityActor?.type) {
-                                    SecurityActor.TYPE_BIO -> noteViewModel.with {
-                                        authUIState.close()
-                                        authState.authenticate()
-                                    }
-                                    SecurityActor.TYPE_PASS -> authUIState.open()
-                                    else -> { authUIState.open() }
-                                }
-                            }
+                            onSecurityClick = { SecurityState.navigateToSecurityPick(navController) }
                         )
                 } else {
                     null
@@ -265,8 +150,7 @@ class NoteState(
                             }
                         },
                         securityStruct = securityStruct,
-                    ),
-                    authUIState = authUIState,
+                    )
                 )
             }
 
@@ -424,11 +308,8 @@ class NoteState(
 
     companion object {
         @Composable
-        fun rememberState(
-            navController: NavHostController = rememberNavController(),
-            authState: AuthenticationState,
-            noteViewModel: NoteViewModel) =
-            remember(navController) { NoteState(navController, noteViewModel, authState) }
+        fun rememberState(navController: NavHostController = rememberNavController(), noteViewModel: NoteViewModel) =
+            remember(navController) { NoteState(navController, noteViewModel) }
     }
 }
 

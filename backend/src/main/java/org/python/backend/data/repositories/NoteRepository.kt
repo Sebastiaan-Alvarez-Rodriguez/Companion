@@ -7,21 +7,23 @@ import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.stores.NoteStore
 import org.python.backend.security.Securer
-import org.python.backend.security.VerificationToken
+import org.python.backend.security.SecurityActor
 import org.python.db.CompanionDatabase
 
-class NoteRepository(private val noteStore: NoteStore) {
-    constructor(companionDatabase: CompanionDatabase) : this(NoteStore(companionDatabase))
+class NoteRepository(private val securityActor: SecurityActor, private val noteStore: NoteStore) {
+    constructor(securityActor: SecurityActor, companionDatabase: CompanionDatabase) :
+            this(securityActor, NoteStore(companionDatabase))
 
-    /**
-     * @param token If set, also fetches secure notes from the collection.
-     * @return All notes to be found in the collection.
-     */
-    fun allNotes(token: VerificationToken?) : Flow<PagingData<Note>> {
-        return when (token) {
-            null -> noteStore.getAllNotes()
-            else -> noteStore.getAllNotesWithSecure().map { page -> page.map { secureToUI(it)?: throw IllegalStateException("Could not decrypt notes") } }
-        }
+    /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
+    fun allNotes() : Flow<PagingData<Note>> {
+        return if (securityActor.authenticated.value)
+            noteStore.getAllNotesWithSecure().map {
+                page -> page.map {
+                    secureToUI(it)?: throw IllegalStateException("Could not decrypt notes")
+                }
+            }
+        else
+            noteStore.getAllNotes()
     }
 
     fun hasSecureNotes(): Flow<Boolean> = noteStore.hasSecureNotes()
