@@ -26,17 +26,20 @@ import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
-import org.python.companion.ui.note.security.SecurityDialogView
+import org.python.companion.ui.security.SecurityDialogView
+import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
 import org.python.companion.viewmodels.NoteViewModel
+import org.python.companion.viewmodels.SecurityViewModel
 import timber.log.Timber
 
 
 class MainActivity : FragmentActivity() {
     private val noteViewModel by viewModels<NoteViewModel>()
     private val anniversaryViewModel by viewModels<AnniversaryViewModel>()
+    private val securityViewModel by viewModels<SecurityViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,12 +51,20 @@ class MainActivity : FragmentActivity() {
                 val backstackEntry = navController.currentBackStackEntryAsState()
                 val selectedTabScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
+                val securityState = SecurityState.rememberState(
+                    navController = navController,
+                    securityViewModel = securityViewModel
+                )
                 val noteState = NoteState.rememberState(
                     navController = navController,
                     authState = AuthenticationState.rememberState(this, noteViewModel),
-                    noteViewModel = noteViewModel)
+                    noteViewModel = noteViewModel
+                )
                 val cactusState = CactusState.rememberState(navController = navController)
-                val anniversaryState = AnniversaryState.rememberState(navController = navController, anniversaryViewModel = anniversaryViewModel)
+                val anniversaryState = AnniversaryState.rememberState(
+                    navController = navController,
+                    anniversaryViewModel = anniversaryViewModel
+                )
 
                 Scaffold(
                     topBar = {
@@ -83,6 +94,7 @@ class MainActivity : FragmentActivity() {
                         with(cactusState) { cactusGraph() }
                         with(noteState) { noteGraph() }
                         with(anniversaryState) { anniversaryGraph() }
+                        with(securityState) { securityGraph() }
                     }
                 }
             }

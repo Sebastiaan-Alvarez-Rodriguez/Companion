@@ -8,6 +8,8 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
 
@@ -16,7 +18,7 @@ import timber.log.Timber
 @IntDef(SecurityActor.TYPE_PASS, SecurityActor.TYPE_BIO)
 annotation class SecurityType
 
-abstract class SecurityActor(@SecurityType val type: Int) {
+interface SecurityInterface {
     companion object {
         const val TYPE_PASS = 0
         const val TYPE_BIO = 1
@@ -27,15 +29,18 @@ abstract class SecurityActor(@SecurityType val type: Int) {
         const val preferred_actor_default = TYPE_UNDEFINED
     }
 
+    /** security type being implemented by this actor */
+    val type: @SecurityType Int
+
     /**
      * Whether this actor is available at this time.
      * @return Message with <code>message.type == SEC_CORRECT</code> and no body on success,
      * message with a human-readable error otherwise.
      */
-    abstract fun actorAvailable(): VerificationMessage
+    fun actorAvailable(): VerificationMessage
 
     /** Whether a credential has been set or not. */
-    abstract fun hasCredentials(): Boolean
+    fun hasCredentials(): Boolean
 
     /** Setup a credential.
      * If a credential exists, this function calls <code>verify()</code>.
@@ -54,6 +59,55 @@ abstract class SecurityActor(@SecurityType val type: Int) {
     abstract suspend fun verify(token: VerificationToken? = null): VerificationMessage
 }
 
+class SecurityActor : SecurityInterface {
+    private var internalActor: SecurityInterface? = null
+    var authenticated = MutableStateFlow(false)
+
+    fun switchTo(activity: FragmentActivity, @SecurityType ofType: Int) {
+        internalActor = when (ofType) {
+            TYPE_PASS -> PassActor(activity)
+            TYPE_BIO -> BioActor(activity)
+            else -> null
+        }
+    }
+
+    private fun setAuthenticated(newValue: Boolean) = authenticated.update { newValue }
+
+    override val type: Int = internalActor?.type ?: TYPE_UNDEFINED
+
+    override fun actorAvailable(): VerificationMessage {
+        return internalActor?.actorAvailable()
+            ?: throw IllegalAccessException("Must set internal actor first")
+    }
+
+    override fun hasCredentials(): Boolean {
+        return internalActor?.hasCredentials()
+            ?: throw IllegalAccessException("Must set internal actor first")
+    }
+
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage {
+        return internalActor?.setCredentials(oldToken, newToken)
+            ?: throw IllegalAccessException("Must set internal actor first")
+    }
+
+    override suspend fun verify(token: VerificationToken?): VerificationMessage {
+        val msg = internalActor?.verify(token) ?: throw IllegalAccessException("Must set internal actor first")
+        if (msg.type == VerificationMessage.SEC_CORRECT)
+            setAuthenticated(true)
+        return msg
+    }
+
+    companion object {
+        const val TYPE_PASS = 0
+        const val TYPE_BIO = 1
+        /* Indicates that user has not yet set a preference */
+        const val TYPE_UNDEFINED = -1
+        const val security_storage = "SECURITY_ACTOR_STORAGE"
+        const val preferred_actor_key = "SECURITY_ACTOR_PREFERRED"
+        const val preferred_actor_default = TYPE_UNDEFINED
+    }
+}
+
 internal class BioActor(
     private val activity: FragmentActivity,
     private var biometricPromptInfo: BiometricPrompt.PromptInfo =
@@ -63,11 +117,13 @@ internal class BioActor(
             .setDescription("")
             .setAllowedAuthenticators(BiometricManager.Authenticators.DEVICE_CREDENTIAL or BiometricManager.Authenticators.BIOMETRIC_WEAK)
             .build()
-) : SecurityActor(TYPE_BIO) {
+) : SecurityInterface {
 
     fun updateBiometricPromptInfo(biometricPromptInfo: BiometricPrompt.PromptInfo) {
         this.biometricPromptInfo = biometricPromptInfo
     }
+
+    override val type: Int = SecurityActor.TYPE_BIO
 
     override fun actorAvailable(): VerificationMessage {
         val biometricManager = BiometricManager.from(activity.baseContext)
@@ -159,14 +215,16 @@ internal class BioActor(
     }
 }
 
-internal class PassActor(private val sharedPreferences: SharedPreferences) : SecurityActor(TYPE_PASS) {
+internal class PassActor(private val sharedPreferences: SharedPreferences) : SecurityInterface {
 
-    constructor(context: Context) : this(context.getSharedPreferences(security_storage, Context.MODE_PRIVATE))
+    constructor(context: Context) : this(context.getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE))
     constructor(activity: Activity) : this(activity.baseContext)
 
     private companion object {
         const val pass_storage_key = "SECURITY_PASS"
     }
+
+    override val type: Int = SecurityActor.TYPE_PASS
 
     override fun actorAvailable(): VerificationMessage = VerificationMessage.createCorrect()
 

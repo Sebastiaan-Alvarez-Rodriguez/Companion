@@ -1,4 +1,4 @@
-package org.python.companion.ui.note.security
+package org.python.companion.ui.security
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,27 +25,25 @@ import org.python.backend.security.VerificationToken
 import org.python.companion.R
 import org.python.companion.support.LoadState
 import org.python.companion.support.LoadingState
-import org.python.companion.support.UiUtil.SimpleLoading
-import org.python.companion.support.UiUtil.SimpleOk
+import org.python.companion.support.UiUtil
 import java.nio.ByteBuffer
 
 
-class PasswordDialogMiniState(
+class PasswordSetupDialogMiniState(
     val state: MutableState<Int>,
     val stateMessage: MutableState<String?>,
     val pass: MutableState<String>,
+    val match: MutableState<Boolean> = mutableStateOf(false),
     val passVisible: MutableState<Boolean>,
     open: MutableState<Boolean>
-) : SecurityDialogState(open) {
+) : SecurityDialogSetupState(open) {
+
     override fun open() {
         open.value = true
-        state.value = LoadState.STATE_READY
     }
 
     override fun close() {
         open.value = false
-        stateMessage.value = null
-        pass.value = ""
     }
 
     @Composable
@@ -54,7 +52,7 @@ class PasswordDialogMiniState(
         onNegativeClick: () -> Unit,
         onPositiveClick: (VerificationToken) -> Unit
     ) {
-        SecurityPasswordDialog(
+        SecurityDialogSetupPassword(
             onDismiss = onDismiss,
             onNegativeClick = onNegativeClick,
             onPositiveClick = onPositiveClick,
@@ -65,58 +63,55 @@ class PasswordDialogMiniState(
     companion object {
         @Composable
         fun rememberState(
-            stateMessage: String? = null,
             @LoadingState state: Int = LoadState.STATE_OK,
+            stateMessage: String? = null,
             passVisible: Boolean = false,
             open: Boolean = false
-        ) =
-            remember(open) {
-                PasswordDialogMiniState(
-                    state = mutableStateOf(state),
-                    stateMessage = mutableStateOf(stateMessage),
-                    pass = mutableStateOf(""),
-                    passVisible = mutableStateOf(passVisible),
-                    open = mutableStateOf(open)
-                )
-            }
+        ) = remember(open) {
+            PasswordSetupDialogMiniState(
+                state = mutableStateOf(state),
+                stateMessage = mutableStateOf(stateMessage),
+                pass = mutableStateOf(""),
+                match = mutableStateOf(false),
+                passVisible = mutableStateOf(passVisible),
+                open = mutableStateOf(open)
+            )
+        }
+    }
+}
+@Composable
+fun SecurityDialogSetupPasswordContent(
+    onNegativeClick: () -> Unit,
+    onPositiveClick: (PasswordVerificationToken) -> Unit,
+//    state: PasswordSetupDialogMiniState
+) {
+    Card(
+        elevation = 8.dp,
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        when(state.state.value) {
+            LoadState.STATE_READY,
+            LoadState.STATE_FAILED -> SecurityDialogSetupPasswordReady(onNegativeClick, onPositiveClick, state)
+            LoadState.STATE_LOADING -> UiUtil.SimpleLoading()
+            LoadState.STATE_OK -> UiUtil.SimpleOk()
+        }
     }
 }
 
 @Composable
-fun SecurityPasswordDialog(
-    onDismiss: () -> Unit,
+fun SecurityDialogSetupPasswordReady(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
-    state: PasswordDialogMiniState
-) {
-    if (state.open.value)
-        Dialog(onDismissRequest = onDismiss) {
-            Card(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                when(state.state.value) {
-                    LoadState.STATE_READY -> SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state)
-                    LoadState.STATE_LOADING -> SimpleLoading()
-                    LoadState.STATE_FAILED -> SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state)
-                    LoadState.STATE_OK -> SimpleOk()
-                }
-            }
-        }
-}
-
-@Composable
-private fun SecurityPasswordDialogReady(
-    onNegativeClick: () -> Unit,
-    onPositiveClick: (PasswordVerificationToken) -> Unit,
-    state: PasswordDialogMiniState
+    state: PasswordSetupDialogMiniState
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
+    val repeatPassword = remember { mutableStateOf("") }
+
     Column(modifier = Modifier.padding(defaultPadding)) {
         Text(
-            text = "Please authenticate",
+            text = "Setup a method to authenticate",
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             modifier = Modifier.padding(defaultPadding)
@@ -127,7 +122,26 @@ private fun SecurityPasswordDialogReady(
             isError = state.state.value == LoadState.STATE_FAILED,
             value = state.pass.value,
             onValueChange = { state.pass.value = it },
-            label = { Text("Enter password...") },
+            label = { Text("Enter new password...") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (state.passVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true,
+            trailingIcon = {
+                val image = if (state.passVisible.value) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                IconButton(onClick = { state.passVisible.value = !state.passVisible.value }) {
+                    Icon(imageVector = image, "")
+                }
+            }
+        )
+        OutlinedTextField(
+            isError = state.state.value == LoadState.STATE_FAILED,
+            value = repeatPassword.value,
+            onValueChange = {
+                repeatPassword.value = it
+                state.match.value = repeatPassword.value == state.pass.value
+            },
+            label = { Text("Repeat new password...") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (state.passVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -153,13 +167,14 @@ private fun SecurityPasswordDialogReady(
                 Text(text = "CANCEL")
             }
             Spacer(modifier = Modifier.width(smallPadding))
-            TextButton(onClick = {
-                onPositiveClick(
-                    PasswordVerificationToken.PassBuilder().with(
-                        ByteBuffer.wrap(state.pass.value.toByteArray(charset = Charsets.ISO_8859_1))
-                    ).build()
-                )
-            }) {
+            TextButton(
+                onClick = {
+                    onPositiveClick(PasswordVerificationToken.PassBuilder().with(
+                        ByteBuffer.wrap(state.pass.value.toByteArray(charset = Charsets.ISO_8859_1))).build()
+                    )
+                },
+                enabled = state.match.value
+            ) {
                 Text(text = "SUBMIT")
             }
         }

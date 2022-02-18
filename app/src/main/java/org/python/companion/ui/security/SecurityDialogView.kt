@@ -1,4 +1,4 @@
-package org.python.companion.ui.note.security
+package org.python.companion.ui.security
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
