@@ -101,7 +101,6 @@ class MainActivity : FragmentActivity() {
 class NoteState(
     private val navController: NavHostController,
     private val noteViewModel: NoteViewModel,
-
 ) {
     private val noteTabName = CompanionScreen.Note.name
 
@@ -168,6 +167,7 @@ class NoteState(
                     onImportClick = { /* TODO */ }
                 )
             }
+
             composable(
                 route = "$noteTabName/view/{note}",
                 arguments = listOf(
@@ -201,6 +201,7 @@ class NoteState(
                             })
                 }
             }
+
             composable(
                 route = "$noteTabName/create",
                 deepLinks = listOf(
@@ -239,6 +240,7 @@ class NoteState(
                     }
                 )
             }
+
             composable(
                 route = "$noteTabName/edit/{note}",
                 arguments = listOf(

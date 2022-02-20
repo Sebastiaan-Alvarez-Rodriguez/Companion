@@ -23,7 +23,7 @@ class SecurityState(
 ) {
     fun NavGraphBuilder.securityGraph() {
         navigation(startDestination = navigationStart, route = "sec") {
-            dialog("pick") {
+            dialog(navigationStart) {
                 SecurityPickDialogContent(
                     onNegativeClick = { navController.navigateUp() /* TODO: does this work on top-level? */ },
                     onPositiveClick = { type ->
