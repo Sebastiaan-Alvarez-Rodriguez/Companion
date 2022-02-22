@@ -26,7 +26,6 @@ abstract class VerificationToken(@SecurityType val type: Int) {
     }
 }
 
-@Suppress("EqualsOrHashCode")
 class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToken(SecurityActor.TYPE_PASS) {
     /**
      * Password builder.
@@ -59,6 +58,10 @@ class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToke
             is String -> this.pass == fromString(other).pass
             else -> throw java.lang.IllegalArgumentException("Cannot compare against $other")
         }
+    }
+
+    override fun hashCode(): Int {
+        return pass.hashCode()
     }
 
     companion object {

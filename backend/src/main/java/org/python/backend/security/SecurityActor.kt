@@ -130,8 +130,7 @@ internal class BioActor(
 
     override fun actorAvailable(): VerificationMessage {
         val biometricManager = BiometricManager.from(activity.baseContext)
-        val status = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)
-        return when (status) {
+        return when (val status = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)) {
             BiometricManager.BIOMETRIC_SUCCESS -> VerificationMessage.createCorrect()
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> VerificationMessage.createIncorrect(
                 body = StatusBody.IncorrectBody("Biometrics hardware in use by other app.")
@@ -160,7 +159,7 @@ internal class BioActor(
         }
     }
 
-    override fun hasCredentials(): Boolean = actorAvailable().type == VerificationMessage.SEC_CORRECT
+    override fun hasCredentials(): Boolean = BiometricManager.from(activity.baseContext).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage = VerificationMessage.createCorrect()
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
@@ -51,6 +52,16 @@ object UiUtil {
             contentAlignment = Alignment.Center,
         ) {
             Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
+        }
+    }
+
+    @Composable
+    fun SimpleText(text: String) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = text)
         }
     }
 

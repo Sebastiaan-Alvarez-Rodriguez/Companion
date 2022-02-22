@@ -30,10 +30,7 @@ fun SecurityPasswordSetupDialogContent(
     state: @LoadingState Int = LoadState.STATE_READY,
     stateMessage: String? = null
 ) {
-    Card(
-        elevation = 8.dp,
-        shape = RoundedCornerShape(12.dp)
-    ) {
+    Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
         when(state) {
             LoadState.STATE_READY, LoadState.STATE_FAILED ->
                 SecurityDialogSetupPasswordReady(onNegativeClick, onPositiveClick, state, stateMessage)
@@ -58,7 +55,7 @@ private fun SecurityDialogSetupPasswordReady(
     var passVisible by remember { mutableStateOf(false) }
     var passMatch by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.padding(defaultPadding)) {
+    Column(modifier = Modifier.padding(defaultPadding).fillMaxSize()) {
         Text(
             text = "Setup password",
             fontWeight = FontWeight.Bold,
