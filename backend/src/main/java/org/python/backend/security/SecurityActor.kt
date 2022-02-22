@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
 import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
 
@@ -53,6 +54,14 @@ interface SecurityInterface {
 class SecurityActor : SecurityInterface {
     private var internalActor: SecurityInterface? = null
     var authenticated = MutableStateFlow(false)
+    private val mutex = Mutex()
+
+    suspend fun <T> withLock(action: () -> T): T {
+        mutex.lock()
+        val result = action()
+        mutex.unlock()
+        return result
+    }
 
     fun switchTo(activity: FragmentActivity, @SecurityType ofType: Int) {
         internalActor = when (ofType) {
@@ -62,9 +71,7 @@ class SecurityActor : SecurityInterface {
         }
     }
 
-    fun logout() {
-        authenticated.value = false
-    }
+    fun logout() = setAuthenticated(false)
 
     private fun setAuthenticated(newValue: Boolean) = authenticated.update { newValue }
 
@@ -86,7 +93,8 @@ class SecurityActor : SecurityInterface {
     }
 
     override suspend fun verify(token: VerificationToken?): VerificationMessage {
-        val msg = internalActor?.verify(token) ?: throw IllegalAccessException("Must set internal actor first")
+        val msg = internalActor?.verify(token)
+            ?: throw IllegalAccessException("Must set internal actor first")
         if (msg.type == VerificationMessage.SEC_CORRECT)
             setAuthenticated(true)
         return msg

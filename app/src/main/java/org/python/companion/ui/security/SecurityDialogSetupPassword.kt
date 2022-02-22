@@ -24,7 +24,7 @@ import org.python.companion.support.UiUtil
 import java.nio.ByteBuffer
 
 @Composable
-fun SecurityDialogSetupPasswordContent(
+fun SecurityPasswordSetupDialogContent(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
     state: @LoadingState Int = LoadState.STATE_READY,
@@ -60,7 +60,7 @@ private fun SecurityDialogSetupPasswordReady(
 
     Column(modifier = Modifier.padding(defaultPadding)) {
         Text(
-            text = "Setup a method to authenticate",
+            text = "Setup password",
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             modifier = Modifier.padding(defaultPadding)

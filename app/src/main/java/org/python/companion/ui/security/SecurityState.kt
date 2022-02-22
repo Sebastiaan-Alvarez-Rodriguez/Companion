@@ -25,7 +25,7 @@ class SecurityState(
         navigation(startDestination = navigationStart, route = "sec") {
             dialog(navigationStart) {
                 SecurityPickDialogContent(
-                    onNegativeClick = { navController.navigateUp() /* TODO: does this work on top-level? */ },
+                    onNegativeClick = { navController.navigateUp() },
                     onPositiveClick = { type ->
                         securityViewModel.securityActor.switchTo(activity, type)
                         when (type) {
@@ -41,6 +41,9 @@ class SecurityState(
                 //TODO: Locking/synchronizing
                 // to ensure security type & availability are guaranteed on the same object.
                 // Maybe use fancy lambda function that takes lock, executes function, releases lock?
+                // https://stackoverflow.com/questions/64116377
+                // https://developer.android.com/jetpack/compose/side-effects
+
                 if (securityViewModel.securityActor.type != SecurityActor.TYPE_PASS)
                     securityViewModel.securityActor.switchTo(activity, SecurityActor.TYPE_PASS)
 
@@ -71,7 +74,7 @@ class SecurityState(
                         }
                     )
                 } else {
-                    SecurityDialogSetupPasswordContent(
+                    SecurityPasswordSetupDialogContent(
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { token ->
                             state = LoadState.STATE_LOADING
