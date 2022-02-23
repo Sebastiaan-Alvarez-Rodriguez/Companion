@@ -3,6 +3,7 @@ package org.python.backend.data.repositories
 import androidx.paging.PagingData
 import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.stores.NoteStore
@@ -15,12 +16,11 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
             this(securityActor, NoteStore(companionDatabase))
 
     /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
-    fun allNotes() : Flow<PagingData<Note>> {
-        return if (securityActor.authenticated.value)
-            noteStore.getAllNotesWithSecure().map {
-                page -> page.map {
-                    secureToUI(it)?: throw IllegalStateException("Could not decrypt notes")
-                }
+    fun allNotes() : Flow<PagingData<Note>> = securityActor.authenticated.flatMapLatest { authed ->
+        if (authed)
+            noteStore.getAllNotesWithSecure().map { page -> page.map {
+                secureToUI(it)?: throw IllegalStateException("Could not decrypt notes")
+            }
             }
         else
             noteStore.getAllNotes()
@@ -32,7 +32,7 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
      * Rerieves a note by name.
      * @return found note on succes, `null` if no such name exists.
      */
-    suspend fun getByName(name: String): Note? = noteStore.getByName(name)
+    suspend fun getByName(name: String): Note? = noteStore.getByName(name, securityActor.authenticated.value)?.let { secureToUI(it) }
 
     /**
      * Sets note to be a regular or favored note.

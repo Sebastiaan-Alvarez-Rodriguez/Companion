@@ -183,7 +183,8 @@ class NoteState(
                     Timber.e("View note: Navcontroller navigation - note name == null")
                 } else {
                     var note by remember { mutableStateOf<Note?>(null) }
-                    noteViewModel.with {
+                    noteViewModel.with { // TODO: Change all with-calls (as they use launch() in composition)
+                        Timber.w("Travel to note named: ${noteName}")
                         note = noteViewModel.getbyName(noteName)
                     }
                     if (note != null)

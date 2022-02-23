@@ -13,9 +13,8 @@ interface NoteDao {
     @Query("select * from RoomNote")
     fun getAllWithSecure(): PagingSource<Int, RoomNote>
 
-    // TODO: Allow searching secure notes when token is present and valid.
-    @Query("select * from RoomNote where secure == 0 and name = :name")
-    suspend fun getByName(name: String): RoomNote?
+    @Query("select * from RoomNote where secure <= :secure and name = :name")
+    suspend fun getByName(name: String, secure: Boolean = false): RoomNote?
 
     @Query("update RoomNote set favorite = :favorite where id == :noteId")
     suspend fun setFavorite(noteId: Long, favorite: Boolean)
