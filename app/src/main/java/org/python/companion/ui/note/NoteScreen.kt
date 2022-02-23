@@ -128,11 +128,10 @@ fun NoteScreenList(
     val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
     val listState: LazyListState = rememberLazyListState()
 
-    val minimumNumNotes = if (securityStruct != null) 1 else 0
     Box(Modifier.fillMaxSize()) {
         when {
             isLoading -> LoadingContent()
-            items.itemCount == minimumNumNotes -> EmptyContent()
+            items.itemCount == 0 -> EmptyContent()
             else -> {
                 LazyColumn(
                     modifier = Modifier

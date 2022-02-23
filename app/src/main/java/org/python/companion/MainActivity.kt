@@ -113,7 +113,6 @@ class NoteState(
                 val hasAuthenticated by noteViewModel.authenticated.collectAsState()
 
                 val securityStruct = if (hasSecureNotes) {
-                    Timber.w("Authstate authed: ${noteViewModel.authenticated}")
                     if (hasAuthenticated)
                         NoteScreenListSecurityStruct(
                             securityText = "Lock secure notes",
