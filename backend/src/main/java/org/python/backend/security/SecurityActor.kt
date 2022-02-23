@@ -185,8 +185,7 @@ internal class BioActor(
                         VerificationMessage.createOther(body = StatusBody.OtherBody(message))
                 })
             },
-            onSucces = { result -> callback.onResult(VerificationMessage.createCorrect())
-            }
+            onSucces = { callback.onResult(VerificationMessage.createCorrect()) }
         ).authenticate(biometricPromptInfo)
     }
 

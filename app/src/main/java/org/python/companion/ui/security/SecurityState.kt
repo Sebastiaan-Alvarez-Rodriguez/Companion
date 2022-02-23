@@ -68,7 +68,7 @@ class SecurityState(
                                 val msgSec = securityViewModel.securityActor.verify(token)
                                 if (msgSec.type == VerificationMessage.SEC_CORRECT) {
                                     state = LoadState.STATE_OK
-                                    navController.navigateUp()
+                                    navController.popBackStack(route = navigationStart, inclusive = true)
                                 } else {
                                     state = LoadState.STATE_FAILED
                                     stateMessage = msgSec.body?.userMessage
@@ -85,7 +85,7 @@ class SecurityState(
                                 val msgSet = securityViewModel.securityActor.setCredentials(null, token)
                                 if (msgSet.type == VerificationMessage.SEC_CORRECT) {
                                     state = LoadState.STATE_OK
-                                    navController.navigateUp()
+                                    navController.popBackStack(route = navigationStart, inclusive = true)
                                 } else {
                                     state = LoadState.STATE_FAILED
                                     stateMessage = msgSet.body?.userMessage
@@ -114,7 +114,7 @@ class SecurityState(
                                 val msgSec = securityViewModel.securityActor.verify(null)
                                 if (msgSec.type == VerificationMessage.SEC_CORRECT) {
                                     state = LoadState.STATE_OK
-                                    navController.navigateUp()
+                                    navController.popBackStack(route = navigationStart, inclusive = true)
                                 } else {
                                     state = LoadState.STATE_FAILED
                                     stateMessage = msgSec.body?.userMessage
@@ -159,9 +159,15 @@ class SecurityState(
 
     companion object {
         private const val navigationStart = "securitydialog"
-        fun navigateToSecurityPick(navController: NavController) = navController.navigate(navigationStart)
-        private fun navigateToBio(navController: NavController) = navController.navigate("$navigationStart/bio")
-        private fun navigateToPass(navController: NavController) = navController.navigate("$navigationStart/pass")
+        fun navigateToSecurityPick(navController: NavController) = navController.navigate(navigationStart) {
+            launchSingleTop = true
+        }
+        private fun navigateToBio(navController: NavController) = navController.navigate("$navigationStart/bio") {
+            launchSingleTop = true
+        }
+        private fun navigateToPass(navController: NavController) = navController.navigate("$navigationStart/pass") {
+            launchSingleTop = true
+        }
 
         @Composable
         fun rememberState(
