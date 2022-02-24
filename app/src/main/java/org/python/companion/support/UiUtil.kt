@@ -1,19 +1,22 @@
 package org.python.companion.support
 
 import androidx.annotation.IntDef
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.python.companion.R
 
 object LoadState {
     const val STATE_READY = 0
@@ -42,6 +46,25 @@ object UiUtil {
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator()
+        }
+    }
+
+    @Composable
+    fun SimpleProblem(message: String, prefix: String = "Error", icon: ImageVector = Icons.Outlined.ErrorOutline) {
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = "Error",
+                    modifier = Modifier.size(64.dp)
+                )
+                Spacer(modifier = Modifier.height(defaultPadding))
+                Text("[$prefix]: $message")
+            }
         }
     }
 

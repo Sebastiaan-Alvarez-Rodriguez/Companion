@@ -21,7 +21,47 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.companion.R
+import org.python.companion.support.LoadState
+import org.python.companion.support.UiUtil
+import org.python.companion.viewmodels.NoteViewModel
+import timber.log.Timber
 
+
+/** Loads note to edit, then shows edit screen. */
+@Composable
+fun NoteScreenEdit(
+    noteViewModel: NoteViewModel,
+    noteName: String,
+    overrideDialogMiniState: NoteOverrideDialogMiniState,
+    onSaveClick: (Note, Note?) -> Unit,
+    onOverrideAcceptClick: (Note, Note?) -> Unit
+) {
+    var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
+    var existingNote by remember { mutableStateOf<Note?>(null) }
+
+    when (state) {
+        LoadState.STATE_LOADING -> if (existingNote == null) {
+            UiUtil.SimpleLoading()
+            LaunchedEffect(state) {
+                existingNote = noteViewModel.getbyName(noteName)
+                state = LoadState.STATE_OK
+            }
+        }
+        LoadState.STATE_OK -> NoteScreenEditReady(existingNote, overrideDialogMiniState, { toSaveNote -> onSaveClick(toSaveNote, existingNote) }, {  toSaveNote -> onOverrideAcceptClick(toSaveNote, existingNote)})
+        LoadState.STATE_FAILED -> {
+            Timber.e("Could not find note name: $noteName")
+            UiUtil.SimpleProblem("Could not find note named: $noteName")
+        }
+    }
+}
+
+/** Edits a new note directly. */
+@Composable
+fun NoteScreenEditNew(
+    overrideDialogMiniState: NoteOverrideDialogMiniState,
+    onSaveClick: (Note) -> Unit,
+    onOverrideAcceptClick: (Note) -> Unit
+) = NoteScreenEditReady(null, overrideDialogMiniState, onSaveClick, onOverrideAcceptClick)
 
 /**
  * Detail screen for editing a single note.
@@ -31,7 +71,7 @@ import org.python.companion.R
  * @param onOverrideAcceptClick Lambda executed when the user hits the override button.
  */
 @Composable
-fun NoteScreenEdit(
+fun NoteScreenEditReady(
     note: Note?,
     overrideDialogMiniState: NoteOverrideDialogMiniState,
     onSaveClick: (Note) -> Unit,
@@ -42,6 +82,8 @@ fun NoteScreenEdit(
         NoteScreenEditBody(note, onSaveClick)
     }
 }
+
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteScreenEditBody(
@@ -92,17 +134,13 @@ fun NoteScreenEditBody(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row {
-                    IconButton(
-                        modifier = Modifier.padding(smallPadding),
-                        onClick = { favorite = !favorite }) {
+                    IconButton(modifier = Modifier.padding(smallPadding), onClick = { favorite = !favorite }) {
                         Icon(
                             imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = if (favorite) "Stop favoring" else "Favorite"
                         )
                     }
-                    IconButton(
-                        modifier = Modifier.padding(smallPadding),
-                        onClick = { secure = !secure }) {
+                    IconButton(modifier = Modifier.padding(smallPadding), onClick = { secure = !secure }) {
                         Icon(
                             imageVector = if (secure) Icons.Filled.Lock else Icons.Outlined.Lock,
                             contentDescription =if (secure) "Stop securing" else "Secure")
@@ -110,8 +148,7 @@ fun NoteScreenEditBody(
                 }
                 Spacer(Modifier.width(defaultPadding))
 
-                Button(
-                    onClick = { onSaveClick(createNoteObject()) }) {
+                Button(onClick = { onSaveClick(createNoteObject()) }) {
                     Text(text = "Save")
                 }
             }

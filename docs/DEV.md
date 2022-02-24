@@ -17,6 +17,7 @@ UI:
       for basic layout help.
  + [navigation](https://developer.android.com/jetpack/compose/navigation)
  + [dialogs](https://stackoverflow.com/questions/68852110/)
+ + [dialog resize bug](https://stackoverflow.com/questions/68469681/)
  + [splash screen](https://www.geeksforgeeks.org/animated-splash-screen-in-android-using-jetpack-compose/)
  + [simple color picker](https://stackoverflow.com/a/69116990)
 

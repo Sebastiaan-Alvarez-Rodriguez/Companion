@@ -131,12 +131,10 @@ fun NoteScreenList(
     Box(Modifier.fillMaxSize()) {
         when {
             isLoading -> LoadingContent()
-            items.itemCount == 0 -> EmptyContent()
+            items.itemCount == 0 && securityStruct == null -> EmptyContent()
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .semantics { contentDescription = "Note Screen" },
+                    modifier = Modifier.fillMaxSize().semantics { contentDescription = "Note Screen" },
                     contentPadding = PaddingValues(defaultPadding),
                     verticalArrangement = Arrangement.spacedBy(defaultPadding),
                     state = listState,

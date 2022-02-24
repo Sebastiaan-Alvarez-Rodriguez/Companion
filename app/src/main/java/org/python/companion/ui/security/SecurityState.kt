@@ -8,6 +8,8 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -30,9 +32,10 @@ class SecurityState(
     private val navController: NavHostController,
     private val securityViewModel: SecurityViewModel
 ) {
+    @OptIn(ExperimentalComposeUiApi::class)
     fun NavGraphBuilder.securityGraph() {
         navigation(startDestination = navigationStart, route = "sec") {
-            dialog(navigationStart) {
+            dialog(navigationStart, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 SecurityPickDialogContent(
                     onNegativeClick = { navController.navigateUp() },
                     onPositiveClick = { type ->
@@ -46,7 +49,7 @@ class SecurityState(
                 )
             }
 
-            dialog(route = "$navigationStart/pass") {
+            dialog(route = "$navigationStart/pass", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 //TODO: Locking/synchronizing
                 // to ensure security type & availability are guaranteed on the same object.
                 // Maybe use fancy lambda function that takes lock, executes function, releases lock?
@@ -98,7 +101,7 @@ class SecurityState(
                 }
             }
 
-            dialog(route = "$navigationStart/bio") {
+            dialog(route = "$navigationStart/bio", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_BIO))
                     return@dialog
 
@@ -134,10 +137,7 @@ class SecurityState(
                             @Suppress("DEPRECATION")
                             Intent(Settings.ACTION_FINGERPRINT_ENROLL)
                         }
-                        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-//                            if (it.resultCode == Activity.RESULT_OK)
-                                navController.navigateUp()
-                        }
+                        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
                         launcher.launch(enrollIntent)
                 }
             }

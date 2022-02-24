@@ -97,7 +97,7 @@ private fun SplashActor(
     val scale = remember { androidx.compose.animation.core.Animatable(0f) }
 
     // AnimationEffect
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(true) {
         scale.animateTo(
             targetValue = 0.7f,
             animationSpec = tween(durationMillis = DEFAULT_DELAY_MS, easing = { OvershootInterpolator(4f).getInterpolation(it) })
@@ -111,7 +111,7 @@ private fun SplashActor(
             delay(timeToHandle)
 
         UiUtil.navigatePop(navController, destination)
-        }
+    }
 
     // Image
     Box(contentAlignment = Alignment.Center,

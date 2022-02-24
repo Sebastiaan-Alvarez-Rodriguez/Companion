@@ -4,27 +4,56 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import org.python.backend.data.datatype.Note
 import org.python.companion.R
+import org.python.companion.support.LoadState
+import org.python.companion.support.UiUtil
+import org.python.companion.viewmodels.NoteViewModel
+import timber.log.Timber
 
+
+@Composable
+fun NoteScreenViewSingle(
+    noteViewModel: NoteViewModel,
+    noteName: String,
+    onEditClick: ((Note) -> Unit)? = null,
+    onDeleteClick: ((Note) -> Unit)? = null
+) {
+    var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
+    var note by remember { mutableStateOf<Note?>(null) }
+
+    when (state) {
+        LoadState.STATE_LOADING -> if (note == null) {
+            UiUtil.SimpleLoading()
+            LaunchedEffect(state) {
+                when (val loadedNote = noteViewModel.getbyName(noteName)) {
+                    null -> state = LoadState.STATE_FAILED
+                    else -> {
+                        note = loadedNote
+                        state = LoadState.STATE_OK
+                    }
+                }
+            }
+        }
+        LoadState.STATE_OK -> NoteScreenViewSingleReady(note!!, onEditClick, onDeleteClick)
+        LoadState.STATE_FAILED -> {
+            Timber.e("Could not find note name: $noteName")
+            UiUtil.SimpleProblem("Could not find note named: $noteName")
+        }
+    }
+}
 
 /**
  * Detail screen for a single note.
  * @param note Title of the passed note.
  */
 @Composable
-fun NoteScreenViewSingle(
-    note: Note,
-    onEditClick: ((Note) -> Unit)? = null,
-    onDeleteClick: ((Note) -> Unit)? = null) {
+fun NoteScreenViewSingleReady(note: Note, onEditClick: ((Note) -> Unit)? = null, onDeleteClick: ((Note) -> Unit)? = null) {
     val title by remember { mutableStateOf(note.name) }
     val content by remember { mutableStateOf(note.content) }
     val anyOptionsEnabled = onEditClick != null || onDeleteClick != null

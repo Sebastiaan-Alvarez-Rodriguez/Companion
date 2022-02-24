@@ -56,10 +56,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<Note>>> = search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
-    fun with(func: suspend CoroutineScope.() -> Unit): Job {
-        return viewModelScope.launch { func() }
-    }
-
     private fun notes(search: String?) = when {
         search.isNullOrEmpty() -> allNotes
         else -> searchNotes
