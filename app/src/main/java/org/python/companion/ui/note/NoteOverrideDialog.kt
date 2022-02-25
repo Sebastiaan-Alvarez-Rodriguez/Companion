@@ -64,7 +64,7 @@ class NoteOverrideDialogMiniState(
     val currentNote: MutableState<Note?>,
     val overriddenNote: MutableState<Note?>,
     open: MutableState<Boolean>
-) : UiUtil.DialogMiniState(open) {
+) : UiUtil.OpenableMiniState(open) {
     override fun open() {
         throw RuntimeException("I should not be here") // TODO: What about this call?
     }

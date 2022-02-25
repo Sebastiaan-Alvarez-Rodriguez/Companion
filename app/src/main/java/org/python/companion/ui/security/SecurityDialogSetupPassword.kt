@@ -21,19 +21,17 @@ import org.python.companion.R
 import org.python.companion.support.LoadState
 import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
-import java.nio.ByteBuffer
 
 @Composable
 fun SecurityPasswordSetupDialogContent(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
-    state: @LoadingState Int = LoadState.STATE_READY,
-    stateMessage: String? = null
+    state: UiUtil.StateMiniState
 ) {
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-        when(state) {
+        when(state.state.value) {
             LoadState.STATE_READY, LoadState.STATE_FAILED ->
-                SecurityDialogSetupPasswordReady(onNegativeClick, onPositiveClick, state, stateMessage)
+                SecurityDialogSetupPasswordReady(onNegativeClick, onPositiveClick, state.state.value, state.stateMessage.value)
             LoadState.STATE_LOADING -> UiUtil.SimpleLoading()
             LoadState.STATE_OK -> UiUtil.SimpleOk()
         }
@@ -116,11 +114,7 @@ private fun SecurityDialogSetupPasswordReady(
             }
             Spacer(modifier = Modifier.width(smallPadding))
             TextButton(
-                onClick = {
-                    onPositiveClick(PasswordVerificationToken.PassBuilder().with(
-                        ByteBuffer.wrap(pass.toByteArray(charset = Charsets.ISO_8859_1))).build()
-                    )
-                },
+                onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass).build()) },
                 enabled = passMatch
             ) {
                 Text(text = "SUBMIT")

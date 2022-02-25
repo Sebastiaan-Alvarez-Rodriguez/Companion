@@ -20,8 +20,10 @@ import org.python.backend.security.PasswordVerificationToken
 import org.python.companion.R
 import org.python.companion.support.LoadState
 import org.python.companion.support.LoadingState
+import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.SimpleLoading
 import org.python.companion.support.UiUtil.SimpleOk
+import timber.log.Timber
 import java.nio.ByteBuffer
 
 
@@ -29,20 +31,17 @@ import java.nio.ByteBuffer
 fun SecurityPasswordDialogContent(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
-    state: @LoadingState Int = LoadState.STATE_READY,
-    stateMessage: String? = null
+    state: UiUtil.StateMiniState
 ) {
-        Card(
-            elevation = 8.dp,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            when(state) {
-                LoadState.STATE_READY, LoadState.STATE_FAILED ->
-                    SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state, stateMessage)
-                LoadState.STATE_LOADING -> SimpleLoading()
-                LoadState.STATE_OK -> SimpleOk()
-            }
+    Timber.e("Got securityPasswordDialog state: $state (ready=${state.state.value == LoadState.STATE_READY}, loading=${state.state.value == LoadState.STATE_LOADING}, ok=${state.state.value == LoadState.STATE_OK}, failed=${state.state.value == LoadState.STATE_FAILED})")
+    Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
+        when(state.state.value) {
+            LoadState.STATE_READY, LoadState.STATE_FAILED ->
+                SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state.state.value, state.stateMessage.value)
+            LoadState.STATE_LOADING -> SimpleLoading()
+            LoadState.STATE_OK -> SimpleOk()
         }
+    }
 }
 
 @Composable

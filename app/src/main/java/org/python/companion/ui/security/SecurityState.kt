@@ -25,6 +25,7 @@ import org.python.backend.security.VerificationMessage
 import org.python.companion.support.LoadState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.SecurityViewModel
+import timber.log.Timber
 
 
 class SecurityState(
@@ -59,44 +60,47 @@ class SecurityState(
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
 
-                var state by remember { mutableStateOf(LoadState.STATE_READY) }
-                var stateMessage by remember { mutableStateOf<String?>(null) }
+                val stateMiniState = UiUtil.StateMiniState.rememberState(LoadState.STATE_READY)
 
                 if (securityViewModel.securityActor.hasCredentials()) {
                     SecurityPasswordDialogContent(
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { token ->
-                            state = LoadState.STATE_LOADING
+                            stateMiniState.state.value = LoadState.STATE_LOADING
                             securityViewModel.viewModelScope.launch {
+                                Timber.w("Note: Authenticating pass")
                                 val msgSec = securityViewModel.securityActor.verify(token)
                                 if (msgSec.type == VerificationMessage.SEC_CORRECT) {
-                                    state = LoadState.STATE_OK
+                                    Timber.w("Authentication success")
+                                    stateMiniState.state.value = LoadState.STATE_OK
                                     navController.popBackStack(route = navigationStart, inclusive = true)
                                 } else {
-                                    state = LoadState.STATE_FAILED
-                                    stateMessage = msgSec.body?.userMessage
+                                    Timber.w("Authentication failed")
+                                    stateMiniState.state.value = LoadState.STATE_FAILED
+                                    stateMiniState.stateMessage.value = msgSec.body?.userMessage
                                 }
                             }
-                        }
+                        },
+                        state = stateMiniState
                     )
                 } else {
                     SecurityPasswordSetupDialogContent(
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { token ->
-                            state = LoadState.STATE_LOADING
+                            stateMiniState.state.value = LoadState.STATE_LOADING
                             securityViewModel.viewModelScope.launch {
                                 val msgSet = securityViewModel.securityActor.setCredentials(null, token)
                                 if (msgSet.type == VerificationMessage.SEC_CORRECT) {
-                                    state = LoadState.STATE_OK
+                                    securityViewModel.securityActor.verify(token)
+                                    stateMiniState.state.value = LoadState.STATE_OK
                                     navController.popBackStack(route = navigationStart, inclusive = true)
                                 } else {
-                                    state = LoadState.STATE_FAILED
-                                    stateMessage = msgSet.body?.userMessage
+                                    stateMiniState.state.value = LoadState.STATE_FAILED
+                                    stateMiniState.stateMessage.value = msgSet.body?.userMessage
                                 }
                             }
                         },
-                        state = state,
-                        stateMessage = stateMessage
+                        state = stateMiniState
                     )
                 }
             }

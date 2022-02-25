@@ -25,14 +25,14 @@ private val DEFAULT_SALT = byteArrayOf(
 
 object Hasher {
     // https://github.com/lambdapioneer/argon2kt
-    fun argon(password: ByteBuffer, salt: ByteArray? = null): ByteBuffer {
-        val finalSalt = salt ?: DEFAULT_SALT
+    fun argon(password: ByteBuffer, salt: ByteBuffer? = null): ByteBuffer {
+        val finalSalt = salt ?: ByteBuffer.allocateDirect(DEFAULT_SALT.size).put(DEFAULT_SALT)
         val argon2 = Argon2Kt()
 
         return argon2.hash(
             mode = Argon2Mode.ARGON2_ID,
             password = password,
-            salt = ByteBuffer.wrap(finalSalt),
+            salt = finalSalt,
             tCostInIterations = 5,
             mCostInKibibyte = 65536
         ).encodedOutput

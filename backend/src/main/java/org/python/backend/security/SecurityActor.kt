@@ -41,7 +41,7 @@ interface SecurityInterface {
      * @return Message providing status.
      * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
-    suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage
+    suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken): VerificationMessage
 
     /**
      * Verifies given token for correctness.
@@ -106,8 +106,6 @@ class SecurityActor : SecurityInterface {
         /* Indicates that user has not yet set a preference */
         const val TYPE_UNDEFINED = -1
         const val security_storage = "SECURITY_ACTOR_STORAGE"
-        const val preferred_actor_key = "SECURITY_ACTOR_PREFERRED"
-        const val preferred_actor_default = TYPE_UNDEFINED
     }
 }
 
@@ -234,43 +232,43 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
     }
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage {
-        return CoroutineUtil.awaitSuspendingCallback { setCredentials(oldToken, newToken, it) }
-    }
-
-    private suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, callback: CoroutineUtil.Callback<VerificationMessage>) {
         if (hasCredentials()) {
             val result = when (oldToken) {
                 null -> throw IllegalArgumentException("Existing credentials detected. Caller must provide old verification token for verification.")
                 else -> verify(oldToken)
             }
             if (result.type != VerificationMessage.SEC_CORRECT)
-                return callback.onResult(result)
+                return result
         }
-
         val preferencesEditor = sharedPreferences.edit()
         preferencesEditor.putString(pass_storage_key, newToken.toString())
         preferencesEditor.commit()
-
-        return callback.onResult(VerificationMessage.createCorrect())
+        return VerificationMessage.createCorrect()
     }
 
-    override suspend fun verify(token: VerificationToken?): VerificationMessage =
-        CoroutineUtil.awaitCallback { verify(token, it) }
+    override suspend fun verify(token: VerificationToken?): VerificationMessage = verifyInternal(token)
 
-    private fun verify(token: VerificationToken?, callback: CoroutineUtil.Callback<VerificationMessage>) {
-        if (!hasCredentials())
-            return callback.onResult(VerificationMessage.createNoInit())
+    @Suppress("RedundantSuspendModifier")
+    private suspend fun verifyInternal(token: VerificationToken?): VerificationMessage {
+        Timber.w("Authentication stage0")
 
         if (token == null || token !is PasswordVerificationToken)
             throw IllegalArgumentException("Password actor requires password verification token")
 
+        Timber.w("Authentication stage1")
         val given: PasswordVerificationToken = token
-        val known = sharedPreferences.getString(pass_storage_key, null)
-            ?: return callback.onResult(VerificationMessage.createNoInit())
+        val known = PasswordVerificationToken.PassBuilder().with(sharedPreferences.getString(pass_storage_key, null) ?: return VerificationMessage.createNoInit()).build()
 
-        callback.onResult(when (given.equals(known)) {
-            true -> VerificationMessage.createCorrect()
-            false -> VerificationMessage.createIncorrect()
-        })
+        Timber.w("Authentication stage2")
+        return when (given.equals(known)) {
+            true -> {
+                Timber.w("Authentication stage3")
+                VerificationMessage.createCorrect()
+            }
+            false -> {
+                Timber.w("Authentication stage4")
+                VerificationMessage.createIncorrect()
+            }
+        }
     }
 }

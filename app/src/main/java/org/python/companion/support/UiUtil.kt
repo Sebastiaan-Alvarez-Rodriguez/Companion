@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.python.backend.data.datatype.Note
 import org.python.companion.R
 
 object LoadState {
@@ -90,14 +91,12 @@ object UiUtil {
 
 
 
-    fun effect(scope: CoroutineScope, block: suspend () -> Unit) {
-        scope.launch(Dispatchers.IO) { block() }
-    }
+    fun effect(scope: CoroutineScope, block: suspend () -> Unit) =scope.launch(Dispatchers.IO) { block() }
 
     fun <T> Flow<T>.stateInViewModel(scope: CoroutineScope, initialValue : T): StateFlow<T> =
         stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
 
-    open class DialogMiniState(val open: MutableState<Boolean>) {
+    open class OpenableMiniState(val open: MutableState<Boolean>) {
         open fun open() {
             open.value = true
         }
@@ -109,11 +108,21 @@ object UiUtil {
         companion object {
             @Composable
             fun rememberState(open: Boolean = false) = remember(open) {
-                DialogMiniState(open = mutableStateOf(open))
+                OpenableMiniState(open = mutableStateOf(open))
             }
         }
     }
 
+    open class StateMiniState(
+        val state: MutableState<@LoadingState Int>,
+        val stateMessage: MutableState<String?>
+    ) {
+        companion object {
+            @Composable
+            fun rememberState(state: @LoadingState Int, stateMessage: String? = null) =
+                remember(state) { StateMiniState(mutableStateOf(state), mutableStateOf(stateMessage)) }
+        }
+    }
     fun navigateReplaceStartRoute(navController: NavController, newHomeRoute: String) {
         with (navController) {
             popBackStack(graph.startDestinationId, true)

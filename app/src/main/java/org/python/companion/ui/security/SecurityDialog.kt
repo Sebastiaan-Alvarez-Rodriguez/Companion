@@ -5,7 +5,7 @@ import androidx.compose.runtime.MutableState
 import org.python.backend.security.VerificationToken
 import org.python.companion.support.UiUtil
 
-abstract class SecurityDialogState(open: MutableState<Boolean>) : UiUtil.DialogMiniState(open) {
+abstract class SecurityDialogState(open: MutableState<Boolean>) : UiUtil.OpenableMiniState(open) {
     @Composable
     abstract fun Dialog(
         onDismiss: () -> Unit,
@@ -14,7 +14,7 @@ abstract class SecurityDialogState(open: MutableState<Boolean>) : UiUtil.DialogM
     )
 }
 
-abstract class SecurityDialogPickState(open: MutableState<Boolean>) : UiUtil.DialogMiniState(open) {
+abstract class SecurityDialogPickState(open: MutableState<Boolean>) : UiUtil.OpenableMiniState(open) {
     @Composable
     abstract fun Dialog(
         onDismiss: () -> Unit,
@@ -23,7 +23,7 @@ abstract class SecurityDialogPickState(open: MutableState<Boolean>) : UiUtil.Dia
     )
 }
 
-abstract class SecurityDialogSetupState(open: MutableState<Boolean>) : UiUtil.DialogMiniState(open) {
+abstract class SecurityDialogSetupState(open: MutableState<Boolean>) : UiUtil.OpenableMiniState(open) {
     @Composable
     abstract fun Dialog(
         onDismiss: () -> Unit,

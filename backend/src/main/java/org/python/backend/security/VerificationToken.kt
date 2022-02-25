@@ -34,10 +34,15 @@ class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToke
     class PassBuilder : VerificationToken.Builder() {
         private var pass: ByteBuffer? = null
 
-        fun with(password: ByteBuffer, salt: ByteArray? = null): PassBuilder {
-            pass = Hasher.argon(password = password, salt = salt)
+        fun with(password: ByteBuffer, salt: ByteBuffer? = null): PassBuilder {
+            pass = Hasher.argon(
+                password = if (password.isDirect) password else toDirectBuffer(password),
+                salt = if (salt == null) null else if(salt.isDirect) salt else toDirectBuffer(salt),
+            )
             return this
         }
+
+        fun with(password: String, salt: String? = null): PassBuilder = with(toDirectBuffer(password), if (salt == null) null else toDirectBuffer(salt))
 
         override fun build(): PasswordVerificationToken {
             synchronized(this) {
@@ -45,6 +50,14 @@ class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToke
                     return PasswordVerificationToken(pass = pass!!)
                 throw IllegalStateException("Must set password when building PasswordVerificationToken")
             }
+        }
+
+        @Suppress("unused")
+        companion object {
+            private fun toDirectBuffer(data: ByteBuffer): ByteBuffer = ByteBuffer.allocateDirect(data.capacity()).put(data)
+            private fun toDirectBuffer(data: ByteArray): ByteBuffer = ByteBuffer.allocateDirect(data.size).put(data)
+            private fun toDirectBuffer(data: String, toISO_8859_1: Boolean = true): ByteBuffer =
+                ByteBuffer.allocateDirect(data.length).put(if (toISO_8859_1) data.toByteArray(charset = Charsets.ISO_8859_1) else data.toByteArray())
         }
     }
 
