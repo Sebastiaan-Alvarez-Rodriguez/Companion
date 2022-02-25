@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
@@ -35,12 +36,7 @@ fun SecurityPasswordDialogContent(
 ) {
     Timber.e("Got securityPasswordDialog state: $state (ready=${state.state.value == LoadState.STATE_READY}, loading=${state.state.value == LoadState.STATE_LOADING}, ok=${state.state.value == LoadState.STATE_OK}, failed=${state.state.value == LoadState.STATE_FAILED})")
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-        when(state.state.value) {
-            LoadState.STATE_READY, LoadState.STATE_FAILED ->
-                SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state.state.value, state.stateMessage.value)
-            LoadState.STATE_LOADING -> SimpleLoading()
-            LoadState.STATE_OK -> SimpleOk()
-        }
+        SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state.state.value, state.stateMessage.value)
     }
 }
 
@@ -67,6 +63,7 @@ private fun SecurityPasswordDialogReady(
         Spacer(modifier = Modifier.height(defaultPadding))
 
         OutlinedTextField(
+            enabled = state == LoadState.STATE_READY,
             isError = state == LoadState.STATE_FAILED,
             value = pass,
             onValueChange = { pass = it },
@@ -87,22 +84,23 @@ private fun SecurityPasswordDialogReady(
 
         Spacer(modifier = Modifier.height(defaultPadding))
 
-        Row(
-            horizontalArrangement = Arrangement.End,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TextButton(onClick = onNegativeClick) {
-                Text(text = "CANCEL")
-            }
-            Spacer(modifier = Modifier.width(smallPadding))
-            TextButton(onClick = {
-                onPositiveClick(
-                    PasswordVerificationToken.PassBuilder().with(
-                        ByteBuffer.wrap(pass.toByteArray(charset = Charsets.ISO_8859_1))
-                    ).build()
-                )
-            }) {
-                Text(text = "SUBMIT")
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            if (state == LoadState.STATE_LOADING)
+                CircularProgressIndicator()
+            else if (state == LoadState.STATE_OK)
+                Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
+
+            Row(horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onNegativeClick, enabled = state != LoadState.STATE_LOADING) {
+                    Text(text = "CANCEL")
+                }
+                Spacer(modifier = Modifier.width(smallPadding))
+                TextButton(
+                    onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass).build()) },
+                    enabled = state != LoadState.STATE_LOADING
+                ) {
+                    Text(text = "SUBMIT")
+                }
             }
         }
     }

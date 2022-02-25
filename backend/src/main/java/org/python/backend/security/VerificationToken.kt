@@ -67,7 +67,10 @@ class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToke
 
     override fun equals(other: Any?): Boolean {
         return when (other) {
-            is PasswordVerificationToken -> this.pass == other.pass
+            is PasswordVerificationToken -> {
+                val tmp = this.pass.array().contentEquals(other.pass.array())
+                tmp
+            }
             is String -> this.pass == fromString(other).pass
             else -> throw java.lang.IllegalArgumentException("Cannot compare against $other")
         }

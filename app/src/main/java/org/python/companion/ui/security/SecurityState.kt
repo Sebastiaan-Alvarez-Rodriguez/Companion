@@ -25,7 +25,6 @@ import org.python.backend.security.VerificationMessage
 import org.python.companion.support.LoadState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.SecurityViewModel
-import timber.log.Timber
 
 
 class SecurityState(
@@ -68,14 +67,11 @@ class SecurityState(
                         onPositiveClick = { token ->
                             stateMiniState.state.value = LoadState.STATE_LOADING
                             securityViewModel.viewModelScope.launch {
-                                Timber.w("Note: Authenticating pass")
                                 val msgSec = securityViewModel.securityActor.verify(token)
                                 if (msgSec.type == VerificationMessage.SEC_CORRECT) {
-                                    Timber.w("Authentication success")
                                     stateMiniState.state.value = LoadState.STATE_OK
                                     navController.popBackStack(route = navigationStart, inclusive = true)
                                 } else {
-                                    Timber.w("Authentication failed")
                                     stateMiniState.state.value = LoadState.STATE_FAILED
                                     stateMiniState.stateMessage.value = msgSec.body?.userMessage
                                 }

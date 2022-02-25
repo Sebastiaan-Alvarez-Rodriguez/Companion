@@ -1,5 +1,6 @@
 package org.python.backend.security
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
@@ -8,9 +9,11 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 import org.python.backend.util.CoroutineUtil
 import timber.log.Timber
 
@@ -161,8 +164,7 @@ internal class BioActor(
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage = VerificationMessage.createCorrect()
 
-    override suspend fun verify(token: VerificationToken?): VerificationMessage =
-        CoroutineUtil.awaitCallback { verify(it) }
+    override suspend fun verify(token: VerificationToken?): VerificationMessage = withContext(Dispatchers.Default) { CoroutineUtil.awaitCallback { verify(it) } }
 
     private fun verify(callback: CoroutineUtil.Callback<VerificationMessage>) {
         initBiometricPrompt(
@@ -227,48 +229,43 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
 
     override fun actorAvailable(): VerificationMessage = VerificationMessage.createCorrect()
 
-    override fun hasCredentials(): Boolean {
-        return sharedPreferences.contains(pass_storage_key)
-    }
+    override fun hasCredentials(): Boolean = sharedPreferences.contains(pass_storage_key)
 
-    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage {
+    @SuppressLint("ApplySharedPref")
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage = withContext(Dispatchers.Default) {
         if (hasCredentials()) {
             val result = when (oldToken) {
                 null -> throw IllegalArgumentException("Existing credentials detected. Caller must provide old verification token for verification.")
                 else -> verify(oldToken)
             }
             if (result.type != VerificationMessage.SEC_CORRECT)
-                return result
+                return@withContext result
         }
         val preferencesEditor = sharedPreferences.edit()
         preferencesEditor.putString(pass_storage_key, newToken.toString())
         preferencesEditor.commit()
-        return VerificationMessage.createCorrect()
+        return@withContext VerificationMessage.createCorrect()
     }
 
-    override suspend fun verify(token: VerificationToken?): VerificationMessage = verifyInternal(token)
+    override suspend fun verify(token: VerificationToken?): VerificationMessage = withContext(Dispatchers.Default) { verifyInternal(token) }
 
     @Suppress("RedundantSuspendModifier")
-    private suspend fun verifyInternal(token: VerificationToken?): VerificationMessage {
+    private suspend fun verifyInternal(token: VerificationToken?): VerificationMessage = withContext(Dispatchers.Default) {
         Timber.w("Authentication stage0")
-
         if (token == null || token !is PasswordVerificationToken)
             throw IllegalArgumentException("Password actor requires password verification token")
 
         Timber.w("Authentication stage1")
         val given: PasswordVerificationToken = token
-        val known = PasswordVerificationToken.PassBuilder().with(sharedPreferences.getString(pass_storage_key, null) ?: return VerificationMessage.createNoInit()).build()
+        val known = PasswordVerificationToken.PassBuilder().with(sharedPreferences.getString(pass_storage_key, null) ?: return@withContext VerificationMessage.createNoInit()).build()
 
         Timber.w("Authentication stage2")
-        return when (given.equals(known)) {
-            true -> {
-                Timber.w("Authentication stage3")
-                VerificationMessage.createCorrect()
-            }
-            false -> {
-                Timber.w("Authentication stage4")
-                VerificationMessage.createIncorrect()
-            }
+        return@withContext if (given == known) {
+            Timber.w("Authentication stage3")
+            VerificationMessage.createCorrect()
+        } else {
+            Timber.w("Authentication stage4")
+            VerificationMessage.createIncorrect()
         }
     }
 }
