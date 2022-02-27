@@ -22,21 +22,17 @@ import org.python.companion.R
 import org.python.companion.support.LoadState
 import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
-import org.python.companion.support.UiUtil.SimpleLoading
-import org.python.companion.support.UiUtil.SimpleOk
-import timber.log.Timber
-import java.nio.ByteBuffer
 
 
 @Composable
 fun SecurityPasswordDialogContent(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
+    onResetPasswordClick: () -> Unit,
     state: UiUtil.StateMiniState
 ) {
-    Timber.e("Got securityPasswordDialog state: $state (ready=${state.state.value == LoadState.STATE_READY}, loading=${state.state.value == LoadState.STATE_LOADING}, ok=${state.state.value == LoadState.STATE_OK}, failed=${state.state.value == LoadState.STATE_FAILED})")
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-        SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, state.state.value, state.stateMessage.value)
+        SecurityPasswordDialogReady(onNegativeClick, onPositiveClick, onResetPasswordClick, state.state.value, state.stateMessage.value)
     }
 }
 
@@ -44,6 +40,7 @@ fun SecurityPasswordDialogContent(
 private fun SecurityPasswordDialogReady(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
+    onResetPasswordClick: () -> Unit,
     state: @LoadingState Int = LoadState.STATE_READY,
     stateMessage: String? = null
 ) {
@@ -63,7 +60,7 @@ private fun SecurityPasswordDialogReady(
         Spacer(modifier = Modifier.height(defaultPadding))
 
         OutlinedTextField(
-            enabled = state == LoadState.STATE_READY,
+            enabled = state != LoadState.STATE_LOADING,
             isError = state == LoadState.STATE_FAILED,
             value = pass,
             onValueChange = { pass = it },
@@ -80,16 +77,18 @@ private fun SecurityPasswordDialogReady(
             }
         )
         if (stateMessage != null)
-            Text(text = stateMessage, fontSize = 8.sp)
+            Text(text = stateMessage, fontSize = 12.sp)
 
         Spacer(modifier = Modifier.height(defaultPadding))
 
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-            if (state == LoadState.STATE_LOADING)
-                CircularProgressIndicator()
-            else if (state == LoadState.STATE_OK)
-                Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
-
+            when (state) {
+                LoadState.STATE_LOADING -> CircularProgressIndicator()
+                LoadState.STATE_OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
+                else -> TextButton(onClick = onResetPasswordClick) {
+                    Text(text = "RESET PASSWORD")
+                }
+            }
             Row(horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onNegativeClick, enabled = state != LoadState.STATE_LOADING) {
                     Text(text = "CANCEL")

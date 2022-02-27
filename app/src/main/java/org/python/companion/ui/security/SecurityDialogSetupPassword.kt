@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
@@ -26,15 +27,11 @@ import org.python.companion.support.UiUtil
 fun SecurityPasswordSetupDialogContent(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
+    title: String,
     state: UiUtil.StateMiniState
 ) {
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-        when(state.state.value) {
-            LoadState.STATE_READY, LoadState.STATE_FAILED ->
-                SecurityDialogSetupPasswordReady(onNegativeClick, onPositiveClick, state.state.value, state.stateMessage.value)
-            LoadState.STATE_LOADING -> UiUtil.SimpleLoading()
-            LoadState.STATE_OK -> UiUtil.SimpleOk()
-        }
+        SecurityDialogSetupPasswordReady(onNegativeClick, onPositiveClick, title, state.state.value, state.stateMessage.value)
     }
 }
 
@@ -42,6 +39,7 @@ fun SecurityPasswordSetupDialogContent(
 private fun SecurityDialogSetupPasswordReady(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
+    title: String,
     state: @LoadingState Int,
     stateMessage: String?
 ) {
@@ -55,7 +53,7 @@ private fun SecurityDialogSetupPasswordReady(
 
     Column(modifier = Modifier.padding(defaultPadding).fillMaxSize()) {
         Text(
-            text = "Setup password",
+            text = title,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             modifier = Modifier.padding(defaultPadding)
@@ -63,6 +61,7 @@ private fun SecurityDialogSetupPasswordReady(
         Spacer(modifier = Modifier.height(defaultPadding))
 
         OutlinedTextField(
+            enabled = state != LoadState.STATE_LOADING,
             isError = state == LoadState.STATE_FAILED,
             value = pass,
             onValueChange = {
@@ -82,6 +81,7 @@ private fun SecurityDialogSetupPasswordReady(
             }
         )
         OutlinedTextField(
+            enabled = state != LoadState.STATE_LOADING,
             isError = state == LoadState.STATE_FAILED,
             value = repeatPass,
             onValueChange = {
@@ -101,23 +101,26 @@ private fun SecurityDialogSetupPasswordReady(
             }
         )
         if (stateMessage != null)
-            Text(text = stateMessage, fontSize = 8.sp)
+            Text(text = stateMessage, fontSize = 12.sp)
 
         Spacer(modifier = Modifier.height(defaultPadding))
 
-        Row(
-            horizontalArrangement = Arrangement.End,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TextButton(onClick = onNegativeClick) {
-                Text(text = "CANCEL")
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            when (state) {
+                LoadState.STATE_LOADING -> CircularProgressIndicator()
+                LoadState.STATE_OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
             }
-            Spacer(modifier = Modifier.width(smallPadding))
-            TextButton(
-                onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass).build()) },
-                enabled = passMatch
-            ) {
-                Text(text = "SUBMIT")
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = onNegativeClick) {
+                    Text(text = "CANCEL")
+                }
+                Spacer(modifier = Modifier.width(smallPadding))
+                TextButton(
+                    onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass).build()) },
+                    enabled = passMatch
+                ) {
+                    Text(text = "SUBMIT")
+                }
             }
         }
     }
