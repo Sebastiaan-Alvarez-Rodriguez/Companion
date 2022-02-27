@@ -57,7 +57,7 @@ class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToke
             private fun toDirectBuffer(data: ByteBuffer): ByteBuffer = ByteBuffer.allocateDirect(data.capacity()).put(data)
             private fun toDirectBuffer(data: ByteArray): ByteBuffer = ByteBuffer.allocateDirect(data.size).put(data)
             private fun toDirectBuffer(data: String, toISO_8859_1: Boolean = true): ByteBuffer =
-                ByteBuffer.allocateDirect(data.length).put(if (toISO_8859_1) data.toByteArray(charset = Charsets.ISO_8859_1) else data.toByteArray())
+                toDirectBuffer(if (toISO_8859_1) data.toByteArray(charset = Charsets.ISO_8859_1) else data.toByteArray())
         }
     }
 

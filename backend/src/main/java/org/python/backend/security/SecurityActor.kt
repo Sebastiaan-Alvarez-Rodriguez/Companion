@@ -257,10 +257,10 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
 
         Timber.w("Authentication stage1")
         val given: PasswordVerificationToken = token
-        val known = PasswordVerificationToken.PassBuilder().with(
+        val known = PasswordVerificationToken.fromString(
             sharedPreferences.getString(pass_storage_key, null)
                 ?: return@withContext VerificationMessage.createNoInit(StatusBody.NoInitBody("Did not initialize security type"))
-        ).build()
+        )
 
         Timber.w("Authentication stage2")
         return@withContext if (given == known) {
