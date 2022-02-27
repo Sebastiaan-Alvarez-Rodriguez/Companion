@@ -251,23 +251,18 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
 
     @Suppress("RedundantSuspendModifier")
     private suspend fun verifyInternal(token: VerificationToken?): VerificationMessage = withContext(Dispatchers.Default) {
-        Timber.w("Authentication stage0")
         if (token == null || token !is PasswordVerificationToken)
             throw IllegalArgumentException("Password actor requires password verification token")
 
-        Timber.w("Authentication stage1")
         val given: PasswordVerificationToken = token
         val known = PasswordVerificationToken.fromString(
             sharedPreferences.getString(pass_storage_key, null)
                 ?: return@withContext VerificationMessage.createNoInit(StatusBody.NoInitBody("Did not initialize security type"))
         )
 
-        Timber.w("Authentication stage2")
         return@withContext if (given == known) {
-            Timber.w("Authentication stage3")
             VerificationMessage.createCorrect()
         } else {
-            Timber.w("Authentication stage4")
             VerificationMessage.createIncorrect(StatusBody.IncorrectBody("Incorrect Password"))
         }
     }
