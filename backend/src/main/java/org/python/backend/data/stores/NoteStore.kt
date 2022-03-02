@@ -12,7 +12,6 @@ class NoteStore(database: CompanionDatabase) {
 
     fun getAllNotes(): Flow<PagingData<Note>> = pagingNote { noteDao.getAll() }
 
-    //TODO: Decrypt secure notes
     fun getAllNotesWithSecure(): Flow<PagingData<Note>> = pagingNote { noteDao.getAllWithSecure() }
 
     fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()
@@ -42,6 +41,8 @@ class NoteStore(database: CompanionDatabase) {
     suspend fun update(note: Note) = noteDao.update(note.toRoom())
 
     suspend fun delete(note: Note) = noteDao.delete(note.toRoom())
+
+    suspend fun deleteAllSecure(foreach: ((String) -> Unit)? = null) = noteDao.deleteAllSecure(foreach)
 }
 
 private fun pagingNote(block: () -> PagingSource<Int, RoomNote>): Flow<PagingData<Note>> =

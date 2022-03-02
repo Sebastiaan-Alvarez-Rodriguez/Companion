@@ -5,11 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
@@ -45,7 +42,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun update(oldNote: Note, updateNote: Note): Boolean = noteRepository.update(oldNote, updateNote)
 
     suspend fun delete(note: Note): Unit = noteRepository.delete(note)
-
+    suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
 
     suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)

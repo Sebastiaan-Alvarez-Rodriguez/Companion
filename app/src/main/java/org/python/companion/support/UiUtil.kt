@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.python.backend.data.datatype.Note
 import org.python.companion.R
 
 object LoadState {
@@ -89,7 +88,15 @@ object UiUtil {
         }
     }
 
+    @Composable
 
+
+    fun NavController.getNavigationResult(key: String = "result") {
+        currentBackStackEntry?.savedStateHandle?.getLiveData<String>(key)
+    }
+    fun NavController.setNavigationResult(result: String, key: String = "result") {
+        previousBackStackEntry?.savedStateHandle?.set(key, result)
+    }
 
     fun effect(scope: CoroutineScope, block: suspend () -> Unit) =scope.launch(Dispatchers.IO) { block() }
 

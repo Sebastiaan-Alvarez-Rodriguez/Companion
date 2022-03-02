@@ -13,6 +13,9 @@ interface NoteDao {
     @Query("select * from RoomNote")
     fun getAllWithSecure(): PagingSource<Int, RoomNote>
 
+    @Query("select name from RoomNote where secure > 0")
+    fun getSecureNames(): List<String>
+
     @Query("select * from RoomNote where secure <= :secure and name = :name")
     suspend fun getByName(name: String, secure: Boolean = false): RoomNote?
 
@@ -34,4 +37,12 @@ interface NoteDao {
 
     @Delete
     suspend fun delete(item: RoomNote)
+
+    @Query("select * from RoomNote where secure > 0") // TODO: Do delete
+    suspend fun deleteAllSecure()
+
+    suspend fun deleteAllSecure(foreach: ((String) -> Unit)?) {
+        getSecureNames().forEach { foreach?.invoke(it) }
+        deleteAllSecure()
+    }
 }

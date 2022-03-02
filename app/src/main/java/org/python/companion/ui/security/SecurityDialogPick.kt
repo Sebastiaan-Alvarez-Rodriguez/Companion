@@ -9,11 +9,13 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.python.backend.security.SecurityActor
+import org.python.backend.security.SecurityType
 import org.python.companion.R
 
 @Composable
@@ -21,10 +23,15 @@ fun SecurityPickDialogContent(
     headerText: String = "Select a method to login",
     onNegativeClick: () -> Unit,
     onPositiveClick: (Int) -> Unit,
+    forbiddenMethods: Collection<@SecurityType Int>? = null,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
 
+    val iconMap = mapOf<@SecurityType Int, Pair<ImageVector, String>>(
+        Pair(SecurityActor.TYPE_PASS, Pair(Icons.Filled.Password, "Password")),
+        Pair(SecurityActor.TYPE_BIO, Pair(Icons.Filled.Fingerprint, "Fingerprint"))
+    )
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text(
@@ -39,16 +46,13 @@ fun SecurityPickDialogContent(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                IconButton(
-                    modifier = Modifier.padding(tinyPadding),
-                    onClick = { onPositiveClick(SecurityActor.TYPE_PASS) }) {
-                    Icon(Icons.Filled.Password, "Password login")
-                }
-                Spacer(modifier = Modifier.width(defaultPadding))
-                IconButton(
-                    modifier = Modifier.padding(tinyPadding),
-                    onClick = { onPositiveClick(SecurityActor.TYPE_BIO) }) {
-                    Icon(Icons.Filled.Fingerprint, "Biometric login")
+                val lazyMap = if (forbiddenMethods != null) iconMap.filter { item -> item.key !in forbiddenMethods } else iconMap
+                for (entry in lazyMap) {
+                    IconButton(
+                        modifier = Modifier.padding(tinyPadding).size(16.dp),
+                        onClick = { onPositiveClick(entry.key) }) {
+                        Icon(entry.value.first, entry.value.second)
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(defaultPadding))

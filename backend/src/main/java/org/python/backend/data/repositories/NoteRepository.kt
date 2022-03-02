@@ -55,6 +55,7 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
 
     suspend fun delete(note: Note): Unit = noteStore.delete(secureDelete(note))
 
+    suspend fun deleteAllSecure(): Unit = noteStore.deleteAllSecure { name -> secureDelete(name) }
 
     private fun secureToStorage(note: Note): Note? {
         if (note.secure) {
@@ -83,7 +84,10 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
 
     private fun secureDelete(note: Note): Note {
         if (note.secure)
-            Securer.deleteAlias(note.name)
+            secureDelete(note.name)
         return note
+    }
+    private fun secureDelete(name: String) {
+        Securer.deleteAlias(name)
     }
 }

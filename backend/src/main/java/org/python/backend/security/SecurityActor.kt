@@ -22,6 +22,24 @@ import timber.log.Timber
 @IntDef(SecurityActor.TYPE_PASS, SecurityActor.TYPE_BIO)
 annotation class SecurityType
 
+val SecurityTypes: @SecurityType IntArray = intArrayOf(
+    SecurityActor.TYPE_PASS,
+    SecurityActor.TYPE_BIO
+)
+
+data class CompactSecurityTypeArray(val types: Int) {
+    fun isAllowed(type: @SecurityType Int): Boolean = !isForbidden(type)
+    fun isForbidden(type: @SecurityType Int): Boolean = types and type == 0
+
+    fun allowed(): Set<@SecurityType Int> = SecurityTypes.filter { type -> type and types == 1 }.toSet()
+    fun forbidden(): Set<@SecurityType Int> = SecurityTypes.filter { type -> type and types == 0 }.toSet()
+
+    companion object {
+        fun create(vararg allowed: @SecurityType Int): CompactSecurityTypeArray = CompactSecurityTypeArray(allowed.reduce(Int::or))
+        fun create(allowed: Collection<@SecurityType Int>): CompactSecurityTypeArray = CompactSecurityTypeArray(allowed.reduce(Int::or))
+    }
+}
+
 interface SecurityInterface {
     /** security type being implemented by this actor */
     val type: @SecurityType Int
