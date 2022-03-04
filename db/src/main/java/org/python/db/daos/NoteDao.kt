@@ -38,7 +38,7 @@ interface NoteDao {
     @Delete
     suspend fun delete(item: RoomNote)
 
-    @Query("delete from RoomNote where secure > 0") // TODO: Do delete
+    @Query("delete from RoomNote where secure > 0")
     suspend fun deleteAllSecure()
 
     @Transaction
