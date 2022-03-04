@@ -12,9 +12,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
+import androidx.navigation.*
 import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
@@ -22,6 +20,7 @@ import kotlinx.coroutines.launch
 import org.python.backend.security.*
 import org.python.companion.support.LoadState
 import org.python.companion.support.UiUtil
+import org.python.companion.support.UiUtil.createRoute
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.companion.viewmodels.SecurityViewModel
 
@@ -35,20 +34,34 @@ class SecurityState(
     @OptIn(ExperimentalComposeUiApi::class)
     fun NavGraphBuilder.securityGraph() {
         navigation(startDestination = navigationStart, route = "sec") {
-            dialog(route = "$navigationStart?returnTarget={target}?allowedMethods={allowedMethods}", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) { entry ->
-                SecurityPickDialogContent(
-                    onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { type ->
-                        val target = entry.arguments?.getString("target", null)
-                        securityViewModel.securityActor.switchTo(activity, type)
-                        when (type) {
-                            SecurityActor.TYPE_BIO -> navigateToBio(navController, returnTarget = target)
-                            SecurityActor.TYPE_PASS -> navigateToPass(navController, returnTarget = target)
-                            else -> throw RuntimeException("How did we get here?!")
-                        }
-                    },
-                    forbiddenMethods = CompactSecurityTypeArray.create(entry.arguments?.getInt("allowedMethods") ?: 0).forbidden()
-                )
+            dialog(
+                route = "$navigationStart?returnTarget={target}&allowedMethods={allowedMethods}",
+                arguments = listOf(
+                    navArgument("target") { nullable = true; defaultValue = null; type = NavType.StringType },
+                    navArgument("allowedMethods") { defaultValue = CompactSecurityTypeArray.default; type = NavType.IntType }
+                ),
+                dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+            ) { entry ->
+                val target = entry.arguments?.getString("target", null)
+                val allowedMethods = CompactSecurityTypeArray(entry.arguments?.getInt("allowedMethods"))
+                val moveToMethod: (@SecurityType Int, Boolean) -> Unit = { type, popCurrent ->
+                    if (popCurrent)
+                        navController.popBackStack()
+                    when (type) {
+                        SecurityActor.TYPE_BIO -> navigateToBio(navController, returnTarget = target)
+                        SecurityActor.TYPE_PASS -> navigateToPass(navController, returnTarget = target)
+                        else -> throw RuntimeException("How did we get here?!")
+                    }
+                }
+                when (allowedMethods.allowed().size) {
+                    0 -> throw RuntimeException("Cannot pick security type with 0 allowed methods.")
+                    1 -> moveToMethod(allowedMethods.allowed().first(), true)
+                    else -> SecurityPickDialogContent(
+                        onNegativeClick = { navController.navigateUp() },
+                        onPositiveClick = { type -> moveToMethod(type, false) },
+                        allowedMethods = allowedMethods.allowed()
+                    )
+                }
             }
 
             dialog(route = "$navigationStart/pass", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -204,13 +217,16 @@ class SecurityState(
         fun navigateToSecurityPick(
             navController: NavController,
             returnTarget: String? = null,
-            allowedMethods: Collection<@SecurityType Int>? = null
+            allowedMethods: Collection<@SecurityType Int> = SecurityTypes.toList()
         ) {
             navController.navigate(
-                navigationStart +
-                        (if (returnTarget != null) "?target=$returnTarget" else "") +
-                        (if (allowedMethods != null) "?allowedMethods=${CompactSecurityTypeArray.create(allowedMethods)}" else {})
-                ) {
+                createRoute(navigationStart,
+                    optionals = mapOf(
+                        "target" to returnTarget,
+                        "allowedMethods" to CompactSecurityTypeArray.create(allowedMethods).toString()
+                    )
+                )
+            ) {
                 launchSingleTop = true
             }
         }

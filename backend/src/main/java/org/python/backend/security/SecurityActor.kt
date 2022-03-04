@@ -28,13 +28,18 @@ val SecurityTypes: @SecurityType IntArray = intArrayOf(
 )
 
 data class CompactSecurityTypeArray(val types: Int) {
+    constructor(types: Int?) : this(types ?: default)
+
     fun isAllowed(type: @SecurityType Int): Boolean = !isForbidden(type)
     fun isForbidden(type: @SecurityType Int): Boolean = types and type == 0
 
-    fun allowed(): Set<@SecurityType Int> = SecurityTypes.filter { type -> type and types == 1 }.toSet()
+    fun allowed(): Set<@SecurityType Int> = SecurityTypes.filter { type -> type and types > 0 }.toSet()
     fun forbidden(): Set<@SecurityType Int> = SecurityTypes.filter { type -> type and types == 0 }.toSet()
 
+    override fun toString(): String = types.toString()
+
     companion object {
+        val default = Int.MAX_VALUE
         fun create(vararg allowed: @SecurityType Int): CompactSecurityTypeArray = CompactSecurityTypeArray(allowed.reduce(Int::or))
         fun create(allowed: Collection<@SecurityType Int>): CompactSecurityTypeArray = CompactSecurityTypeArray(allowed.reduce(Int::or))
     }
@@ -122,8 +127,8 @@ class SecurityActor : SecurityInterface {
     }
 
     companion object {
-        const val TYPE_PASS = 0
-        const val TYPE_BIO = 1
+        const val TYPE_PASS = 1
+        const val TYPE_BIO = 2
         /* Indicates that user has not yet set a preference */
         const val TYPE_UNDEFINED = -1
         const val security_storage = "SECURITY_ACTOR_STORAGE"

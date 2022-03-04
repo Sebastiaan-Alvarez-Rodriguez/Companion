@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.app.FragmentActivity
@@ -52,7 +55,8 @@ class MainActivity : FragmentActivity() {
                 val securityState = SecurityState.rememberState(
                     activity = this,
                     navController = navController,
-                    securityViewModel = securityViewModel
+                    securityViewModel = securityViewModel,
+                    noteViewModel = noteViewModel
                 )
                 val noteState = NoteState.rememberState(
                     navController = navController,

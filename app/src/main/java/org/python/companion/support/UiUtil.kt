@@ -88,7 +88,15 @@ object UiUtil {
         }
     }
 
-    @Composable
+    fun createRoute(base: String, args: Collection<String>? = null, optionals: Map<String, String?>? = null): String {
+        return base + when (args.isNullOrEmpty()) {
+            true -> ""
+            false -> "/"+args.joinToString(separator="/")
+        } + when(optionals.isNullOrEmpty()) {
+            true -> ""
+            false -> "?"+optionals.filterValues { v -> v != null }.map { (k, v) -> "$k=$v" }.joinToString(separator = "&")
+        }
+    }
 
 
     fun NavController.getNavigationResult(key: String = "result") {

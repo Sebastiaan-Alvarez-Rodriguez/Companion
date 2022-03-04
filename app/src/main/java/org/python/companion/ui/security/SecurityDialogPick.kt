@@ -23,7 +23,7 @@ fun SecurityPickDialogContent(
     headerText: String = "Select a method to login",
     onNegativeClick: () -> Unit,
     onPositiveClick: (Int) -> Unit,
-    forbiddenMethods: Collection<@SecurityType Int>? = null,
+    allowedMethods: Collection<@SecurityType Int>,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
@@ -34,24 +34,22 @@ fun SecurityPickDialogContent(
     )
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
-            Text(
-                text = headerText,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(defaultPadding)
-            )
+            Text(text = headerText, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
             Spacer(modifier = Modifier.height(defaultPadding))
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val lazyMap = if (forbiddenMethods != null) iconMap.filter { item -> item.key !in forbiddenMethods } else iconMap
+                val lazyMap = iconMap.filter { item -> item.key in allowedMethods }
                 for (entry in lazyMap) {
-                    IconButton(
-                        modifier = Modifier.padding(tinyPadding).size(16.dp),
-                        onClick = { onPositiveClick(entry.key) }) {
-                        Icon(entry.value.first, entry.value.second)
+                    Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
+                        IconButton(
+                            modifier = Modifier.padding(tinyPadding).size(32.dp),
+                            onClick = { onPositiveClick(entry.key) }
+                        ) {
+                            Icon(entry.value.first, entry.value.second)
+                        }
                     }
                 }
             }
