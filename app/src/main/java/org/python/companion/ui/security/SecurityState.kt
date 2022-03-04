@@ -73,7 +73,7 @@ class SecurityState(
 
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
-
+                navController.popBackStack()
                 if (securityViewModel.securityActor.hasCredentials()) { // TODO: Pop this frame from the stack
                     navigateToPassAuth(navController)
                 } else {
