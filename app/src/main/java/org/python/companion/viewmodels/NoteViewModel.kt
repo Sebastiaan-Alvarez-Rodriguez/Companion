@@ -8,6 +8,7 @@ import androidx.paging.cachedIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.python.backend.data.datatype.Note
+import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
@@ -19,8 +20,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
     var authenticated = securityActor.authenticated.stateInViewModel(viewModelScope, false)
 
-    private val allNotes = MutableStateFlow(emptyFlow<PagingData<Note>>().cachedIn(viewModelScope))
-    private val searchNotes = MutableStateFlow(emptyFlow<PagingData<Note>>())
+    private val allNotes = MutableStateFlow(emptyFlow<PagingData<Pair<Note, NoteCategory?>>>().cachedIn(viewModelScope))
+    private val searchNotes = MutableStateFlow(emptyFlow<PagingData<Pair<Note, NoteCategory?>>>())
 
     private val _search = MutableStateFlow(null as String?)
     private val _isLoading = MutableStateFlow(true)
@@ -51,7 +52,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val notes: StateFlow<Flow<PagingData<Note>>> = search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
+    val notes: StateFlow<Flow<PagingData<Pair<Note, NoteCategory?>>>> =
+        search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
     private fun notes(search: String?) = when {
         search.isNullOrEmpty() -> allNotes

@@ -7,12 +7,12 @@ import java.time.temporal.ChronoUnit
 
 object DurationConverter {
     @TypeConverter
-    fun durationFromDays(value: Long?): Duration? {
+    fun durationFromMillis(value: Long?): Duration? {
         return if (value == null) null else Duration.of(value, ChronoUnit.MILLIS)
     }
 
     @TypeConverter
-    fun durationToDays(duration: Duration): Long {
+    fun durationToMillis(duration: Duration): Long {
         return duration.toMillis()
     }
 }

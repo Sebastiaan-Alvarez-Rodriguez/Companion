@@ -4,15 +4,18 @@ import androidx.paging.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
+import org.python.backend.data.datatype.NoteCategory
 import org.python.db.CompanionDatabase
-import org.python.db.entities.RoomNote
+import org.python.db.entities.note.RoomNote
+import org.python.db.entities.note.RoomNoteCategory
+import org.python.db.entities.note.RoomNoteWithCategory
 
 class NoteStore(database: CompanionDatabase) {
     private val noteDao = database.noteDao
 
-    fun getAllNotes(): Flow<PagingData<Note>> = pagingNote { noteDao.getAll() }
+    fun getAllNotes(): Flow<PagingData<Pair<Note, NoteCategory?>>> = pagingNote { noteDao.getAll() }
 
-    fun getAllNotesWithSecure(): Flow<PagingData<Note>> = pagingNote { noteDao.getAllWithSecure() }
+    fun getAllNotesWithSecure(): Flow<PagingData<Pair<Note, NoteCategory?>>> = pagingNote { noteDao.getAllWithSecure() }
 
     fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()
 
@@ -45,8 +48,10 @@ class NoteStore(database: CompanionDatabase) {
     suspend fun deleteAllSecure(foreach: ((String) -> Unit)? = null) = noteDao.deleteAllSecure(foreach)
 }
 
-private fun pagingNote(block: () -> PagingSource<Int, RoomNote>): Flow<PagingData<Note>> =
-    Pager(PagingConfig(pageSize = 20)) { block() }.flow.map { page -> page.map(RoomNote::toUI) }
+private fun pagingNote(block: () -> PagingSource<Int, RoomNoteWithCategory>): Flow<PagingData<Pair<Note, NoteCategory?>>> =
+    Pager(PagingConfig(pageSize = 20)) { block() }.flow.map { page -> page.map {
+        it.note.toUI() to it.roomNoteCategory?.toUI()
+    } }
 
 
 private fun Note.toRoom() = RoomNote(
@@ -55,7 +60,8 @@ private fun Note.toRoom() = RoomNote(
     content = content,
     favorite = favorite,
     secure = secure,
-    iv = iv
+    iv = iv,
+    categoryId = categoryId
 )
 
 private fun RoomNote.toUI() = Note(
@@ -64,5 +70,10 @@ private fun RoomNote.toUI() = Note(
     content = content,
     favorite = favorite,
     secure = secure,
-    iv = iv
+    iv = iv,
+    categoryId = categoryId
 )
+
+private fun NoteCategory.toRoom() = RoomNoteCategory(id = id, name = name, color = color)
+
+private fun RoomNoteCategory.toUI() = NoteCategory(id = id, name = name, color = color)

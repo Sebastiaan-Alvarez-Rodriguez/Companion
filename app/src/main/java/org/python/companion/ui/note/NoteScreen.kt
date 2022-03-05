@@ -1,5 +1,6 @@
 package org.python.companion.ui.note
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -24,6 +26,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
+import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
 
 
@@ -82,7 +85,7 @@ fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit)
 }
 
 class NoteScreenListStruct(
-    val notes: Flow<PagingData<Note>>,
+    val notes: Flow<PagingData<Pair<Note, NoteCategory?>>>,
     val isLoading: Boolean,
     val onNewClick: () -> Unit,
     val onNoteClick: (Note) -> Unit,
@@ -107,7 +110,7 @@ fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
 
 /**
  * Overview screen for all notes.
- * @param notes List of notes to display.
+ * @param notes List of notes to display, with an optional category.
  * @param isLoading If set, displays a loading screen.
  * @param onNewClick Lambda to perform on new-note button clicks.
  * @param onNoteClick Lambda to perform on note clicks.
@@ -116,7 +119,7 @@ fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
  */
 @Composable
 fun NoteScreenList(
-    notes: Flow<PagingData<Note>>,
+    notes: Flow<PagingData<Pair<Note, NoteCategory?>>>,
     isLoading: Boolean,
     onNewClick: () -> Unit,
     onNoteClick: (Note) -> Unit,
@@ -125,7 +128,7 @@ fun NoteScreenList(
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
-    val items: LazyPagingItems<Note> = notes.collectAsLazyPagingItems()
+    val items: LazyPagingItems<Pair<Note, NoteCategory?>> = notes.collectAsLazyPagingItems()
     val listState: LazyListState = rememberLazyListState()
 
     Box(Modifier.fillMaxSize()) {
@@ -146,7 +149,7 @@ fun NoteScreenList(
                     }
                     items(items = items) { note ->
                         if (note != null)
-                            NoteItem(note, onNoteClick, onFavoriteClick)
+                            NoteItem(note.first, note.second, onNoteClick, onFavoriteClick)
                     }
                 }
             }
@@ -183,12 +186,14 @@ private fun EmptyContent() {
 /**
  * Composition for a single note item.
  * @param note Note to display.
+ * @param noteCategory Optional note category.
  * @param onNoteClick Lambda to perform on note clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
  */
 @Composable
 fun NoteItem(
     note: Note,
+    noteCategory: NoteCategory? = null,
     onNoteClick: (Note) -> Unit,
     onFavoriteClick: (Note) -> Unit
 ) {
@@ -211,6 +216,10 @@ fun NoteItem(
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { onFavoriteClick(note) }) {
                 Icon(
+                    modifier = when(noteCategory) {
+                            null -> Modifier
+                            else -> Modifier.background(Color(noteCategory.color.toArgb()))
+                        },
                     imageVector = if (note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = "Favorite"
                 )

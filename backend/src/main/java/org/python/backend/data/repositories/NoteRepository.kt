@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
+import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.stores.NoteStore
 import org.python.backend.security.Securer
 import org.python.backend.security.SecurityActor
@@ -16,12 +17,11 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
             this(securityActor, NoteStore(companionDatabase))
 
     /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
-    fun allNotes() : Flow<PagingData<Note>> = securityActor.authenticated.flatMapLatest { authed ->
+    fun allNotes(): Flow<PagingData<Pair<Note, NoteCategory?>>> = securityActor.authenticated.flatMapLatest { authed ->
         if (authed)
             noteStore.getAllNotesWithSecure().map { page -> page.map {
-                secureToUI(it)?: throw IllegalStateException("Could not decrypt notes")
-            }
-            }
+                (secureToUI(it.first) ?: throw IllegalStateException("Could not decrypt note")) to it.second
+            } }
         else
             noteStore.getAllNotes()
     }

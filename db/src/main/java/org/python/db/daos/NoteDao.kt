@@ -3,15 +3,23 @@ package org.python.db.daos
 import androidx.paging.PagingSource
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
-import org.python.db.entities.RoomNote
+import org.python.db.entities.note.RoomNote
+import org.python.db.entities.note.RoomNoteWithCategory
 
 @Dao
 interface NoteDao {
-    @Query("select * from RoomNote where secure == 0")
-    fun getAll(): PagingSource<Int, RoomNote>
+    @Query(
+        "select * from RoomNote " +
+            "left join RoomNoteCategory on RoomNote.categoryId = RoomNoteCategory.id " +
+            "where secure == 0"
+    )
+    fun getAll(): PagingSource<Int, RoomNoteWithCategory>
 
-    @Query("select * from RoomNote")
-    fun getAllWithSecure(): PagingSource<Int, RoomNote>
+    @Query(
+        "select * from RoomNote " +
+        "left join RoomNoteCategory on RoomNote.categoryId = RoomNoteCategory.id "
+    )
+    fun getAllWithSecure(): PagingSource<Int, RoomNoteWithCategory>
 
     @Query("select name from RoomNote where secure > 0")
     fun getSecureNames(): List<String>
