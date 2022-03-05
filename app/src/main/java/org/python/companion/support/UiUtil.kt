@@ -138,12 +138,15 @@ object UiUtil {
                 remember(state) { StateMiniState(mutableStateOf(state), mutableStateOf(stateMessage)) }
         }
     }
-    fun navigateReplaceStartRoute(navController: NavController, newHomeRoute: String) {
-        with (navController) {
-            popBackStack(graph.startDestinationId, true)
-            graph.setStartDestination(newHomeRoute)
-            navigate(newHomeRoute)
-        }
+    fun navigateReplaceStartRoute(navController: NavController, newHomeRoute: String) = with (navController) {
+        popBackStack(graph.startDestinationId, true)
+        graph.setStartDestination(newHomeRoute)
+        navigate(newHomeRoute)
+    }
+
+    fun navigateOutOfGraph(navController: NavController) = with (navController) {
+        popBackStack(graph.startDestinationId, true)
+        navigateUp()
     }
 
     /**
