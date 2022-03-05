@@ -22,7 +22,10 @@ interface NoteDao {
     fun getAllWithSecure(): PagingSource<Int, RoomNoteWithCategory>
 
     @Query("select name from RoomNote where secure > 0")
-    fun getSecureNames(): List<String>
+    suspend fun getSecureNames(): List<String>
+
+    @Query("select * from RoomNote where secure <= :secure and id == :id")
+    suspend fun get(id: Long, secure: Boolean = false): RoomNote?
 
     @Query("select * from RoomNote where secure <= :secure and name = :name")
     suspend fun getByName(name: String, secure: Boolean = false): RoomNote?

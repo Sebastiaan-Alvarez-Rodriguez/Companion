@@ -20,6 +20,13 @@ class NoteStore(database: CompanionDatabase) {
     fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()
 
     /**
+     * Searches note by id.
+     * @param id Id to search for.
+     * @param secure If set, searches secure notes and insecure notes. Otherwise, only searches insecure notes.
+     * @return Found note if present, null otherwise
+     */
+    suspend fun get(id: Long, secure: Boolean = false): Note? = noteDao.get(id, secure)?.toUI()
+    /**
      * Searches note by name.
      * @param name Exact name of note.
      * @param secure If set, searches secure notes and insecure notes. Otherwise, only searches insecure notes.

@@ -28,6 +28,8 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
 
     fun hasSecureNotes(): Flow<Boolean> = noteStore.hasSecureNotes()
 
+    suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.authenticated.value)?.let { secureToUI(it) }
+
     /**
      * Rerieves a note by name.
      * @return found note on succes, `null` if no such name exists.

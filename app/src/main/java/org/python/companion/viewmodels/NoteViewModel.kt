@@ -45,6 +45,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun delete(note: Note): Unit = noteRepository.delete(note)
     suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
 
+    suspend fun get(id: Long): Note? = noteRepository.get(id)
     suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)
 

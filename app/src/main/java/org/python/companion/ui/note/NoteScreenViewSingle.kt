@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
 import org.python.companion.R
 import org.python.companion.support.LoadState
@@ -20,19 +21,26 @@ import timber.log.Timber
 @Composable
 fun NoteScreenViewSingle(
     noteViewModel: NoteViewModel,
-    noteName: String,
+    navController: NavController,
+    id: Long,
     onEditClick: ((Note) -> Unit)? = null,
     onDeleteClick: ((Note) -> Unit)? = null
 ) {
     var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
     var note by remember { mutableStateOf<Note?>(null) }
 
+    val authenticated by noteViewModel.securityActor.authenticated.collectAsState()
+
     when (state) {
         LoadState.STATE_LOADING -> if (note == null) {
             UiUtil.SimpleLoading()
             LaunchedEffect(state) {
-                when (val loadedNote = noteViewModel.getbyName(noteName)) {
-                    null -> state = LoadState.STATE_FAILED
+                when (val loadedNote = noteViewModel.get(id)) {
+                    null ->
+                        if (authenticated)
+                            state = LoadState.STATE_FAILED
+                        else
+                            navController.navigateUp() // Note was edited, became secure
                     else -> {
                         note = loadedNote
                         state = LoadState.STATE_OK
@@ -42,8 +50,8 @@ fun NoteScreenViewSingle(
         }
         LoadState.STATE_OK -> NoteScreenViewSingleReady(note!!, onEditClick, onDeleteClick)
         LoadState.STATE_FAILED -> {
-            Timber.e("Could not find note name: $noteName")
-            UiUtil.SimpleProblem("Could not find note named: $noteName")
+            Timber.e("Could not find note with id: $id")
+            UiUtil.SimpleProblem("Could not find note with id: $id")
         }
     }
 }
@@ -78,7 +86,7 @@ fun NoteScreenViewSingleReady(note: Note, onEditClick: ((Note) -> Unit)? = null,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (onDeleteClick != null)
-                            Button(onClick = {onDeleteClick(note) }) {
+                            Button(onClick = { onDeleteClick(note) }) {
                                 Text(text = "Delete")
                             }
                         if (onEditClick != null)

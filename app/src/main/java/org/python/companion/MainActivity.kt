@@ -170,33 +170,23 @@ class NoteState(
             }
 
             composable(
-                route = "$noteDestination/view/{note}",
-                arguments = listOf(
-                    navArgument("note") {
-                        type = NavType.StringType
-                    }
-                ),
-                deepLinks = listOf(
-                    navDeepLink {
-                        uriPattern = "companion://$noteDestination/view/{note}"
-                    }
-                ),
+                route = "$noteDestination/view/{noteId}",
+                arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/view/{noteId}" }),
             ) { entry ->
-                val noteName = entry.arguments?.getString("note")
-                if (noteName == null) {
-                    Timber.e("View note: Navcontroller navigation - note name == null")
-                } else {
-                    NoteScreenViewSingle(
-                        noteViewModel = noteViewModel,
-                        noteName = noteName,
-                        onEditClick = { navigateToNoteEdit(navController = navController, note = it) },
-                        onDeleteClick = {
-                            noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
-                            navController.navigateUp()
-                        }
-                    )
-                }
+                val noteId = entry.arguments?.getLong("noteId")!!
+                NoteScreenViewSingle(
+                    noteViewModel = noteViewModel,
+                    navController = navController,
+                    id = noteId,
+                    onEditClick = { navigateToNoteEdit(navController = navController, note = it) },
+                    onDeleteClick = {
+                        noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
+                        navController.navigateUp()
+                    }
+                )
             }
+
 
             composable(
                 route = "$noteDestination/create",
@@ -235,67 +225,56 @@ class NoteState(
             }
 
             composable(
-                route = "$noteDestination/edit/{note}",
-                arguments = listOf(
-                    navArgument("note") {
-                        type = NavType.StringType
-                    }
-                ),
-                deepLinks = listOf(
-                    navDeepLink {
-                        uriPattern = "companion://$noteDestination/edit/{note}"
-                    }
-                ),
+                route = "$noteDestination/edit/{noteId}",
+                arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/edit/{noteId}" }),
             ) { entry ->
-                val noteName = entry.arguments?.getString("note")
-                if (noteName == null) {
-                    Timber.e("Edit note: Navcontroller navigation: note name == null")
-                } else {
-                    Timber.d("Edit note: Editing")
-                    val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState()
+                val noteId = entry.arguments?.getLong("noteId")!!
 
-                    NoteScreenEdit(
-                        noteViewModel = noteViewModel,
-                        noteName = noteName,
-                        overrideDialogMiniState = noteOverrideDialogMiniState,
-                        onSaveClick = { toSaveNote, existingNote ->
-                            Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.id}, ${toSaveNote.favorite}")
-                            noteViewModel.viewModelScope.launch {
-                                // If note name == same as before, there is no conflict. Otherwise, we must check.
-                                val conflict: Note? = if (toSaveNote.name == noteName) null else noteViewModel.getbyName(toSaveNote.name)
-                                Timber.d("Edit note: edited note has changed name=${toSaveNote.name != noteName}, now conflict: ${conflict != null}")
-                                if (conflict == null) {
-                                    val success = noteViewModel.update(existingNote!!, toSaveNote)
-                                    navController.navigateUp()
-                                } else {
-                                    noteOverrideDialogMiniState.open(toSaveNote, conflict)
-                                }
+                Timber.d("Edit note: Editing")
+                val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState()
+
+                NoteScreenEdit(
+                    noteViewModel = noteViewModel,
+                    id = noteId,
+                    overrideDialogMiniState = noteOverrideDialogMiniState,
+                    onSaveClick = { toSaveNote, existingNote ->
+                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.id}, ${toSaveNote.favorite}")
+                        noteViewModel.viewModelScope.launch {
+                            // If note name == same as before, there is no conflict. Otherwise, we must check.
+                            val conflict: Note? = if (toSaveNote.name == existingNote!!.name) null else noteViewModel.getbyName(toSaveNote.name)
+                            Timber.d("Edit note: edited note has changed name=${toSaveNote.name != existingNote.name}, now conflict: ${conflict != null}")
+                            if (conflict == null) {
+                                noteViewModel.update(existingNote, toSaveNote)
+                                navController.navigateUp()
+                            } else {
+                                noteOverrideDialogMiniState.open(toSaveNote, conflict)
                             }
-                        },
-                        onOverrideAcceptClick = { toSaveNote, existingNote ->
-                            Timber.d("Edit note: Overriding note (old name=${noteName}) (new name=${toSaveNote.name})")
-                            noteViewModel.viewModelScope.launch {
-                                noteViewModel.delete(existingNote!!)
-                                noteViewModel.upsert(toSaveNote)
-                            }
-                            noteOverrideDialogMiniState.close()
-                            navController.navigateUp()
                         }
-                    )
-                }
+                    },
+                    onOverrideAcceptClick = { toSaveNote, existingNote ->
+                        Timber.d("Edit note: Overriding note (new name=${toSaveNote.name})")
+                        noteViewModel.viewModelScope.launch {
+                            noteViewModel.delete(existingNote!!)
+                            noteViewModel.upsert(toSaveNote)
+                        }
+                        noteOverrideDialogMiniState.close()
+                        navController.navigateUp()
+                    }
+                )
             }
         }
     }
 
 
     private fun navigateToNoteSettings(navController: NavController) = navController.navigate("$noteDestination/settings")
-    private fun navigateToNoteSingle(navController: NavController, note: Note) = navigateToNoteSingle(navController, note.name)
-    private fun navigateToNoteSingle(navController: NavController, note: String) = navController.navigate("$noteDestination/view/$note")
+    private fun navigateToNoteSingle(navController: NavController, note: Note) = navigateToNoteSingle(navController, note.id)
+    private fun navigateToNoteSingle(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/view/$noteId")
 
     private fun navigateToNoteCreate(navController: NavController) = navController.navigate("$noteDestination/create")
 
-    private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.name)
-    private fun navigateToNoteEdit(navController: NavController, note: String) = navController.navigate("$noteDestination/edit/$note")
+    private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.id)
+    private fun navigateToNoteEdit(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/edit/$noteId")
 
     companion object {
         val noteDestination: String = CompanionScreen.Note.name

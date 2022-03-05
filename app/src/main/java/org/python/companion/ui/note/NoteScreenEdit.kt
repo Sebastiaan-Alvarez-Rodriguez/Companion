@@ -31,7 +31,7 @@ import timber.log.Timber
 @Composable
 fun NoteScreenEdit(
     noteViewModel: NoteViewModel,
-    noteName: String,
+    id: Long,
     overrideDialogMiniState: NoteOverrideDialogMiniState,
     onSaveClick: (Note, Note?) -> Unit,
     onOverrideAcceptClick: (Note, Note?) -> Unit
@@ -43,14 +43,14 @@ fun NoteScreenEdit(
         LoadState.STATE_LOADING -> if (existingNote == null) {
             UiUtil.SimpleLoading()
             LaunchedEffect(state) {
-                existingNote = noteViewModel.getbyName(noteName)
+                existingNote = noteViewModel.get(id)
                 state = LoadState.STATE_OK
             }
         }
         LoadState.STATE_OK -> NoteScreenEditReady(existingNote, overrideDialogMiniState, { toSaveNote -> onSaveClick(toSaveNote, existingNote) }, {  toSaveNote -> onOverrideAcceptClick(toSaveNote, existingNote)})
         LoadState.STATE_FAILED -> {
-            Timber.e("Could not find note name: $noteName")
-            UiUtil.SimpleProblem("Could not find note named: $noteName")
+            Timber.e("Could not find note with id: $id")
+            UiUtil.SimpleProblem("Could not find note with id: $id")
         }
     }
 }
