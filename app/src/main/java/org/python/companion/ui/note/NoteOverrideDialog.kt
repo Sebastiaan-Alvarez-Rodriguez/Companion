@@ -26,13 +26,8 @@ fun NoteOverrideDialog(
     onNegativeClick: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        Card(
-            elevation = 8.dp,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-
+        Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
             Column(modifier = Modifier.padding(8.dp)) {
-
                 Text(
                     text = "Name ${currentNote.name} already in use",
                     fontWeight = FontWeight.Bold,

@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
+import org.python.companion.support.UiUtil
 
 
 @Composable
@@ -133,7 +134,7 @@ fun NoteScreenList(
 
     Box(Modifier.fillMaxSize()) {
         when {
-            isLoading -> LoadingContent()
+            isLoading -> UiUtil.SimpleLoading()
             items.itemCount == 0 && securityStruct == null -> EmptyContent()
             else -> {
                 LazyColumn(
@@ -164,16 +165,6 @@ fun NoteScreenList(
 }
 
 @Composable
-private fun LoadingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
 private fun EmptyContent() {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -200,8 +191,9 @@ fun NoteItem(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Card(elevation = 5.dp) {
         Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
+            modifier = Modifier.fillMaxWidth()
                 .padding(defaultPadding)
                 .clickable { onNoteClick(note) }
                 // Regard the whole row as one semantics node. This way each row will receive focus as
@@ -211,9 +203,7 @@ fun NoteItem(
                 .semantics(mergeDescendants = true) {},
         ) {
             Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
-            Spacer(modifier = Modifier.weight(1f))
-            Text(note.name)
-            Spacer(modifier = Modifier.weight(1f))
+            Text(modifier = Modifier.weight(1f, fill = false), text = note.name)
             IconButton(onClick = { onFavoriteClick(note) }) {
                 Icon(
                     modifier = when(noteCategory) {

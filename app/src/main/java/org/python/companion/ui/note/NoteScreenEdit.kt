@@ -119,15 +119,8 @@ fun NoteScreenEditBody(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(defaultPadding),
-        elevation = 5.dp,
-    ) {
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(defaultPadding)) {
+    Card(modifier = Modifier.fillMaxSize().padding(defaultPadding), elevation = 5.dp) {
+        Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
