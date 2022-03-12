@@ -7,17 +7,18 @@ import androidx.room.PrimaryKey
 
 @Entity(indices = [Index("name", unique = true)])
 data class RoomNoteCategory(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val categoryId: Long = 0,
     val name: String,
-    val color: Color
+    val color: Color,
+    val favorite: Boolean,
 ) {
     override fun equals(other: Any?): Boolean {
         if (other !is RoomNoteCategory)
             return false
-        return this.id == other.id
+        return this.categoryId == other.categoryId
     }
 
     override fun hashCode(): Int {
-        return this.id.hashCode()
+        return this.categoryId.hashCode()
     }
 }

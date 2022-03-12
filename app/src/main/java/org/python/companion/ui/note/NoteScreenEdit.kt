@@ -2,24 +2,39 @@ package org.python.companion.ui.note
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
+import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
 import org.python.companion.support.LoadState
 import org.python.companion.support.UiUtil
@@ -33,21 +48,29 @@ fun NoteScreenEdit(
     noteViewModel: NoteViewModel,
     id: Long,
     overrideDialogMiniState: NoteOverrideDialogMiniState,
+    onCategoryClick: () -> Unit,
     onSaveClick: (Note, Note?) -> Unit,
     onOverrideAcceptClick: (Note, Note?) -> Unit
 ) {
     var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
-    var existingNote by remember { mutableStateOf<Note?>(null) }
+    var existingData by remember { mutableStateOf<Pair<Note?, NoteCategory?>?>(null) }
 
     when (state) {
-        LoadState.STATE_LOADING -> if (existingNote == null) {
+        LoadState.STATE_LOADING -> if (existingData == null) {
             UiUtil.SimpleLoading()
             LaunchedEffect(state) {
-                existingNote = noteViewModel.get(id)
+                existingData = noteViewModel.getWithCategory(id)
                 state = LoadState.STATE_OK
             }
         }
-        LoadState.STATE_OK -> NoteScreenEditReady(existingNote, overrideDialogMiniState, { toSaveNote -> onSaveClick(toSaveNote, existingNote) }, {  toSaveNote -> onOverrideAcceptClick(toSaveNote, existingNote)})
+        LoadState.STATE_OK -> NoteScreenEditReady(
+            note = existingData?.first,
+            noteCategory = existingData?.second,
+            overrideDialogMiniState = overrideDialogMiniState,
+            onCategoryClick = onCategoryClick,
+            onSaveClick = { toSaveNote -> onSaveClick(toSaveNote, existingData?.first) },
+            onOverrideAcceptClick = { toSaveNote -> onOverrideAcceptClick(toSaveNote, existingData?.first)}
+        )
         LoadState.STATE_FAILED -> {
             Timber.e("Could not find note with id: $id")
             UiUtil.SimpleProblem("Could not find note with id: $id")
@@ -60,12 +83,14 @@ fun NoteScreenEdit(
 fun NoteScreenEditNew(
     overrideDialogMiniState: NoteOverrideDialogMiniState,
     onSaveClick: (Note) -> Unit,
+    onCategoryClick: () -> Unit,
     onOverrideAcceptClick: (Note) -> Unit
-) = NoteScreenEditReady(null, overrideDialogMiniState, onSaveClick, onOverrideAcceptClick)
+) = NoteScreenEditReady(null, null, overrideDialogMiniState, onCategoryClick, onSaveClick, onOverrideAcceptClick)
 
 /**
  * Detail screen for editing a single note.
  * @param note Title of the passed note.
+ * @param noteCategory Optional category assigned to passed note.
  * @param overrideDialogMiniState
  * @param onSaveClick Lambda executed when the user hits the save button.
  * @param onOverrideAcceptClick Lambda executed when the user hits the override button.
@@ -73,13 +98,15 @@ fun NoteScreenEditNew(
 @Composable
 fun NoteScreenEditReady(
     note: Note?,
+    noteCategory: NoteCategory?,
     overrideDialogMiniState: NoteOverrideDialogMiniState,
+    onCategoryClick: () -> Unit,
     onSaveClick: (Note) -> Unit,
     onOverrideAcceptClick: (Note) -> Unit
 ) {
     Box {
         NoteScreenOverrideDialog(overrideDialogMiniState, onOverrideAcceptClick)
-        NoteScreenEditBody(note, onSaveClick)
+        NoteScreenEditBody(note, noteCategory, onCategoryClick, onSaveClick)
     }
 }
 
@@ -88,6 +115,8 @@ fun NoteScreenEditReady(
 @Composable
 fun NoteScreenEditBody(
     note: Note?,
+    noteCategory: NoteCategory?,
+    onCategoryClick: () -> Unit,
     onSaveClick: (Note) -> Unit
 ) {
     var title by remember { mutableStateOf(note?.name ?: "") }
@@ -95,7 +124,12 @@ fun NoteScreenEditBody(
     var favorite by remember { mutableStateOf(note?.favorite ?: false)}
     var secure by remember { mutableStateOf(note?.secure ?: false)}
 
-    val changed = lazy {
+    var categoryKey by remember { mutableStateOf(-1L)}
+
+    var categoryName by remember { mutableStateOf(noteCategory?.name ?: "") }
+    var categoryColor by remember { mutableStateOf(noteCategory?.color) }
+
+    val noteChanged = lazy {
         if (note == null)
             title != "" || content != "" || favorite || secure
         else
@@ -138,6 +172,12 @@ fun NoteScreenEditBody(
                             imageVector = if (secure) Icons.Filled.Lock else Icons.Outlined.Lock,
                             contentDescription =if (secure) "Stop securing" else "Secure")
                     }
+                    IconButton(modifier = Modifier.padding(smallPadding), onClick = onCategoryClick) {
+                        Icon(
+                            modifier = categoryColor.let { if (it != null) Modifier.background(Color(it.toArgb())) else Modifier },
+                            imageVector = Icons.Outlined.Article,
+                            contentDescription = "Edit category")
+                    }
                 }
                 Spacer(Modifier.width(defaultPadding))
 
@@ -173,10 +213,85 @@ fun NoteScreenEditBody(
         }
     }
 
-    BackHandler(enabled = changed.value) {
+    BackHandler(enabled = noteChanged.value) {
         // TODO: Are you sure you want to go back?
     }
 }
+
+/**
+ * Overview screen for all categories.
+ * @param categories List of categories to display.
+ * @param isLoading if set, a loading screen will be displayed.
+ * @param onNewClick Lambda to perform on new-category button clicks.
+ * @param onCategoryClick Lambda to perform on category clicks.
+ * @param onFavoriteClick Lambda to perform on note favorite clicks.
+ */
+@Composable
+fun NoteScreenEditCategory(
+    categories: Flow<PagingData<NoteCategory>>,
+    isLoading: Boolean,
+    onNewClick: () -> Unit,
+    onCategoryClick: (NoteCategory) -> Unit,
+    onFavoriteClick: (NoteCategory) -> Unit,
+) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+    val smallPadding = dimensionResource(id = R.dimen.padding_small)
+
+    val items: LazyPagingItems<NoteCategory> = categories.collectAsLazyPagingItems()
+    val listState: LazyListState = rememberLazyListState()
+
+    Card(modifier = Modifier.fillMaxSize().padding(defaultPadding), elevation = 5.dp) {
+        Box(Modifier.fillMaxSize()) {
+            when {
+                isLoading -> UiUtil.SimpleLoading()
+                items.itemCount == 0 -> UiUtil.SimpleText("No categories yet")
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().semantics { contentDescription = "Note Screen" },
+                        contentPadding = PaddingValues(defaultPadding),
+                        verticalArrangement = Arrangement.spacedBy(defaultPadding),
+                        state = listState,
+                    ) {
+                        items(items = items) { category ->
+                            if (category != null)
+                                CategoryItem(category, onCategoryClick, onFavoriteClick)
+                        }
+                    }
+                }
+            }
+            FloatingActionButton(
+                onClick = onNewClick,
+                modifier = Modifier.align(Alignment.BottomEnd)
+            ) {
+                Text("+")
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryItem(category: NoteCategory, onCategoryClick: (NoteCategory) -> Unit, onFavoriteClick: (NoteCategory) -> Unit) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+        Card(elevation = 5.dp) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(defaultPadding)
+                    .clickable { onCategoryClick(category) }
+                    .semantics(mergeDescendants = true) {},
+            ) {
+                Text(modifier = Modifier.weight(1f, fill = false), text = category.name)
+                IconButton(onClick = { onFavoriteClick(category) }) {
+                    Icon(
+                        modifier = Modifier.background(Color(category.color.toArgb())),
+                        imageVector = if (category.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Favorite"
+                    )
+                }
+            }
+        }
+    }
 
 @Composable
 fun NoteScreenOverrideDialog(

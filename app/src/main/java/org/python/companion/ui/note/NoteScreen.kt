@@ -27,6 +27,7 @@ import androidx.paging.compose.items
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
+import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 
@@ -35,9 +36,7 @@ import org.python.companion.support.UiUtil
 fun NoteScreen(
     noteScreenListHeaderStruct: NoteScreenListHeaderStruct,
     noteScreenListStruct: NoteScreenListStruct,
-) {
-    NoteScreenList(noteScreenListHeaderStruct, noteScreenListStruct)
-}
+) = NoteScreenList(noteScreenListHeaderStruct, noteScreenListStruct)
 
 @Composable
 fun NoteScreenList(
@@ -86,7 +85,7 @@ fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit)
 }
 
 class NoteScreenListStruct(
-    val notes: Flow<PagingData<Pair<Note, NoteCategory?>>>,
+    val notes: Flow<PagingData<NoteWithCategory>>,
     val isLoading: Boolean,
     val onNewClick: () -> Unit,
     val onNoteClick: (Note) -> Unit,
@@ -120,7 +119,7 @@ fun NoteScreenList(noteScreenListStruct: NoteScreenListStruct) =
  */
 @Composable
 fun NoteScreenList(
-    notes: Flow<PagingData<Pair<Note, NoteCategory?>>>,
+    notes: Flow<PagingData<NoteWithCategory>>,
     isLoading: Boolean,
     onNewClick: () -> Unit,
     onNoteClick: (Note) -> Unit,
@@ -129,13 +128,13 @@ fun NoteScreenList(
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
-    val items: LazyPagingItems<Pair<Note, NoteCategory?>> = notes.collectAsLazyPagingItems()
+    val items: LazyPagingItems<NoteWithCategory> = notes.collectAsLazyPagingItems()
     val listState: LazyListState = rememberLazyListState()
 
     Box(Modifier.fillMaxSize()) {
         when {
             isLoading -> UiUtil.SimpleLoading()
-            items.itemCount == 0 && securityStruct == null -> EmptyContent()
+            items.itemCount == 0 && securityStruct == null -> UiUtil.SimpleText("No notes yet")
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().semantics { contentDescription = "Note Screen" },
@@ -148,9 +147,9 @@ fun NoteScreenList(
                             SecurityClickItem(securityStruct)
                         }
                     }
-                    items(items = items) { note ->
-                        if (note != null)
-                            NoteItem(note.first, note.second, onNoteClick, onFavoriteClick)
+                    items(items = items) { noteWithCategory ->
+                        if (noteWithCategory != null)
+                            NoteItem(noteWithCategory.note, noteWithCategory.noteCategory, onNoteClick, onFavoriteClick)
                     }
                 }
             }
@@ -161,16 +160,6 @@ fun NoteScreenList(
         ) {
             Text("+")
         }
-    }
-}
-
-@Composable
-private fun EmptyContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = "No notes yet")
     }
 }
 
@@ -190,29 +179,35 @@ fun NoteItem(
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Card(elevation = 5.dp) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-                .padding(defaultPadding)
-                .clickable { onNoteClick(note) }
-                // Regard the whole row as one semantics node. This way each row will receive focus as
-                // a whole and the focus bounds will be around the whole row content. The semantics
-                // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
-                // we'd have to define the semantics properties explicitly.
-                .semantics(mergeDescendants = true) {},
-        ) {
-            Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
-            Text(modifier = Modifier.weight(1f, fill = false), text = note.name)
-            IconButton(onClick = { onFavoriteClick(note) }) {
-                Icon(
-                    modifier = when(noteCategory) {
+        val modifier = when (noteCategory) {
+            null -> Modifier.padding(start = 16.dp)
+            else -> Modifier.padding(start = 16.dp).background(Color(noteCategory.color.toArgb()))
+        }
+        Card(elevation = 0.dp, modifier = modifier) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(defaultPadding)
+                    .clickable { onNoteClick(note) }
+                    // Regard the whole row as one semantics node. This way each row will receive focus as
+                    // a whole and the focus bounds will be around the whole row content. The semantics
+                    // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
+                    // we'd have to define the semantics properties explicitly.
+                    .semantics(mergeDescendants = true) {},
+            ) {
+                Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
+                Text(modifier = Modifier.weight(1f, fill = false), text = note.name)
+                IconButton(onClick = { onFavoriteClick(note) }) {
+                    Icon(
+                        modifier = when (noteCategory) {
                             null -> Modifier
                             else -> Modifier.background(Color(noteCategory.color.toArgb()))
                         },
-                    imageVector = if (note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Favorite"
-                )
+                        imageVector = if (note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Favorite"
+                    )
+                }
             }
         }
     }

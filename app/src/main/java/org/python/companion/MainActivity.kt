@@ -196,12 +196,12 @@ class NoteState(
                     }
                 )
             ) {
-                Timber.d("New note: Creating")
                 val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
                 NoteScreenEditNew(
                     noteOverrideDialogMiniState,
+                    onCategoryClick = { TODO("Implement category editing from note edit") },
                     onSaveClick = { toSaveNote ->
-                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.id}, ${toSaveNote.favorite}")
+                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         noteViewModel.viewModelScope.launch {
                             val conflict = noteViewModel.getbyName(toSaveNote.name)
                             Timber.d("New note: conflict: ${conflict!=null}")
@@ -231,15 +231,15 @@ class NoteState(
             ) { entry ->
                 val noteId = entry.arguments?.getLong("noteId")!!
 
-                Timber.d("Edit note: Editing")
                 val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState()
 
                 NoteScreenEdit(
                     noteViewModel = noteViewModel,
                     id = noteId,
                     overrideDialogMiniState = noteOverrideDialogMiniState,
+                    onCategoryClick = { TODO("Implement category editing from note edit") },
                     onSaveClick = { toSaveNote, existingNote ->
-                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.id}, ${toSaveNote.favorite}")
+                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         noteViewModel.viewModelScope.launch {
                             // If note name == same as before, there is no conflict. Otherwise, we must check.
                             val conflict: Note? = if (toSaveNote.name == existingNote!!.name) null else noteViewModel.getbyName(toSaveNote.name)
@@ -263,17 +263,25 @@ class NoteState(
                     }
                 )
             }
+
+            composable( // TODO: Implement later
+                route = "$noteDestination/edit/{noteId}/category",
+                arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/edit/{noteId}" }),
+            ) { entry ->
+
+            }
         }
     }
 
 
     private fun navigateToNoteSettings(navController: NavController) = navController.navigate("$noteDestination/settings")
-    private fun navigateToNoteSingle(navController: NavController, note: Note) = navigateToNoteSingle(navController, note.id)
+    private fun navigateToNoteSingle(navController: NavController, note: Note) = navigateToNoteSingle(navController, note.noteId)
     private fun navigateToNoteSingle(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/view/$noteId")
 
     private fun navigateToNoteCreate(navController: NavController) = navController.navigate("$noteDestination/create")
 
-    private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.id)
+    private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.noteId)
     private fun navigateToNoteEdit(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/edit/$noteId")
 
     companion object {

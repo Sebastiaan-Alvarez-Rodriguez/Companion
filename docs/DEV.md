@@ -41,3 +41,7 @@ Current issue list:
     Unsolved problem in Android community, see:
     https://issuetracker.google.com/issues/192043120?pli=1
     https://askandroidquestions.com/2021/08/19/jetpack-compose-textfield-soft-keyboard-obscures-text-entry/
+
+## Ideas
+ 1. Prepopulate a default category in the database.
+ This reduces need for nullability of types and should simplify logic.

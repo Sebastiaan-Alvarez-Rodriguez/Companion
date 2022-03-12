@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
+import org.python.backend.data.datatype.NoteWithCategory
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNote
 import org.python.db.entities.note.RoomNoteCategory
@@ -13,9 +14,9 @@ import org.python.db.entities.note.RoomNoteWithCategory
 class NoteStore(database: CompanionDatabase) {
     private val noteDao = database.noteDao
 
-    fun getAllNotes(): Flow<PagingData<Pair<Note, NoteCategory?>>> = pagingNote { noteDao.getAll() }
+    fun getAllNotes(): Flow<PagingData<NoteWithCategory>> = pagingNote { noteDao.getAll() }
 
-    fun getAllNotesWithSecure(): Flow<PagingData<Pair<Note, NoteCategory?>>> = pagingNote { noteDao.getAllWithSecure() }
+    fun getAllNotesWithSecure(): Flow<PagingData<NoteWithCategory>> = pagingNote { noteDao.getAllWithSecure() }
 
     fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()
 
@@ -26,6 +27,8 @@ class NoteStore(database: CompanionDatabase) {
      * @return Found note if present, null otherwise
      */
     suspend fun get(id: Long, secure: Boolean = false): Note? = noteDao.get(id, secure)?.toUI()
+    suspend fun getWithCategory(id: Long, secure: Boolean = false): NoteWithCategory? =
+        noteDao.getWithCategory(id, secure)?.toUI()
     /**
      * Searches note by name.
      * @param name Exact name of note.
@@ -34,7 +37,7 @@ class NoteStore(database: CompanionDatabase) {
      */
     suspend fun getByName(name: String, secure: Boolean = false): Note? = noteDao.getByName(name, secure)?.toUI()
 
-    suspend fun setFavorite(note: Note, favorite: Boolean) = noteDao.setFavorite(note.id, favorite)
+    suspend fun setFavorite(note: Note, favorite: Boolean) = noteDao.setFavorite(note.noteId, favorite)
     suspend fun add(note: Note): Boolean {
         return try {
             noteDao.add(note.toRoom())
@@ -55,32 +58,34 @@ class NoteStore(database: CompanionDatabase) {
     suspend fun deleteAllSecure(foreach: ((String) -> Unit)? = null) = noteDao.deleteAllSecure(foreach)
 }
 
-private fun pagingNote(block: () -> PagingSource<Int, RoomNoteWithCategory>): Flow<PagingData<Pair<Note, NoteCategory?>>> =
-    Pager(PagingConfig(pageSize = 20)) { block() }.flow.map { page -> page.map {
-        it.note.toUI() to it.roomNoteCategory?.toUI()
-    } }
+private fun pagingNote(block: () -> PagingSource<Int, RoomNoteWithCategory>): Flow<PagingData<NoteWithCategory>> =
+    Pager(PagingConfig(pageSize = 20)) { block() }.flow.map { page -> page.map { it.toUI() } }
 
 
 private fun Note.toRoom() = RoomNote(
-    id = id,
+    noteId = noteId,
     name = name,
     content = content,
     favorite = favorite,
     secure = secure,
     iv = iv,
-    categoryId = categoryId
+    categoryKey = categoryKey
 )
 
 private fun RoomNote.toUI() = Note(
-    id = id,
+    noteId = noteId,
     name = name,
     content = content,
     favorite = favorite,
     secure = secure,
     iv = iv,
-    categoryId = categoryId
+    categoryKey = categoryKey
 )
 
-private fun NoteCategory.toRoom() = RoomNoteCategory(id = id, name = name, color = color)
+private fun NoteCategory.toRoom() = RoomNoteCategory(categoryId = categoryId, name = name, color = color, favorite = favorite)
 
-private fun RoomNoteCategory.toUI() = NoteCategory(id = id, name = name, color = color)
+private fun RoomNoteCategory.toUI() = NoteCategory(categoryId = categoryId, name = name, color = color, favorite = favorite)
+
+private fun NoteWithCategory.toRoom() = RoomNoteWithCategory(note = note.toRoom(), noteCategory = noteCategory.toRoom())
+
+private fun RoomNoteWithCategory.toUI() = NoteWithCategory(note = note.toUI(), noteCategory = noteCategory.toUI())

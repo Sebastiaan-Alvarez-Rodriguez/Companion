@@ -10,29 +10,34 @@ import org.python.db.entities.note.RoomNoteWithCategory
 interface NoteDao {
     @Query(
         "select * from RoomNote " +
-            "left join RoomNoteCategory on RoomNote.categoryId = RoomNoteCategory.id " +
+            "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
             "where secure == 0"
     )
     fun getAll(): PagingSource<Int, RoomNoteWithCategory>
 
     @Query(
         "select * from RoomNote " +
-        "left join RoomNoteCategory on RoomNote.categoryId = RoomNoteCategory.id "
+        "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId"
     )
     fun getAllWithSecure(): PagingSource<Int, RoomNoteWithCategory>
 
     @Query("select name from RoomNote where secure > 0")
     suspend fun getSecureNames(): List<String>
 
-    @Query("select * from RoomNote where secure <= :secure and id == :id")
+    @Query("select * from RoomNote where noteId == :id and secure <= :secure")
     suspend fun get(id: Long, secure: Boolean = false): RoomNote?
 
-    @Query("select * from RoomNote where secure <= :secure and name = :name")
+    @Query("select * from RoomNote " +
+            "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "where noteId == :id and secure <= :secure")
+    suspend fun getWithCategory(id: Long, secure: Boolean = false): RoomNoteWithCategory?
+
+    @Query("select * from RoomNote where name = :name and secure <= :secure")
     suspend fun getByName(name: String, secure: Boolean = false): RoomNote?
 
-    @Query("update RoomNote set favorite = :favorite where id == :noteId")
+    @Query("update RoomNote set favorite = :favorite where noteId == :noteId")
     suspend fun setFavorite(noteId: Long, favorite: Boolean)
-    suspend fun setFavorite(note: RoomNote, favorite: Boolean) = setFavorite(note.id, favorite)
+    suspend fun setFavorite(note: RoomNote, favorite: Boolean) = setFavorite(note.noteId, favorite)
 
     @Query("select exists(select 1 from RoomNote where secure != 0)")
     fun hasSecureNotes(): Flow<Boolean>

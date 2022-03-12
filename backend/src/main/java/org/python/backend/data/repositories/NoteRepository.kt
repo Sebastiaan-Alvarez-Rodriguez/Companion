@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
-import org.python.backend.data.datatype.NoteCategory
+import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.stores.NoteStore
 import org.python.backend.security.Securer
 import org.python.backend.security.SecurityActor
@@ -17,10 +17,13 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
             this(securityActor, NoteStore(companionDatabase))
 
     /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
-    fun allNotes(): Flow<PagingData<Pair<Note, NoteCategory?>>> = securityActor.authenticated.flatMapLatest { authed ->
+    fun allNotes(): Flow<PagingData<NoteWithCategory>> = securityActor.authenticated.flatMapLatest { authed ->
         if (authed)
             noteStore.getAllNotesWithSecure().map { page -> page.map {
-                (secureToUI(it.first) ?: throw IllegalStateException("Could not decrypt note")) to it.second
+                NoteWithCategory(
+                    (secureToUI(it.note) ?: throw IllegalStateException("Could not decrypt note")),
+                    it.noteCategory
+                )
             } }
         else
             noteStore.getAllNotes()
@@ -29,7 +32,13 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
     fun hasSecureNotes(): Flow<Boolean> = noteStore.hasSecureNotes()
 
     suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.authenticated.value)?.let { secureToUI(it) }
-
+    suspend fun getWithCategory(id: Long): NoteWithCategory? =
+        noteStore.getWithCategory(id, securityActor.authenticated.value)?.let {
+                NoteWithCategory(
+                    it.note.let { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") },
+                    it.noteCategory
+                )
+        }
     /**
      * Rerieves a note by name.
      * @return found note on succes, `null` if no such name exists.

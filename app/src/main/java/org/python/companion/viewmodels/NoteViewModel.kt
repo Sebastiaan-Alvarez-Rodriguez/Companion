@@ -8,7 +8,7 @@ import androidx.paging.cachedIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.python.backend.data.datatype.Note
-import org.python.backend.data.datatype.NoteCategory
+import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
@@ -20,8 +20,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
     var authenticated = securityActor.authenticated.stateInViewModel(viewModelScope, false)
 
-    private val allNotes = MutableStateFlow(emptyFlow<PagingData<Pair<Note, NoteCategory?>>>().cachedIn(viewModelScope))
-    private val searchNotes = MutableStateFlow(emptyFlow<PagingData<Pair<Note, NoteCategory?>>>())
+    private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
+    private val searchNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>())
 
     private val _search = MutableStateFlow(null as String?)
     private val _isLoading = MutableStateFlow(true)
@@ -46,6 +46,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
 
     suspend fun get(id: Long): Note? = noteRepository.get(id)
+    suspend fun getWithCategory(id: Long): NoteWithCategory? = noteRepository.getWithCategory(id)
+
     suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)
 
@@ -53,7 +55,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val notes: StateFlow<Flow<PagingData<Pair<Note, NoteCategory?>>>> =
+    val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
         search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
     private fun notes(search: String?) = when {
