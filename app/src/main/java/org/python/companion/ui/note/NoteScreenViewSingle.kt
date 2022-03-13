@@ -2,10 +2,14 @@ package org.python.companion.ui.note
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,20 +102,26 @@ fun NoteScreenViewSingleReady(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (onDeleteClick != null)
-                            Button(onClick = { onDeleteClick(note) }) {
-                                Text(text = "Delete")
+                            IconButton(onClick = { onDeleteClick(note) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = "Delete note"
+                                )
                             }
                         if (onCategoryClick != null)
                             IconButton(onClick = { onCategoryClick(note) }) {
                                 Icon(
-                                    modifier = Modifier.background(Color(noteCategory.color.toArgb())),
-                                    imageVector = if (note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = "Favorite"
+                                    modifier = noteCategory.color.let { Modifier.background(Color(it.toArgb())) },
+                                    imageVector = Icons.Outlined.Article,
+                                    contentDescription = "Edit category"
                                 )
                             }
                         if (onEditClick != null)
-                            Button(onClick = { onEditClick(note) }) {
-                                Text(text = "Edit")
+                            IconButton(onClick = { onEditClick(note) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = "Edit note"
+                                )
                             }
                     }
                 }
@@ -119,9 +129,7 @@ fun NoteScreenViewSingleReady(
         }
         Spacer(Modifier.height(defaultPadding))
         Card(elevation = 5.dp) {
-            Text(text = content, modifier = Modifier
-                .fillMaxWidth()
-                .padding(defaultPadding))
+            Text(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding))
         }
     }
 }

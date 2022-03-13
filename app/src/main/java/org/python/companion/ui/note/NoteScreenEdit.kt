@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
+import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
 import org.python.companion.support.LoadState
 import org.python.companion.support.UiUtil
@@ -53,7 +54,7 @@ fun NoteScreenEdit(
     onOverrideAcceptClick: (Note, Note?) -> Unit
 ) {
     var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
-    var existingData by remember { mutableStateOf<Pair<Note?, NoteCategory?>?>(null) }
+    var existingData by remember { mutableStateOf<NoteWithCategory?>(null) }
 
     when (state) {
         LoadState.STATE_LOADING -> if (existingData == null) {
@@ -64,12 +65,12 @@ fun NoteScreenEdit(
             }
         }
         LoadState.STATE_OK -> NoteScreenEditReady(
-            note = existingData?.first,
-            noteCategory = existingData?.second,
+            note = existingData?.note,
+            noteCategory = existingData?.noteCategory,
             overrideDialogMiniState = overrideDialogMiniState,
             onCategoryClick = onCategoryClick,
-            onSaveClick = { toSaveNote -> onSaveClick(toSaveNote, existingData?.first) },
-            onOverrideAcceptClick = { toSaveNote -> onOverrideAcceptClick(toSaveNote, existingData?.first)}
+            onSaveClick = { toSaveNote -> onSaveClick(toSaveNote, existingData?.note) },
+            onOverrideAcceptClick = { toSaveNote -> onOverrideAcceptClick(toSaveNote, existingData?.note)}
         )
         LoadState.STATE_FAILED -> {
             Timber.e("Could not find note with id: $id")
