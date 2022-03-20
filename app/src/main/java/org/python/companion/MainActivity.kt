@@ -106,6 +106,7 @@ class MainActivity : FragmentActivity() {
                         }
                         with(cactusState) { cactusGraph() }
                         with(noteState) { noteGraph() }
+                        with(noteCategoryState) { categoryGraph() }
                         with(anniversaryState) { anniversaryGraph() }
                         with(securityState) { securityGraph() }
                     }
@@ -120,7 +121,7 @@ class NoteCategoryState(
     private val noteCategoryViewModel: NoteCategoryViewModel,
 ) {
 
-    fun NavGraphBuilder.noteGraph() {
+    fun NavGraphBuilder.categoryGraph() {
         navigation(startDestination = noteCategoryDestination, route = "category") {
             composable(noteCategoryDestination) {
                 val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
@@ -151,18 +152,18 @@ class NoteCategoryState(
                 val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
                 NoteCategoryScreenEditNew(
                     noteOverrideDialogMiniState,
-                    onSaveClick = { toSaveNote ->
-                        Timber.d("Found new noteCategory: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
+                    onSaveClick = { toSaveNoteCategory ->
+                        Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
                         noteCategoryViewModel.viewModelScope.launch {
-                            val conflict = noteCategoryViewModel.getbyName(toSaveNote.name)
-                            Timber.d("New note: conflict: ${conflict!=null}")
+                            val conflict = noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
+                            Timber.d("New noteCategory: conflict: ${conflict!=null}")
                             if (conflict == null) {
-                                if (noteCategoryViewModel.add(toSaveNote))
+                                if (noteCategoryViewModel.add(toSaveNoteCategory))
                                     navController.navigateUp()
                                 else
                                     TODO("Let user know there was a problem while adding note")
                             } else {
-                                noteOverrideDialogMiniState.open(toSaveNote, conflict)
+                                noteOverrideDialogMiniState.open(toSaveNoteCategory, conflict)
                             }
                         }
                     },

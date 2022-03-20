@@ -16,6 +16,7 @@ UI:
     - Also check [here](https://developer.android.com/jetpack/compose/layouts/basics)
       for basic layout help.
  + [navigation](https://developer.android.com/jetpack/compose/navigation)
+ + [navigation returns](https://code.luasoftware.com/tutorials/android/jetpack-compose-navigation-return-result/)
  + [dialogs](https://stackoverflow.com/questions/68852110/)
  + [dialog resize bug](https://stackoverflow.com/questions/68469681/)
  + [splash screen](https://www.geeksforgeeks.org/animated-splash-screen-in-android-using-jetpack-compose/)

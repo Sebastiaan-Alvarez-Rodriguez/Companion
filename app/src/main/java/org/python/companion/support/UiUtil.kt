@@ -2,9 +2,8 @@ package org.python.companion.support
 
 import androidx.annotation.IntDef
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -16,7 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +90,44 @@ object UiUtil {
         }
     }
 
+    @Composable
+    fun SimpleDialogOverride(
+        message: String,
+        onDismiss: () -> Unit,
+        onNegativeClick: () -> Unit,
+        onPositiveClick: () -> Unit,
+        showableObjectFunc: @Composable () -> Unit
+    ) {
+        Dialog(onDismissRequest = onDismiss) {
+            Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    Text(
+                        text = message,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    showableObjectFunc()
+
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        TextButton(onClick = onNegativeClick) {
+                            Text(text = "CANCEL")
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        TextButton(onClick = onPositiveClick) {
+                            Text(text = "OVERRIDE")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /** Creates a route string such as 'somelocation/arg0/arg1?optionalarg2=value' */
     fun createRoute(base: String, args: Collection<String>? = null, optionals: Map<String, String?>? = null): String {
         return base + when (args.isNullOrEmpty()) {
             true -> ""
