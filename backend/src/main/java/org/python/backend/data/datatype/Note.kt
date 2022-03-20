@@ -35,6 +35,14 @@ data class NoteCategory(
     }
 
     override fun hashCode(): Int = this.categoryId.toInt()
+
+    companion object {
+        val DEFAULT: NoteCategory = NoteCategory(
+            name = "",
+            color = Color.valueOf(Int.MAX_VALUE),// TODO get default note color style from styles
+            favorite = false
+        )
+    }
 }
 
 data class NoteWithCategory(

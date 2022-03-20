@@ -28,10 +28,15 @@ import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
+import org.python.companion.ui.note.category.NoteCategoryScreen
+import org.python.companion.ui.note.category.NoteCategoryScreenEditNew
+import org.python.companion.ui.note.category.NoteCategoryScreenListHeaderStruct
+import org.python.companion.ui.note.category.NoteCategoryScreenListStruct
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.AnniversaryViewModel
+import org.python.companion.viewmodels.NoteCategoryViewModel
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.companion.viewmodels.SecurityViewModel
 import timber.log.Timber
@@ -39,6 +44,8 @@ import timber.log.Timber
 
 class MainActivity : FragmentActivity() {
     private val noteViewModel by viewModels<NoteViewModel>()
+    private val noteCategoryViewModel by viewModels<NoteCategoryViewModel>()
+
     private val anniversaryViewModel by viewModels<AnniversaryViewModel>()
     private val securityViewModel by viewModels<SecurityViewModel>()
 
@@ -61,6 +68,10 @@ class MainActivity : FragmentActivity() {
                 val noteState = NoteState.rememberState(
                     navController = navController,
                     noteViewModel = noteViewModel
+                )
+                val noteCategoryState = NoteCategoryState.rememberState(
+                    navController = navController,
+                    noteCategoryViewModel = noteCategoryViewModel
                 )
                 val cactusState = CactusState.rememberState(navController = navController)
                 val anniversaryState = AnniversaryState.rememberState(
@@ -101,6 +112,76 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+}
+
+class NoteCategoryState(
+    private val navController: NavHostController,
+    private val noteCategoryViewModel: NoteCategoryViewModel,
+) {
+
+    fun NavGraphBuilder.noteGraph() {
+        navigation(startDestination = noteCategoryDestination, route = "category") {
+            composable(noteCategoryDestination) {
+                val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
+                val isLoading by noteCategoryViewModel.isLoading.collectAsState()
+
+                NoteCategoryScreen(
+                    noteCategoryScreenListHeaderStruct = NoteCategoryScreenListHeaderStruct(
+                        onSearchClick = { /* TODO */ }
+                    ),
+                    noteCategoryScreenListStruct = NoteCategoryScreenListStruct(
+                        noteCategories = noteCategories,
+                        isLoading = isLoading,
+                        onNewClick = { /* TODO: edit screen */ },
+                        onNoteCategoryClick = { /* TODO: edit screen */},
+                        onFavoriteClick = { /* TODO: toggle favorite */ }
+                    )
+                )
+            }
+
+            composable(
+                route = "${noteCategoryDestination}/create",
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "companion://${noteCategoryDestination}/create"
+                    }
+                )
+            ) {
+                val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
+                NoteCategoryScreenEditNew(
+                    noteOverrideDialogMiniState,
+                    onSaveClick = { toSaveNote ->
+                        Timber.d("Found new noteCategory: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
+                        noteCategoryViewModel.viewModelScope.launch {
+                            val conflict = noteCategoryViewModel.getbyName(toSaveNote.name)
+                            Timber.d("New note: conflict: ${conflict!=null}")
+                            if (conflict == null) {
+                                if (noteCategoryViewModel.add(toSaveNote))
+                                    navController.navigateUp()
+                                else
+                                    TODO("Let user know there was a problem while adding note")
+                            } else {
+                                noteOverrideDialogMiniState.open(toSaveNote, conflict)
+                            }
+                        }
+                    },
+                    onOverrideAcceptClick = { toSaveNote ->
+                        Timber.d("New note: Overriding ${toSaveNote.name}...")
+                        noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.upsert(toSaveNote) }
+                        noteOverrideDialogMiniState.close()
+                        navController.navigateUp()
+                    }
+                )
+            }
+        }
+    }
+    companion object {
+        val noteCategoryDestination: String = "${NoteState.noteDestination}/category"
+
+        @Composable
+        fun rememberState(navController: NavHostController = rememberNavController(), noteCategoryViewModel: NoteCategoryViewModel) =
+            remember(navController) { NoteCategoryState(navController, noteCategoryViewModel) }
     }
 }
 
