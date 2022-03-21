@@ -23,6 +23,9 @@ android {
                         "room.expandProjection":"true"]
             }
         }
+
+        // Database version
+        buildConfigField "int", "DB_VERSION", DB_VERSION
     }
 
     buildTypes {

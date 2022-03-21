@@ -15,7 +15,7 @@ import org.python.db.typeconverters.ColorConverter
 import org.python.db.typeconverters.DurationConverter
 import org.python.db.typeconverters.InstantConverter
 
-@Database(entities = [RoomNote::class, RoomNoteCategory::class, RoomAnniversary::class], version = 1)
+@Database(entities = [RoomNote::class, RoomNoteCategory::class, RoomAnniversary::class], version = BuildConfig.DB_VERSION)
 @TypeConverters(ColorConverter::class, DurationConverter::class, InstantConverter::class)
 abstract class CompanionDatabase : RoomDatabase() {
     abstract val noteDao: NoteDao

@@ -27,6 +27,7 @@ Room:
  + [room livedata](https://levelup.gitconnected.com/using-room-in-jetpack-compose-d2b6b674d3a5)
  + [room relations](https://developer.android.com/training/data-storage/room/relationships)
  + [room docs](https://developer.android.com/jetpack/androidx/releases/room)
+ + [room prepopulate](https://proandroiddev.com/pre-populating-your-room-i-b8e44fd965c1)
  + [**legacy** room tips](https://medium.com/androiddevelopers/7-pro-tips-for-room-fbadea4bfbd1)
 
 Kotlin:
@@ -45,4 +46,9 @@ Current issue list:
 
 ## Ideas
  1. Prepopulate a default category in the database.
- This reduces need for nullability of types and should simplify logic.
+    This reduces need for nullability of types and should simplify logic.
+    Can create a database by hand at every schema change...
+    Or can create and use something like:
+    https://proandroiddev.com/pre-populating-your-room-i-b8e44fd965c1
+    (https://github.com/motorro/room-populate)
+    Only then, no js, and make it a gradle plugin/java package

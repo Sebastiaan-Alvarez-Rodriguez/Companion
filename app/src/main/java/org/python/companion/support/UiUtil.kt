@@ -206,8 +206,6 @@ object UiUtil {
         }
     }
 
-
-    fun <T> NavController.getNavigationResult(key: String = "result") = currentBackStackEntry?.savedStateHandle?.getLiveData<T>(key)
     fun <T> NavController.setNavigationResult(result: T?, key: String = "result") = previousBackStackEntry?.savedStateHandle?.set(key, result)
     fun <T> getNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result", onResult: (result: T) -> Unit) {
         val observer = LifecycleEventObserver { _, event ->

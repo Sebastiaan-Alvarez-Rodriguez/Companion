@@ -29,10 +29,7 @@ import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
-import org.python.companion.ui.note.category.NoteCategoryScreen
-import org.python.companion.ui.note.category.NoteCategoryScreenEditNew
-import org.python.companion.ui.note.category.NoteCategoryScreenListHeaderStruct
-import org.python.companion.ui.note.category.NoteCategoryScreenListStruct
+import org.python.companion.ui.note.category.*
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
@@ -117,72 +114,6 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-    }
-}
-
-class NoteCategoryState(
-    private val navController: NavHostController,
-    private val noteCategoryViewModel: NoteCategoryViewModel,
-) {
-
-    fun NavGraphBuilder.categoryGraph() {
-        navigation(startDestination = noteCategoryDestination, route = "category") {
-            composable(noteCategoryDestination) {
-                val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
-                val isLoading by noteCategoryViewModel.isLoading.collectAsState()
-
-                NoteCategoryScreen(
-                    noteCategoryScreenListHeaderStruct = NoteCategoryScreenListHeaderStruct(
-                        onSearchClick = { /* TODO */ }
-                    ),
-                    noteCategoryScreenListStruct = NoteCategoryScreenListStruct(
-                        noteCategories = noteCategories,
-                        isLoading = isLoading,
-                        onNewClick = { /* TODO: edit screen */ },
-                        onNoteCategoryClick = { /* TODO: edit screen */},
-                        onFavoriteClick = { /* TODO: toggle favorite */ }
-                    )
-                )
-            }
-
-            composable(
-                route = "${noteCategoryDestination}/create",
-                deepLinks = listOf(
-                    navDeepLink {
-                        uriPattern = "companion://${noteCategoryDestination}/create"
-                    }
-                )
-            ) { entry ->
-                NoteCategoryScreenEditNew(
-                    onSaveClick = { toSaveNoteCategory ->
-                        Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
-                        noteCategoryViewModel.viewModelScope.launch {
-                            val conflict = noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
-                            Timber.d("New noteCategory: conflict: ${conflict!=null}")
-                            if (conflict == null) {
-                                if (noteCategoryViewModel.add(toSaveNoteCategory))
-                                    navController.navigateUp()
-                                else
-                                    TODO("Let user know there was a problem while adding note")
-                            } else {
-                                UiUtil.UIUtilState.navigateToOverride(navController) {
-                                    Timber.d("New noteCategory: Overriding ${toSaveNoteCategory.name}...")
-                                    noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.upsert(toSaveNoteCategory) }
-                                    navController.navigateUp()
-                                }
-                            }
-                        }
-                    }
-                )
-            }
-        }
-    }
-    companion object {
-        val noteCategoryDestination: String = "${NoteState.noteDestination}/category"
-
-        @Composable
-        fun rememberState(navController: NavHostController = rememberNavController(), noteCategoryViewModel: NoteCategoryViewModel) =
-            remember(navController) { NoteCategoryState(navController, noteCategoryViewModel) }
     }
 }
 
