@@ -48,10 +48,8 @@ import timber.log.Timber
 fun NoteScreenEdit(
     noteViewModel: NoteViewModel,
     id: Long,
-    overrideDialogMiniState: NoteOverrideDialogMiniState,
     onCategoryClick: () -> Unit,
     onSaveClick: (Note, Note?) -> Unit,
-    onOverrideAcceptClick: (Note, Note?) -> Unit
 ) {
     var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
     var existingData by remember { mutableStateOf<NoteWithCategory?>(null) }
@@ -67,10 +65,8 @@ fun NoteScreenEdit(
         LoadState.STATE_OK -> NoteScreenEditReady(
             note = existingData?.note,
             noteCategory = existingData?.noteCategory,
-            overrideDialogMiniState = overrideDialogMiniState,
             onCategoryClick = onCategoryClick,
             onSaveClick = { toSaveNote -> onSaveClick(toSaveNote, existingData?.note) },
-            onOverrideAcceptClick = { toSaveNote -> onOverrideAcceptClick(toSaveNote, existingData?.note)}
         )
         LoadState.STATE_FAILED -> {
             Timber.e("Could not find note with id: $id")
@@ -81,44 +77,21 @@ fun NoteScreenEdit(
 
 /** Edits a new note directly. */
 @Composable
-fun NoteScreenEditNew(
-    overrideDialogMiniState: NoteOverrideDialogMiniState,
-    onSaveClick: (Note) -> Unit,
-    onCategoryClick: () -> Unit,
-    onOverrideAcceptClick: (Note) -> Unit
-) = NoteScreenEditReady(null, null, overrideDialogMiniState, onCategoryClick, onSaveClick, onOverrideAcceptClick)
+fun NoteScreenEditNew(onSaveClick: (Note) -> Unit, onCategoryClick: () -> Unit) = NoteScreenEditReady(null, null, onCategoryClick, onSaveClick)
 
 /**
  * Detail screen for editing a single note.
  * @param note Note to edit.
  * @param noteCategory Optional category assigned to passed note.
- * @param overrideDialogMiniState
  * @param onSaveClick Lambda executed when the user hits the save button.
- * @param onOverrideAcceptClick Lambda executed when the user hits the override button.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteScreenEditReady(
     note: Note?,
     noteCategory: NoteCategory?,
-    overrideDialogMiniState: NoteOverrideDialogMiniState,
     onCategoryClick: () -> Unit,
     onSaveClick: (Note) -> Unit,
-    onOverrideAcceptClick: (Note) -> Unit
-) {
-    Box {
-        NoteScreenOverrideDialog(overrideDialogMiniState, onOverrideAcceptClick)
-        NoteScreenEditBody(note, noteCategory, onCategoryClick, onSaveClick)
-    }
-}
-
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun NoteScreenEditBody(
-    note: Note?,
-    noteCategory: NoteCategory?,
-    onCategoryClick: () -> Unit,
-    onSaveClick: (Note) -> Unit
 ) {
     var title by remember { mutableStateOf(note?.name ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
@@ -293,22 +266,3 @@ fun CategoryItem(category: NoteCategory, onCategoryClick: (NoteCategory) -> Unit
             }
         }
     }
-
-@Composable
-fun NoteScreenOverrideDialog(
-    overrideDialogMiniState: NoteOverrideDialogMiniState,
-    onOverrideAcceptClick: (Note) -> Unit
-) {
-    if (overrideDialogMiniState.open.value)
-        NoteOverrideDialog(
-            overrideDialogMiniState.currentNote.value!!,
-            overrideDialogMiniState.overriddenNote.value!!,
-            {},
-            { onOverrideAcceptClick(overrideDialogMiniState.overriddenNote.value!!) },
-            {}
-        )
-
-    BackHandler(enabled = overrideDialogMiniState.open.value) {
-        overrideDialogMiniState.close()
-    }
-}

@@ -22,5 +22,5 @@ data class RoomNoteWithCategory(
         parentColumn = "categoryKey",
         entityColumn = "categoryId"
     )
-    val noteCategory: RoomNoteCategory
+    @Embedded val noteCategory: RoomNoteCategory
 )

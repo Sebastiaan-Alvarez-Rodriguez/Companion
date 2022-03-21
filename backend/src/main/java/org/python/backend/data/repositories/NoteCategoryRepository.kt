@@ -10,8 +10,8 @@ class NoteCategoryRepository(private val noteCategoryStore: NoteCategoryStore) {
     constructor(companionDatabase: CompanionDatabase) : this(NoteCategoryStore(companionDatabase))
 
     /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
-    fun allNoteCategories(): Flow<PagingData<NoteCategory>> = 
-        noteCategoryStore.getAllNoteCategories()
+    fun allNoteCategories(): Flow<PagingData<NoteCategory>> =
+        noteCategoryStore.getAll()
 
 
     suspend fun get(id: Long): NoteCategory? = noteCategoryStore.get(id)
@@ -42,7 +42,10 @@ class NoteCategoryRepository(private val noteCategoryStore: NoteCategoryStore) {
         return true
     }
 
-    suspend fun update(updatedCategory: NoteCategory): Boolean = noteCategoryStore.update(updatedCategory)
+    suspend fun update(updatedCategory: NoteCategory): Boolean {
+        noteCategoryStore.update(updatedCategory)
+        return true
+    }
 
     suspend fun delete(category: NoteCategory): Unit = noteCategoryStore.delete(category)
 }

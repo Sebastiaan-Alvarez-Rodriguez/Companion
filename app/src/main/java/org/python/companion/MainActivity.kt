@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Anniversary
 import org.python.backend.data.datatype.Note
+import org.python.companion.support.UiUtil
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
@@ -58,6 +59,8 @@ class MainActivity : FragmentActivity() {
                 val navController = rememberNavController()
                 val backstackEntry = navController.currentBackStackEntryAsState()
                 val selectedTabScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
+
+                val utilState = UiUtil.UIUtilState.rememberState(navController = navController)
 
                 val securityState = SecurityState.rememberState(
                     activity = this,
@@ -104,6 +107,7 @@ class MainActivity : FragmentActivity() {
                             }
                             splashScreenFunc()
                         }
+                        with (utilState) { utilGraph() }
                         with(cactusState) { cactusGraph() }
                         with(noteState) { noteGraph() }
                         with(noteCategoryState) { categoryGraph() }
@@ -148,10 +152,8 @@ class NoteCategoryState(
                         uriPattern = "companion://${noteCategoryDestination}/create"
                     }
                 )
-            ) {
-                val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
+            ) { entry ->
                 NoteCategoryScreenEditNew(
-                    noteOverrideDialogMiniState,
                     onSaveClick = { toSaveNoteCategory ->
                         Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
                         noteCategoryViewModel.viewModelScope.launch {
@@ -163,15 +165,13 @@ class NoteCategoryState(
                                 else
                                     TODO("Let user know there was a problem while adding note")
                             } else {
-                                noteOverrideDialogMiniState.open(toSaveNoteCategory, conflict)
+                                UiUtil.UIUtilState.navigateToOverride(navController) {
+                                    Timber.d("New noteCategory: Overriding ${toSaveNoteCategory.name}...")
+                                    noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.upsert(toSaveNoteCategory) }
+                                    navController.navigateUp()
+                                }
                             }
                         }
-                    },
-                    onOverrideAcceptClick = { toSaveNote ->
-                        Timber.d("New note: Overriding ${toSaveNote.name}...")
-                        noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.upsert(toSaveNote) }
-                        noteOverrideDialogMiniState.close()
-                        navController.navigateUp()
                     }
                 )
             }
@@ -186,10 +186,7 @@ class NoteCategoryState(
     }
 }
 
-class NoteState(
-    private val navController: NavHostController,
-    private val noteViewModel: NoteViewModel,
-) {
+class NoteState(private val navController: NavHostController, private val noteViewModel: NoteViewModel) {
     fun load() = noteViewModel.load()
 
     fun NavGraphBuilder.noteGraph() {
@@ -277,10 +274,8 @@ class NoteState(
                         uriPattern = "companion://$noteDestination/create"
                     }
                 )
-            ) {
-                val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState(null, null, false)
+            ) { entry ->
                 NoteScreenEditNew(
-                    noteOverrideDialogMiniState,
                     onCategoryClick = { TODO("Implement category editing from note edit") },
                     onSaveClick = { toSaveNote ->
                         Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
@@ -293,15 +288,13 @@ class NoteState(
                                 else
                                     TODO("Let user know there was a problem while adding note")
                             } else {
-                                noteOverrideDialogMiniState.open(toSaveNote, conflict)
+                                UiUtil.UIUtilState.navigateToOverride(navController) {
+                                    Timber.d("New note: Overriding ${toSaveNote.name}...")
+                                    noteViewModel.viewModelScope.launch { noteViewModel.upsert(toSaveNote) }
+                                    navController.navigateUp()
+                                }
                             }
                         }
-                    },
-                    onOverrideAcceptClick = { toSaveNote ->
-                        Timber.d("New note: Overriding ${toSaveNote.name}...")
-                        noteViewModel.viewModelScope.launch { noteViewModel.upsert(toSaveNote) }
-                        noteOverrideDialogMiniState.close()
-                        navController.navigateUp()
                     }
                 )
             }
@@ -312,13 +305,9 @@ class NoteState(
                 deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/edit/{noteId}" }),
             ) { entry ->
                 val noteId = entry.arguments?.getLong("noteId")!!
-
-                val noteOverrideDialogMiniState = NoteOverrideDialogMiniState.rememberState()
-
                 NoteScreenEdit(
                     noteViewModel = noteViewModel,
                     id = noteId,
-                    overrideDialogMiniState = noteOverrideDialogMiniState,
                     onCategoryClick = { TODO("Implement category editing from note edit") },
                     onSaveClick = { toSaveNote, existingNote ->
                         Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
@@ -330,18 +319,16 @@ class NoteState(
                                 noteViewModel.update(existingNote, toSaveNote)
                                 navController.navigateUp()
                             } else {
-                                noteOverrideDialogMiniState.open(toSaveNote, conflict)
+                                UiUtil.UIUtilState.navigateToOverride(navController) {
+                                    Timber.d("Edit note: Overriding note (new name=${toSaveNote.name})")
+                                    noteViewModel.viewModelScope.launch {
+                                        noteViewModel.delete(existingNote)
+                                        noteViewModel.upsert(toSaveNote)
+                                    }
+                                    navController.navigateUp()
+                                }
                             }
                         }
-                    },
-                    onOverrideAcceptClick = { toSaveNote, existingNote ->
-                        Timber.d("Edit note: Overriding note (new name=${toSaveNote.name})")
-                        noteViewModel.viewModelScope.launch {
-                            noteViewModel.delete(existingNote!!)
-                            noteViewModel.upsert(toSaveNote)
-                        }
-                        noteOverrideDialogMiniState.close()
-                        navController.navigateUp()
                     }
                 )
             }

@@ -1,5 +1,6 @@
 package org.python.companion.support
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.IntDef
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.navigation.NavController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.*
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -91,8 +97,10 @@ object UiUtil {
     }
 
     @Composable
-    fun SimpleDialogOverride(
+    fun SimpleDialogBinary(
         message: String,
+        negativeText: String = "CANCEL",
+        positiveText: String = "OK",
         onDismiss: () -> Unit,
         onNegativeClick: () -> Unit,
         onPositiveClick: () -> Unit,
@@ -116,17 +124,77 @@ object UiUtil {
                     ) {
 
                         TextButton(onClick = onNegativeClick) {
-                            Text(text = "CANCEL")
+                            Text(text = negativeText.uppercase())
                         }
                         Spacer(modifier = Modifier.width(4.dp))
                         TextButton(onClick = onPositiveClick) {
-                            Text(text = "OVERRIDE")
+                            Text(text = positiveText.uppercase())
                         }
                     }
                 }
             }
         }
     }
+
+    class UIUtilState(private val navController: NavHostController) {
+
+        fun NavGraphBuilder.utilGraph() {
+            navigation(startDestination = uiutilDestination, route = "uiutil") {
+                composable(uiutilDestination) {}
+
+                dialog(route = "${uiutilDestination}/binary?message={message}&negativeText={negativeText}&positiveText={positiveText}") { entry ->
+                    SimpleDialogBinary(
+                        message = entry.arguments?.getString("message") ?: "Accept?",
+                        negativeText = entry.arguments?.getString("negativeText") ?: "CANCEL",
+                        positiveText = entry.arguments?.getString("positiveText") ?: "OK",
+                        onDismiss = {
+                            navController.setNavigationResult(result = false, key = resultKeyOverride)
+                            navController.navigateUp()
+                        },
+                        onNegativeClick = {
+                            navController.setNavigationResult(result = false, key = resultKeyOverride)
+                            navController.navigateUp()
+                        },
+                        onPositiveClick = {
+                            navController.setNavigationResult(result = true, key = resultKeyOverride)
+                            navController.navigateUp()
+                        },
+                    ) {}
+                    BackHandler(enabled = true) {
+                        navController.setNavigationResult(result = false, key = resultKeyOverride)
+                        navController.navigateUp()
+                    }
+                }
+            }
+        }
+        companion object {
+            const val uiutilDestination: String = "UiUtil"
+            const val resultKeyOverride = "uiutil|binary"
+
+            fun navigateToOverride(navController: NavController, onOverrideClick: () -> Unit) {
+                val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
+                navController.navigate(
+                    route = createRoute("$uiutilDestination/binary",
+                        optionals = mapOf(
+                            "message" to "Already exists. Override?",
+                            "positiveText" to "OVERRIDE"
+                        )
+                    )
+                ) {
+                    launchSingleTop = true
+                }
+                getNavigationResult<Boolean>(navBackStackEntry, resultKeyOverride) {
+                    if (it) onOverrideClick()
+                }
+            }
+
+            @Composable
+            fun rememberState(navController: NavHostController = rememberNavController()) =
+                remember(navController) { UIUtilState(navController) }
+        }
+    }
+    
+    
     /** Creates a route string such as 'somelocation/arg0/arg1?optionalarg2=value' */
     fun createRoute(base: String, args: Collection<String>? = null, optionals: Map<String, String?>? = null): String {
         return base + when (args.isNullOrEmpty()) {
@@ -139,12 +207,26 @@ object UiUtil {
     }
 
 
-    fun NavController.getNavigationResult(key: String = "result") {
-        currentBackStackEntry?.savedStateHandle?.getLiveData<String>(key)
+    fun <T> NavController.getNavigationResult(key: String = "result") = currentBackStackEntry?.savedStateHandle?.getLiveData<T>(key)
+    fun <T> NavController.setNavigationResult(result: T?, key: String = "result") = previousBackStackEntry?.savedStateHandle?.set(key, result)
+    fun <T> getNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result", onResult: (result: T) -> Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)
+            ) {
+                val result = navBackStackEntry.savedStateHandle.get<T>(key)
+                result?.let(onResult)
+                navBackStackEntry.savedStateHandle.remove<T>(key)
+            }
+        }
+        navBackStackEntry.lifecycle.addObserver(observer)
+
+//        viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+//            if (event == Lifecycle.Event.ON_DESTROY)
+//                navBackStackEntry.lifecycle.removeObserver(observer)
+//        })
     }
-    fun NavController.setNavigationResult(result: String, key: String = "result") {
-        previousBackStackEntry?.savedStateHandle?.set(key, result)
-    }
+
+    fun NavController.clearNavigationResult(key: String = "result") = previousBackStackEntry?.savedStateHandle?.remove<String>(key)
 
     fun effect(scope: CoroutineScope, block: suspend () -> Unit) =scope.launch(Dispatchers.IO) { block() }
 
@@ -178,6 +260,7 @@ object UiUtil {
                 remember(state) { StateMiniState(mutableStateOf(state), mutableStateOf(stateMessage)) }
         }
     }
+
     fun navigateReplaceStartRoute(navController: NavController, newHomeRoute: String) = with (navController) {
         popBackStack(graph.startDestinationId, true)
         graph.setStartDestination(newHomeRoute)

@@ -8,6 +8,7 @@ import org.python.db.entities.note.RoomNoteWithCategory
 
 @Dao
 interface NoteDao {
+    @Transaction
     @Query(
         "select * from RoomNote " +
             "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
@@ -15,6 +16,7 @@ interface NoteDao {
     )
     fun getAll(): PagingSource<Int, RoomNoteWithCategory>
 
+    @Transaction
     @Query(
         "select * from RoomNote " +
         "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId"
@@ -27,6 +29,7 @@ interface NoteDao {
     @Query("select * from RoomNote where noteId == :id and secure <= :secure")
     suspend fun get(id: Long, secure: Boolean = false): RoomNote?
 
+    @Transaction
     @Query("select * from RoomNote " +
             "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
             "where noteId == :id and secure <= :secure")
