@@ -20,7 +20,7 @@ import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
 
 
-/** Loads note to edit, then shows edit screen. */
+/** Loads notecategory to edit, then shows edit screen. */
 @Composable
 fun NoteCategoryScreenEdit(noteCategoryViewModel: NoteCategoryViewModel, id: Long, onSaveClick: (NoteCategory, NoteCategory?) -> Unit) {
     var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
@@ -87,12 +87,8 @@ fun NoteCategoryScreenEditReady(noteCategory: NoteCategory?, onSaveClick: (NoteC
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
-    Card(modifier = Modifier
-        .fillMaxSize()
-        .padding(defaultPadding), elevation = 5.dp) {
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(defaultPadding)) {
+    Card(modifier = Modifier.fillMaxSize().padding(defaultPadding), elevation = 5.dp) {
+        Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
