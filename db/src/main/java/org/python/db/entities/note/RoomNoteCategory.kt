@@ -21,4 +21,13 @@ data class RoomNoteCategory(
     override fun hashCode(): Int {
         return this.categoryId.hashCode()
     }
+
+    companion object {
+        val DEFAULT: RoomNoteCategory = RoomNoteCategory(
+            categoryId = 0,
+            name = "default",
+            color = Color.valueOf(Color.WHITE),
+            favorite = false
+        )
+    }
 }

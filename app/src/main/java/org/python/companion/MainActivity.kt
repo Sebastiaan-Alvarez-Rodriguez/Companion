@@ -29,7 +29,7 @@ import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
 import org.python.companion.ui.note.*
-import org.python.companion.ui.note.category.*
+import org.python.companion.ui.note.category.NoteCategoryState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
@@ -193,7 +193,8 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     onDeleteClick = {
                         noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
                         navController.navigateUp()
-                    }
+                    },
+                    onCategoryClick = { category -> NoteCategoryState.navigateToCategoryPick(navController, category) }
                 )
             }
 
@@ -209,7 +210,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 NoteScreenEditNew(
                     onCategoryClick = { TODO("Implement category editing from note edit") },
                     onSaveClick = { toSaveNote ->
-                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
+                        Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
                         noteViewModel.viewModelScope.launch {
                             val conflict = noteViewModel.getbyName(toSaveNote.name)
                             Timber.d("New note: conflict: ${conflict!=null}")

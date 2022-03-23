@@ -11,7 +11,7 @@ interface NoteDao {
     @Transaction
     @Query(
         "select * from RoomNote " +
-            "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
             "where secure == 0"
     )
     fun getAll(): PagingSource<Int, RoomNoteWithCategory>
@@ -19,7 +19,7 @@ interface NoteDao {
     @Transaction
     @Query(
         "select * from RoomNote " +
-        "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId"
+        "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId"
     )
     fun getAllWithSecure(): PagingSource<Int, RoomNoteWithCategory>
 
@@ -31,7 +31,7 @@ interface NoteDao {
 
     @Transaction
     @Query("select * from RoomNote " +
-            "left join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
             "where noteId == :id and secure <= :secure")
     suspend fun getWithCategory(id: Long, secure: Boolean = false): RoomNoteWithCategory?
 

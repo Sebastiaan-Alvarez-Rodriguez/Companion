@@ -1,6 +1,6 @@
 package org.python.companion.ui.note
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -138,7 +139,6 @@ fun NoteScreenList(
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().semantics { contentDescription = "Note Screen" },
-                    contentPadding = PaddingValues(defaultPadding),
                     verticalArrangement = Arrangement.spacedBy(defaultPadding),
                     state = listState,
                 ) {
@@ -178,36 +178,30 @@ fun NoteItem(
     onFavoriteClick: (Note) -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Card(elevation = 5.dp) {
-        val modifier = when (noteCategory) {
-            null -> Modifier.padding(start = 16.dp)
-            else -> Modifier.padding(start = 16.dp).background(Color(noteCategory.color.toArgb()))
-        }
-        Card(elevation = 0.dp, modifier = modifier) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-                    .padding(defaultPadding)
-                    .clickable { onNoteClick(note) }
-                    // Regard the whole row as one semantics node. This way each row will receive focus as
-                    // a whole and the focus bounds will be around the whole row content. The semantics
-                    // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
-                    // we'd have to define the semantics properties explicitly.
-                    .semantics(mergeDescendants = true) {},
-            ) {
-                Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
-                Text(modifier = Modifier.weight(1f, fill = false), text = note.name)
-                IconButton(onClick = { onFavoriteClick(note) }) {
-                    Icon(
-                        modifier = when (noteCategory) {
-                            null -> Modifier
-                            else -> Modifier.background(Color(noteCategory.color.toArgb()))
-                        },
-                        imageVector = if (note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite"
-                    )
-                }
+    Card(
+        elevation = 5.dp,
+        border = BorderStroke(width = 1.dp, Color(noteCategory?.color?.toArgb() ?: Color.Transparent.toArgb())),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+                .padding(defaultPadding)
+                .clickable { onNoteClick(note) }
+                // Regard the whole row as one semantics node. This way each row will receive focus as
+                // a whole and the focus bounds will be around the whole row content. The semantics
+                // properties of the descendants will be merged. If we'd use clearAndSetSemantics instead,
+                // we'd have to define the semantics properties explicitly.
+                .semantics(mergeDescendants = true) {},
+        ) {
+            Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
+            Text(modifier = Modifier.weight(1f, fill = false), text = note.name)
+            IconButton(onClick = { onFavoriteClick(note) }) {
+                Icon(
+                    imageVector = if (note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Favorite"
+                )
             }
         }
     }

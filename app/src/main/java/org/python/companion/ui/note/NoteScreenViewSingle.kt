@@ -1,6 +1,5 @@
 package org.python.companion.ui.note
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
@@ -33,7 +32,7 @@ fun NoteScreenViewSingle(
     id: Long,
     onDeleteClick: ((Note) -> Unit)? = null,
     onEditClick: ((Note) -> Unit)? = null,
-    onCategoryClick: ((Note) -> Unit)? = null,
+    onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
     var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
     var note by remember { mutableStateOf<Note?>(null) }
@@ -74,9 +73,9 @@ fun NoteScreenViewSingle(
 fun NoteScreenViewSingleReady(
     note: Note,
     noteCategory: NoteCategory,
-    onCategoryClick: ((Note) -> Unit)? = null,
-    onDeleteClick: ((Note) -> Unit)? = null,
     onEditClick: ((Note) -> Unit)? = null,
+    onDeleteClick: ((Note) -> Unit)? = null,
+    onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
     val title by remember { mutableStateOf(note.name) }
     val content by remember { mutableStateOf(note.content) }
@@ -109,9 +108,9 @@ fun NoteScreenViewSingleReady(
                                 )
                             }
                         if (onCategoryClick != null)
-                            IconButton(onClick = { onCategoryClick(note) }) {
+                            IconButton(onClick = { onCategoryClick(noteCategory) }) {
                                 Icon(
-                                    modifier = noteCategory.color.let { Modifier.background(Color(it.toArgb())) },
+                                    tint = Color(noteCategory.color.toArgb()),
                                     imageVector = Icons.Outlined.Article,
                                     contentDescription = "Edit category"
                                 )

@@ -52,3 +52,43 @@ Current issue list:
     https://proandroiddev.com/pre-populating-your-room-i-b8e44fd965c1
     (https://github.com/motorro/room-populate)
     Only then, no js, and make it a gradle plugin/java package
+ 2. Creating a new secure note, then editing it, crashes:
+ ```
+E/Securer: Problem in getDecCipher
+    java.lang.NullPointerException: null cannot be cast to non-null type java.security.KeyStore.SecretKeyEntry
+        at org.python.backend.security.Securer.getDecCipher(Securer.kt:112)
+        at org.python.backend.security.Securer.decrypt(Securer.kt:60)
+        at org.python.backend.security.Securer.decrypt(Securer.kt:65)
+        at org.python.backend.data.repositories.NoteRepository.secureToUI(NoteRepository.kt:90)
+        at org.python.backend.data.repositories.NoteRepository.getWithCategory(NoteRepository.kt:38)
+        at org.python.backend.data.repositories.NoteRepository$getWithCategory$1.invokeSuspend(Unknown Source:16)
+        at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+        at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+        at androidx.compose.ui.platform.AndroidUiDispatcher.performTrampolineDispatch(AndroidUiDispatcher.android.kt:81)
+        at androidx.compose.ui.platform.AndroidUiDispatcher.access$performTrampolineDispatch(AndroidUiDispatcher.android.kt:41)
+        at androidx.compose.ui.platform.AndroidUiDispatcher$dispatchCallback$1.run(AndroidUiDispatcher.android.kt:57)
+        at android.os.Handler.handleCallback(Handler.java:883)
+        at android.os.Handler.dispatchMessage(Handler.java:100)
+        at android.os.Looper.loop(Looper.java:214)
+        at android.app.ActivityThread.main(ActivityThread.java:7697)
+        at java.lang.reflect.Method.invoke(Native Method)
+        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:516)
+        at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:950)
+E/AndroidRuntime: FATAL EXCEPTION: main
+    Process: org.python.companion, PID: 22024
+    java.lang.IllegalStateException: Could not decrypt note
+        at org.python.backend.data.repositories.NoteRepository.getWithCategory(NoteRepository.kt:38)
+        at org.python.backend.data.repositories.NoteRepository$getWithCategory$1.invokeSuspend(Unknown Source:16)
+        at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+        at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:106)
+        at androidx.compose.ui.platform.AndroidUiDispatcher.performTrampolineDispatch(AndroidUiDispatcher.android.kt:81)
+        at androidx.compose.ui.platform.AndroidUiDispatcher.access$performTrampolineDispatch(AndroidUiDispatcher.android.kt:41)
+        at androidx.compose.ui.platform.AndroidUiDispatcher$dispatchCallback$1.run(AndroidUiDispatcher.android.kt:57)
+        at android.os.Handler.handleCallback(Handler.java:883)
+        at android.os.Handler.dispatchMessage(Handler.java:100)
+        at android.os.Looper.loop(Looper.java:214)
+        at android.app.ActivityThread.main(ActivityThread.java:7697)
+        at java.lang.reflect.Method.invoke(Native Method)
+        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:516)
+        at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:950)
+ ```

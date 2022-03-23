@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.NoteState
 import org.python.companion.support.UiUtil
+import org.python.companion.support.UiUtil.createRoute
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
 
@@ -108,6 +109,19 @@ class NoteCategoryState(
     companion object {
         val noteCategoryDestination: String = "${NoteState.noteDestination}/category"
 
+        fun navigateToCategoryPick(navController: NavController, noteCategory: NoteCategory?) =
+            navigateToCategoryPick(navController, noteCategory?.categoryId)
+        fun navigateToCategoryPick(navController: NavController, selectedId: Long?) {
+            navController.navigate(
+                    createRoute(noteCategoryDestination,
+                        optionals = mapOf(
+                            "selectedId" to selectedId?.toString()
+                    )
+                )
+            ) {
+                launchSingleTop = true
+            }
+        }
         private fun navigateToNoteCategoryCreate(navController: NavController) = navController.navigate("$noteCategoryDestination/create")
 
         private fun navigateToNoteCategoryEdit(navController: NavController, noteCategory: NoteCategory) = navigateToNoteCategoryEdit(navController, noteCategory.categoryId)

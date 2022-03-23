@@ -98,9 +98,8 @@ fun NoteScreenEditReady(
     var favorite by remember { mutableStateOf(note?.favorite ?: false)}
     var secure by remember { mutableStateOf(note?.secure ?: false)}
 
-    var categoryKey by remember { mutableStateOf(-1L)}
-
-    var categoryName by remember { mutableStateOf(noteCategory?.name ?: "") }
+    var categoryKey by remember { mutableStateOf(NoteCategory.DEFAULT.categoryId)}
+//    var categoryName by remember { mutableStateOf(noteCategory?.name ?: "") }
     var categoryColor by remember { mutableStateOf(noteCategory?.color) }
 
     val noteChanged = lazy {
@@ -115,12 +114,15 @@ fun NoteScreenEditReady(
             name = title,
             content = content,
             favorite = favorite,
-            secure = secure) ?:
+            secure = secure,
+            categoryKey = categoryKey
+        ) ?:
         Note(
             name = title,
             content = content,
             favorite = favorite,
-            secure = secure
+            secure = secure,
+            categoryKey = categoryKey
         )
     }
 

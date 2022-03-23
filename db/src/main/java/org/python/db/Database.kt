@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.db.SupportSQLiteDatabase
 import org.python.db.daos.AnniversaryDao
 import org.python.db.daos.NoteCategoryDao
 import org.python.db.daos.NoteDao
@@ -35,11 +36,26 @@ abstract class CompanionDatabase : RoomDatabase() {
                             context.applicationContext,
                             CompanionDatabase::class.java,
                             DB_NAME
-                        ).build()
+                        ).addCallback(object : RoomDatabase.Callback() {
+                            override fun onCreate(db: SupportSQLiteDatabase) {
+                                super.onCreate(db)
+                                buildDb(db)
+                            }
+                        }).build()
                     }
                 }
             }
             return INSTANCE!!
+        }
+
+        private fun buildDb(db: SupportSQLiteDatabase) {
+            db.execSQL("BEGIN TRANSACTION;")
+            db.execSQL("INSERT OR IGNORE INTO RoomNoteCategory VALUES(${noteCategorySQLValueBuilder(RoomNoteCategory.DEFAULT)});")
+            db.execSQL("COMMIT;")
+        }
+
+        private fun noteCategorySQLValueBuilder(category: RoomNoteCategory): String {
+            return "${category.categoryId}, '${category.name}', ${ColorConverter.colorToLong(category.color)}, ${if (category.favorite) 1 else 0}"
         }
     }
 }

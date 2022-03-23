@@ -1,6 +1,7 @@
 package org.python.backend.data.datatype
 
 import android.graphics.Color
+import org.python.db.entities.note.RoomNoteCategory
 
 data class Note(
     val noteId: Long = 0L,
@@ -38,9 +39,10 @@ data class NoteCategory(
 
     companion object {
         val DEFAULT: NoteCategory = NoteCategory(
-            name = "",
-            color = Color.valueOf(Int.MAX_VALUE),// TODO get default note color style from styles
-            favorite = false
+            categoryId = RoomNoteCategory.DEFAULT.categoryId,
+            name = RoomNoteCategory.DEFAULT.name,
+            color = RoomNoteCategory.DEFAULT.color,
+            favorite = RoomNoteCategory.DEFAULT.favorite
         )
     }
 }
