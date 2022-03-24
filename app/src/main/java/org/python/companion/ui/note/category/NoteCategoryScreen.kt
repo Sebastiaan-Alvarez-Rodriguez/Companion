@@ -1,6 +1,6 @@
 package org.python.companion.ui.note.category
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -105,7 +105,6 @@ fun NoteCategoryScreenList(
     onFavoriteClick: (NoteCategory) -> Unit,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-//    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<NoteCategory> = NoteCategories.collectAsLazyPagingItems()
     val listState: LazyListState = rememberLazyListState()
 
@@ -116,7 +115,6 @@ fun NoteCategoryScreenList(
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().semantics { contentDescription = "Note Category Screen" },
-                    contentPadding = PaddingValues(defaultPadding),
                     verticalArrangement = Arrangement.spacedBy(defaultPadding),
                     state = listState,
                 ) {
@@ -149,24 +147,26 @@ fun NoteCategoryItem(
     onFavoriteClick: (NoteCategory) -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Card(elevation = 5.dp) {
-        Card(elevation = 0.dp, modifier = Modifier.padding(start = 16.dp).background(Color(noteCategory.color.toArgb()))) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-                    .padding(defaultPadding)
-                    .clickable { onNoteCategoryClick(noteCategory) }
-                    .semantics(mergeDescendants = true) {},
-            ) {
-                Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
-                Text(modifier = Modifier.weight(1f, fill = false), text = noteCategory.name)
-                IconButton(onClick = { onFavoriteClick(noteCategory) }) {
-                    Icon(modifier = Modifier.background(Color(noteCategory.color.toArgb())),
-                        imageVector = if (noteCategory.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite"
-                    )
-                }
+    Card(
+        elevation = 5.dp,
+        modifier = Modifier.padding(start = defaultPadding, end = defaultPadding),
+        border = BorderStroke(width = 1.dp, Color(noteCategory.color.toArgb())),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+                .padding(defaultPadding)
+                .clickable { onNoteCategoryClick(noteCategory) }
+                .semantics(mergeDescendants = true) {},
+        ) {
+            Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
+            Text(modifier = Modifier.weight(1f, fill = false), text = noteCategory.name)
+            IconButton(onClick = { onFavoriteClick(noteCategory) }) {
+                Icon(
+                    imageVector = if (noteCategory.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Favorite"
+                )
             }
         }
     }

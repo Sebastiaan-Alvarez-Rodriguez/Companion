@@ -15,7 +15,7 @@ interface NoteCategoryDao {
     @Query("select * from RoomNoteCategory where categoryId == :id")
     suspend fun get(id: Long): RoomNoteCategory?
 
-    @Query("select * from RoomNoteCategory where name = :name")
+    @Query("select * from RoomNoteCategory where categoryName = :name")
     suspend fun getByName(name: String): RoomNoteCategory?
 
     @Query("update RoomNote set favorite = :favorite where noteId == :noteId")

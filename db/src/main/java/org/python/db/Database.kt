@@ -55,7 +55,7 @@ abstract class CompanionDatabase : RoomDatabase() {
         }
 
         private fun noteCategorySQLValueBuilder(category: RoomNoteCategory): String {
-            return "${category.categoryId}, '${category.name}', ${ColorConverter.colorToLong(category.color)}, ${if (category.favorite) 1 else 0}"
+            return "${category.categoryId}, '${category.categoryName}', ${ColorConverter.colorToLong(category.color)}, ${if (category.favorite) 1 else 0}"
         }
     }
 }

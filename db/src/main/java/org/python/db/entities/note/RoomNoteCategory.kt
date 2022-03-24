@@ -5,10 +5,10 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(indices = [Index("name", unique = true)])
+@Entity(indices = [Index("categoryName", unique = true)])
 data class RoomNoteCategory(
     @PrimaryKey(autoGenerate = true) val categoryId: Long = 0,
-    val name: String,
+    val categoryName: String,
     val color: Color,
     val favorite: Boolean,
 ) {
@@ -25,7 +25,7 @@ data class RoomNoteCategory(
     companion object {
         val DEFAULT: RoomNoteCategory = RoomNoteCategory(
             categoryId = 0,
-            name = "default",
+            categoryName = "default",
             color = Color.valueOf(Color.WHITE),
             favorite = false
         )

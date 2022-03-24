@@ -99,6 +99,7 @@ class MainActivity : FragmentActivity() {
                             val splashScreenFunc = remember {
                                 SplashBuilder(navController = navController, destination = CactusState.cactusDestination).build {
                                     noteState.load()
+                                    noteCategoryState.load()
                                     anniversaryState.load()
                                 }
                             }
@@ -194,7 +195,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                         noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
                         navController.navigateUp()
                     },
-                    onCategoryClick = { category -> NoteCategoryState.navigateToCategoryPick(navController, category) }
+                    onCategoryClick = { category -> NoteCategoryState.navigateToCategorySelectOrCreate(navController, category) }
                 )
             }
 

@@ -82,9 +82,9 @@ private fun RoomNote.toUI() = Note(
     categoryKey = categoryKey
 )
 
-private fun NoteCategory.toRoom() = RoomNoteCategory(categoryId = categoryId, name = name, color = color, favorite = favorite)
+private fun NoteCategory.toRoom() = RoomNoteCategory(categoryId = categoryId, categoryName = name, color = color, favorite = favorite)
 
-private fun RoomNoteCategory.toUI() = NoteCategory(categoryId = categoryId, name = name, color = color, favorite = favorite)
+private fun RoomNoteCategory.toUI() = NoteCategory(categoryId = categoryId, name = categoryName, color = color, favorite = favorite)
 
 private fun NoteWithCategory.toRoom() = RoomNoteWithCategory(note = note.toRoom(), noteCategory = noteCategory.toRoom())
 

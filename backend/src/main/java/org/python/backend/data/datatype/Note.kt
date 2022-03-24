@@ -40,7 +40,7 @@ data class NoteCategory(
     companion object {
         val DEFAULT: NoteCategory = NoteCategory(
             categoryId = RoomNoteCategory.DEFAULT.categoryId,
-            name = RoomNoteCategory.DEFAULT.name,
+            name = RoomNoteCategory.DEFAULT.categoryName,
             color = RoomNoteCategory.DEFAULT.color,
             favorite = RoomNoteCategory.DEFAULT.favorite
         )

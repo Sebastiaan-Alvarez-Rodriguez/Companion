@@ -48,6 +48,6 @@ class NoteCategoryStore(database: CompanionDatabase) {
 private fun pagingNoteCategory(block: () -> PagingSource<Int, RoomNoteCategory>): Flow<PagingData<NoteCategory>> =
     Pager(PagingConfig(pageSize = 20)) { block() }.flow.map { page -> page.map { it.toUI() } }
 
-private fun NoteCategory.toRoom() = RoomNoteCategory(categoryId = categoryId, name = name, color = color, favorite = favorite)
+private fun NoteCategory.toRoom() = RoomNoteCategory(categoryId = categoryId, categoryName = name, color = color, favorite = favorite)
 
-private fun RoomNoteCategory.toUI() = NoteCategory(categoryId = categoryId, name = name, color = color, favorite = favorite)
+private fun RoomNoteCategory.toUI() = NoteCategory(categoryId = categoryId, name = categoryName, color = color, favorite = favorite)

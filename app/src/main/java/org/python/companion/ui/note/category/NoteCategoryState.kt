@@ -20,6 +20,9 @@ class NoteCategoryState(
     private val navController: NavHostController,
     private val noteCategoryViewModel: NoteCategoryViewModel,
 ) {
+    fun load() {
+        noteCategoryViewModel.load()
+    }
 
     fun NavGraphBuilder.categoryGraph() {
         navigation(startDestination = noteCategoryDestination, route = "category") {
@@ -36,7 +39,32 @@ class NoteCategoryState(
                         isLoading = isLoading,
                         onNewClick = { navigateToNoteCategoryCreate(navController) },
                         onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it)},
-                        onFavoriteClick = { /* TODO: toggle favorite */ }
+                        onFavoriteClick = { noteCategory ->
+                            noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
+                        }
+                    )
+                )
+            }
+
+            composable(
+                route = "$noteCategoryDestination/select?selectedId={selectedId}",
+                arguments = listOf(navArgument("selectedId") { type = NavType.IntType })
+            ) {
+                val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
+                val isLoading by noteCategoryViewModel.isLoading.collectAsState()
+
+                NoteCategoryScreen(
+                    noteCategoryScreenListHeaderStruct = NoteCategoryScreenListHeaderStruct(
+                        onSearchClick = { /* TODO */ }
+                    ),
+                    noteCategoryScreenListStruct = NoteCategoryScreenListStruct(
+                        noteCategories = noteCategories,
+                        isLoading = isLoading,
+                        onNewClick = { navigateToNoteCategoryCreate(navController) },
+                        onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it)},
+                        onFavoriteClick = { noteCategory ->
+                            noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
+                        }
                     )
                 )
             }
@@ -109,11 +137,16 @@ class NoteCategoryState(
     companion object {
         val noteCategoryDestination: String = "${NoteState.noteDestination}/category"
 
-        fun navigateToCategoryPick(navController: NavController, noteCategory: NoteCategory?) =
-            navigateToCategoryPick(navController, noteCategory?.categoryId)
-        fun navigateToCategoryPick(navController: NavController, selectedId: Long?) {
+        fun navigateToCategoryScreen(navController: NavController) {
+            navController.navigate(noteCategoryDestination) {
+                launchSingleTop = true
+            }
+        }
+        fun navigateToCategorySelectOrCreate(navController: NavController, noteCategory: NoteCategory?) =
+            navigateToCategorySelectOrCreate(navController, noteCategory?.categoryId)
+        fun navigateToCategorySelectOrCreate(navController: NavController, selectedId: Long?) {
             navController.navigate(
-                    createRoute(noteCategoryDestination,
+                    createRoute("$noteCategoryDestination/select",
                         optionals = mapOf(
                             "selectedId" to selectedId?.toString()
                     )
