@@ -2,6 +2,7 @@ package org.python.companion.support
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.IntDef
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -14,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
@@ -131,6 +133,63 @@ object UiUtil {
                             Text(text = positiveText.uppercase())
                         }
                     }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun SimpleColorPick(color: android.graphics.Color, onColorUpdate: (android.graphics.Color) -> Unit) {
+        val red = color.red()
+        val green = color.green()
+        val blue = color.blue()
+
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+        val smallPadding = dimensionResource(id = R.dimen.padding_small)
+        val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+
+        Column(modifier = Modifier.padding(defaultPadding)) {
+            Text(
+                text = "Select Color",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+            Spacer(modifier = Modifier.height(defaultPadding))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Column {
+                    Text(text = "Red ${red.toInt()}")
+                    Slider(
+                        value = red,
+                        onValueChange = { onColorUpdate(android.graphics.Color.valueOf(it, green, blue)) },
+                        onValueChangeFinished = {}
+                    )
+                    Spacer(modifier = Modifier.height(tinyPadding))
+
+                    Text(text = "Green ${green.toInt()}")
+                    Slider(
+                        value = green,
+                        onValueChange = { onColorUpdate(android.graphics.Color.valueOf(red, it, blue)) },
+                        onValueChangeFinished = {}
+                    )
+                    Spacer(modifier = Modifier.height(tinyPadding))
+
+                    Text(text = "Blue ${blue.toInt()}")
+                    Slider(
+                        value = blue,
+                        onValueChange = { onColorUpdate(android.graphics.Color.valueOf(red, green, it)) },
+                        onValueChangeFinished = {}
+                    )
+
+                    Spacer(modifier = Modifier.height(smallPadding))
+                    Surface(
+                        border = BorderStroke(1.dp, Color.DarkGray),
+                        color = Color(red, green, blue),
+                        modifier = Modifier.fillMaxWidth().height(40.dp)
+                    ) {}
                 }
             }
         }

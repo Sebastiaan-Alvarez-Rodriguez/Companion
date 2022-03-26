@@ -61,9 +61,6 @@ fun NoteCategoryScreenEditReady(noteCategory: NoteCategory?, onSaveClick: (NoteC
     var color by remember { mutableStateOf(noteCategory?.color ?: NoteCategory.DEFAULT.color) }
     var favorite by remember { mutableStateOf(noteCategory?.favorite ?: false)}
 
-    var categoryKey by remember { mutableStateOf(-1L)}
-
-
     val hasChanged = lazy {
         if (noteCategory == null)
             name != "" || color != NoteCategory.DEFAULT.color || favorite
@@ -87,33 +84,42 @@ fun NoteCategoryScreenEditReady(noteCategory: NoteCategory?, onSaveClick: (NoteC
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
-    Card(modifier = Modifier.fillMaxSize().padding(defaultPadding), elevation = 5.dp) {
-        Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                IconButton(modifier = Modifier.padding(smallPadding), onClick = { favorite = !favorite }) {
-                    Icon(
-                        imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (favorite) "Stop favoring" else "Favorite"
-                    )
-                }
-                Spacer(Modifier.width(defaultPadding))
+    Column {
+        NoteCategoryItem(noteCategory = createNoteCategoryObject(), onNoteCategoryClick = {}, onFavoriteClick = { favorite = !favorite})
+        Spacer(modifier = Modifier.height(defaultPadding))
+        Card(modifier = Modifier.fillMaxSize().padding(defaultPadding), elevation = 5.dp) {
+            Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(
+                        modifier = Modifier.padding(smallPadding),
+                        onClick = { favorite = !favorite }) {
+                        Icon(
+                            imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (favorite) "Stop favoring" else "Favorite"
+                        )
+                    }
+                    Spacer(Modifier.width(defaultPadding))
 
-                Button(onClick = { onSaveClick(createNoteCategoryObject()) }) {
-                    Text(text = "Save")
+                    Button(onClick = { onSaveClick(createNoteCategoryObject()) }) {
+                        Text(text = "Save")
+                    }
                 }
+                Spacer(Modifier.height(defaultPadding))
+                OutlinedTextField(
+                    value = name,
+                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                )
+
+                Spacer(Modifier.height(defaultPadding))
+                UiUtil.SimpleColorPick(color = color, onColorUpdate = { color = it })
             }
-            Spacer(Modifier.height(defaultPadding))
-            OutlinedTextField(
-                value = name,
-                modifier = Modifier.fillMaxWidth(),
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                singleLine = true,
-            )
         }
     }
 

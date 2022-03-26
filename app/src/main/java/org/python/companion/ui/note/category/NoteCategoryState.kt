@@ -101,7 +101,7 @@ class NoteCategoryState(
             }
 
             composable(
-                route = "${NoteState.noteDestination}/edit/{categoryId}",
+                route = "$noteCategoryDestination/edit/{categoryId}",
                 arguments = listOf(navArgument("categoryId") { type = NavType.LongType }),
                 deepLinks = listOf(navDeepLink { uriPattern = "companion://${NoteState.noteDestination}/edit/{categoryId}" }),
             ) { entry ->
@@ -155,6 +155,7 @@ class NoteCategoryState(
                 launchSingleTop = true
             }
         }
+
         private fun navigateToNoteCategoryCreate(navController: NavController) = navController.navigate("$noteCategoryDestination/create")
 
         private fun navigateToNoteCategoryEdit(navController: NavController, noteCategory: NoteCategory) = navigateToNoteCategoryEdit(navController, noteCategory.categoryId)
