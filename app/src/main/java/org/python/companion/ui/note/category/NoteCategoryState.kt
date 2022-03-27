@@ -1,9 +1,6 @@
 package org.python.companion.ui.note.category
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
 import androidx.navigation.compose.composable
@@ -39,6 +36,9 @@ class NoteCategoryState(
                         isLoading = isLoading,
                         onNewClick = { navigateToNoteCategoryCreate(navController) },
                         onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it)},
+                        onCheckClick = {category, nowChecked ->
+                            //TODO: Show delete button
+                        },
                         onFavoriteClick = { noteCategory ->
                             noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
                         }
@@ -48,11 +48,12 @@ class NoteCategoryState(
 
             composable(
                 route = "$noteCategoryDestination/select?selectedId={selectedId}",
-                arguments = listOf(navArgument("selectedId") { type = NavType.IntType })
-            ) {
+                arguments = listOf(navArgument("selectedId") { defaultValue = NoteCategory.DEFAULT.categoryId; type = NavType.LongType })
+            ) { entry ->
                 val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
                 val isLoading by noteCategoryViewModel.isLoading.collectAsState()
 
+                val selectedId by remember { mutableStateOf(entry.arguments?.getLong("selectedId")) }
                 NoteCategoryScreen(
                     noteCategoryScreenListHeaderStruct = NoteCategoryScreenListHeaderStruct(
                         onSearchClick = { /* TODO */ }
@@ -62,6 +63,10 @@ class NoteCategoryState(
                         isLoading = isLoading,
                         onNewClick = { navigateToNoteCategoryCreate(navController) },
                         onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it)},
+                        onCheckClick = {category, nowChecked ->
+                            //TODO: Return selected id?
+                            // non-intuitive UI...
+                        },
                         onFavoriteClick = { noteCategory ->
                             noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
                         }

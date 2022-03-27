@@ -82,6 +82,7 @@ class NoteCategoryScreenListStruct(
     val isLoading: Boolean,
     val onNewClick: () -> Unit,
     val onNoteCategoryClick: (NoteCategory) -> Unit,
+    val onCheckClick: (NoteCategory, Boolean) -> Unit,
     val onFavoriteClick: (NoteCategory) -> Unit,
 )
 
@@ -92,6 +93,7 @@ fun NoteCategoryScreenList(noteCategoryScreenListStruct: NoteCategoryScreenListS
         isLoading = noteCategoryScreenListStruct.isLoading,
         onNewClick = noteCategoryScreenListStruct.onNewClick,
         onNoteCategoryClick = noteCategoryScreenListStruct.onNoteCategoryClick,
+        onCheckClick = noteCategoryScreenListStruct.onCheckClick,
         onFavoriteClick = noteCategoryScreenListStruct.onFavoriteClick,
     )
 
@@ -102,6 +104,7 @@ fun NoteCategoryScreenList(
     isLoading: Boolean,
     onNewClick: () -> Unit,
     onNoteCategoryClick: (NoteCategory) -> Unit,
+    onCheckClick: (NoteCategory, Boolean) -> Unit,
     onFavoriteClick: (NoteCategory) -> Unit,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
@@ -120,7 +123,7 @@ fun NoteCategoryScreenList(
                 ) {
                     items(items = items) { NoteCategory ->
                         if (NoteCategory != null)
-                            NoteCategoryItem(NoteCategory, onNoteCategoryClick, onFavoriteClick)
+                            NoteCategoryItem(NoteCategory, onNoteCategoryClick, onCheckClick, onFavoriteClick)
                     }
                 }
             }
@@ -144,6 +147,7 @@ fun NoteCategoryScreenList(
 fun NoteCategoryItem(
     noteCategory: NoteCategory,
     onNoteCategoryClick: (NoteCategory) -> Unit,
+    onCheckClick: (NoteCategory, Boolean) -> Unit,
     onFavoriteClick: (NoteCategory) -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
@@ -160,7 +164,7 @@ fun NoteCategoryItem(
                 .clickable { onNoteCategoryClick(noteCategory) }
                 .semantics(mergeDescendants = true) {},
         ) {
-            Checkbox(checked = false, onCheckedChange = {}) // TODO: Handle checkbox behaviour
+            Checkbox(checked = false, onCheckedChange = { nowChecked -> onCheckClick(noteCategory, nowChecked) })
             Text(modifier = Modifier.weight(1f, fill = false), text = noteCategory.name)
             IconButton(onClick = { onFavoriteClick(noteCategory) }) {
                 Icon(

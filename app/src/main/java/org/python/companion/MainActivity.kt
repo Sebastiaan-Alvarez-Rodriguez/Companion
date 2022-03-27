@@ -3,16 +3,13 @@ package org.python.companion
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
@@ -355,21 +352,5 @@ class AnniversaryState(private val navController: NavHostController, private val
         @Composable
         fun rememberState(navController: NavHostController = rememberNavController(), anniversaryViewModel: AnniversaryViewModel)
         = remember(navController) { AnniversaryState(navController, anniversaryViewModel) }
-    }
-}
-
-
-@Composable
-fun Greeting(name: String) {
-    Column {
-        Text(text = "Hello $name!")
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    CompanionTheme {
-        Greeting("Android")
     }
 }
