@@ -2,7 +2,10 @@ package org.python.companion.ui.note.category
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -85,9 +88,9 @@ fun NoteCategoryScreenEditReady(noteCategory: NoteCategory?, onSaveClick: (NoteC
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
     Column {
-        NoteCategoryItem(noteCategory = createNoteCategoryObject(), onNoteCategoryClick = {}, onFavoriteClick = { favorite = !favorite})
+        NoteCategoryItem(noteCategory = createNoteCategoryObject(), onNoteCategoryClick = {}, onCheckClick = {_, _ ->}, onFavoriteClick = { favorite = !favorite})
         Spacer(modifier = Modifier.height(defaultPadding))
-        Card(modifier = Modifier.fillMaxSize().padding(defaultPadding), elevation = 5.dp) {
+        Card(modifier = Modifier.fillMaxWidth().padding(defaultPadding).verticalScroll(rememberScrollState()), elevation = 5.dp) {
             Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,

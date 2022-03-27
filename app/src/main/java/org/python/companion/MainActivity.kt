@@ -4,11 +4,9 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
@@ -126,39 +124,51 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
                 val hasAuthenticated by noteViewModel.authenticated.collectAsState()
 
-                val securityStruct = if (hasSecureNotes) {
-                    if (hasAuthenticated)
-                        NoteScreenListSecurityStruct(
-                            securityText = "Lock secure notes",
-                            onSecurityClick = {
-                                Timber.w("Authstate disable busy: $hasAuthenticated")
-                                noteViewModel.securityActor.logout()
-                                Timber.w("Authstate disable complete: $hasAuthenticated")
-                            }
+                val selectedItems = remember { mutableStateListOf<Note>() }
+                val securityItem: @Composable (LazyItemScope.() -> Unit)? = if (hasSecureNotes) {
+                    if (hasAuthenticated) {
+                        {SecurityClickItem(
+                                text = "Lock secure notes",
+                                onClick = { noteViewModel.securityActor.logout() }
+                            )
+                        }
+                    } else {
+                    {SecurityClickItem(
+                            text = "Unlock secure notes",
+                            onClick = { SecurityState.navigateToSecurityPick(navController) }
                         )
-                    else
-                        NoteScreenListSecurityStruct(
-                            securityText = "Unlock secure notes",
-                            onSecurityClick = { SecurityState.navigateToSecurityPick(navController) }
-                        )
+                    }
+                    }
                 } else {
                     null
                 }
                 NoteScreen(
-                    noteScreenListHeaderStruct = NoteScreenListHeaderStruct(
-                        onSearchClick = { /* TODO */ },
-                        onSettingsClick = { navigateToNoteSettings(navController = navController) }
-                    ),
-                    noteScreenListStruct = NoteScreenListStruct(
-                        notes = notes,
-                        isLoading = isLoading,
-                        onNewClick = { navigateToNoteCreate(navController = navController) },
-                        onNoteClick = { note -> navigateToNoteSingle(navController = navController, note = note) },
-                        onFavoriteClick = { note ->
-                            noteViewModel.viewModelScope.launch { noteViewModel.setFavorite(note, !note.favorite) }
-                        },
-                        securityStruct = securityStruct,
-                    )
+                    header = {
+                        if (selectedItems.isEmpty())
+                            NoteScreenListHeader(
+                                onSearchClick = { /* TODO */ },
+                                onSettingsClick = { navigateToNoteSettings(navController = navController) }
+                            )
+                        else
+                            NoteScreenContextListHeader(
+                                onDeleteClick = { noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) } },
+                                onSearchClick = { /* TODO */ },
+                            )
+                    },
+                    list = {
+                        NoteScreenList(
+                            notes = notes,
+                            selectedItems = selectedItems,
+                            isLoading = isLoading,
+                            onNewClick = { navigateToNoteCreate(navController = navController) },
+                            onNoteClick = { item -> navigateToNoteSingle(navController = navController, note = item.note) },
+                            onCheckClick = {item, nowChecked -> if (nowChecked) selectedItems.add(item.note) else selectedItems.remove(item.note)},
+                            onFavoriteClick = { item ->
+                                noteViewModel.viewModelScope.launch { noteViewModel.setFavorite(item.note, !item.note.favorite) }
+                            },
+                            securityItem = securityItem
+                        )
+                    }
                 )
             }
 

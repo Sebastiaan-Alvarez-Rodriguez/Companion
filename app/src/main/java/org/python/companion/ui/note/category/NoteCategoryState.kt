@@ -28,21 +28,26 @@ class NoteCategoryState(
                 val isLoading by noteCategoryViewModel.isLoading.collectAsState()
 
                 NoteCategoryScreen(
-                    noteCategoryScreenListHeaderStruct = NoteCategoryScreenListHeaderStruct(
-                        onSearchClick = { /* TODO */ }
-                    ),
-                    noteCategoryScreenListStruct = NoteCategoryScreenListStruct(
-                        noteCategories = noteCategories,
-                        isLoading = isLoading,
-                        onNewClick = { navigateToNoteCategoryCreate(navController) },
-                        onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it)},
-                        onCheckClick = {category, nowChecked ->
-                            //TODO: Show delete button
-                        },
-                        onFavoriteClick = { noteCategory ->
-                            noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
-                        }
-                    )
+                    header = {
+                        NoteCategoryScreenListHeader(
+                            onSearchClick = { /* TODO */ }
+                        )
+                    },
+                    list = {
+                        NoteCategoryScreenList(
+                            noteCategories = noteCategories,
+                            isLoading = isLoading,
+                            onNewClick = { navigateToNoteCategoryCreate(navController) },
+                            onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it) },
+                            onCheckClick = {category, nowChecked ->
+                                //TODO: Return selected id?
+                                // non-intuitive UI...
+                            },
+                            onFavoriteClick = { noteCategory ->
+                                noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
+                            }
+                        )
+                    }
                 )
             }
 
@@ -55,22 +60,27 @@ class NoteCategoryState(
 
                 val selectedId by remember { mutableStateOf(entry.arguments?.getLong("selectedId")) }
                 NoteCategoryScreen(
-                    noteCategoryScreenListHeaderStruct = NoteCategoryScreenListHeaderStruct(
-                        onSearchClick = { /* TODO */ }
-                    ),
-                    noteCategoryScreenListStruct = NoteCategoryScreenListStruct(
-                        noteCategories = noteCategories,
-                        isLoading = isLoading,
-                        onNewClick = { navigateToNoteCategoryCreate(navController) },
-                        onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it)},
-                        onCheckClick = {category, nowChecked ->
-                            //TODO: Return selected id?
-                            // non-intuitive UI...
-                        },
-                        onFavoriteClick = { noteCategory ->
-                            noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
-                        }
-                    )
+                    header = {
+                        NoteCategoryScreenListHeader(
+                            message = "Select a category.",
+                            onSearchClick = { /* TODO */ }
+                        )
+                    },
+                    list = {
+                        NoteCategoryScreenList(
+                            noteCategories = noteCategories,
+                            isLoading = isLoading,
+                            onNewClick = { navigateToNoteCategoryCreate(navController) },
+                            onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it) },
+                            onCheckClick = {category, nowChecked ->
+                                //TODO: Return selected id?
+                                // non-intuitive UI...
+                            },
+                            onFavoriteClick = { noteCategory ->
+                                noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
+                            }
+                        )
+                    }
                 )
             }
 

@@ -2,9 +2,11 @@ package org.python.backend.data.repositories
 
 import androidx.paging.PagingData
 import androidx.paging.map
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.stores.NoteStore
@@ -64,6 +66,13 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
 
     suspend fun update(oldNote: Note, updatedNote: Note): Boolean = secureUpdate(oldNote, updatedNote)?.let { noteStore.update(it); true } ?: false
 
+    suspend fun delete(items: Collection<Note>): Unit = coroutineScope {
+        for (item in items)
+            launch {
+                secureDelete(item)
+                noteStore.delete(item)
+            }
+    }
     suspend fun delete(note: Note): Unit = noteStore.delete(secureDelete(note))
 
     suspend fun deleteAllSecure(): Unit = noteStore.deleteAllSecure { name -> secureDelete(name) }

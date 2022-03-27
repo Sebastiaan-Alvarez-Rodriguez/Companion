@@ -42,6 +42,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun upsert(note: Note): Boolean = noteRepository.upsert(note)
     suspend fun update(oldNote: Note, updateNote: Note): Boolean = noteRepository.update(oldNote, updateNote)
 
+    /** Delete notes by id */
+    suspend fun delete(items: Collection<Note>): Unit = noteRepository.delete(items)
     suspend fun delete(note: Note): Unit = noteRepository.delete(note)
     suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
 

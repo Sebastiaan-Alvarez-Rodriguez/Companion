@@ -4,6 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.IntDef
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -18,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +34,10 @@ import androidx.navigation.*
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -195,6 +205,72 @@ object UiUtil {
         }
     }
 
+    @Composable
+    fun GenericListHeader(items: Collection<@Composable RowScope.() -> Unit>) {
+        Card(elevation = 5.dp) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                for (item in items) {
+                    item()
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun <T : Any> GenericList(
+        prefix: @Composable (LazyItemScope.() -> Unit)? = null,
+        items: Flow<PagingData<T>>,
+        isLoading: Boolean,
+        showItemFunc: @Composable LazyItemScope.(item: T) -> Unit,
+        fab: (@Composable BoxScope.() -> Unit)? = null
+    ) {
+        //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+        val lazyCollectItems: LazyPagingItems<T> = items.collectAsLazyPagingItems()
+        val listState: LazyListState = rememberLazyListState()
+
+        Box(Modifier.fillMaxSize()) {
+            when {
+                isLoading -> SimpleLoading()
+                lazyCollectItems.itemCount == 0 && prefix == null -> SimpleText("Nothing here yet")
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().semantics { contentDescription = "Item" },
+                        verticalArrangement = Arrangement.spacedBy(defaultPadding),
+                        state = listState,
+                    ) {
+                        if (prefix != null) {
+                            item {
+                                prefix()
+                            }
+                        }
+                        items(items = lazyCollectItems) { item ->
+                            if (item != null)
+                                showItemFunc(item)
+                        }
+                    }
+                }
+            }
+            if (fab != null)
+                fab()
+        }
+    }
+
+    @Composable
+    fun BoxScope.SimpleFAB(onClick: () -> Unit) {
+        FloatingActionButton(
+            onClick = onClick,
+            modifier = Modifier.align(Alignment.BottomEnd)
+        ) {
+            Text("+")
+        }
+    }
+
+
     class UIUtilState(private val navController: NavHostController) {
 
         fun NavGraphBuilder.utilGraph() {
@@ -265,31 +341,6 @@ object UiUtil {
         }
     }
 
-    fun <T> NavController.setNavigationResult(result: T?, key: String = "result") = previousBackStackEntry?.savedStateHandle?.set(key, result)
-    fun <T> getNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result", onResult: (result: T) -> Unit) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)
-            ) {
-                val result = navBackStackEntry.savedStateHandle.get<T>(key)
-                result?.let(onResult)
-                navBackStackEntry.savedStateHandle.remove<T>(key)
-            }
-        }
-        navBackStackEntry.lifecycle.addObserver(observer)
-
-//        viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
-//            if (event == Lifecycle.Event.ON_DESTROY)
-//                navBackStackEntry.lifecycle.removeObserver(observer)
-//        })
-    }
-
-    fun NavController.clearNavigationResult(key: String = "result") = previousBackStackEntry?.savedStateHandle?.remove<String>(key)
-
-    fun effect(scope: CoroutineScope, block: suspend () -> Unit) =scope.launch(Dispatchers.IO) { block() }
-
-    fun <T> Flow<T>.stateInViewModel(scope: CoroutineScope, initialValue : T): StateFlow<T> =
-        stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
-
     open class OpenableMiniState(val open: MutableState<Boolean>) {
         open fun open() {
             open.value = true
@@ -340,4 +391,29 @@ object UiUtil {
             navigate(newRoute)
         }
     }
+
+    fun effect(scope: CoroutineScope, block: suspend () -> Unit) =scope.launch(Dispatchers.IO) { block() }
+
+    fun <T> Flow<T>.stateInViewModel(scope: CoroutineScope, initialValue : T): StateFlow<T> =
+        stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
+
+    fun <T> NavController.setNavigationResult(result: T?, key: String = "result") = previousBackStackEntry?.savedStateHandle?.set(key, result)
+    fun <T> getNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result", onResult: (result: T) -> Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)
+            ) {
+                val result = navBackStackEntry.savedStateHandle.get<T>(key)
+                result?.let(onResult)
+                navBackStackEntry.savedStateHandle.remove<T>(key)
+            }
+        }
+        navBackStackEntry.lifecycle.addObserver(observer)
+
+//        viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+//            if (event == Lifecycle.Event.ON_DESTROY)
+//                navBackStackEntry.lifecycle.removeObserver(observer)
+//        })
+    }
+
+    fun NavController.clearNavigationResult(key: String = "result") = previousBackStackEntry?.savedStateHandle?.remove<String>(key)
 }
