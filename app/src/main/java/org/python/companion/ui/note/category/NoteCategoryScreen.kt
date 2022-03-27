@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -59,8 +60,28 @@ fun NoteCategoryScreenListHeader(message: String? = null, onSearchClick: () -> U
 }
 
 @Composable
+fun NoteCategoryScreenContextListHeader(onDeleteClick: () -> Unit, onSearchClick: () -> Unit) {
+    val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+    UiUtil.GenericListHeader(
+        listOf(
+            {
+                IconButton(modifier = Modifier.padding(tinyPadding), onClick = onDeleteClick) {
+                    Icon(Icons.Filled.Delete, "Delete")
+                }
+            },
+            {
+                IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
+                    Icon(Icons.Filled.Search, "Search")
+                }
+            }
+        )
+    )
+}
+
+@Composable
 fun NoteCategoryScreenList(
     noteCategories: Flow<PagingData<NoteCategory>>,
+    selectedItems: Collection<NoteCategory>,
     isLoading: Boolean,
     onNewClick: () -> Unit,
     onNoteCategoryClick: (NoteCategory) -> Unit,
@@ -70,7 +91,7 @@ fun NoteCategoryScreenList(
     UiUtil.GenericList(
         items = noteCategories,
         isLoading = isLoading,
-        showItemFunc = { item -> NoteCategoryItem(item, onNoteCategoryClick, onCheckClick, onFavoriteClick) },
+        showItemFunc = { item -> NoteCategoryItem(item, onNoteCategoryClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item)) },
         fab = { SimpleFAB(onClick = onNewClick) }
     )
 }
@@ -87,7 +108,8 @@ fun NoteCategoryItem(
     noteCategory: NoteCategory,
     onNoteCategoryClick: (NoteCategory) -> Unit,
     onCheckClick: (NoteCategory, Boolean) -> Unit,
-    onFavoriteClick: (NoteCategory) -> Unit
+    onFavoriteClick: (NoteCategory) -> Unit,
+    selected: Boolean
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Card(
@@ -104,7 +126,7 @@ fun NoteCategoryItem(
                 .clickable { onNoteCategoryClick(noteCategory) }
                 .semantics(mergeDescendants = true) {},
         ) {
-            Checkbox(checked = false, onCheckedChange = { nowChecked -> onCheckClick(noteCategory, nowChecked) })
+            Checkbox(checked = selected, onCheckedChange = { nowChecked -> onCheckClick(noteCategory, nowChecked) })
             Text(modifier = Modifier.weight(1f, fill = false), text = noteCategory.name)
             IconButton(onClick = { onFavoriteClick(noteCategory) }) {
                 Icon(

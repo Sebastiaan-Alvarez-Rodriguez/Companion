@@ -6,6 +6,7 @@ import androidx.navigation.*
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.NoteState
 import org.python.companion.support.UiUtil
@@ -27,15 +28,24 @@ class NoteCategoryState(
                 val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
                 val isLoading by noteCategoryViewModel.isLoading.collectAsState()
 
+                val selectedItems = remember { mutableStateListOf<NoteCategory>() }
+
                 NoteCategoryScreen(
                     header = {
-                        NoteCategoryScreenListHeader(
-                            onSearchClick = { /* TODO */ }
-                        )
+                        if (selectedItems.isEmpty())
+                            NoteCategoryScreenListHeader(
+                                onSearchClick = { /* TODO */ }
+                            )
+                        else
+                            NoteCategoryScreenContextListHeader(
+                                onDeleteClick = { /*TODO*/ },
+                                onSearchClick = { /* TODO */ }
+                            )
                     },
                     list = {
                         NoteCategoryScreenList(
                             noteCategories = noteCategories,
+                            selectedItems = selectedItems,
                             isLoading = isLoading,
                             onNewClick = { navigateToNoteCategoryCreate(navController) },
                             onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it) },

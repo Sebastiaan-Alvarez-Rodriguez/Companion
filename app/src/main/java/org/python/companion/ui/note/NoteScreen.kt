@@ -107,7 +107,7 @@ fun NoteScreenList(
         prefix = securityItem,
         items = notes,
         isLoading = isLoading,
-        showItemFunc = { item -> NoteItem(item, onNoteClick, onCheckClick, onFavoriteClick, selectedItems.contains(item.note)) },
+        showItemFunc = { item -> NoteItem(item, onNoteClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item.note)) },
         fab = { SimpleFAB(onClick = onNewClick) }
     )
 }
