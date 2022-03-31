@@ -54,6 +54,8 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
      */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteStore.setFavorite(note, favorite)
 
+    /** Sets note category for given note */
+    suspend fun updateCategoryForNote(noteId: Long, categoryId: Long): Unit = noteStore.updateCategoryForNote(noteId, categoryId)
 
     /**
      * Adds a note. If a conflict exists, skips adding proposed item.
@@ -76,6 +78,7 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
     suspend fun delete(note: Note): Unit = noteStore.delete(secureDelete(note))
 
     suspend fun deleteAllSecure(): Unit = noteStore.deleteAllSecure { name -> secureDelete(name) }
+
 
     private fun secureToStorage(note: Note): Note? {
         if (note.secure) {

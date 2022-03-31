@@ -6,11 +6,11 @@ import androidx.navigation.*
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.NoteState
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.createRoute
+import org.python.companion.support.UiUtil.setNavigationResult
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
 
@@ -43,16 +43,13 @@ class NoteCategoryState(
                             )
                     },
                     list = {
-                        NoteCategoryScreenList(
+                        NoteCategoryScreenListCheckbox(
                             noteCategories = noteCategories,
                             selectedItems = selectedItems,
                             isLoading = isLoading,
                             onNewClick = { navigateToNoteCategoryCreate(navController) },
                             onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it) },
-                            onCheckClick = {category, nowChecked ->
-                                //TODO: Return selected id?
-                                // non-intuitive UI...
-                            },
+                            onCheckClick = {item, nowChecked -> if (nowChecked) selectedItems.add(item) else selectedItems.remove(item) },
                             onFavoriteClick = { noteCategory ->
                                 noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
                             }
@@ -68,7 +65,13 @@ class NoteCategoryState(
                 val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
                 val isLoading by noteCategoryViewModel.isLoading.collectAsState()
 
-                val selectedId by remember { mutableStateOf(entry.arguments?.getLong("selectedId")) }
+                var selected by remember { mutableStateOf<NoteCategory?>(null) } //
+
+                entry.arguments?.let {
+                    LaunchedEffect(it) {
+                        selected = noteCategoryViewModel.get(it.getLong("selectedId"))
+                    }
+                }
                 NoteCategoryScreen(
                     header = {
                         NoteCategoryScreenListHeader(
@@ -77,14 +80,15 @@ class NoteCategoryState(
                         )
                     },
                     list = {
-                        NoteCategoryScreenList(
+                        NoteCategoryScreenListRadio(
                             noteCategories = noteCategories,
+                            selectedItem = selected,
                             isLoading = isLoading,
                             onNewClick = { navigateToNoteCategoryCreate(navController) },
                             onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it) },
-                            onCheckClick = {category, nowChecked ->
-                                //TODO: Return selected id?
-                                // non-intuitive UI...
+                            onSelectClick = {category ->
+                                selected = category
+                                navController.setNavigationResult(result = selected?.categoryId, key = resultKeySelect)
                             },
                             onFavoriteClick = { noteCategory ->
                                 noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
@@ -160,16 +164,19 @@ class NoteCategoryState(
         }
     }
     companion object {
-        val noteCategoryDestination: String = "${NoteState.noteDestination}/category"
+        val noteCategoryDestination = "${NoteState.noteDestination}/category"
+
+        const val resultKeySelect = "notecategorystate|select"
 
         fun navigateToCategoryScreen(navController: NavController) {
             navController.navigate(noteCategoryDestination) {
                 launchSingleTop = true
             }
         }
-        fun navigateToCategorySelectOrCreate(navController: NavController, noteCategory: NoteCategory?) =
-            navigateToCategorySelectOrCreate(navController, noteCategory?.categoryId)
-        fun navigateToCategorySelectOrCreate(navController: NavController, selectedId: Long?) {
+        fun navigateToCategorySelectOrCreate(navController: NavController, noteCategory: NoteCategory?, selectedChanged: (newId: Long?) -> Unit) =
+            navigateToCategorySelectOrCreate(navController, noteCategory?.categoryId, selectedChanged)
+        fun navigateToCategorySelectOrCreate(navController: NavController, selectedId: Long?, selectedChanged: (newId: Long?) -> Unit) {
+            val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
             navController.navigate(
                     createRoute("$noteCategoryDestination/select",
                         optionals = mapOf(
@@ -178,6 +185,10 @@ class NoteCategoryState(
                 )
             ) {
                 launchSingleTop = true
+            }
+
+            UiUtil.getNavigationResult<Long?>(navBackStackEntry, resultKeySelect) {
+                selectedChanged(it)
             }
         }
 

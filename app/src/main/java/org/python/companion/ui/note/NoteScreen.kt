@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -51,8 +50,7 @@ fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit)
                 IconButton(modifier = Modifier.padding(tinyPadding), onClick = onSettingsClick) {
                     Icon(Icons.Filled.Settings, "Settings")
                 }
-            }
-            ,
+            },
             {
                 IconButton(modifier = Modifier.padding(tinyPadding), onClick = onSearchClick) {
                     Icon(Icons.Filled.Search, "Search")
@@ -130,7 +128,7 @@ fun NoteItem(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Card(
         elevation = 5.dp,
-        border = BorderStroke(width = 1.dp, Color(item.noteCategory?.color?.toArgb() ?: Color.Transparent.toArgb())),
+        border = BorderStroke(width = 1.dp, Color(item.noteCategory.color.toArgb())),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(

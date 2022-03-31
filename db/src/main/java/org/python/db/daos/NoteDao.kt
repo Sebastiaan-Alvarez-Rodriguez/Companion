@@ -42,6 +42,9 @@ interface NoteDao {
     suspend fun setFavorite(noteId: Long, favorite: Boolean)
     suspend fun setFavorite(note: RoomNote, favorite: Boolean) = setFavorite(note.noteId, favorite)
 
+    @Query("update RoomNote set categoryKey = :categoryId where noteId == :noteId")
+    suspend fun updateCategoryForNote(noteId: Long, categoryId: Long)
+
     @Query("select exists(select 1 from RoomNote where secure != 0)")
     fun hasSecureNotes(): Flow<Boolean>
 

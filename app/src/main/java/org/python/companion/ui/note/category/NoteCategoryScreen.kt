@@ -79,7 +79,7 @@ fun NoteCategoryScreenContextListHeader(onDeleteClick: () -> Unit, onSearchClick
 }
 
 @Composable
-fun NoteCategoryScreenList(
+fun NoteCategoryScreenListCheckbox(
     noteCategories: Flow<PagingData<NoteCategory>>,
     selectedItems: Collection<NoteCategory>,
     isLoading: Boolean,
@@ -91,8 +91,72 @@ fun NoteCategoryScreenList(
     UiUtil.GenericList(
         items = noteCategories,
         isLoading = isLoading,
-        showItemFunc = { item -> NoteCategoryItem(item, onNoteCategoryClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item)) },
+        showItemFunc = { item -> NoteCategoryCheckbox(item, onNoteCategoryClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item)) },
         fab = { SimpleFAB(onClick = onNewClick) }
+    )
+}
+
+@Composable
+fun NoteCategoryScreenListRadio(
+    noteCategories: Flow<PagingData<NoteCategory>>,
+    selectedItem: NoteCategory?,
+    isLoading: Boolean,
+    onNewClick: () -> Unit,
+    onNoteCategoryClick: (NoteCategory) -> Unit,
+    onSelectClick: (NoteCategory) -> Unit,
+    onFavoriteClick: (NoteCategory) -> Unit
+) {
+    UiUtil.GenericList(
+        items = noteCategories,
+        isLoading = isLoading,
+        showItemFunc = { item -> NoteCategoryItemRadio(item, onNoteCategoryClick, onSelectClick, onFavoriteClick, selected = selectedItem == item) },
+        fab = { SimpleFAB(onClick = onNewClick) }
+    )
+}
+
+
+/**
+ * Composition for a single noteCategory item.
+ * @param onSelectClick Lambda to perform on radiobutton clicks.
+ *  @see NoteCategoryItem(noteCategory, onNoteCategoryClick, onFavoriteClick)
+ */
+@Composable
+fun NoteCategoryItemRadio(
+    noteCategory: NoteCategory,
+    onNoteCategoryClick: (NoteCategory) -> Unit,
+    onSelectClick: (NoteCategory) -> Unit,
+    onFavoriteClick: (NoteCategory) -> Unit,
+    selected: Boolean
+) {
+    NoteCategoryItem(
+        noteCategory = noteCategory,
+        onNoteCategoryClick = onNoteCategoryClick,
+        onFavoriteClick = onFavoriteClick,
+        selectorBox = { RadioButton(selected = selected, onClick = { onSelectClick(noteCategory) }) }
+    )
+}
+
+/**
+ * Composition for a noteCategory item with a checkbox.
+ * @param onCheckClick Lambda to execute on checkbox click.
+ *  - param 0 is the clicked noteCategory
+ *  - param 1 tells whether the checkbox is currently selected
+ *  @see NoteCategoryItem(noteCategory, onNoteCategoryClick, onFavoriteClick)
+ */
+@Composable
+private fun NoteCategoryCheckbox(
+    noteCategory: NoteCategory,
+    onNoteCategoryClick: (NoteCategory) -> Unit,
+    onCheckClick: (NoteCategory, Boolean) -> Unit,
+    onFavoriteClick: (NoteCategory) -> Unit,
+    selected: Boolean
+) {
+    NoteCategoryItem(
+        noteCategory = noteCategory,
+        onNoteCategoryClick = onNoteCategoryClick,
+        onFavoriteClick = onFavoriteClick,
+        selectorBox = { Checkbox(checked = selected, onCheckedChange = { nowChecked -> onCheckClick(noteCategory, nowChecked) })
+        }
     )
 }
 
@@ -100,16 +164,14 @@ fun NoteCategoryScreenList(
  * Composition for a single noteCategory item.
  * @param noteCategory NoteCategory to display.
  * @param onNoteCategoryClick Lambda to perform on noteCategory clicks.
- * @param onCheckClick Lambda to perform on checkbox clicks.
  * @param onFavoriteClick Lambda to perform on noteCategory favorite clicks.
  */
 @Composable
 fun NoteCategoryItem(
     noteCategory: NoteCategory,
     onNoteCategoryClick: (NoteCategory) -> Unit,
-    onCheckClick: (NoteCategory, Boolean) -> Unit,
     onFavoriteClick: (NoteCategory) -> Unit,
-    selected: Boolean
+    selectorBox: @Composable (RowScope.() -> Unit)? = null
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Card(
@@ -126,7 +188,7 @@ fun NoteCategoryItem(
                 .clickable { onNoteCategoryClick(noteCategory) }
                 .semantics(mergeDescendants = true) {},
         ) {
-            Checkbox(checked = selected, onCheckedChange = { nowChecked -> onCheckClick(noteCategory, nowChecked) })
+            selectorBox?.let { it() }
             Text(modifier = Modifier.weight(1f, fill = false), text = noteCategory.name)
             IconButton(onClick = { onFavoriteClick(noteCategory) }) {
                 Icon(

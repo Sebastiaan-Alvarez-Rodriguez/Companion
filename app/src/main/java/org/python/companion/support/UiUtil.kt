@@ -1,7 +1,6 @@
 package org.python.companion.support
 
 import androidx.activity.compose.BackHandler
-import androidx.annotation.IntDef
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,16 +46,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.python.companion.R
 
-object LoadState {
-    const val STATE_READY = 0
-    const val STATE_LOADING = 1
-    const val STATE_OK = 2
-    const val STATE_FAILED = 3
+/** Simple enum representing loading state of asynchronously loading objects. */
+enum class LoadingState {
+    LOADING, READY, FAILED, OK
 }
-@Target(AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE)
-@kotlin.annotation.Retention(AnnotationRetention.SOURCE)
-@IntDef(LoadState.STATE_READY, LoadState.STATE_LOADING, LoadState.STATE_OK, LoadState.STATE_FAILED)
-annotation class LoadingState
 
 object UiUtil {
     @Composable
@@ -358,13 +351,10 @@ object UiUtil {
         }
     }
 
-    open class StateMiniState(
-        val state: MutableState<@LoadingState Int>,
-        val stateMessage: MutableState<String?>
-    ) {
+    open class StateMiniState(val state: MutableState<LoadingState>, val stateMessage: MutableState<String?>) {
         companion object {
             @Composable
-            fun rememberState(state: @LoadingState Int, stateMessage: String? = null) =
+            fun rememberState(state: LoadingState, stateMessage: String? = null) =
                 remember(state) { StateMiniState(mutableStateOf(state), mutableStateOf(stateMessage)) }
         }
     }

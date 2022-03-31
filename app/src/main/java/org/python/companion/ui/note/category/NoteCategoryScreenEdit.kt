@@ -2,7 +2,6 @@ package org.python.companion.ui.note.category
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,7 +16,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
-import org.python.companion.support.LoadState
+import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
@@ -26,22 +25,22 @@ import timber.log.Timber
 /** Loads notecategory to edit, then shows edit screen. */
 @Composable
 fun NoteCategoryScreenEdit(noteCategoryViewModel: NoteCategoryViewModel, id: Long, onSaveClick: (NoteCategory, NoteCategory?) -> Unit) {
-    var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
+    var state by remember { mutableStateOf(LoadingState.LOADING) }
     var existingData by remember { mutableStateOf<NoteCategory?>(null) }
 
     when (state) {
-        LoadState.STATE_LOADING -> if (existingData == null) {
+        LoadingState.LOADING -> if (existingData == null) {
             UiUtil.SimpleLoading()
             LaunchedEffect(state) {
                 existingData = noteCategoryViewModel.get(id)
-                state = LoadState.STATE_OK
+                state = LoadingState.READY
             }
         }
-        LoadState.STATE_OK -> NoteCategoryScreenEditReady(
+        LoadingState.READY -> NoteCategoryScreenEditReady(
             noteCategory = existingData,
             onSaveClick = { toSaveNoteCategory -> onSaveClick(toSaveNoteCategory, existingData) }
         )
-        LoadState.STATE_FAILED -> {
+        LoadingState.FAILED -> {
             Timber.e("Could not find note with id: $id")
             UiUtil.SimpleProblem("Could not find note with id: $id")
         }
@@ -88,7 +87,7 @@ fun NoteCategoryScreenEditReady(noteCategory: NoteCategory?, onSaveClick: (NoteC
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
     Column {
-        NoteCategoryItem(noteCategory = createNoteCategoryObject(), onNoteCategoryClick = {}, onCheckClick = {_, _ ->}, onFavoriteClick = { favorite = !favorite})
+        NoteCategoryItem(noteCategory = createNoteCategoryObject(), onNoteCategoryClick = {}, onFavoriteClick = { favorite = !favorite})
         Spacer(modifier = Modifier.height(defaultPadding))
         Card(modifier = Modifier.fillMaxWidth().padding(defaultPadding).verticalScroll(rememberScrollState()), elevation = 5.dp) {
             Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {

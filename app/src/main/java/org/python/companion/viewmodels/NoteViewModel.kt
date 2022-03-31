@@ -56,6 +56,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     /** Sets a note to be or not be favored */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
+    suspend fun updateCategoryForNote(noteId: Long, categoryId: Long): Unit = noteRepository.updateCategoryForNote(noteId, categoryId)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
         search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())

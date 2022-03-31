@@ -37,7 +37,7 @@ import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
-import org.python.companion.support.LoadState
+import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
 import timber.log.Timber
@@ -51,24 +51,24 @@ fun NoteScreenEdit(
     onCategoryClick: () -> Unit,
     onSaveClick: (Note, Note?) -> Unit,
 ) {
-    var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
+    var state by remember { mutableStateOf(LoadingState.LOADING) }
     var existingData by remember { mutableStateOf<NoteWithCategory?>(null) }
 
     when (state) {
-        LoadState.STATE_LOADING -> if (existingData == null) {
+        LoadingState.LOADING -> if (existingData == null) {
             UiUtil.SimpleLoading()
             LaunchedEffect(state) {
                 existingData = noteViewModel.getWithCategory(id)
-                state = LoadState.STATE_OK
+                state = LoadingState.READY
             }
         }
-        LoadState.STATE_OK -> NoteScreenEditReady(
+        LoadingState.READY -> NoteScreenEditReady(
             note = existingData?.note,
             noteCategory = existingData?.noteCategory,
             onCategoryClick = onCategoryClick,
             onSaveClick = { toSaveNote -> onSaveClick(toSaveNote, existingData?.note) },
         )
-        LoadState.STATE_FAILED -> {
+        LoadingState.FAILED -> {
             Timber.e("Could not find note with id: $id")
             UiUtil.SimpleProblem("Could not find note with id: $id")
         }

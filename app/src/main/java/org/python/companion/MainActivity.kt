@@ -202,7 +202,14 @@ class NoteState(private val navController: NavHostController, private val noteVi
                         noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
                         navController.navigateUp()
                     },
-                    onCategoryClick = { category -> NoteCategoryState.navigateToCategorySelectOrCreate(navController, category) }
+                    onCategoryClick = { category ->
+                        NoteCategoryState.navigateToCategorySelectOrCreate(navController, category) { newCategoryId ->
+                            Timber.w("Got new id: $newCategoryId")
+                            newCategoryId?.let {
+                                noteViewModel.viewModelScope.launch { noteViewModel.updateCategoryForNote(noteId, it) }
+                            }
+                        }
+                    }
                 )
             }
 

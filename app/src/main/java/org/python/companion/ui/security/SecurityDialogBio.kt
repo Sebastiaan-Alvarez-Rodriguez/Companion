@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Biotech
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +13,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.python.companion.R
-import org.python.companion.support.LoadState
 import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil.SimpleLoading
 import org.python.companion.support.UiUtil.SimpleOk
@@ -24,7 +22,7 @@ import org.python.companion.support.UiUtil.SimpleOk
 fun SecurityBioDialogContent(
     onNegativeClick: () -> Unit,
     onPositiveClick: () -> Unit,
-    state: @LoadingState Int = LoadState.STATE_READY,
+    state: LoadingState = LoadingState.READY,
     stateMessage: String? = null
 ) {
         Card(
@@ -32,10 +30,10 @@ fun SecurityBioDialogContent(
             shape = RoundedCornerShape(12.dp)
         ) {
             when(state) {
-                LoadState.STATE_READY, LoadState.STATE_FAILED ->
+                LoadingState.READY, LoadingState.FAILED ->
                     SecurityBioDialogReady(onNegativeClick, onPositiveClick, stateMessage)
-                LoadState.STATE_LOADING -> SimpleLoading()
-                LoadState.STATE_OK -> SimpleOk()
+                LoadingState.LOADING -> SimpleLoading()
+                LoadingState.OK -> SimpleOk()
             }
         }
 }

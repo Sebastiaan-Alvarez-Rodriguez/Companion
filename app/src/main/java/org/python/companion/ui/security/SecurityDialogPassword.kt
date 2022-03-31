@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.python.backend.security.PasswordVerificationToken
 import org.python.companion.R
-import org.python.companion.support.LoadState
+import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 
 @Composable
@@ -46,8 +46,8 @@ fun SecurityPasswordDialogContent(
             Spacer(modifier = Modifier.height(defaultPadding))
 
             OutlinedTextField(
-                enabled = state.state.value != LoadState.STATE_LOADING,
-                isError = state.state.value == LoadState.STATE_FAILED,
+                enabled = state.state.value != LoadingState.LOADING,
+                isError = state.state.value == LoadingState.FAILED,
                 value = pass,
                 onValueChange = { pass = it },
                 label = { Text("Enter password...") },
@@ -72,20 +72,20 @@ fun SecurityPasswordDialogContent(
 
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 when (state.state.value) {
-                    LoadState.STATE_LOADING -> CircularProgressIndicator()
-                    LoadState.STATE_OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
+                    LoadingState.LOADING -> CircularProgressIndicator()
+                    LoadingState.OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
                     else -> TextButton(onClick = onResetPasswordClick) {
                         Text(text = "RESET PASSWORD")
                     }
                 }
                 Row(horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onNegativeClick, enabled = state.state.value != LoadState.STATE_LOADING) {
+                    TextButton(onClick = onNegativeClick, enabled = state.state.value != LoadingState.LOADING) {
                         Text(text = "CANCEL")
                     }
                     Spacer(modifier = Modifier.width(smallPadding))
                     TextButton(
                         onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass).build()) },
-                        enabled = state.state.value != LoadState.STATE_LOADING
+                        enabled = state.state.value != LoadingState.LOADING
                     ) {
                         Text(text = "SUBMIT")
                     }
@@ -123,8 +123,8 @@ fun SecurityPasswordSetupDialogContent(
             Spacer(modifier = Modifier.height(defaultPadding))
 
             OutlinedTextField(
-                enabled = state.state.value != LoadState.STATE_LOADING,
-                isError = state.state.value == LoadState.STATE_FAILED,
+                enabled = state.state.value != LoadingState.LOADING,
+                isError = state.state.value == LoadingState.FAILED,
                 value = pass,
                 onValueChange = {
                     pass = it
@@ -143,8 +143,8 @@ fun SecurityPasswordSetupDialogContent(
                 }
             )
             OutlinedTextField(
-                enabled = state.state.value != LoadState.STATE_LOADING,
-                isError = state.state.value == LoadState.STATE_FAILED,
+                enabled = state.state.value != LoadingState.LOADING,
+                isError = state.state.value == LoadingState.FAILED,
                 value = repeatPass,
                 onValueChange = {
                     repeatPass = it
@@ -171,8 +171,8 @@ fun SecurityPasswordSetupDialogContent(
 
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 when (state.state.value) {
-                    LoadState.STATE_LOADING -> CircularProgressIndicator()
-                    LoadState.STATE_OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
+                    LoadingState.LOADING -> CircularProgressIndicator()
+                    LoadingState.OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
                 }
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                     TextButton(onClick = onNegativeClick) {

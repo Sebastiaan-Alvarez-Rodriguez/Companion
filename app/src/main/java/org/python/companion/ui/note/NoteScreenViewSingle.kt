@@ -19,7 +19,7 @@ import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
-import org.python.companion.support.LoadState
+import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
 import timber.log.Timber
@@ -34,31 +34,31 @@ fun NoteScreenViewSingle(
     onEditClick: ((Note) -> Unit)? = null,
     onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
-    var state by remember { mutableStateOf(LoadState.STATE_LOADING) }
+    var state by remember { mutableStateOf(LoadingState.LOADING) }
     var note by remember { mutableStateOf<Note?>(null) }
     var noteCategory by remember { mutableStateOf<NoteCategory?>(null) }
 
     val authenticated by noteViewModel.securityActor.authenticated.collectAsState()
 
     when (state) {
-        LoadState.STATE_LOADING -> if (note == null) {
+        LoadingState.LOADING -> if (note == null) {
             UiUtil.SimpleLoading()
             LaunchedEffect(state) {
                 val loadedNoteWithCategory = noteViewModel.getWithCategory(id)
                 if (loadedNoteWithCategory == null) {
                     if (authenticated)
-                        state = LoadState.STATE_FAILED
+                        state = LoadingState.FAILED
                     else
                         navController.navigateUp() // Note was edited, became secure
                 } else {
                     note = loadedNoteWithCategory.note
                     noteCategory = loadedNoteWithCategory.noteCategory
-                    state = LoadState.STATE_OK
+                    state = LoadingState.READY
                 }
             }
         }
-        LoadState.STATE_OK -> NoteScreenViewSingleReady(note!!, noteCategory!!, onEditClick, onDeleteClick, onCategoryClick)
-        LoadState.STATE_FAILED -> {
+        LoadingState.READY -> NoteScreenViewSingleReady(note!!, noteCategory!!, onEditClick, onDeleteClick, onCategoryClick)
+        LoadingState.FAILED -> {
             Timber.e("Could not find note with id: $id")
             UiUtil.SimpleProblem("Could not find note with id: $id")
         }
@@ -110,7 +110,7 @@ fun NoteScreenViewSingleReady(
                         if (onCategoryClick != null)
                             IconButton(onClick = { onCategoryClick(noteCategory) }) {
                                 Icon(
-                                    tint = Color(noteCategory.color.toArgb()),
+                                    tint = Color(noteCategory.color.toArgb()), //TODO: Update from state!
                                     imageVector = Icons.Outlined.Article,
                                     contentDescription = "Edit category"
                                 )
