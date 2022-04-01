@@ -35,11 +35,20 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
 
     suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.authenticated.value)?.let { secureToUI(it) }
     suspend fun getWithCategory(id: Long): NoteWithCategory? =
-        noteStore.getWithCategory(id, securityActor.authenticated.value)?.let {
+        noteStore.getWithCategory(id, securityActor.authenticated.value)?.let { data ->
                 NoteWithCategory(
-                    it.note.let { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") },
-                    it.noteCategory
+                    data.note.let { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") },
+                    data.noteCategory
                 )
+        }
+    fun getWithCategoryLive(id: Long): Flow<NoteWithCategory?> =
+        noteStore.getWithCategoryLive(id, securityActor.authenticated.value).map { item ->
+            item?.let { data ->
+                NoteWithCategory(
+                    data.note.let { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") },
+                    data.noteCategory
+                )
+            }
         }
     /**
      * Rerieves a note by name.

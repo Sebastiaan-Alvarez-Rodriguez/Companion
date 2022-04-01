@@ -164,7 +164,7 @@ object UiUtil {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Column {
-                    Text(text = "Red ${red.toInt()}")
+                    Text(text = "Red ${(red*255).toInt()}")
                     Slider(
                         value = red,
                         onValueChange = { onColorUpdate(android.graphics.Color.valueOf(it, green, blue)) },
@@ -172,7 +172,7 @@ object UiUtil {
                     )
                     Spacer(modifier = Modifier.height(tinyPadding))
 
-                    Text(text = "Green ${green.toInt()}")
+                    Text(text = "Green ${(green*255).toInt()}")
                     Slider(
                         value = green,
                         onValueChange = { onColorUpdate(android.graphics.Color.valueOf(red, it, blue)) },
@@ -180,7 +180,7 @@ object UiUtil {
                     )
                     Spacer(modifier = Modifier.height(tinyPadding))
 
-                    Text(text = "Blue ${blue.toInt()}")
+                    Text(text = "Blue ${(blue*255).toInt()}")
                     Slider(
                         value = blue,
                         onValueChange = { onColorUpdate(android.graphics.Color.valueOf(red, green, it)) },

@@ -3,6 +3,7 @@ package org.python.backend.data.stores
 import androidx.paging.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
@@ -29,6 +30,10 @@ class NoteStore(database: CompanionDatabase) {
     suspend fun get(id: Long, secure: Boolean = false): Note? = noteDao.get(id, secure)?.toUI()
     suspend fun getWithCategory(id: Long, secure: Boolean = false): NoteWithCategory? =
         noteDao.getWithCategory(id, secure)?.toUI()
+
+    fun getWithCategoryLive(id: Long, secure: Boolean = false): Flow<NoteWithCategory?> =
+        noteDao.getWithCategoryLive(id, secure).mapLatest { it?.toUI() }
+
     /**
      * Searches note by name.
      * @param name Exact name of note.

@@ -49,6 +49,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun get(id: Long): Note? = noteRepository.get(id)
     suspend fun getWithCategory(id: Long): NoteWithCategory? = noteRepository.getWithCategory(id)
+    fun getWithCategoryLive(id: Long): Flow<NoteWithCategory?> = noteRepository.getWithCategoryLive(id)
+
 
     suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)

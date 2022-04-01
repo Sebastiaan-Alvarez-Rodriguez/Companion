@@ -1,5 +1,6 @@
 package org.python.companion.ui.note
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
@@ -15,53 +16,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
+import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
-import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
-import timber.log.Timber
 
 
 @Composable
 fun NoteScreenViewSingle(
     noteViewModel: NoteViewModel,
-    navController: NavController,
     id: Long,
     onDeleteClick: ((Note) -> Unit)? = null,
     onEditClick: ((Note) -> Unit)? = null,
     onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
-    var state by remember { mutableStateOf(LoadingState.LOADING) }
-    var note by remember { mutableStateOf<Note?>(null) }
-    var noteCategory by remember { mutableStateOf<NoteCategory?>(null) }
-
-    val authenticated by noteViewModel.securityActor.authenticated.collectAsState()
-
-    when (state) {
-        LoadingState.LOADING -> if (note == null) {
+    val noteWithCategory by noteViewModel.getWithCategoryLive(id).collectAsState(null)
+    noteWithCategory.let {
+        if (it == null)
             UiUtil.SimpleLoading()
-            LaunchedEffect(state) {
-                val loadedNoteWithCategory = noteViewModel.getWithCategory(id)
-                if (loadedNoteWithCategory == null) {
-                    if (authenticated)
-                        state = LoadingState.FAILED
-                    else
-                        navController.navigateUp() // Note was edited, became secure
-                } else {
-                    note = loadedNoteWithCategory.note
-                    noteCategory = loadedNoteWithCategory.noteCategory
-                    state = LoadingState.READY
-                }
-            }
-        }
-        LoadingState.READY -> NoteScreenViewSingleReady(note!!, noteCategory!!, onEditClick, onDeleteClick, onCategoryClick)
-        LoadingState.FAILED -> {
-            Timber.e("Could not find note with id: $id")
-            UiUtil.SimpleProblem("Could not find note with id: $id")
-        }
+        else
+            NoteScreenViewSingleReady(it, onEditClick, onDeleteClick, onCategoryClick)
     }
 }
 
@@ -71,20 +47,18 @@ fun NoteScreenViewSingle(
  */
 @Composable
 fun NoteScreenViewSingleReady(
-    note: Note,
-    noteCategory: NoteCategory,
+    noteWithCategory: NoteWithCategory,
     onEditClick: ((Note) -> Unit)? = null,
     onDeleteClick: ((Note) -> Unit)? = null,
     onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
-    val title by remember { mutableStateOf(note.name) }
-    val content by remember { mutableStateOf(note.content) }
+    val title by remember { mutableStateOf(noteWithCategory.note.name) }
+    val content by remember { mutableStateOf(noteWithCategory.note.content) }
     val anyOptionsEnabled = onEditClick != null || onDeleteClick != null
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-
     Column(modifier = Modifier.padding(defaultPadding)) {
-        Card(elevation = 5.dp) {
+        Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
             Column(modifier = Modifier.padding(defaultPadding)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -101,22 +75,22 @@ fun NoteScreenViewSingleReady(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (onDeleteClick != null)
-                            IconButton(onClick = { onDeleteClick(note) }) {
+                            IconButton(onClick = { onDeleteClick(noteWithCategory.note) }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Delete,
                                     contentDescription = "Delete note"
                                 )
                             }
                         if (onCategoryClick != null)
-                            IconButton(onClick = { onCategoryClick(noteCategory) }) {
+                            IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
                                 Icon(
-                                    tint = Color(noteCategory.color.toArgb()), //TODO: Update from state!
+                                    tint = Color(noteWithCategory.noteCategory.color.toArgb()),
                                     imageVector = Icons.Outlined.Article,
                                     contentDescription = "Edit category"
                                 )
                             }
                         if (onEditClick != null)
-                            IconButton(onClick = { onEditClick(note) }) {
+                            IconButton(onClick = { onEditClick(noteWithCategory.note) }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
                                     contentDescription = "Edit note"
@@ -128,7 +102,9 @@ fun NoteScreenViewSingleReady(
         }
         Spacer(Modifier.height(defaultPadding))
         Card(elevation = 5.dp) {
-            Text(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding))
+            Text(text = content, modifier = Modifier
+                .fillMaxWidth()
+                .padding(defaultPadding))
         }
     }
 }

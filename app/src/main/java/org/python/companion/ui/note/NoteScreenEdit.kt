@@ -98,9 +98,9 @@ fun NoteScreenEditReady(
     var favorite by remember { mutableStateOf(note?.favorite ?: false)}
     var secure by remember { mutableStateOf(note?.secure ?: false)}
 
-    var categoryKey by remember { mutableStateOf(NoteCategory.DEFAULT.categoryId)}
+    var categoryKey by remember { mutableStateOf(noteCategory?.categoryId ?: NoteCategory.DEFAULT.categoryId)}
 //    var categoryName by remember { mutableStateOf(noteCategory?.name ?: "") }
-    var categoryColor by remember { mutableStateOf(noteCategory?.color) }
+    var categoryColor by remember { mutableStateOf(noteCategory?.color ?: NoteCategory.DEFAULT.color) }
 
     val noteChanged = lazy {
         if (note == null)
@@ -150,7 +150,7 @@ fun NoteScreenEditReady(
                     }
                     IconButton(modifier = Modifier.padding(smallPadding), onClick = onCategoryClick) {
                         Icon(
-                            modifier = categoryColor.let { if (it != null) Modifier.background(Color(it.toArgb())) else Modifier },
+                            tint = Color(categoryColor.toArgb()),
                             imageVector = Icons.Outlined.Article,
                             contentDescription = "Edit category")
                     }

@@ -195,7 +195,6 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 val noteId = entry.arguments?.getLong("noteId")!!
                 NoteScreenViewSingle(
                     noteViewModel = noteViewModel,
-                    navController = navController,
                     id = noteId,
                     onEditClick = { navigateToNoteEdit(navController = navController, note = it) },
                     onDeleteClick = {

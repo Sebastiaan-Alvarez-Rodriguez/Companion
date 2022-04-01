@@ -35,6 +35,12 @@ interface NoteDao {
             "where noteId == :id and secure <= :secure")
     suspend fun getWithCategory(id: Long, secure: Boolean = false): RoomNoteWithCategory?
 
+    @Transaction
+    @Query("select * from RoomNote " +
+            "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "where noteId == :id and secure <= :secure")
+    fun getWithCategoryLive(id: Long, secure: Boolean = false): Flow<RoomNoteWithCategory?>
+
     @Query("select * from RoomNote where name = :name and secure <= :secure")
     suspend fun getByName(name: String, secure: Boolean = false): RoomNote?
 
