@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.navigateForResult
-import org.python.companion.support.UiUtil.setNavigationResult
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.note.category.NoteCategoryState
 import org.python.companion.ui.security.SecurityState
@@ -135,15 +134,16 @@ class NoteState(private val navController: NavHostController, private val noteVi
                         val conflict = noteViewModel.hasConflict(toSaveNote.name)
                         Timber.d("New note: conflict: $conflict")
                         if (!conflict) {
-                            val setId = noteViewModel.add(toSaveNote)
-                            navController.setNavigationResult<Long?>(result = setId, key = resultKeyNoteCreate)
-                            navController.navigateUp()
+                            noteViewModel.add(toSaveNote)?.let {
+                                navController.popBackStack()
+                                navigateToNoteView(navController, it)
+                            }
                         } else {
                             UiUtil.UIUtilState.navigateToOverride(navController) {
                                 Timber.d("New note: Overriding ${toSaveNote.name}...")
                                 noteViewModel.viewModelScope.launch { noteViewModel.upsert(toSaveNote) }
-                                navController.setNavigationResult<Long?>(result = toSaveNote.noteId, key = resultKeyNoteCreate)
-                                navController.navigateUp()
+                                navController.popBackStack()
+                                navigateToNoteView(navController, toSaveNote.noteId)
                             }
                         }
                     }

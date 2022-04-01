@@ -45,8 +45,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.python.companion.R
-import org.python.companion.ui.note.NoteState
-import timber.log.Timber
 
 /** Simple enum representing loading state of asynchronously loading objects. */
 enum class LoadingState {
