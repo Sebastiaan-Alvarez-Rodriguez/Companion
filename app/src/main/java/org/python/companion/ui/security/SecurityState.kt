@@ -234,6 +234,7 @@ class SecurityState(
     companion object {
         private const val navigationStart = "securitydialog"
 
+
         fun navigateToSecurityPick(navController: NavController, allowedMethods: Collection<@SecurityType Int> = SecurityTypes.toList()) {
             navController.navigate(
                 createRoute(navigationStart,

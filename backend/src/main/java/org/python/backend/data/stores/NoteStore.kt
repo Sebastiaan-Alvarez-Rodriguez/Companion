@@ -42,19 +42,20 @@ class NoteStore(database: CompanionDatabase) {
      */
     suspend fun getByName(name: String, secure: Boolean = false): Note? = noteDao.getByName(name, secure)?.toUI()
 
+    suspend fun hasConflict(name: String): Boolean = noteDao.hasConflict(name)
+
     suspend fun setFavorite(note: Note, favorite: Boolean) = noteDao.setFavorite(note.noteId, favorite)
 
     suspend fun updateCategoryForNote(noteId: Long, categoryId: Long) = noteDao.updateCategoryForNote(noteId, categoryId)
 
 
-    suspend fun add(note: Note): Boolean {
+    suspend fun add(note: Note): Long? {
         return try {
             noteDao.add(note.toRoom())
-            true
         } catch (e: android.database.sqlite.SQLiteConstraintException) {
-            false
+            null
         } catch (e: Exception) {
-            false
+            null
         }
     }
 

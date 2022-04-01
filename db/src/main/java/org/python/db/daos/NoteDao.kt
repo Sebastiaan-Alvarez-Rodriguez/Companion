@@ -44,6 +44,9 @@ interface NoteDao {
     @Query("select * from RoomNote where name = :name and secure <= :secure")
     suspend fun getByName(name: String, secure: Boolean = false): RoomNote?
 
+    @Query("select exists(select 1 from RoomNote where name = :name)")
+    suspend fun hasConflict(name: String): Boolean
+
     @Query("update RoomNote set favorite = :favorite where noteId == :noteId")
     suspend fun setFavorite(noteId: Long, favorite: Boolean)
     suspend fun setFavorite(note: RoomNote, favorite: Boolean) = setFavorite(note.noteId, favorite)
@@ -55,7 +58,7 @@ interface NoteDao {
     fun hasSecureNotes(): Flow<Boolean>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun add(item: RoomNote)
+    suspend fun add(item: RoomNote): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(item: RoomNote)

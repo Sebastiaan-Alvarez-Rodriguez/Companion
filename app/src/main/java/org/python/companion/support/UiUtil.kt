@@ -45,6 +45,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.python.companion.R
+import org.python.companion.ui.note.NoteState
+import timber.log.Timber
 
 /** Simple enum representing loading state of asynchronously loading objects. */
 enum class LoadingState {
@@ -297,7 +299,7 @@ object UiUtil {
         }
         companion object {
             const val uiutilDestination: String = "UiUtil"
-            const val resultKeyOverride = "uiutil|binary"
+            private const val resultKeyOverride = "uiutil|binary"
 
             fun navigateToOverride(navController: NavController, onOverrideClick: () -> Unit) {
                 val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
@@ -388,7 +390,17 @@ object UiUtil {
         stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
 
     fun <T> NavController.setNavigationResult(result: T?, key: String = "result") = previousBackStackEntry?.savedStateHandle?.set(key, result)
-    fun <T> getNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result", onResult: (result: T) -> Unit) {
+    fun <T> NavController.navigateForResult(route: String, key: String = "result", onResult: (result: T) -> Unit) {
+        val navBackStackEntry = currentBackStackEntry!!
+        navigate(route) {
+            launchSingleTop = true
+        }
+
+        getNavigationResult<T>(navBackStackEntry, key) {
+            onResult(it)
+        }
+    }
+    private fun <T> getNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result", onResult: (result: T) -> Unit) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)
             ) {
@@ -403,6 +415,11 @@ object UiUtil {
 //            if (event == Lifecycle.Event.ON_DESTROY)
 //                navBackStackEntry.lifecycle.removeObserver(observer)
 //        })
+    }
+    fun <T> NavController.forwardNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result") {
+        getNavigationResult<T>(navBackStackEntry, key) {
+            setNavigationResult(result = it, key = key)
+        }
     }
 
     fun NavController.clearNavigationResult(key: String = "result") = previousBackStackEntry?.savedStateHandle?.remove<String>(key)

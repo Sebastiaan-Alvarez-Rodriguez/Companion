@@ -7,10 +7,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.NoteCategory
-import org.python.companion.NoteState
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.createRoute
+import org.python.companion.support.UiUtil.navigateForResult
 import org.python.companion.support.UiUtil.setNavigationResult
+import org.python.companion.ui.note.NoteState
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
 
@@ -132,7 +133,7 @@ class NoteCategoryState(
             composable(
                 route = "$noteCategoryDestination/edit/{categoryId}",
                 arguments = listOf(navArgument("categoryId") { type = NavType.LongType }),
-                deepLinks = listOf(navDeepLink { uriPattern = "companion://${NoteState.noteDestination}/edit/{categoryId}" }),
+                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteCategoryDestination/edit/{categoryId}" }),
             ) { entry ->
                 val categoryId = entry.arguments?.getLong("categoryId")!!
                 NoteCategoryScreenEdit(
@@ -175,22 +176,13 @@ class NoteCategoryState(
         }
         fun navigateToCategorySelectOrCreate(navController: NavController, noteCategory: NoteCategory?, selectedChanged: (newId: Long?) -> Unit) =
             navigateToCategorySelectOrCreate(navController, noteCategory?.categoryId, selectedChanged)
-        fun navigateToCategorySelectOrCreate(navController: NavController, selectedId: Long?, selectedChanged: (newId: Long?) -> Unit) {
-            val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
-            navController.navigate(
-                    createRoute("$noteCategoryDestination/select",
-                        optionals = mapOf(
-                            "selectedId" to selectedId?.toString()
-                    )
-                )
+        fun navigateToCategorySelectOrCreate(navController: NavController, selectedId: Long?, selectedChanged: (newId: Long?) -> Unit) =
+            navController.navigateForResult<Long?>(
+                route = createRoute("$noteCategoryDestination/select", optionals = mapOf("selectedId" to selectedId?.toString())),
+                key = resultKeySelect
             ) {
-                launchSingleTop = true
-            }
-
-            UiUtil.getNavigationResult<Long?>(navBackStackEntry, resultKeySelect) {
                 selectedChanged(it)
             }
-        }
 
         private fun navigateToNoteCategoryCreate(navController: NavController) = navController.navigate("$noteCategoryDestination/create")
 

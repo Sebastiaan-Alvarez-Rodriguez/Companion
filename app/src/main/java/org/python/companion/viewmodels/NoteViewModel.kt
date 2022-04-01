@@ -38,7 +38,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = false
         }
     }
-    suspend fun add(note: Note): Boolean = noteRepository.add(note)
+    suspend fun add(note: Note): Long? = noteRepository.add(note)
     suspend fun upsert(note: Note): Boolean = noteRepository.upsert(note)
     suspend fun update(oldNote: Note, updateNote: Note): Boolean = noteRepository.update(oldNote, updateNote)
 
@@ -54,6 +54,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun getbyName(note: Note): Note? = noteRepository.getByName(note.name)
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)
+
+    suspend fun hasConflict(name: String): Boolean = noteRepository.hasConflict(name)
 
     /** Sets a note to be or not be favored */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)

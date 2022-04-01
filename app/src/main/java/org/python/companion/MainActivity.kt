@@ -4,26 +4,28 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewModelScope
-import androidx.navigation.*
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
+import androidx.navigation.navDeepLink
+import androidx.navigation.navigation
 import org.python.backend.data.datatype.Anniversary
-import org.python.backend.data.datatype.Note
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.anniversary.AnniversaryBody
 import org.python.companion.ui.cactus.CactusBody
 import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.components.CompanionTabRow
-import org.python.companion.ui.note.*
+import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.note.category.NoteCategoryState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.splash.SplashBuilder
@@ -100,7 +102,7 @@ class MainActivity : FragmentActivity() {
                             }
                             splashScreenFunc()
                         }
-                        with (utilState) { utilGraph() }
+                        with(utilState) { utilGraph() }
                         with(cactusState) { cactusGraph() }
                         with(noteState) { noteGraph() }
                         with(noteCategoryState) { categoryGraph() }
@@ -110,201 +112,6 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-    }
-}
-
-class NoteState(private val navController: NavHostController, private val noteViewModel: NoteViewModel) {
-    fun load() = noteViewModel.load()
-
-    fun NavGraphBuilder.noteGraph() {
-        navigation(startDestination = noteDestination, route = "note") {
-            composable(noteDestination) {
-                val notes by noteViewModel.notes.collectAsState()
-                val isLoading by noteViewModel.isLoading.collectAsState()
-                val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
-                val hasAuthenticated by noteViewModel.authenticated.collectAsState()
-
-                val selectedItems = remember { mutableStateListOf<Note>() }
-                val securityItem: @Composable (LazyItemScope.() -> Unit)? = if (hasSecureNotes) {
-                    if (hasAuthenticated) {
-                        {SecurityClickItem(
-                                text = "Lock secure notes",
-                                onClick = { noteViewModel.securityActor.logout() }
-                            )
-                        }
-                    } else {
-                    {SecurityClickItem(
-                            text = "Unlock secure notes",
-                            onClick = { SecurityState.navigateToSecurityPick(navController) }
-                        )
-                    }
-                    }
-                } else {
-                    null
-                }
-                NoteScreen(
-                    header = {
-                        if (selectedItems.isEmpty())
-                            NoteScreenListHeader(
-                                onSearchClick = { /* TODO */ },
-                                onSettingsClick = { navigateToNoteSettings(navController = navController) }
-                            )
-                        else
-                            NoteScreenContextListHeader(
-                                onDeleteClick = { noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) } },
-                                onSearchClick = { /* TODO */ },
-                            )
-                    },
-                    list = {
-                        NoteScreenList(
-                            notes = notes,
-                            selectedItems = selectedItems,
-                            isLoading = isLoading,
-                            onNewClick = { navigateToNoteCreate(navController = navController) },
-                            onNoteClick = { item -> navigateToNoteSingle(navController = navController, note = item.note) },
-                            onCheckClick = {item, nowChecked -> if (nowChecked) selectedItems.add(item.note) else selectedItems.remove(item.note)},
-                            onFavoriteClick = { item ->
-                                noteViewModel.viewModelScope.launch { noteViewModel.setFavorite(item.note, !item.note.favorite) }
-                            },
-                            securityItem = securityItem
-                        )
-                    }
-                )
-            }
-
-            composable(
-                route = "$noteDestination/settings",
-                deepLinks = listOf(
-                    navDeepLink {
-                        uriPattern = "companion://$noteDestination/settings"
-                    }
-                )
-            ) {
-                Timber.d("Note Settings")
-                NoteScreenSettings(
-                    onExportClick = { /* TODO */ },
-                    onImportClick = { /* TODO */ }
-                )
-            }
-
-            composable(
-                route = "$noteDestination/view/{noteId}",
-                arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
-                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/view/{noteId}" }),
-            ) { entry ->
-                val noteId = entry.arguments?.getLong("noteId")!!
-                NoteScreenViewSingle(
-                    noteViewModel = noteViewModel,
-                    id = noteId,
-                    onEditClick = { navigateToNoteEdit(navController = navController, note = it) },
-                    onDeleteClick = {
-                        noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
-                        navController.navigateUp()
-                    },
-                    onCategoryClick = { category ->
-                        NoteCategoryState.navigateToCategorySelectOrCreate(navController, category) { newCategoryId ->
-                            Timber.w("Got new id: $newCategoryId")
-                            newCategoryId?.let {
-                                noteViewModel.viewModelScope.launch { noteViewModel.updateCategoryForNote(noteId, it) }
-                            }
-                        }
-                    }
-                )
-            }
-
-
-            composable(
-                route = "$noteDestination/create",
-                deepLinks = listOf(
-                    navDeepLink {
-                        uriPattern = "companion://$noteDestination/create"
-                    }
-                )
-            ) { entry ->
-                NoteScreenEditNew(
-                    onCategoryClick = { TODO("Implement category editing from note edit") },
-                    onSaveClick = { toSaveNote ->
-                        Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
-                        noteViewModel.viewModelScope.launch {
-                            val conflict = noteViewModel.getbyName(toSaveNote.name)
-                            Timber.d("New note: conflict: ${conflict!=null}")
-                            if (conflict == null) {
-                                if (noteViewModel.add(toSaveNote))
-                                    navController.navigateUp()
-                                else
-                                    TODO("Let user know there was a problem while adding note")
-                            } else {
-                                UiUtil.UIUtilState.navigateToOverride(navController) {
-                                    Timber.d("New note: Overriding ${toSaveNote.name}...")
-                                    noteViewModel.viewModelScope.launch { noteViewModel.upsert(toSaveNote) }
-                                    navController.navigateUp()
-                                }
-                            }
-                        }
-                    }
-                )
-            }
-
-            composable(
-                route = "$noteDestination/edit/{noteId}",
-                arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
-                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/edit/{noteId}" }),
-            ) { entry ->
-                val noteId = entry.arguments?.getLong("noteId")!!
-                NoteScreenEdit(
-                    noteViewModel = noteViewModel,
-                    id = noteId,
-                    onCategoryClick = { TODO("Implement category editing from note edit") },
-                    onSaveClick = { toSaveNote, existingNote ->
-                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
-                        noteViewModel.viewModelScope.launch {
-                            // If note name == same as before, there is no conflict. Otherwise, we must check.
-                            val conflict: Note? = if (toSaveNote.name == existingNote!!.name) null else noteViewModel.getbyName(toSaveNote.name)
-                            Timber.d("Edit note: edited note has changed name=${toSaveNote.name != existingNote.name}, now conflict: ${conflict != null}")
-                            if (conflict == null) {
-                                noteViewModel.update(existingNote, toSaveNote)
-                                navController.navigateUp()
-                            } else {
-                                UiUtil.UIUtilState.navigateToOverride(navController) {
-                                    Timber.d("Edit note: Overriding note (new name=${toSaveNote.name})")
-                                    noteViewModel.viewModelScope.launch {
-                                        noteViewModel.delete(existingNote)
-                                        noteViewModel.upsert(toSaveNote)
-                                    }
-                                    navController.navigateUp()
-                                }
-                            }
-                        }
-                    }
-                )
-            }
-
-            composable( // TODO: Implement later
-                route = "$noteDestination/edit/{noteId}/category",
-                arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
-                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/edit/{noteId}" }),
-            ) { entry ->
-
-            }
-        }
-    }
-
-
-    private fun navigateToNoteSettings(navController: NavController) = navController.navigate("$noteDestination/settings")
-    private fun navigateToNoteSingle(navController: NavController, note: Note) = navigateToNoteSingle(navController, note.noteId)
-    private fun navigateToNoteSingle(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/view/$noteId")
-
-    private fun navigateToNoteCreate(navController: NavController) = navController.navigate("$noteDestination/create")
-
-    private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.noteId)
-    private fun navigateToNoteEdit(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/edit/$noteId")
-
-    companion object {
-        val noteDestination: String = CompanionScreen.Note.name
-
-        @Composable
-        fun rememberState(navController: NavHostController = rememberNavController(), noteViewModel: NoteViewModel) =
-            remember(navController) { NoteState(navController, noteViewModel) }
     }
 }
 

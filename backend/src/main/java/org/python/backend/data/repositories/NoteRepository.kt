@@ -52,9 +52,12 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
         }
     /**
      * Rerieves a note by name.
-     * @return found note on succes, `null` if no such name exists.
+     * @return found note on success, `null` if no such name exists.
      */
     suspend fun getByName(name: String): Note? = noteStore.getByName(name, securityActor.authenticated.value)?.let { secureToUI(it) }
+
+    /** @return `true` if a conflicting note name was found, `false` otherwise */
+    suspend fun hasConflict(name: String): Boolean = noteStore.hasConflict(name)
 
     /**
      * Sets note to be a regular or favored note.
@@ -68,9 +71,9 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
 
     /**
      * Adds a note. If a conflict exists, skips adding proposed item.
-     * @return `true` on success, `false` on conflict.
+     * @return Inserted id on success, `null on conflict.
      */
-    suspend fun add(note: Note): Boolean = secureToStorage(note)?.let { noteStore.add(it) } ?: false
+    suspend fun add(note: Note): Long? = secureToStorage(note)?.let { noteStore.add(it) }
 
     /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
     suspend fun upsert(note: Note): Boolean = secureToStorage(note)?.let { noteStore.upsert(it); true } ?: false
