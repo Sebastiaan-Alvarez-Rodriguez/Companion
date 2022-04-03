@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +25,11 @@ import timber.log.Timber
 
 /** Loads notecategory to edit, then shows edit screen. */
 @Composable
-fun NoteCategoryScreenEdit(noteCategoryViewModel: NoteCategoryViewModel, id: Long, onSaveClick: (NoteCategory, NoteCategory?) -> Unit) {
+fun NoteCategoryScreenEdit(
+    noteCategoryViewModel: NoteCategoryViewModel,
+    id: Long,
+    onDeleteClick: ((NoteCategory?) -> Unit)?,
+    onSaveClick: (NoteCategory, NoteCategory?) -> Unit) {
     var state by remember { mutableStateOf(LoadingState.LOADING) }
     var existingData by remember { mutableStateOf<NoteCategory?>(null) }
 
@@ -38,6 +43,7 @@ fun NoteCategoryScreenEdit(noteCategoryViewModel: NoteCategoryViewModel, id: Lon
         }
         LoadingState.READY -> NoteCategoryScreenEditReady(
             noteCategory = existingData,
+            onDeleteClick = onDeleteClick,
             onSaveClick = { toSaveNoteCategory -> onSaveClick(toSaveNoteCategory, existingData) }
         )
         LoadingState.FAILED -> {
@@ -49,16 +55,24 @@ fun NoteCategoryScreenEdit(noteCategoryViewModel: NoteCategoryViewModel, id: Lon
 
 /** Edits a new note directly. */
 @Composable
-fun NoteCategoryScreenEditNew(onSaveClick: (NoteCategory) -> Unit) = NoteCategoryScreenEditReady(null, onSaveClick)
+fun NoteCategoryScreenEditNew(
+    onDeleteClick: ((NoteCategory?) -> Unit)?,
+    onSaveClick: (NoteCategory) -> Unit
+) = NoteCategoryScreenEditReady(null, onDeleteClick, onSaveClick)
 
 /**
  * Detail screen for editing a single note.
- * @param noteCategory Category to edit.
- * @param onSaveClick Lambda executed when the user hits the save button.
+ * @param noteCategory Category to edit. `null` if we create a new one instead.
+ * @param onDeleteClick: Lambda for delete operation. If `null`, cannot delete.
+ * If passed category == `null`, the user creates a new noteCategory.
+ * @param onSaveClick Lambda for save operation.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NoteCategoryScreenEditReady(noteCategory: NoteCategory?, onSaveClick: (NoteCategory) -> Unit) {
+fun NoteCategoryScreenEditReady(
+    noteCategory: NoteCategory?,
+    onDeleteClick: ((NoteCategory?) -> Unit)?,
+    onSaveClick: (NoteCategory) -> Unit) {
     var name by remember { mutableStateOf(noteCategory?.name ?: "") }
     var color by remember { mutableStateOf(noteCategory?.color ?: NoteCategory.DEFAULT.color) }
     var favorite by remember { mutableStateOf(noteCategory?.favorite ?: false)}
@@ -104,6 +118,13 @@ fun NoteCategoryScreenEditReady(noteCategory: NoteCategory?, onSaveClick: (NoteC
                             contentDescription = if (favorite) "Stop favoring" else "Favorite"
                         )
                     }
+                    if (onDeleteClick != null)
+                        IconButton(onClick = { onDeleteClick(noteCategory) }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = "Delete note category"
+                            )
+                        }
                     Spacer(Modifier.width(defaultPadding))
 
                     Button(onClick = { onSaveClick(createNoteCategoryObject()) }) {

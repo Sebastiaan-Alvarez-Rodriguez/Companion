@@ -66,9 +66,6 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
      */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteStore.setFavorite(note, favorite)
 
-    /** Sets note category for given note */
-    suspend fun updateCategoryForNote(noteId: Long, categoryId: Long): Unit = noteStore.updateCategoryForNote(noteId, categoryId)
-
     /**
      * Adds a note. If a conflict exists, skips adding proposed item.
      * @return Inserted id on success, `null on conflict.

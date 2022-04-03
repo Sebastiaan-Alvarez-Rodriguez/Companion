@@ -4,10 +4,12 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.stores.NoteCategoryStore
+import org.python.backend.security.SecurityActor
 import org.python.db.CompanionDatabase
 
-class NoteCategoryRepository(private val noteCategoryStore: NoteCategoryStore) {
-    constructor(companionDatabase: CompanionDatabase) : this(NoteCategoryStore(companionDatabase))
+class NoteCategoryRepository(private val securityActor: SecurityActor, private val noteCategoryStore: NoteCategoryStore) {
+    constructor(securityActor: SecurityActor, companionDatabase: CompanionDatabase) :
+            this(securityActor, NoteCategoryStore(companionDatabase))
 
     /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
     fun allNoteCategories(): Flow<PagingData<NoteCategory>> =
@@ -29,6 +31,12 @@ class NoteCategoryRepository(private val noteCategoryStore: NoteCategoryStore) {
      */
     suspend fun setFavorite(category: NoteCategory, favorite: Boolean): Unit = noteCategoryStore.setFavorite(category, favorite)
 
+    /** Returns the live category for a note */
+    fun categoryForNoteLive(noteId: Long): Flow<NoteCategory> =
+        noteCategoryStore.categoryForNoteLive(noteId, securityActor.authenticated.value)
+
+    /** Sets note category for given note */
+    suspend fun updateCategoryForNote(noteId: Long, categoryId: Long): Unit = noteCategoryStore.updateCategoryForNote(noteId, categoryId)
 
     /**
      * Adds a note. If a conflict exists, skips adding proposed item.

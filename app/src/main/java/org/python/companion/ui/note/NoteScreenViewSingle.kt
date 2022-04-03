@@ -43,7 +43,10 @@ fun NoteScreenViewSingle(
 
 /**
  * Detail screen for a single note.
- * @param note Title of the passed note.
+ * @param noteWithCategory Note together with its category.
+ * @param onEditClick Lambda for edit clicks.
+ * @param onDeleteClick Lambda for delete clicks.
+ * @param onCategoryClick Lambda for category clicks.
  */
 @Composable
 fun NoteScreenViewSingleReady(
@@ -54,7 +57,7 @@ fun NoteScreenViewSingleReady(
 ) {
     val title by remember { mutableStateOf(noteWithCategory.note.name) }
     val content by remember { mutableStateOf(noteWithCategory.note.content) }
-    val anyOptionsEnabled = onEditClick != null || onDeleteClick != null
+    val anyOptionsEnabled = onEditClick != null || onDeleteClick != null || onCategoryClick != null
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     Column(modifier = Modifier.padding(defaultPadding)) {

@@ -27,6 +27,11 @@ class NoteCategoryStore(database: CompanionDatabase) {
     suspend fun getByName(name: String): NoteCategory? = noteCategoryDao.getByName(name)?.toUI()
 
     suspend fun setFavorite(category: NoteCategory, favorite: Boolean) = noteCategoryDao.setFavorite(category.categoryId, favorite)
+
+    fun categoryForNoteLive(noteId: Long, secure: Boolean): Flow<NoteCategory> = noteCategoryDao.categoryForNoteLive(noteId, secure).map { it.toUI() }
+
+    suspend fun updateCategoryForNote(noteId: Long, categoryId: Long) = noteCategoryDao.updateCategoryForNote(noteId, categoryId)
+
     suspend fun add(category: NoteCategory): Boolean {
         return try {
             noteCategoryDao.add(category.toRoom())

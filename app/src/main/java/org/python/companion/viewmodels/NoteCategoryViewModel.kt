@@ -7,6 +7,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
@@ -46,6 +47,12 @@ class NoteCategoryViewModel(application: Application) : AndroidViewModel(applica
 
     /** Sets a noteCategory to be or not be favored */
     suspend fun setFavorite(noteCategory: NoteCategory, favorite: Boolean): Unit = noteCategoryRepository.setFavorite(noteCategory, favorite)
+
+    /** Returns the live category for a note */
+    fun categoryForNoteLive(note: Note) = categoryForNoteLive(note.noteId)
+    fun categoryForNoteLive(noteId: Long): Flow<NoteCategory> = noteCategoryRepository.categoryForNoteLive(noteId)
+
+    suspend fun updateCategoryForNote(noteId: Long, categoryId: Long): Unit = noteCategoryRepository.updateCategoryForNote(noteId, categoryId)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val noteCategories: StateFlow<Flow<PagingData<NoteCategory>>> =

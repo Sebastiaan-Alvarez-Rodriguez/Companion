@@ -13,7 +13,7 @@ open class BackendInjector : DBInjector() {
 
     // Repositories
     val noteRepository by lazy { NoteRepository(securityActor, companionDatabase) }
-    val noteCategoryRepository by lazy { NoteCategoryRepository(companionDatabase) }
+    val noteCategoryRepository by lazy { NoteCategoryRepository(securityActor, companionDatabase) }
 
     val anniversaryRepository by lazy { AnniversaryRepository(companionDatabase) }
 }

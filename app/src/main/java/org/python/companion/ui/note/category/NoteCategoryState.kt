@@ -9,8 +9,6 @@ import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.createRoute
-import org.python.companion.support.UiUtil.navigateForResult
-import org.python.companion.support.UiUtil.setNavigationResult
 import org.python.companion.ui.note.NoteState
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
@@ -60,19 +58,15 @@ class NoteCategoryState(
             }
 
             composable(
-                route = "$noteCategoryDestination/select?selectedId={selectedId}",
-                arguments = listOf(navArgument("selectedId") { defaultValue = NoteCategory.DEFAULT.categoryId; type = NavType.LongType })
+                route = "$noteCategoryDestination/select/{noteId}",
+                arguments = listOf(navArgument("noteId") { type = NavType.LongType })
             ) { entry ->
                 val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
                 val isLoading by noteCategoryViewModel.isLoading.collectAsState()
 
-                var selected by remember { mutableStateOf<NoteCategory?>(null) } //
+                val noteId: Long = entry.arguments?.getLong("noteId")!!
+                val selectedCategory by noteCategoryViewModel.categoryForNoteLive(noteId).collectAsState(NoteCategory.DEFAULT)
 
-                entry.arguments?.let {
-                    LaunchedEffect(it) {
-                        selected = noteCategoryViewModel.get(it.getLong("selectedId"))
-                    }
-                }
                 NoteCategoryScreen(
                     header = {
                         NoteCategoryScreenListHeader(
@@ -83,13 +77,12 @@ class NoteCategoryState(
                     list = {
                         NoteCategoryScreenListRadio(
                             noteCategories = noteCategories,
-                            selectedItem = selected,
+                            selectedItem = selectedCategory,
                             isLoading = isLoading,
                             onNewClick = { navigateToNoteCategoryCreate(navController) },
                             onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it) },
                             onSelectClick = {category ->
-                                selected = category
-                                navController.setNavigationResult(result = selected?.categoryId, key = resultKeySelect)
+                                noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.updateCategoryForNote(noteId, category.categoryId) }
                             },
                             onFavoriteClick = { noteCategory ->
                                 noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
@@ -108,7 +101,8 @@ class NoteCategoryState(
                 )
             ) {
                 NoteCategoryScreenEditNew(
-                    onSaveClick = { toSaveNoteCategory ->
+                    onDeleteClick = { navController.navigateUp() }, // new category, just return without saving
+                    onSaveClick = { toSaveNoteCategory -> //TODO: Can still override default category
                         Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
                         noteCategoryViewModel.viewModelScope.launch {
                             val conflict = noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
@@ -139,7 +133,16 @@ class NoteCategoryState(
                 NoteCategoryScreenEdit(
                     noteCategoryViewModel = noteCategoryViewModel,
                     id = categoryId,
-                    onSaveClick = { toSaveNoteCategory, existingNoteCategory ->
+                    onDeleteClick =
+                        when (categoryId) {
+                            NoteCategory.DEFAULT.categoryId -> null
+                            else -> { category ->
+                                if (category != null) // existing category, delete and return
+                                    noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.delete(category) }
+                                navController.navigateUp()
+                            }
+                        },
+                    onSaveClick = { toSaveNoteCategory, existingNoteCategory -> //TODO: Can still override default category
                         Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
                         noteCategoryViewModel.viewModelScope.launch {
                             // If category name == same as before, there is no conflict. Otherwise, we must check.
@@ -167,22 +170,14 @@ class NoteCategoryState(
     companion object {
         val noteCategoryDestination = "${NoteState.noteDestination}/category"
 
-        const val resultKeySelect = "notecategorystate|select"
-
         fun navigateToCategoryScreen(navController: NavController) {
             navController.navigate(noteCategoryDestination) {
                 launchSingleTop = true
             }
         }
-        fun navigateToCategorySelectOrCreate(navController: NavController, noteCategory: NoteCategory?, selectedChanged: (newId: Long?) -> Unit) =
-            navigateToCategorySelectOrCreate(navController, noteCategory?.categoryId, selectedChanged)
-        fun navigateToCategorySelectOrCreate(navController: NavController, selectedId: Long?, selectedChanged: (newId: Long?) -> Unit) =
-            navController.navigateForResult<Long?>(
-                route = createRoute("$noteCategoryDestination/select", optionals = mapOf("selectedId" to selectedId?.toString())),
-                key = resultKeySelect
-            ) {
-                selectedChanged(it)
-            }
+
+        fun navigateToCategorySelect(navController: NavController, noteId: Long) =
+            navController.navigate(createRoute("$noteCategoryDestination/select", args = listOf(noteId.toString())))
 
         private fun navigateToNoteCategoryCreate(navController: NavController) = navController.navigate("$noteCategoryDestination/create")
 
