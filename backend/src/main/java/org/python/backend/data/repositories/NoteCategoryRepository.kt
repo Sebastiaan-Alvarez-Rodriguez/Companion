@@ -23,7 +23,7 @@ class NoteCategoryRepository(private val noteCategoryStore: NoteCategoryStore) {
     suspend fun getByName(name: String): NoteCategory? = noteCategoryStore.getByName(name)
 
     /**
-     * Sets note tcategory to be regular or favored.
+     * Sets note category to be regular or favored.
      * @param category Category to set value for.
      * @param favorite new favored status.
      */

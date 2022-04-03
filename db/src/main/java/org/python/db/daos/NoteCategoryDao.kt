@@ -18,9 +18,9 @@ interface NoteCategoryDao {
     @Query("select * from RoomNoteCategory where categoryName = :name")
     suspend fun getByName(name: String): RoomNoteCategory?
 
-    @Query("update RoomNote set favorite = :favorite where noteId == :noteId")
-    suspend fun setFavorite(noteId: Long, favorite: Boolean)
-    suspend fun setFavorite(note: RoomNote, favorite: Boolean) = setFavorite(note.noteId, favorite)
+    @Query("update RoomNoteCategory set favorite = :favorite where categoryId == :categoryId")
+    suspend fun setFavorite(categoryId: Long, favorite: Boolean)
+    suspend fun setFavorite(category: RoomNoteCategory, favorite: Boolean) = setFavorite(category.categoryId, favorite)
 
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
