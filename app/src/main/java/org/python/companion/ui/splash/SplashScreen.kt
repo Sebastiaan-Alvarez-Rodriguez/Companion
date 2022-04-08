@@ -22,7 +22,7 @@ import org.python.companion.support.UiUtil
 import kotlin.random.Random
 
 
-const val DEFAULT_DELAY_MS = 300
+const val DEFAULT_DELAY_MS = 200
 
 private val cacti: Array<Int> = arrayOf(
         R.drawable.ic_cactus_0,

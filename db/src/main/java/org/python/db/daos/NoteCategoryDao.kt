@@ -22,9 +22,9 @@ interface NoteCategoryDao {
 
 
     /** Returns the live category for a note */
-    @Query("select * from RoomNoteCategory " +
+    @Query("select RoomNoteCategory.* from RoomNoteCategory " +
             "join RoomNote on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
-            "where noteId == :noteId and secure <= :secure")
+            "where RoomNote.noteId == :noteId and RoomNote.secure <= :secure")
     fun categoryForNoteLive(noteId: Long, secure: Boolean = false): Flow<RoomNoteCategory>
 
     @Query("update RoomNote set categoryKey = :categoryId where noteId == :noteId")
