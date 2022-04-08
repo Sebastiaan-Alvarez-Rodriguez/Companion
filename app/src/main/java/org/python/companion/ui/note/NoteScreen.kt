@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -125,28 +122,36 @@ fun NoteItem(
     onFavoriteClick: (NoteWithCategory) -> Unit,
     selected: Boolean,
 ) {
-    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+    val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
     Card(
         elevation = 5.dp,
         border = BorderStroke(width = 1.dp, Color(item.noteCategory.color.toArgb())),
         modifier = Modifier.fillMaxWidth()
     ) {
+
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(defaultPadding)
-                .clickable { onNoteClick(item) }
-                .semantics(mergeDescendants = true) {},
+            modifier = Modifier.fillMaxWidth().clickable { onNoteClick(item) }.semantics(mergeDescendants = true) {},
         ) {
-            Checkbox(checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
-            Text(modifier = Modifier.weight(1f, fill = false), text = item.note.name)
-            IconButton(onClick = { onFavoriteClick(item) }) {
-                Icon(
-                    imageVector = if (item.note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Favorite"
-                )
+            Checkbox(modifier = Modifier.weight(0.1f, fill = false), checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
+            Text(modifier = Modifier.weight(0.8f, fill = false), text = item.note.name)
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.fillMaxHeight().weight(0.1f, fill = true)
+            ) {
+                IconButton(onClick = { onFavoriteClick(item) }) {
+                    Icon(
+                        imageVector = if (item.note.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Favorite"
+                    )
+                }
+                if (item.note.secure)
+                    Icon(
+                        imageVector = Icons.Filled.Lock,
+                        contentDescription = "Protected",
+                        modifier = Modifier.size(width = 12.dp, height = 12.dp).padding(end = tinyPadding, bottom = tinyPadding)
+                    )
             }
         }
     }
