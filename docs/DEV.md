@@ -21,7 +21,7 @@ UI:
  + [dialog resize bug](https://stackoverflow.com/questions/68469681/)
  + [splash screen](https://www.geeksforgeeks.org/animated-splash-screen-in-android-using-jetpack-compose/)
  + [simple color picker](https://stackoverflow.com/a/69116990)
-
+ + [List searching](https://johncodeos.com/how-to-add-search-in-list-with-jetpack-compose/)
 Room:
  + [repository tutorial](https://www.raywenderlich.com/24509368-repository-pattern-with-jetpack-compose#toc-anchor-012)
  + [room livedata](https://levelup.gitconnected.com/using-room-in-jetpack-compose-d2b6b674d3a5)

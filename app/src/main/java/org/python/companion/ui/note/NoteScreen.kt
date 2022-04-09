@@ -1,5 +1,6 @@
 package org.python.companion.ui.note
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +44,7 @@ fun NoteScreen(
 @Composable
 fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+
     UiUtil.GenericListHeader(
         listOf(
             {
@@ -49,12 +53,27 @@ fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit)
                 }
             },
             {
-                IconButton(modifier = Modifier.padding(tinyPadding), onClick = onSearchClick) {
+                IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
                     Icon(Icons.Filled.Search, "Search")
                 }
             }
         )
     )
+}
+
+@Composable
+fun NoteScreenSearchListHeader(searchParameters: SearchParameters, onBack: () -> Unit, onUpdate: (SearchParameters) -> Unit) {
+    UiUtil.GenericListHeader(
+        listOf {
+            NoteSearch(
+                searchParameters = searchParameters,
+                onQueryUpdate = onUpdate,
+            )
+        }
+    )
+    BackHandler(true) {
+        onBack()
+    }
 }
 
 @Composable
@@ -132,13 +151,18 @@ fun NoteItem(
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().clickable { onNoteClick(item) }.semantics(mergeDescendants = true) {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNoteClick(item) }
+                .semantics(mergeDescendants = true) {},
         ) {
             Checkbox(modifier = Modifier.weight(0.1f, fill = false), checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
             Text(modifier = Modifier.weight(0.8f, fill = false), text = item.note.name)
             Column(
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier.fillMaxHeight().weight(0.1f, fill = true)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(0.1f, fill = true)
             ) {
                 IconButton(onClick = { onFavoriteClick(item) }) {
                     Icon(
@@ -150,7 +174,9 @@ fun NoteItem(
                     Icon(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Protected",
-                        modifier = Modifier.size(width = 12.dp, height = 12.dp).padding(end = tinyPadding, bottom = tinyPadding)
+                        modifier = Modifier
+                            .size(width = 12.dp, height = 12.dp)
+                            .padding(end = tinyPadding, bottom = tinyPadding)
                     )
             }
         }
@@ -170,6 +196,60 @@ fun SecurityClickItem(text: String, onClick: () -> Unit) {
                 .fillMaxWidth()
         ) {
             Text(text)
+        }
+    }
+}
+
+
+
+data class SearchParameters(
+    val text: String = "",
+    val inTitle: Boolean = true,
+    val inContent: Boolean = false,
+    val regex: Boolean = false,
+    val caseSensitive: Boolean = false
+)
+
+@Composable
+fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParameters) -> Unit,) {
+    val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+
+    Column() {
+        TextField(
+            value = searchParameters.text,
+            onValueChange = { onQueryUpdate(searchParameters.copy(text = it)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding)) },
+            trailingIcon = {
+                if (searchParameters.text.isNotEmpty()) {
+                    IconButton( onClick = { onQueryUpdate(searchParameters.copy(text = "")) }) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "reset", modifier = Modifier.padding(tinyPadding))
+                    }
+                }
+            }
+        )
+        Row {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = searchParameters.inTitle, onCheckedChange = { onQueryUpdate(searchParameters.copy(inTitle = !searchParameters.inTitle))})
+                    Text(text = "Search in title")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = searchParameters.inContent, onCheckedChange = { onQueryUpdate(searchParameters.copy(inContent = !searchParameters.inContent))})
+                    Text(text = "Search in contents")
+                }
+            }
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = searchParameters.regex, onCheckedChange = { onQueryUpdate(searchParameters.copy(regex = !searchParameters.regex))})
+                    Text(text = "Regex")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = searchParameters.caseSensitive, onCheckedChange = { onQueryUpdate(searchParameters.copy(caseSensitive = !searchParameters.caseSensitive))})
+                    Text(text = "Case sensitive")
+                }
+            }
         }
     }
 }

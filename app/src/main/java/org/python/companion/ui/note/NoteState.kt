@@ -1,13 +1,18 @@
 package org.python.companion.ui.note
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
+import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.navigateForResult
 import org.python.companion.ui.components.CompanionScreen
@@ -27,21 +32,24 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
                 val hasAuthenticated by noteViewModel.authenticated.collectAsState()
 
+                val searchClicked = remember { mutableStateOf(false) }
+                val searchParameters = remember { mutableStateOf(SearchParameters()) }
+
                 val selectedItems = remember { mutableStateListOf<Note>() }
                 val securityItem: @Composable (LazyItemScope.() -> Unit)? = if (hasSecureNotes) {
                     if (hasAuthenticated) {
                         {
                             SecurityClickItem(
-                            text = "Lock secure notes",
-                            onClick = { noteViewModel.securityActor.logout() }
-                        )
+                                text = "Lock secure notes",
+                                onClick = { noteViewModel.securityActor.logout() }
+                            )
                         }
                     } else {
                         {
                             SecurityClickItem(
-                            text = "Unlock secure notes",
-                            onClick = { SecurityState.navigateToSecurityPick(navController) }
-                        )
+                                text = "Unlock secure notes",
+                                onClick = { SecurityState.navigateToSecurityPick(navController) }
+                            )
                         }
                     }
                 } else {
@@ -49,16 +57,26 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 }
                 NoteScreen(
                     header = {
+                        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
                         if (selectedItems.isEmpty())
                             NoteScreenListHeader(
-                                onSearchClick = { /* TODO */ },
-                                onSettingsClick = { navigateToNoteSettings(navController = navController) }
+                                onSettingsClick = { navigateToNoteSettings(navController = navController) },
+                                onSearchClick = { searchClicked.value = !searchClicked.value }
                             )
                         else
                             NoteScreenContextListHeader(
                                 onDeleteClick = { noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) } },
-                                onSearchClick = { /* TODO */ },
+                                onSearchClick = {  searchClicked.value = !searchClicked.value },
                             )
+
+                        if (searchClicked.value) {
+                            Spacer(modifier = Modifier.height(defaultPadding))
+                            NoteScreenSearchListHeader(searchParameters = searchParameters.value, onBack = { searchClicked.value = false }) { params ->
+                                searchParameters.value = params
+                                // TODO: Search
+                            }
+                        }
                     },
                     list = {
                         NoteScreenList(

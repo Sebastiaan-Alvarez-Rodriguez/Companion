@@ -11,11 +11,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -191,7 +190,9 @@ object UiUtil {
                     Surface(
                         border = BorderStroke(1.dp, Color.DarkGray),
                         color = Color(red, green, blue),
-                        modifier = Modifier.fillMaxWidth().height(40.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
                     ) {}
                 }
             }
@@ -232,7 +233,9 @@ object UiUtil {
                 lazyCollectItems.itemCount == 0 && prefix == null -> SimpleText("Nothing here yet")
                 else -> {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize().semantics { contentDescription = "Item" },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .semantics { contentDescription = "Item" },
                         verticalArrangement = Arrangement.spacedBy(defaultPadding),
                         state = listState,
                     ) {
@@ -260,6 +263,43 @@ object UiUtil {
             modifier = Modifier.align(Alignment.BottomEnd)
         ) {
             Text("+")
+        }
+    }
+
+    @Composable
+    fun SimpleSearch(
+        searchExpand: Boolean,
+        searchText: String,
+        onPreSearch: () -> Unit,
+        onQueryUpdate: (String) -> Unit,
+        onPostSearch: () -> Unit,
+    ) {
+        val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+
+        if (!searchExpand) {
+            IconButton(modifier = Modifier.padding(tinyPadding), onClick = {
+                onPreSearch()
+            }) {
+                Icon(Icons.Filled.Search, "Search")
+            }
+        } else {
+            TextField(
+                value = searchText,
+                onValueChange = onQueryUpdate,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding)) },
+                trailingIcon = {
+                    if (searchText != "") {
+                        IconButton( onClick = { onQueryUpdate("") }) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "reset", modifier = Modifier.padding(tinyPadding))
+                        }
+                    }
+                })
+        }
+
+        BackHandler(searchExpand) {
+            onPostSearch()
         }
     }
 
