@@ -10,8 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -231,24 +229,28 @@ fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParamet
         )
         Row {
             Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = searchParameters.inTitle, onCheckedChange = { onQueryUpdate(searchParameters.copy(inTitle = !searchParameters.inTitle))})
-                    Text(text = "Search in title")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = searchParameters.inContent, onCheckedChange = { onQueryUpdate(searchParameters.copy(inContent = !searchParameters.inContent))})
-                    Text(text = "Search in contents")
-                }
+                UiUtil.LabelledCheckBox(
+                    checked = searchParameters.inTitle,
+                    label = "Search in title",
+                    onCheckedChange = { onQueryUpdate(searchParameters.copy(inTitle = !searchParameters.inTitle))}
+                )
+                UiUtil.LabelledCheckBox(
+                    checked = searchParameters.inContent,
+                    label = "Search in contents",
+                    onCheckedChange = { onQueryUpdate(searchParameters.copy(inContent = !searchParameters.inContent))}
+                )
             }
             Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = searchParameters.regex, onCheckedChange = { onQueryUpdate(searchParameters.copy(regex = !searchParameters.regex))})
-                    Text(text = "Regex")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = searchParameters.caseSensitive, onCheckedChange = { onQueryUpdate(searchParameters.copy(caseSensitive = !searchParameters.caseSensitive))})
-                    Text(text = "Case sensitive")
-                }
+                UiUtil.LabelledCheckBox(
+                    checked = searchParameters.regex,
+                    label = "Regex",
+                    onCheckedChange = { onQueryUpdate(searchParameters.copy(regex = !searchParameters.regex))}
+                )
+                UiUtil.LabelledCheckBox(
+                    checked = searchParameters.caseSensitive,
+                    label = "Case sensitive",
+                    onCheckedChange = { onQueryUpdate(searchParameters.copy(caseSensitive = !searchParameters.caseSensitive))}
+                )
             }
         }
     }

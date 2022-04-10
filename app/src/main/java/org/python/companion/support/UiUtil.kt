@@ -2,6 +2,8 @@ package org.python.companion.support
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -14,7 +16,10 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,6 +57,24 @@ enum class LoadingState {
 }
 
 object UiUtil {
+    @Composable
+    fun LabelledCheckBox(checked: Boolean, label: AnnotatedString, onCheckedChange: (Boolean) -> Unit) {
+        val interactionSource = remember { MutableInteractionSource() }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = { onCheckedChange(checked) }
+            ).semantics(mergeDescendants = true) {}) {
+            Checkbox(checked = checked, onCheckedChange = onCheckedChange, interactionSource = interactionSource)
+            Text(text = label)
+        }
+    }
+    @Composable
+    fun LabelledCheckBox(checked: Boolean, label: String, onCheckedChange: (Boolean) -> Unit) =
+        LabelledCheckBox(checked = checked, label = AnnotatedString(label), onCheckedChange = onCheckedChange)
+
     @Composable
     fun SimpleLoading() {
         Box(
