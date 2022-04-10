@@ -212,7 +212,7 @@ data class SearchParameters(
 fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParameters) -> Unit,) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
 
-    Column() {
+    Column {
         TextField(
             value = searchParameters.text,
             onValueChange = { onQueryUpdate(searchParameters.copy(text = it)) },

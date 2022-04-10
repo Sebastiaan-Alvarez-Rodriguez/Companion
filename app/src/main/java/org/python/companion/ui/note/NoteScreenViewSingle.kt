@@ -56,7 +56,7 @@ fun NoteScreenViewSingleReady(
     onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
     val title by remember { mutableStateOf(noteWithCategory.note.name) }
-    val content by remember { mutableStateOf(noteWithCategory.note.content) }
+    val content by remember { mutableStateOf(noteWithCategory.note.content) } // TODO: highlight matching words from noteviewmodel
     val anyOptionsEnabled = onEditClick != null || onDeleteClick != null || onCategoryClick != null
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)

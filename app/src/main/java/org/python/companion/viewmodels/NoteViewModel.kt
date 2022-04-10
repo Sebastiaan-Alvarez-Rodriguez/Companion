@@ -24,11 +24,15 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
 
-    private val _search = MutableStateFlow<SearchParameters?>(null)
+    private val _searchParameters = MutableStateFlow<SearchParameters?>(null)
     private val _isLoading = MutableStateFlow(true)
 
 
-    val searchParameters: StateFlow<SearchParameters?> = _search
+    /**
+     * Search parameters to filter [notes] with. If {{null}}, there is no ongoing search.
+     * This data is also used inside note views to highlight matches.
+     */
+    val searchParameters: StateFlow<SearchParameters?> = _searchParameters
     val isLoading: StateFlow<Boolean> = _isLoading
 
     /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
@@ -62,32 +66,31 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
     fun updateSearchQuery(searchParameters: SearchParameters?) {
-        _search.value = searchParameters
+        _searchParameters.value = searchParameters
     }
     fun toggleSearchQuery() {
-        _search.value = if (_search.value == null) SearchParameters() else null
+        _searchParameters.value = if (_searchParameters.value == null) SearchParameters() else null
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
         searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
+    fun filterNote(note: Note, params: SearchParameters) =
+        (params.inTitle && note.name.contains(params.text, ignoreCase = !params.caseSensitive)) ||
+                (params.inContent && note.content.contains(params.text, ignoreCase = !params.caseSensitive))
+    fun filterNote(note: Note, params: SearchParameters, re: Regex) =
+        (params.inTitle && note.name.contains(re)) || (params.inContent && note.content.contains(re))
+
     private fun notes(params: SearchParameters?) = when (params) {
         null -> allNotes
-        else -> allNotes.map { flow ->
-            flow.map { page -> page.filter {
-                if (params.regex) {
-                    val re = if (params.caseSensitive) Regex(params.text) else Regex(params.text, option = RegexOption.IGNORE_CASE)
-                    return@filter (
-                        (params.inTitle && it.note.name.contains(re)) ||
-                        (params.inContent && it.note.content.contains(re))
-                    )
-                }
-                return@filter (
-                    (params.inTitle && it.note.name.contains(params.text, ignoreCase = !params.caseSensitive)) ||
-                    (params.inContent && it.note.content.contains(params.text, ignoreCase = !params.caseSensitive))
-                )
-            } }
+        else -> {
+            val re = if (params.caseSensitive) Regex(params.text) else Regex(params.text, option = RegexOption.IGNORE_CASE)
+            allNotes.map { flow -> flow.map { page -> page.filter {
+                    if (params.regex)
+                        return@filter filterNote(it.note, params, re)
+                    return@filter filterNote(it.note, params)
+            } } }
         }
     }
 }
