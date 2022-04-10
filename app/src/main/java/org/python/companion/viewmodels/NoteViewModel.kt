@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.python.backend.data.datatype.Note
@@ -12,6 +13,7 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
+import org.python.companion.ui.note.SearchParameters
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
@@ -21,13 +23,12 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     var authenticated = securityActor.authenticated.stateInViewModel(viewModelScope, false)
 
     private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
-    private val searchNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>())
 
-    private val _search = MutableStateFlow(null as String?)
+    private val _search = MutableStateFlow<SearchParameters?>(null)
     private val _isLoading = MutableStateFlow(true)
 
 
-    val search: StateFlow<String?> = _search
+    val searchParameters: StateFlow<SearchParameters?> = _search
     val isLoading: StateFlow<Boolean> = _isLoading
 
     /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
@@ -60,12 +61,33 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     /** Sets a note to be or not be favored */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
+    fun updateSearchQuery(searchParameters: SearchParameters?) {
+        _search.value = searchParameters
+    }
+    fun toggleSearchQuery() {
+        _search.value = if (_search.value == null) SearchParameters() else null
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
-        search.flatMapLatest { search -> notes(search) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
+        searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
-    private fun notes(search: String?) = when {
-        search.isNullOrEmpty() -> allNotes
-        else -> searchNotes
+    private fun notes(params: SearchParameters?) = when (params) {
+        null -> allNotes
+        else -> allNotes.map { flow ->
+            flow.map { page -> page.filter {
+                if (params.regex) {
+                    val re = if (params.caseSensitive) Regex(params.text) else Regex(params.text, option = RegexOption.IGNORE_CASE)
+                    return@filter (
+                        (params.inTitle && it.note.name.contains(re)) ||
+                        (params.inContent && it.note.content.contains(re))
+                    )
+                }
+                return@filter (
+                    (params.inTitle && it.note.name.contains(params.text, ignoreCase = !params.caseSensitive)) ||
+                    (params.inContent && it.note.content.contains(params.text, ignoreCase = !params.caseSensitive))
+                )
+            } }
+        }
     }
 }

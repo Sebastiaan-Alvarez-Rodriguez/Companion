@@ -32,8 +32,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
                 val hasAuthenticated by noteViewModel.authenticated.collectAsState()
 
-                val searchClicked = remember { mutableStateOf(false) }
-                val searchParameters = remember { mutableStateOf(SearchParameters()) }
+                val searchParameters by noteViewModel.searchParameters.collectAsState()
 
                 val selectedItems = remember { mutableStateListOf<Note>() }
                 val securityItem: @Composable (LazyItemScope.() -> Unit)? = if (hasSecureNotes) {
@@ -62,20 +61,21 @@ class NoteState(private val navController: NavHostController, private val noteVi
                         if (selectedItems.isEmpty())
                             NoteScreenListHeader(
                                 onSettingsClick = { navigateToNoteSettings(navController = navController) },
-                                onSearchClick = { searchClicked.value = !searchClicked.value }
+                                onSearchClick = { noteViewModel.toggleSearchQuery() }
                             )
                         else
                             NoteScreenContextListHeader(
                                 onDeleteClick = { noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) } },
-                                onSearchClick = {  searchClicked.value = !searchClicked.value },
+                                onSearchClick = {  noteViewModel.toggleSearchQuery() },
                             )
 
-                        if (searchClicked.value) {
+                        searchParameters?.let {
                             Spacer(modifier = Modifier.height(defaultPadding))
-                            NoteScreenSearchListHeader(searchParameters = searchParameters.value, onBack = { searchClicked.value = false }) { params ->
-                                searchParameters.value = params
-                                // TODO: Search
-                            }
+                            NoteScreenSearchListHeader(
+                                searchParameters = it,
+                                onBack = { noteViewModel.updateSearchQuery(null) },
+                                onUpdate = { params -> noteViewModel.updateSearchQuery(params) }
+                            )
                         }
                     },
                     list = {
