@@ -27,7 +27,7 @@ val LightColorPalette = lightColors(
     */
 )
 
-// Rally is always dark themed.
+// Companion is always dark themed.
 val DarkColorPalette = darkColors(
     primary = Green500,
     surface = DarkBlue900,

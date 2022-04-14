@@ -10,8 +10,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.semantics
@@ -209,14 +212,17 @@ data class SearchParameters(
 )
 
 @Composable
-fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParameters) -> Unit,) {
+fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParameters) -> Unit) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+    val focusRequester = remember { FocusRequester() }
 
     Column {
         TextField(
             value = searchParameters.text,
             onValueChange = { onQueryUpdate(searchParameters.copy(text = it)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             singleLine = true,
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding)) },
             trailingIcon = {
@@ -227,6 +233,10 @@ fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParamet
                 }
             }
         )
+        UiUtil.LaunchedEffectSaveable(Unit) { // We want to take focus only once per search
+            focusRequester.requestFocus()
+        }
+
         Row {
             Column {
                 UiUtil.LabelledCheckBox(

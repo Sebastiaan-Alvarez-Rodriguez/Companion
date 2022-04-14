@@ -2,6 +2,8 @@ package org.python.companion.ui.note
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -14,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import org.python.backend.data.datatype.Note
@@ -22,6 +26,7 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
+import kotlin.math.roundToInt
 
 
 @Composable
@@ -37,7 +42,7 @@ fun NoteScreenViewSingle(
         if (it == null)
             UiUtil.SimpleLoading()
         else
-            NoteScreenViewSingleReady(it, onEditClick, onDeleteClick, onCategoryClick)
+            NoteScreenViewSingleReady(it, noteViewModel, onEditClick, onDeleteClick, onCategoryClick)
     }
 }
 
@@ -51,16 +56,23 @@ fun NoteScreenViewSingle(
 @Composable
 fun NoteScreenViewSingleReady(
     noteWithCategory: NoteWithCategory,
+    noteViewModel: NoteViewModel,
     onEditClick: ((Note) -> Unit)? = null,
     onDeleteClick: ((Note) -> Unit)? = null,
     onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
-    val title by remember { mutableStateOf(noteWithCategory.note.name) }
-    val content by remember { mutableStateOf(noteWithCategory.note.content) } // TODO: highlight matching words from noteviewmodel
-    val anyOptionsEnabled = onEditClick != null || onDeleteClick != null || onCategoryClick != null
+    val title = noteViewModel.highlightTextTitle(noteWithCategory.note.name)
+    val content = noteViewModel.highlightTextContent(noteWithCategory.note.content)
 
+    val scrollState = rememberScrollState()
+
+//    val firstMatch = title.spanStyles.first()
+
+    val anyOptionsEnabled = onEditClick != null || onDeleteClick != null || onCategoryClick != null
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Column(modifier = Modifier.padding(defaultPadding)) {
+    Column(modifier = Modifier
+        .verticalScroll(scrollState)
+        .padding(defaultPadding)) {
         Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
             Column(modifier = Modifier.padding(defaultPadding)) {
                 Row(
@@ -107,7 +119,15 @@ fun NoteScreenViewSingleReady(
         Card(elevation = 5.dp) {
             Text(text = content, modifier = Modifier
                 .fillMaxWidth()
-                .padding(defaultPadding))
+                .padding(defaultPadding)
+                .onGloballyPositioned { coordinates ->
+//                    LaunchedEffect(firstMatch) {
+//                        scrollState.animateScrollTo(coordinates.positionInParent().y.roundToInt())
+//                    }
+
+
+                }
+            )
         }
     }
 }

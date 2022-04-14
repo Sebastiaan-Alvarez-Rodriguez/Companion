@@ -33,6 +33,8 @@ android {
         jvmTarget = '1.8'
         useIR = true
         freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        freeCompilerArgs += kotlin_performance_args
+
     }
     buildFeatures {
         compose true

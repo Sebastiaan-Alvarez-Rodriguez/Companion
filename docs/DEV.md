@@ -15,6 +15,7 @@ UI:
       for states and modularizing UI logic.
     - Also check [here](https://developer.android.com/jetpack/compose/layouts/basics)
       for basic layout help.
+    - Check [here](https://developer.android.com/jetpack/androidx/releases/compose-kotlin) for *Compose Compiler* compatibility with Kotlin versions.
  + [navigation](https://developer.android.com/jetpack/compose/navigation)
  + [navigation returns](https://code.luasoftware.com/tutorials/android/jetpack-compose-navigation-return-result/)
  + [dialogs](https://stackoverflow.com/questions/68852110/)

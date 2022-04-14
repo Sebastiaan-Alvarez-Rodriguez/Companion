@@ -1,6 +1,9 @@
 package org.python.companion.viewmodels
 
 import android.app.Application
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -14,6 +17,8 @@ import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.SearchParameters
+import org.python.companion.ui.theme.DarkColorPalette
+import org.python.companion.ui.theme.LightColorPalette
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
@@ -72,15 +77,54 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         _searchParameters.value = if (_searchParameters.value == null) SearchParameters() else null
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
-        searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
     fun filterNote(note: Note, params: SearchParameters) =
         (params.inTitle && note.name.contains(params.text, ignoreCase = !params.caseSensitive)) ||
                 (params.inContent && note.content.contains(params.text, ignoreCase = !params.caseSensitive))
     fun filterNote(note: Note, params: SearchParameters, re: Regex) =
         (params.inTitle && note.name.contains(re)) || (params.inContent && note.content.contains(re))
+
+    fun highlightTextTitle(text: String, highlightStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold)) = searchParameters.value.let {
+        when {
+            it != null && it.inTitle -> highlightText(text, highlightStyle)
+            else -> AnnotatedString(text)
+        }
+    }
+    fun highlightTextContent(text: String, highlightStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold)) = searchParameters.value.let {
+        when {
+            it != null && it.inContent -> highlightText(text, highlightStyle)
+            else -> AnnotatedString(text)
+        }
+    }
+    private fun highlightText(text: String, highlightStyle: SpanStyle): AnnotatedString {
+        searchParameters.value.let { params ->
+            val builder = AnnotatedString.Builder(text)
+
+            if (params == null)
+                return builder.toAnnotatedString()
+
+            if (params.regex) {
+                val re = Regex(params.text, options = when {
+                        params.caseSensitive -> setOf(RegexOption.IGNORE_CASE)
+                        else -> emptySet()
+                    }
+                )
+                re.findAll(text).forEach { builder.addStyle(highlightStyle, it.range.first, it.range.last+1) }
+            } else {
+                var x = text.indexOf(params.text, ignoreCase = !params.caseSensitive)
+                while (x != -1) {
+                    builder.addStyle(highlightStyle, x, x+params.text.length)
+                    x = text.indexOf(params.text, startIndex = x+1, ignoreCase = !params.caseSensitive)
+                }
+            }
+            return builder.toAnnotatedString()
+        }
+    }
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
+        searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
     private fun notes(params: SearchParameters?) = when (params) {
         null -> allNotes

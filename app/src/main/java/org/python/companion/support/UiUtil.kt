@@ -16,10 +16,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -385,7 +383,19 @@ object UiUtil {
                 remember(navController) { UIUtilState(navController) }
         }
     }
-    
+
+    /** Exactly like [LaunchedEffect], differing only in the persistence: This effect launches only once in a composition. */
+    @Composable
+    fun LaunchedEffectSaveable(key: Any?, func: suspend CoroutineScope.() -> Unit) {
+        val alreadyFocussed = rememberSaveable { mutableStateOf(false) }
+
+        if (!alreadyFocussed.value) {
+            LaunchedEffect(key) {
+                func()
+            }
+            alreadyFocussed.value = true
+        }
+    }
     
     /** Creates a route string such as 'somelocation/arg0/arg1?optionalarg2=value' */
     fun createRoute(base: String, args: Collection<String>? = null, optionals: Map<String, String?>? = null): String {

@@ -42,7 +42,7 @@ class NoteCategoryRepository(private val securityActor: SecurityActor, private v
      * Adds a note. If a conflict exists, skips adding proposed item.
      * @return `true` on success, `false` on conflict.
      */
-    suspend fun add(category: NoteCategory): Boolean = noteCategoryStore.add(category)  ?: false
+    suspend fun add(category: NoteCategory): Boolean = noteCategoryStore.add(category)
 
     /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
     suspend fun upsert(category: NoteCategory): Boolean {
