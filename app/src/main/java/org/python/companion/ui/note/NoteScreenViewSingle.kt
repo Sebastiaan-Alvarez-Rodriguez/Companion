@@ -12,10 +12,12 @@ import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
@@ -57,22 +59,38 @@ fun NoteScreenViewSingleReady(
     onDeleteClick: ((Note) -> Unit)? = null,
     onCategoryClick: ((NoteCategory) -> Unit)? = null,
 ) {
-
-    val title = noteViewModel.highlightTextTitle(noteWithCategory.note.name)
-    val content = noteViewModel.highlightTextContent(noteWithCategory.note.content)
-
     val scrollState = rememberScrollState()
 
     val searchParameters by noteViewModel.searchParameters.collectAsState()
     var searchResultIndex by remember { mutableStateOf(0) } // Index of search result the user currently is interested in.
-    val titleMatchAmount = title.spanStyles.size
-    val searchMatchAmount = titleMatchAmount + content.spanStyles.size
 
+    val highlightIfSearching: (text: String, enable: Boolean, matches: List<NoteViewModel.FindResult>) -> AnnotatedString.Builder = { text, flag, matches ->
+        when {
+            searchParameters != null && flag -> noteViewModel.highlightText(text, matches)
+            else -> AnnotatedString.Builder(text)
+        }
+    }
+
+    val titleMatches = rememberSaveable { searchParameters.let { if (it == null || !it.inTitle) emptyList() else noteViewModel.findMatches(noteWithCategory.note.name) } }
+    val contentMatches = rememberSaveable {  searchParameters.let { if (it == null || !it.inContent) emptyList() else noteViewModel.findMatches(noteWithCategory.note.content) } }
+    val searchMatchAmount = titleMatches.size + contentMatches.size
+
+    val title = noteViewModel.highlightSelection(
+        input = highlightIfSearching(noteWithCategory.note.name, searchParameters?.inTitle ?: false, titleMatches),
+        matches = titleMatches,
+        selectedHighlightIndex = searchResultIndex
+    ).toAnnotatedString()
+    val content = noteViewModel.highlightSelection(
+        input = highlightIfSearching(noteWithCategory.note.content, searchParameters?.inContent ?: false, contentMatches),
+        matches = contentMatches,
+        selectedHighlightIndex = searchResultIndex - titleMatches.size
+    ).toAnnotatedString()
     lateinit var titleScrollFunction: (Int) -> Unit
     lateinit var contentScrollFunction: (Int) -> Unit
 
     val anyOptionsEnabled = onEditClick != null || onDeleteClick != null || onCategoryClick != null
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
 
     Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
         Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
@@ -116,8 +134,8 @@ fun NoteScreenViewSingleReady(
                 UiUtil.SimpleSearchMatchIteratorHeader(currentItem = searchResultIndex, numItems = searchMatchAmount) {
                     searchResultIndex = it
                     when {
-                        it < titleMatchAmount -> titleScrollFunction(it)
-                        else -> contentScrollFunction(it - titleMatchAmount)
+                        it < titleMatches.size -> titleScrollFunction(it)
+                        else -> contentScrollFunction(it - titleMatches.size)
                     }
                 }
             }

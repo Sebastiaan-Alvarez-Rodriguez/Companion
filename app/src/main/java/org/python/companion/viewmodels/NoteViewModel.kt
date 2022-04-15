@@ -3,6 +3,7 @@ package org.python.companion.viewmodels
 import android.app.Application
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +19,7 @@ import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.SearchParameters
 import org.python.companion.ui.theme.DarkColorPalette
-import org.python.companion.ui.theme.LightColorPalette
+import org.python.companion.ui.theme.Purple500
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
@@ -84,41 +85,45 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     fun filterNote(note: Note, params: SearchParameters, re: Regex) =
         (params.inTitle && note.name.contains(re)) || (params.inContent && note.content.contains(re))
 
-    fun highlightTextTitle(text: String, highlightStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold)) = searchParameters.value.let {
-        when {
-            it != null && it.inTitle -> highlightText(text, highlightStyle)
-            else -> AnnotatedString(text)
-        }
-    }
-    fun highlightTextContent(text: String, highlightStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold)) = searchParameters.value.let {
-        when {
-            it != null && it.inContent -> highlightText(text, highlightStyle)
-            else -> AnnotatedString(text)
-        }
-    }
-    private fun highlightText(text: String, highlightStyle: SpanStyle): AnnotatedString {
+    /** Given a text, finds all matches for [searchParameters] */
+    fun findMatches(text: String): List<FindResult> =
         searchParameters.value.let { params ->
-            val builder = AnnotatedString.Builder(text)
-
             if (params == null)
-                return builder.toAnnotatedString()
+                return emptyList()
 
             if (params.regex) {
                 val re = Regex(params.text, options = when {
-                        params.caseSensitive -> setOf(RegexOption.IGNORE_CASE)
-                        else -> emptySet()
-                    }
-                )
-                re.findAll(text).forEach { builder.addStyle(highlightStyle, it.range.first, it.range.last+1) }
+                    params.caseSensitive -> setOf(RegexOption.IGNORE_CASE)
+                    else -> emptySet()
+                })
+                return re.findAll(text).map { FindResult(it.range.first, it.range.last+1) }.toList()
             } else {
                 var x = text.indexOf(params.text, ignoreCase = !params.caseSensitive)
+                val data: ArrayList<FindResult> = ArrayList()
+
                 while (x != -1) {
-                    builder.addStyle(highlightStyle, x, x+params.text.length)
+                    data.add(FindResult(x, x + params.text.length))
                     x = text.indexOf(params.text, startIndex = x+1, ignoreCase = !params.caseSensitive)
                 }
+                return data
             }
-            return builder.toAnnotatedString()
         }
+
+    fun highlightSelection(
+        input: AnnotatedString.Builder,
+        matches: List<FindResult>,
+        selectedHighlightIndex: Int,
+        selectedStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic, background = Purple500),
+    ): AnnotatedString.Builder {
+        if (selectedHighlightIndex >= 0 && selectedHighlightIndex < matches.size)
+            input.addStyle(selectedStyle, matches[selectedHighlightIndex].start, matches[selectedHighlightIndex].end)
+        return input
+    }
+
+    fun highlightText(input: String, matches: List<FindResult>, highlightStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)): AnnotatedString.Builder {
+        val builder = AnnotatedString.Builder(input)
+        matches.forEach { match -> builder.addStyle(highlightStyle, match.start, match.end) }
+        return builder
     }
 
 
@@ -137,4 +142,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             } } }
         }
     }
+
+    data class FindResult(val start: Int, val end: Int)
 }
