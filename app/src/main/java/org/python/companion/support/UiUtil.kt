@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.ArrowLeft
+import androidx.compose.material.icons.outlined.ArrowRight
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -329,11 +331,30 @@ object UiUtil {
     }
 
     @Composable
-    fun SimpleScrollableText(
-        text: AnnotatedString,
-        modifier: Modifier,
-        scrollState: ScrollState
-    ): (Int) -> Unit {
+    fun SimpleSearchMatchIteratorHeader(currentItem: Int, numItems: Int, onUpdate: (Int) -> Unit) {
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+        val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+
+        GenericListHeader(
+            listOf(
+                { Text(modifier = Modifier.padding(defaultPadding), text = "${currentItem+1}/$numItems") },
+                {
+                    Row(modifier = Modifier.padding(defaultPadding)) {
+                        IconButton(onClick = { onUpdate(((currentItem + numItems) - 1) % numItems) }) {
+                            Icon(imageVector = Icons.Outlined.ArrowLeft, contentDescription = "Previous result")
+                        }
+                        Spacer(modifier = Modifier.width(tinyPadding))
+                        IconButton(onClick = { onUpdate((currentItem + 1) % numItems) }) {
+                            Icon(imageVector = Icons.Outlined.ArrowRight, contentDescription = "Next result")
+                        }
+                    }
+                }
+            )
+        )
+    }
+
+    @Composable
+    fun simpleScrollableText(text: AnnotatedString, modifier: Modifier, scrollState: ScrollState): (Int) -> Unit {
         val coroutineScope = rememberCoroutineScope()
 
         val searchResultPositions = /* TODO: get title scrollable positions */ text.spanStyles.map { it.start } // Char offsets for each search result
