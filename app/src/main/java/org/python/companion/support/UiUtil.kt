@@ -25,6 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -52,6 +56,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.python.companion.R
+import timber.log.Timber
 import kotlin.math.roundToInt
 
 /** Simple enum representing loading state of asynchronously loading objects. */
@@ -354,22 +359,24 @@ object UiUtil {
     }
 
     @Composable
-    fun simpleScrollableText(text: AnnotatedString, modifier: Modifier, scrollState: ScrollState): (Int) -> Unit {
+    fun simpleScrollableText(text: AnnotatedString, modifier: Modifier = Modifier, scrollState: ScrollState): (Int) -> Unit {
         val coroutineScope = rememberCoroutineScope()
 
-        val searchResultPositions = /* TODO: get title scrollable positions */ text.spanStyles.map { it.start } // Char offsets for each search result
+        val searchResultPositions = text.spanStyles.map { it.start } // Char offsets for each search result
 
+        var parentOffset by remember { mutableStateOf(0f) }
         var contentTextLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) } // Layout rendering collector
 
         val executeScroll: (Int) -> Unit = { spanIndex ->
             coroutineScope.launch {
                 val charOffset = searchResultPositions[spanIndex]
                 val renderedLineOffset = contentTextLayoutResult!!.getLineForOffset(charOffset)
-                val pointOffset = contentTextLayoutResult!!.getLineBottom(renderedLineOffset).roundToInt()
-                scrollState.animateScrollTo(pointOffset)
+                val pointOffset = contentTextLayoutResult!!.getLineBottom(renderedLineOffset)
+                val finalOffset = (parentOffset + pointOffset).roundToInt()
+                scrollState.animateScrollTo(finalOffset)
             }
         }
-        Text(text = text, modifier = modifier, onTextLayout = { layout -> contentTextLayoutResult = layout })
+        Text(text = text, modifier = modifier.onGloballyPositioned { coordinates -> parentOffset = coordinates.parentLayoutCoordinates!!.positionInParent().y }, onTextLayout = { layout -> contentTextLayoutResult = layout })
         return executeScroll
 
     }

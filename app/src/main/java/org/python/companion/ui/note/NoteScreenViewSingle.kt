@@ -7,9 +7,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,9 +65,11 @@ fun NoteScreenViewSingleReady(
 
     val searchParameters by noteViewModel.searchParameters.collectAsState()
     var searchResultIndex by remember { mutableStateOf(0) } // Index of search result the user currently is interested in.
-    val searchMatchAmount = content.spanStyles.size
+    val titleMatchAmount = title.spanStyles.size
+    val searchMatchAmount = titleMatchAmount + content.spanStyles.size
 
-    lateinit var scrollFunction: (Int) -> Unit
+    lateinit var titleScrollFunction: (Int) -> Unit
+    lateinit var contentScrollFunction: (Int) -> Unit
 
     val anyOptionsEnabled = onEditClick != null || onDeleteClick != null || onCategoryClick != null
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
@@ -76,7 +79,7 @@ fun NoteScreenViewSingleReady(
             Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
                 Column(modifier = Modifier.padding(defaultPadding)) {
                     Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        Text(text = title)
+                        titleScrollFunction = UiUtil.simpleScrollableText(text = title, scrollState = scrollState)
                     }
                     if (anyOptionsEnabled) {
                         Spacer(Modifier.height(defaultPadding))
@@ -104,7 +107,7 @@ fun NoteScreenViewSingleReady(
 
             Spacer(Modifier.height(defaultPadding))
             Card(elevation = 5.dp) {
-                scrollFunction = UiUtil.simpleScrollableText(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding), scrollState = scrollState)
+                contentScrollFunction = UiUtil.simpleScrollableText(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding), scrollState = scrollState)
             }
         }
         if (searchParameters != null) {
@@ -112,7 +115,10 @@ fun NoteScreenViewSingleReady(
                 Spacer(modifier = Modifier.height(defaultPadding))
                 UiUtil.SimpleSearchMatchIteratorHeader(currentItem = searchResultIndex, numItems = searchMatchAmount) {
                     searchResultIndex = it
-                    scrollFunction(searchResultIndex)
+                    when {
+                        it < titleMatchAmount -> titleScrollFunction(it)
+                        else -> contentScrollFunction(it - titleMatchAmount)
+                    }
                 }
             }
         }
