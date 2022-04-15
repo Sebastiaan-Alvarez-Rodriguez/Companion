@@ -2,6 +2,7 @@ package org.python.companion.support
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,6 +50,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.python.companion.R
+import kotlin.math.roundToInt
 
 /** Simple enum representing loading state of asynchronously loading objects. */
 enum class LoadingState {
@@ -323,6 +326,31 @@ object UiUtil {
         BackHandler(searchExpand) {
             onPostSearch()
         }
+    }
+
+    @Composable
+    fun SimpleScrollableText(
+        text: AnnotatedString,
+        modifier: Modifier,
+        scrollState: ScrollState
+    ): (Int) -> Unit {
+        val coroutineScope = rememberCoroutineScope()
+
+        val searchResultPositions = /* TODO: get title scrollable positions */ text.spanStyles.map { it.start } // Char offsets for each search result
+
+        var contentTextLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) } // Layout rendering collector
+
+        val executeScroll: (Int) -> Unit = { spanIndex ->
+            coroutineScope.launch {
+                val charOffset = searchResultPositions[spanIndex]
+                val renderedLineOffset = contentTextLayoutResult!!.getLineForOffset(charOffset)
+                val pointOffset = contentTextLayoutResult!!.getLineBottom(renderedLineOffset).roundToInt()
+                scrollState.animateScrollTo(pointOffset)
+            }
+        }
+        Text(text = text, modifier = modifier, onTextLayout = { layout -> contentTextLayoutResult = layout })
+        return executeScroll
+
     }
 
 
