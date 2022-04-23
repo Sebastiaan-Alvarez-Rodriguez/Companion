@@ -1,10 +1,7 @@
 package org.python.companion.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class CompanionScreen (
@@ -14,7 +11,7 @@ enum class CompanionScreen (
         icon = Icons.Filled.ShoppingCart,
     ),
     Note(
-        icon = Icons.Filled.Notifications,
+        icon = Icons.Filled.Article,
     ),
     Anniversary(
         icon = Icons.Filled.DateRange,

@@ -173,20 +173,11 @@ fun NoteCategoryItem(
     onFavoriteClick: (NoteCategory) -> Unit,
     selectorBox: @Composable (RowScope.() -> Unit)? = null
 ) {
-    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Card(
-        elevation = 5.dp,
-        modifier = Modifier.padding(start = defaultPadding, end = defaultPadding),
-        border = BorderStroke(width = 1.dp, Color(noteCategory.color.toArgb())),
-    ) {
+    Card(border = BorderStroke(width = 1.dp, Color(noteCategory.color.toArgb())), elevation = 5.dp) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(defaultPadding)
-                .clickable { onNoteCategoryClick(noteCategory) }
-                .semantics(mergeDescendants = true) {},
+            modifier = Modifier.fillMaxWidth().clickable { onNoteCategoryClick(noteCategory) }.semantics(mergeDescendants = true) {},
         ) {
             selectorBox?.let { it() }
             Text(modifier = Modifier.weight(1f, fill = false), text = noteCategory.name)

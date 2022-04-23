@@ -139,7 +139,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     }
                 )
             ) {
-                NoteScreenEditNew { toSaveNote ->
+                NoteScreenEditNew(navController = navController) { toSaveNote ->
                     Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
                     noteViewModel.viewModelScope.launch {
                         val conflict = noteViewModel.hasConflict(toSaveNote.name)
@@ -175,6 +175,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     noteViewModel = noteViewModel,
                     id = noteId,
                     offset = offset,
+                    navController = navController,
                     onSaveClick = { toSaveNote, existingNote ->
                         Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         if (!hasAuthenticated && toSaveNote.secure) {
@@ -211,10 +212,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
     private fun navigateToNoteView(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/view/$noteId")
 
     private fun navigateToNoteCreate(navController: NavController, onCreated: (Long?) -> Unit) =
-        navController.navigateForResult<Long?>(
-            route = "$noteDestination/create",
-            key = resultKeyNoteCreate
-        ) {
+        navController.navigateForResult<Long?>(route = "$noteDestination/create", key = resultKeyNoteCreate) {
             onCreated(it)
         }
 

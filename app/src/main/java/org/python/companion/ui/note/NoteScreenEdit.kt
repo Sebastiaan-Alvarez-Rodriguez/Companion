@@ -9,6 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
@@ -28,7 +30,7 @@ import timber.log.Timber
 
 /** Loads note to edit, then shows edit screen. */
 @Composable
-fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, onSaveClick: (Note, Note?) -> Unit) {
+fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, navController: NavController, onSaveClick: (Note, Note?) -> Unit) {
     var state by remember { mutableStateOf(LoadingState.LOADING) }
     var existingData by remember { mutableStateOf<NoteWithCategory?>(null) }
 
@@ -44,6 +46,7 @@ fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, onSaveC
             note = existingData?.note,
             noteCategory = existingData?.noteCategory,
             offset = offset,
+            navController = navController,
             onSaveClick = { toSaveNote -> onSaveClick(toSaveNote, existingData?.note) },
         )
         else -> {
@@ -55,13 +58,14 @@ fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, onSaveC
 
 /** Edits a new note directly. */
 @Composable
-fun NoteScreenEditNew(onSaveClick: (Note) -> Unit) = NoteScreenEditReady(null, null, null, onSaveClick)
+fun NoteScreenEditNew(navController: NavController, onSaveClick: (Note) -> Unit) = NoteScreenEditReady(null, null, null, navController, onSaveClick)
 
 /**
  * Detail screen for editing a single note.
  * @param note Note to edit.
  * @param noteCategory Optional category assigned to passed note.
- * @param offset Optional initial scroll offset in px.
+ * @param offset Optional initial scroll offset in px. Passing `null` prevents scrolling.
+ * @param navController Used to handle back events.
  * @param onSaveClick Lambda executed when the user hits the save button.
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -69,7 +73,8 @@ fun NoteScreenEditNew(onSaveClick: (Note) -> Unit) = NoteScreenEditReady(null, n
 fun NoteScreenEditReady(
     note: Note?,
     noteCategory: NoteCategory?,
-    offset: Int?,
+    offset: Int? = null,
+    navController: NavController,
     onSaveClick: (Note) -> Unit,
 ) {
     var title by remember { mutableStateOf(note?.name ?: "") }
@@ -130,8 +135,8 @@ fun NoteScreenEditReady(
                 }
                 Spacer(Modifier.width(defaultPadding))
 
-                Button(onClick = { onSaveClick(createNoteObject()) }) {
-                    Text(text = "Save")
+                IconButton(onClick = { onSaveClick(createNoteObject()) }) {
+                    Icon(imageVector = Icons.Filled.Save, contentDescription = "Save")
                 }
             }
         }
@@ -162,10 +167,17 @@ fun NoteScreenEditReady(
         }
     }
 
+    val showGoBack = remember { mutableStateOf(false) }
     BackHandler(enabled = noteChanged.value) {
-        // TODO: Are you sure you want to go back?
+        showGoBack.value = !showGoBack.value
     }
-
+    if (showGoBack.value)
+        UiUtil.SimpleDialogBinary(
+            message = "Found unsaved changes. Are you sure you want to go back?",
+            onDismiss = { showGoBack.value = false },
+            onNegativeClick = { showGoBack.value = false },
+            onPositiveClick = { navController.navigateUp() },
+        )
     offset?.let {
         UiUtil.LaunchedEffectSaveable(Unit) {
             scrollState.animateScrollTo(it)

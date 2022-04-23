@@ -135,7 +135,7 @@ object UiUtil {
         onDismiss: () -> Unit,
         onNegativeClick: () -> Unit,
         onPositiveClick: () -> Unit,
-        showableObjectFunc: @Composable () -> Unit
+        showableObjectFunc: @Composable () -> Unit = {}
     ) {
         Dialog(onDismissRequest = onDismiss) {
             Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
@@ -365,7 +365,7 @@ object UiUtil {
                             navController.setNavigationResult(result = true, key = resultKeyOverride)
                             navController.navigateUp()
                         },
-                    ) {}
+                    )
                     BackHandler(enabled = true) {
                         navController.setNavigationResult(result = false, key = resultKeyOverride)
                         navController.navigateUp()

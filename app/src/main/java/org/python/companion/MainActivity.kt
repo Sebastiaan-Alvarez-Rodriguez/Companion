@@ -5,6 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,6 +52,8 @@ class MainActivity : FragmentActivity() {
             CompanionTheme {
                 val allScreens = CompanionScreen.values().toList()
                 val navController = rememberNavController()
+                val scaffoldState = rememberScaffoldState()
+
                 val backstackEntry = navController.currentBackStackEntryAsState()
                 val selectedTabScreen = CompanionScreen.fromRoute(backstackEntry.value?.destination?.route)
 
@@ -60,7 +63,7 @@ class MainActivity : FragmentActivity() {
                     activity = this,
                     navController = navController,
                     securityViewModel = securityViewModel,
-                    noteViewModel = noteViewModel
+                    noteViewModel = noteViewModel,
                 )
                 val noteState = NoteState.rememberState(
                     navController = navController,
@@ -68,7 +71,8 @@ class MainActivity : FragmentActivity() {
                 )
                 val noteCategoryState = NoteCategoryState.rememberState(
                     navController = navController,
-                    noteCategoryViewModel = noteCategoryViewModel
+                    noteCategoryViewModel = noteCategoryViewModel,
+                    scaffoldState = scaffoldState
                 )
                 val cactusState = CactusState.rememberState(navController = navController)
                 val anniversaryState = AnniversaryState.rememberState(
@@ -85,7 +89,8 @@ class MainActivity : FragmentActivity() {
                                      navController.navigate(screen.name) { launchSingleTop = true } },
                             currentScreen = selectedTabScreen
                         )
-                    }
+                    },
+                    scaffoldState = scaffoldState
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
@@ -127,9 +132,7 @@ class CactusState(private val navController: NavHostController) {
     companion object {
         val cactusDestination = CompanionScreen.Cactus.name
         @Composable
-        fun rememberState(
-            navController: NavHostController = rememberNavController(),
-        ) = remember(navController) {
+        fun rememberState(navController: NavHostController = rememberNavController()) = remember(navController) {
             CactusState(navController)
         }
     }

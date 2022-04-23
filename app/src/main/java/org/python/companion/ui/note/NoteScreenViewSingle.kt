@@ -8,7 +8,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.*
@@ -102,7 +102,7 @@ fun NoteScreenViewSingleReady(
                 IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
                     Icon(
                         tint = Color(noteWithCategory.noteCategory.color.toArgb()),
-                        imageVector = Icons.Outlined.Article,
+                        imageVector = Icons.Outlined.Bolt,
                         contentDescription = "Edit category"
                     )
                 }

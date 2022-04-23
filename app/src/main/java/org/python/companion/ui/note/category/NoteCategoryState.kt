@@ -1,5 +1,7 @@
 package org.python.companion.ui.note.category
 
+import androidx.compose.material.ScaffoldState
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
@@ -16,6 +18,7 @@ import timber.log.Timber
 class NoteCategoryState(
     private val navController: NavHostController,
     private val noteCategoryViewModel: NoteCategoryViewModel,
+    private val scaffoldState: ScaffoldState
 ) {
     fun load() {
         noteCategoryViewModel.load()
@@ -102,17 +105,23 @@ class NoteCategoryState(
             ) {
                 NoteCategoryScreenEditNew(
                     onDeleteClick = { navController.navigateUp() }, // new category, just return without saving
-                    onSaveClick = { toSaveNoteCategory -> //TODO: Can still override default category
+                    onSaveClick = { toSaveNoteCategory ->
                         Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
                         noteCategoryViewModel.viewModelScope.launch {
                             val conflict = noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
                             Timber.d("New noteCategory: conflict: ${conflict!=null}")
-                            if (conflict == null) {
-                                if (noteCategoryViewModel.add(toSaveNoteCategory))
+                            when {
+                                conflict == null -> {
+                                    noteCategoryViewModel.add(toSaveNoteCategory)
                                     navController.navigateUp()
-                                else
-                                    TODO("Let user know there was a problem while adding noteCategory")
-                            } else {
+                                }
+                                conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        message = "Cannot override the default category",
+                                        duration = SnackbarDuration.Long
+                                    )
+                                }
+                                else ->
                                 UiUtil.UIUtilState.navigateToOverride(navController) {
                                     Timber.d("New noteCategory: Overriding ${toSaveNoteCategory.name}...")
                                     noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.upsert(toSaveNoteCategory) }
@@ -120,7 +129,8 @@ class NoteCategoryState(
                                 }
                             }
                         }
-                    }
+                    },
+                    navController = navController
                 )
             }
 
@@ -142,16 +152,24 @@ class NoteCategoryState(
                                 navController.navigateUp()
                             }
                         },
-                    onSaveClick = { toSaveNoteCategory, existingNoteCategory -> //TODO: Can still override default category
+                    onSaveClick = { toSaveNoteCategory, existingNoteCategory ->
                         Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
                         noteCategoryViewModel.viewModelScope.launch {
                             // If category name == same as before, there is no conflict. Otherwise, we must check.
                             val conflict: NoteCategory? = if (toSaveNoteCategory.name == existingNoteCategory!!.name) null else noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
                             Timber.d("Edit noteCategory: edited category has changed name=${toSaveNoteCategory.name != existingNoteCategory.name}, now conflict: ${conflict != null}")
-                            if (conflict == null) {
-                                noteCategoryViewModel.update(toSaveNoteCategory)
-                                navController.navigateUp()
-                            } else {
+                            when {
+                                conflict == null -> { // no conflict
+                                    noteCategoryViewModel.update(toSaveNoteCategory)
+                                    navController.navigateUp()
+                                }
+                                conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        message = "Cannot override the default category",
+                                        duration = SnackbarDuration.Long
+                                    )
+                                }
+                                else -> // conflict on non-default category
                                 UiUtil.UIUtilState.navigateToOverride(navController) {
                                     Timber.d("Edit noteCategory: Overriding category (new name=${toSaveNoteCategory.name})")
                                     noteCategoryViewModel.viewModelScope.launch {
@@ -162,7 +180,8 @@ class NoteCategoryState(
                                 }
                             }
                         }
-                    }
+                    },
+                    navController = navController
                 )
             }
         }
@@ -185,7 +204,7 @@ class NoteCategoryState(
         private fun navigateToNoteCategoryEdit(navController: NavController, categoryId: Long) = navController.navigate("$noteCategoryDestination/edit/$categoryId")
 
         @Composable
-        fun rememberState(navController: NavHostController = rememberNavController(), noteCategoryViewModel: NoteCategoryViewModel) =
-            remember(navController) { NoteCategoryState(navController, noteCategoryViewModel) }
+        fun rememberState(navController: NavHostController = rememberNavController(), noteCategoryViewModel: NoteCategoryViewModel, scaffoldState: ScaffoldState) =
+            remember(navController) { NoteCategoryState(navController, noteCategoryViewModel, scaffoldState) }
     }
 }
