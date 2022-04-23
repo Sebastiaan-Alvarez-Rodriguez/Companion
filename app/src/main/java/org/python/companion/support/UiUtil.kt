@@ -14,8 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ArrowLeft
 import androidx.compose.material.icons.outlined.ArrowRight
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -27,8 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -56,7 +52,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.python.companion.R
-import timber.log.Timber
 import kotlin.math.roundToInt
 
 /** Simple enum representing loading state of asynchronously loading objects. */
@@ -299,43 +294,6 @@ object UiUtil {
     }
 
     @Composable
-    fun SimpleSearch(
-        searchExpand: Boolean,
-        searchText: String,
-        onPreSearch: () -> Unit,
-        onQueryUpdate: (String) -> Unit,
-        onPostSearch: () -> Unit,
-    ) {
-        val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
-
-        if (!searchExpand) {
-            IconButton(modifier = Modifier.padding(tinyPadding), onClick = {
-                onPreSearch()
-            }) {
-                Icon(Icons.Filled.Search, "Search")
-            }
-        } else {
-            TextField(
-                value = searchText,
-                onValueChange = onQueryUpdate,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding)) },
-                trailingIcon = {
-                    if (searchText != "") {
-                        IconButton( onClick = { onQueryUpdate("") }) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "reset", modifier = Modifier.padding(tinyPadding))
-                        }
-                    }
-                })
-        }
-
-        BackHandler(searchExpand) {
-            onPostSearch()
-        }
-    }
-
-    @Composable
     fun SimpleSearchMatchIteratorHeader(currentItem: Int, numItems: Int, onUpdate: (Int) -> Unit) {
         val defaultPadding = dimensionResource(id = R.dimen.padding_default)
         val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
@@ -445,17 +403,22 @@ object UiUtil {
     /** Exactly like [LaunchedEffect], differing only in the persistence: This effect launches only once in a composition. */
     @Composable
     fun LaunchedEffectSaveable(key: Any?, func: suspend CoroutineScope.() -> Unit) {
-        val alreadyFocussed = rememberSaveable { mutableStateOf(false) }
+        val alreadyExecuted = rememberSaveable { mutableStateOf(false) }
 
-        if (!alreadyFocussed.value) {
+        if (!alreadyExecuted.value) {
             LaunchedEffect(key) {
                 func()
             }
-            alreadyFocussed.value = true
+            alreadyExecuted.value = true
         }
     }
     
-    /** Creates a route string such as 'somelocation/arg0/arg1?optionalarg2=value' */
+    /**
+     * Creates a route string such as 'somelocation/arg0/arg1?optionalarg2=value'
+     * @param base Base path, NOT ending on '/'.
+     * @param args Required arguments to chain after the base path.
+     * @param optionals Optional named arguments. Arguments with `null` value are filtered out.
+     */
     fun createRoute(base: String, args: Collection<String>? = null, optionals: Map<String, String?>? = null): String {
         return base + when (args.isNullOrEmpty()) {
             true -> ""

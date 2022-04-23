@@ -31,9 +31,9 @@ import org.python.companion.viewmodels.NoteViewModel
 fun NoteScreenViewSingle(
     noteViewModel: NoteViewModel,
     id: Long,
-    onDeleteClick: ((Note) -> Unit)? = null,
-    onEditClick: ((Note) -> Unit)? = null,
-    onCategoryClick: ((NoteCategory) -> Unit)? = null,
+    onDeleteClick: ((Note) -> Unit),
+    onEditClick: ((Note, Int) -> Unit),
+    onCategoryClick: ((NoteCategory) -> Unit),
 ) {
     val noteWithCategory by noteViewModel.getWithCategoryLive(id).collectAsState(null)
     noteWithCategory.let {
@@ -55,9 +55,9 @@ fun NoteScreenViewSingle(
 fun NoteScreenViewSingleReady(
     noteWithCategory: NoteWithCategory,
     noteViewModel: NoteViewModel,
-    onEditClick: ((Note) -> Unit)? = null,
-    onDeleteClick: ((Note) -> Unit)? = null,
-    onCategoryClick: ((NoteCategory) -> Unit)? = null,
+    onEditClick: ((Note, Int) -> Unit),
+    onDeleteClick: ((Note) -> Unit),
+    onCategoryClick: ((NoteCategory) -> Unit),
 ) {
     val scrollState = rememberScrollState()
 
@@ -90,39 +90,32 @@ fun NoteScreenViewSingleReady(
     lateinit var titleScrollFunction: (Int) -> Unit
     lateinit var contentScrollFunction: (Int) -> Unit
 
-    val anyOptionsEnabled = onEditClick != null || onDeleteClick != null || onCategoryClick != null
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
 
     Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
-        Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
-            Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
-                Column(modifier = Modifier.padding(defaultPadding)) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        titleScrollFunction = UiUtil.simpleScrollableText(text = title, scrollState = scrollState)
-                    }
-                    if (anyOptionsEnabled) {
-                        Spacer(Modifier.height(defaultPadding))
-                        Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            if (onDeleteClick != null)
-                                IconButton(onClick = { onDeleteClick(noteWithCategory.note) }) {
-                                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete note")
-                                }
-                            if (onCategoryClick != null)
-                                IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
-                                    Icon(
-                                        tint = Color(noteWithCategory.noteCategory.color.toArgb()),
-                                        imageVector = Icons.Outlined.Article,
-                                        contentDescription = "Edit category"
-                                    )
-                                }
-                            if (onEditClick != null)
-                                IconButton(onClick = { onEditClick(noteWithCategory.note) }) {
-                                    Icon(imageVector = Icons.Outlined.Edit,contentDescription = "Edit note")
-                                }
-                        }
-                    }
+        Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                IconButton(onClick = { onDeleteClick(noteWithCategory.note) }) {
+                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete note")
                 }
+                IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
+                    Icon(
+                        tint = Color(noteWithCategory.noteCategory.color.toArgb()),
+                        imageVector = Icons.Outlined.Article,
+                        contentDescription = "Edit category"
+                    )
+                }
+                IconButton(onClick = { onEditClick(noteWithCategory.note, scrollState.value) }) {
+                    Icon(imageVector = Icons.Outlined.Edit,contentDescription = "Edit note")
+                }
+            }
+        }
+        Spacer(Modifier.height(defaultPadding))
+
+        Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
+            Card(elevation = 5.dp) {
+                titleScrollFunction = UiUtil.simpleScrollableText(text = title,  modifier = Modifier.fillMaxWidth().padding(defaultPadding), scrollState = scrollState)
             }
 
             Spacer(Modifier.height(defaultPadding))

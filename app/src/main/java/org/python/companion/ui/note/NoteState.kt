@@ -121,7 +121,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 NoteScreenViewSingle(
                     noteViewModel = noteViewModel,
                     id = noteId,
-                    onEditClick = { navigateToNoteEdit(navController = navController, note = it) },
+                    onEditClick = { note, offset -> navigateToNoteEdit(navController = navController, note = note, offset = offset) },
                     onDeleteClick = {
                         noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
                         navController.navigateUp()
@@ -162,16 +162,19 @@ class NoteState(private val navController: NavHostController, private val noteVi
             }
 
             composable(
-                route = "$noteDestination/edit/{noteId}",
-                arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
-                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/edit/{noteId}" }),
+                route = "$noteDestination/edit/{noteId}?offset={offset}",
+                arguments = listOf(navArgument("noteId") { type = NavType.LongType }, navArgument("offset") { type = NavType.IntType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/edit/{noteId}?offset={offset}" }),
             ) { entry ->
                 val noteId = entry.arguments?.getLong("noteId")!!
+                val offset = entry.arguments?.getInt("offset")
+
                 val hasAuthenticated by noteViewModel.authenticated.collectAsState()
 
                 NoteScreenEdit(
                     noteViewModel = noteViewModel,
                     id = noteId,
+                    offset = offset,
                     onSaveClick = { toSaveNote, existingNote ->
                         Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         if (!hasAuthenticated && toSaveNote.secure) {
@@ -215,8 +218,9 @@ class NoteState(private val navController: NavHostController, private val noteVi
             onCreated(it)
         }
 
-    private fun navigateToNoteEdit(navController: NavController, note: Note) = navigateToNoteEdit(navController, note.noteId)
-    private fun navigateToNoteEdit(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/edit/$noteId")
+    private fun navigateToNoteEdit(navController: NavController, note: Note, offset: Int? = null) = navigateToNoteEdit(navController, note.noteId, offset)
+    private fun navigateToNoteEdit(navController: NavController, noteId: Long, offset: Int? = null) =
+        navController.navigate(UiUtil.createRoute(base = "$noteDestination/edit", args = listOf(noteId.toString()), optionals = mapOf("offset" to offset?.toString())))
 
     companion object {
         val noteDestination: String = CompanionScreen.Note.name
