@@ -61,30 +61,32 @@ fun NoteScreenViewSingleReady(
 ) {
     val scrollState = rememberScrollState()
 
+    val isSearching by noteViewModel.isSearching.collectAsState()
     val searchParameters by noteViewModel.searchParameters.collectAsState()
     var searchResultIndex by remember { mutableStateOf(0) } // Index of search result the user currently is interested in.
 
-    val highlightIfSearching: (text: String, enable: Boolean, matches: List<NoteViewModel.FindResult>) -> AnnotatedString.Builder = { text, flag, matches ->
+    val highlightIfSearching: (text: String, enable: Boolean?, matches: List<NoteViewModel.FindResult>) -> AnnotatedString.Builder = { text, flag, matches ->
         when {
-            searchParameters != null && flag -> noteViewModel.highlightText(text, matches)
+            isSearching && flag != null && flag -> noteViewModel.highlightText(text, matches)
             else -> AnnotatedString.Builder(text)
         }
     }
 
-    val titleMatches = rememberSaveable { searchParameters.let { if (it == null || !it.inTitle) emptyList() else noteViewModel.findMatches(noteWithCategory.note.name) } }
-    val contentMatches = rememberSaveable {  searchParameters.let { if (it == null || !it.inContent) emptyList() else noteViewModel.findMatches(noteWithCategory.note.content) } }
+    val titleMatches = rememberSaveable { searchParameters.let { if (!isSearching || it == null || !it.inTitle) emptyList() else noteViewModel.findMatches(noteWithCategory.note.name) } }
+    val contentMatches = rememberSaveable {  searchParameters.let { if (!isSearching || it == null || !it.inContent) emptyList() else noteViewModel.findMatches(noteWithCategory.note.content) } }
     val searchMatchAmount = titleMatches.size + contentMatches.size
 
     val title = noteViewModel.highlightSelection(
-        input = highlightIfSearching(noteWithCategory.note.name, searchParameters?.inTitle ?: false, titleMatches),
+        input = highlightIfSearching(noteWithCategory.note.name, searchParameters?.inTitle, titleMatches),
         matches = titleMatches,
         selectedHighlightIndex = searchResultIndex
     ).toAnnotatedString()
     val content = noteViewModel.highlightSelection(
-        input = highlightIfSearching(noteWithCategory.note.content, searchParameters?.inContent ?: false, contentMatches),
+        input = highlightIfSearching(noteWithCategory.note.content, searchParameters?.inContent, contentMatches),
         matches = contentMatches,
         selectedHighlightIndex = searchResultIndex - titleMatches.size
     ).toAnnotatedString()
+
     lateinit var titleScrollFunction: (Int) -> Unit
     lateinit var contentScrollFunction: (Int) -> Unit
 
@@ -124,11 +126,12 @@ fun NoteScreenViewSingleReady(
             }
 
             Spacer(Modifier.height(defaultPadding))
+
             Card(elevation = 5.dp) {
                 contentScrollFunction = UiUtil.simpleScrollableText(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding), scrollState = scrollState)
             }
         }
-        if (searchParameters != null) {
+        if (isSearching) {
             Column(modifier = Modifier.weight(0.1f, fill = true)) {
                 Spacer(modifier = Modifier.height(defaultPadding))
                 UiUtil.SimpleSearchMatchIteratorHeader(currentItem = searchResultIndex, numItems = searchMatchAmount) {

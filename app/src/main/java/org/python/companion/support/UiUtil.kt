@@ -360,6 +360,8 @@ object UiUtil {
 
     @Composable
     fun simpleScrollableText(text: AnnotatedString, modifier: Modifier = Modifier, scrollState: ScrollState): (Int) -> Unit {
+        val scrollDelta = -80
+
         val coroutineScope = rememberCoroutineScope()
 
         val searchResultPositions = text.spanStyles.map { it.start } // Char offsets for each search result
@@ -376,7 +378,7 @@ object UiUtil {
                 scrollState.animateScrollTo(finalOffset)
             }
         }
-        Text(text = text, modifier = modifier.onGloballyPositioned { coordinates -> parentOffset = coordinates.parentLayoutCoordinates!!.positionInParent().y }, onTextLayout = { layout -> contentTextLayoutResult = layout })
+        Text(text = text, modifier = modifier.onGloballyPositioned { coordinates -> parentOffset = coordinates.parentLayoutCoordinates!!.positionInParent().y+scrollDelta }, onTextLayout = { layout -> contentTextLayoutResult = layout })
         return executeScroll
 
     }

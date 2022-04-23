@@ -39,6 +39,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
      * This data is also used inside note views to highlight matches.
      */
     val searchParameters: StateFlow<SearchParameters?> = _searchParameters
+    val isSearching: StateFlow<Boolean> = _searchParameters.map { it != null && it.text.isNotEmpty() }.stateInViewModel(viewModelScope, false)
+
     val isLoading: StateFlow<Boolean> = _isLoading
 
     /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
@@ -87,25 +89,28 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Given a text, finds all matches for [searchParameters] */
     fun findMatches(text: String): List<FindResult> =
-        searchParameters.value.let { params ->
-            if (params == null)
-                return emptyList()
+        when {
+            !isSearching.value -> emptyList()
+            else -> searchParameters.value.let { params ->
+                if (params == null)
+                    return emptyList()
 
-            if (params.regex) {
-                val re = Regex(params.text, options = when {
-                    params.caseSensitive -> setOf(RegexOption.IGNORE_CASE)
-                    else -> emptySet()
-                })
-                return re.findAll(text).map { FindResult(it.range.first, it.range.last+1) }.toList()
-            } else {
-                var x = text.indexOf(params.text, ignoreCase = !params.caseSensitive)
-                val data: ArrayList<FindResult> = ArrayList()
+                if (params.regex) {
+                    val re = Regex(params.text, options = when {
+                        params.caseSensitive -> setOf(RegexOption.IGNORE_CASE)
+                        else -> emptySet()
+                    })
+                    return re.findAll(text).map { FindResult(it.range.first, it.range.last+1) }.toList()
+                } else {
+                    var x = text.indexOf(params.text, ignoreCase = !params.caseSensitive)
+                    val data: ArrayList<FindResult> = ArrayList()
 
-                while (x != -1) {
-                    data.add(FindResult(x, x + params.text.length))
-                    x = text.indexOf(params.text, startIndex = x+1, ignoreCase = !params.caseSensitive)
+                    while (x != -1) {
+                        data.add(FindResult(x, x + params.text.length))
+                        x = text.indexOf(params.text, startIndex = x+1, ignoreCase = !params.caseSensitive)
+                    }
+                    return data
                 }
-                return data
             }
         }
 
