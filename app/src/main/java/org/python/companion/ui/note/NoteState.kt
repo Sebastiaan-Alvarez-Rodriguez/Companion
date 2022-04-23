@@ -54,10 +54,9 @@ class NoteState(private val navController: NavHostController, private val noteVi
                 } else {
                     null
                 }
+                val defaultPadding = dimensionResource(id = R.dimen.padding_default)
                 NoteScreen(
                     header = {
-                        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-
                         if (selectedItems.isEmpty())
                             NoteScreenListHeader(
                                 onSettingsClick = { navigateToNoteSettings(navController = navController) },
@@ -73,7 +72,7 @@ class NoteState(private val navController: NavHostController, private val noteVi
                             Spacer(modifier = Modifier.height(defaultPadding))
                             NoteScreenSearchListHeader(
                                 searchParameters = it,
-                                onBack = { noteViewModel.updateSearchQuery(null) },
+                                onBack = { noteViewModel.toggleSearchQuery() },
                                 onUpdate = { params -> noteViewModel.updateSearchQuery(params) }
                             )
                         }

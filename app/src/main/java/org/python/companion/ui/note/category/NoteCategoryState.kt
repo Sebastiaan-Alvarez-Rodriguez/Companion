@@ -1,14 +1,19 @@
 package org.python.companion.ui.note.category
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.NoteCategory
+import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.createRoute
 import org.python.companion.ui.note.NoteState
@@ -26,40 +31,6 @@ class NoteCategoryState(
 
     fun NavGraphBuilder.categoryGraph() {
         navigation(startDestination = noteCategoryDestination, route = "category") {
-            composable(noteCategoryDestination) {
-                val noteCategories by noteCategoryViewModel.noteCategories.collectAsState()
-                val isLoading by noteCategoryViewModel.isLoading.collectAsState()
-
-                val selectedItems = remember { mutableStateListOf<NoteCategory>() }
-
-                NoteCategoryScreen(
-                    header = {
-                        if (selectedItems.isEmpty())
-                            NoteCategoryScreenListHeader(
-                                onSearchClick = { /* TODO */ }
-                            )
-                        else
-                            NoteCategoryScreenContextListHeader(
-                                onDeleteClick = { /*TODO*/ },
-                                onSearchClick = { /* TODO */ }
-                            )
-                    },
-                    list = {
-                        NoteCategoryScreenListCheckbox(
-                            noteCategories = noteCategories,
-                            selectedItems = selectedItems,
-                            isLoading = isLoading,
-                            onNewClick = { navigateToNoteCategoryCreate(navController) },
-                            onNoteCategoryClick = { navigateToNoteCategoryEdit(navController, it) },
-                            onCheckClick = {item, nowChecked -> if (nowChecked) selectedItems.add(item) else selectedItems.remove(item) },
-                            onFavoriteClick = { noteCategory ->
-                                noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.setFavorite(noteCategory, !noteCategory.favorite) }
-                            }
-                        )
-                    }
-                )
-            }
-
             composable(
                 route = "$noteCategoryDestination/select/{noteId}",
                 arguments = listOf(navArgument("noteId") { type = NavType.LongType })
@@ -70,12 +41,25 @@ class NoteCategoryState(
                 val noteId: Long = entry.arguments?.getLong("noteId")!!
                 val selectedCategory by noteCategoryViewModel.categoryForNoteLive(noteId).collectAsState(NoteCategory.DEFAULT)
 
+                val searchParameters by noteCategoryViewModel.searchParameters.collectAsState()
+
+                val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
                 NoteCategoryScreen(
                     header = {
                         NoteCategoryScreenListHeader(
                             message = "Select a category.",
-                            onSearchClick = { /* TODO */ }
+                            onSearchClick = { noteCategoryViewModel.toggleSearchQuery() }
                         )
+
+                        searchParameters?.let {
+                            Spacer(modifier = Modifier.height(defaultPadding))
+                            NoteCategoryScreenSearchListHeader(
+                                searchParameters = it,
+                                onBack = { noteCategoryViewModel.toggleSearchQuery() },
+                                onUpdate = { params -> noteCategoryViewModel.updateSearchQuery(params) }
+                            )
+                        }
                     },
                     list = {
                         NoteCategoryScreenListRadio(
@@ -118,7 +102,7 @@ class NoteCategoryState(
                                 conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
                                     scaffoldState.snackbarHostState.showSnackbar(
                                         message = "Cannot override the default category",
-                                        duration = SnackbarDuration.Long
+                                        duration = SnackbarDuration.Short
                                     )
                                 }
                                 else ->
@@ -166,7 +150,7 @@ class NoteCategoryState(
                                 conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
                                     scaffoldState.snackbarHostState.showSnackbar(
                                         message = "Cannot override the default category",
-                                        duration = SnackbarDuration.Long
+                                        duration = SnackbarDuration.Short
                                     )
                                 }
                                 else -> // conflict on non-default category

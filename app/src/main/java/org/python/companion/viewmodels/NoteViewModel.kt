@@ -17,7 +17,7 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
-import org.python.companion.ui.note.SearchParameters
+import org.python.companion.ui.note.NoteSearchParameters
 import org.python.companion.ui.theme.DarkColorPalette
 import org.python.companion.ui.theme.Purple500
 
@@ -30,15 +30,15 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
 
-    private val _searchParameters = MutableStateFlow<SearchParameters?>(null)
+    private val _searchParameters = MutableStateFlow<NoteSearchParameters?>(null)
     private val _isLoading = MutableStateFlow(true)
 
 
     /**
-     * Search parameters to filter [notes] with. If {{null}}, there is no ongoing search.
+     * Search parameters to filter [notes] with.
      * This data is also used inside note views to highlight matches.
      */
-    val searchParameters: StateFlow<SearchParameters?> = _searchParameters
+    val searchParameters: StateFlow<NoteSearchParameters?> = _searchParameters
     val isSearching: StateFlow<Boolean> = _searchParameters.map { it != null && it.text.isNotEmpty() }.stateInViewModel(viewModelScope, false)
 
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -73,18 +73,18 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     /** Sets a note to be or not be favored */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
-    fun updateSearchQuery(searchParameters: SearchParameters?) {
+    fun updateSearchQuery(searchParameters: NoteSearchParameters?) {
         _searchParameters.value = searchParameters
     }
     fun toggleSearchQuery() {
-        _searchParameters.value = if (_searchParameters.value == null) SearchParameters() else null
+        _searchParameters.value = if (_searchParameters.value == null) NoteSearchParameters() else null
     }
 
 
-    fun filterNote(note: Note, params: SearchParameters) =
+    fun filterNote(note: Note, params: NoteSearchParameters) =
         (params.inTitle && note.name.contains(params.text, ignoreCase = !params.caseSensitive)) ||
                 (params.inContent && note.content.contains(params.text, ignoreCase = !params.caseSensitive))
-    fun filterNote(note: Note, params: SearchParameters, re: Regex) =
+    fun filterNote(note: Note, params: NoteSearchParameters, re: Regex) =
         (params.inTitle && note.name.contains(re)) || (params.inContent && note.content.contains(re))
 
     /** Given a text, finds all matches for [searchParameters] */
@@ -136,7 +136,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
         searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
-    private fun notes(params: SearchParameters?) = when (params) {
+    private fun notes(params: NoteSearchParameters?) = when (params) {
         null -> allNotes
         else -> {
             val re = if (params.caseSensitive) Regex(params.text) else Regex(params.text, option = RegexOption.IGNORE_CASE)

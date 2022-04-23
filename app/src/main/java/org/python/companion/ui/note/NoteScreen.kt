@@ -63,7 +63,7 @@ fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit)
 }
 
 @Composable
-fun NoteScreenSearchListHeader(searchParameters: SearchParameters, onBack: () -> Unit, onUpdate: (SearchParameters) -> Unit) {
+fun NoteScreenSearchListHeader(searchParameters: NoteSearchParameters, onBack: () -> Unit, onUpdate: (NoteSearchParameters) -> Unit) {
     UiUtil.GenericListHeader(
         listOf {
             NoteSearch(
@@ -152,10 +152,7 @@ fun NoteItem(
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNoteClick(item) }
-                .semantics(mergeDescendants = true) {},
+            modifier = Modifier.fillMaxWidth().clickable { onNoteClick(item) }.semantics(mergeDescendants = true) {},
         ) {
             Checkbox(modifier = Modifier.weight(0.1f, fill = false), checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
             Text(modifier = Modifier.weight(0.8f, fill = false), text = item.note.name)
@@ -191,10 +188,7 @@ fun SecurityClickItem(text: String, onClick: () -> Unit) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(defaultPadding)
-                .clickable { onClick() }
-                .fillMaxWidth()
+            modifier = Modifier.padding(defaultPadding).clickable { onClick() }.fillMaxWidth()
         ) {
             Text(text)
         }
@@ -203,7 +197,7 @@ fun SecurityClickItem(text: String, onClick: () -> Unit) {
 
 
 
-data class SearchParameters(
+data class NoteSearchParameters(
     val text: String = "",
     val inTitle: Boolean = true,
     val inContent: Boolean = false,
@@ -212,7 +206,7 @@ data class SearchParameters(
 )
 
 @Composable
-fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParameters) -> Unit) {
+fun NoteSearch(searchParameters: NoteSearchParameters, onQueryUpdate: (NoteSearchParameters) -> Unit) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
     val focusRequester = remember { FocusRequester() }
 
@@ -220,9 +214,7 @@ fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParamet
         TextField(
             value = searchParameters.text,
             onValueChange = { onQueryUpdate(searchParameters.copy(text = it)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             singleLine = true,
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding)) },
             trailingIcon = {
@@ -238,28 +230,28 @@ fun NoteSearch(searchParameters: SearchParameters, onQueryUpdate: (SearchParamet
         }
 
         Row {
-            Column {
-                UiUtil.LabelledCheckBox(
-                    checked = searchParameters.inTitle,
-                    label = "Search in title",
-                    onCheckedChange = { onQueryUpdate(searchParameters.copy(inTitle = !searchParameters.inTitle))}
-                )
-                UiUtil.LabelledCheckBox(
-                    checked = searchParameters.inContent,
-                    label = "Search in contents",
-                    onCheckedChange = { onQueryUpdate(searchParameters.copy(inContent = !searchParameters.inContent))}
-                )
-            }
-            Column {
+            Column(modifier = Modifier.fillMaxWidth(0.5f)) {
                 UiUtil.LabelledCheckBox(
                     checked = searchParameters.regex,
                     label = "Regex",
                     onCheckedChange = { onQueryUpdate(searchParameters.copy(regex = !searchParameters.regex))}
                 )
                 UiUtil.LabelledCheckBox(
+                    checked = searchParameters.inTitle,
+                    label = "Search in title",
+                    onCheckedChange = { onQueryUpdate(searchParameters.copy(inTitle = !searchParameters.inTitle))}
+                )
+            }
+            Column {
+                UiUtil.LabelledCheckBox(
                     checked = searchParameters.caseSensitive,
                     label = "Case sensitive",
                     onCheckedChange = { onQueryUpdate(searchParameters.copy(caseSensitive = !searchParameters.caseSensitive))}
+                )
+                UiUtil.LabelledCheckBox(
+                    checked = searchParameters.inContent,
+                    label = "Search in contents",
+                    onCheckedChange = { onQueryUpdate(searchParameters.copy(inContent = !searchParameters.inContent))}
                 )
             }
         }
