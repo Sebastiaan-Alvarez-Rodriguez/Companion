@@ -73,7 +73,7 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
     suspend fun add(note: Note): Long? = secureToStorage(note)?.let { noteStore.add(it) }
 
     /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
-    suspend fun upsert(note: Note): Boolean = secureToStorage(note)?.let { noteStore.upsert(it); true } ?: false
+    suspend fun upsert(note: Note): Long? = secureToStorage(note)?.let { noteStore.upsert(it) }
 
     suspend fun update(oldNote: Note, updatedNote: Note): Boolean = secureUpdate(oldNote, updatedNote)?.let { noteStore.update(it); true } ?: false
 

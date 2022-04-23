@@ -56,7 +56,7 @@ class NoteStore(database: CompanionDatabase) {
         }
     }
 
-    suspend fun upsert(note: Note): Unit = noteDao.upsert(note.toRoom())
+    suspend fun upsert(note: Note): Long = noteDao.upsert(note.toRoom())
 
     suspend fun update(note: Note) = noteDao.update(note.toRoom())
 

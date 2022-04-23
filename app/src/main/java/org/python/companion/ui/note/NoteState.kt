@@ -138,22 +138,30 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     }
                 )
             ) {
+                val hasAuthenticated by noteViewModel.authenticated.collectAsState()
+
                 NoteScreenEditNew(navController = navController) { toSaveNote ->
                     Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
-                    noteViewModel.viewModelScope.launch {
-                        val conflict = noteViewModel.hasConflict(toSaveNote.name)
-                        Timber.d("New note: conflict: $conflict")
-                        if (!conflict) {
-                            noteViewModel.add(toSaveNote)?.let {
-                                navController.popBackStack()
-                                navigateToNoteView(navController, it)
-                            }
-                        } else {
-                            UiUtil.UIUtilState.navigateToOverride(navController) {
-                                Timber.d("New note: Overriding ${toSaveNote.name}...")
-                                noteViewModel.viewModelScope.launch { noteViewModel.upsert(toSaveNote) }
-                                navController.popBackStack()
-                                navigateToNoteView(navController, toSaveNote.noteId)
+                    if (!hasAuthenticated && toSaveNote.secure) {
+                        SecurityState.navigateToSecurityPick(navController)
+                    } else {
+                        noteViewModel.viewModelScope.launch {
+                            val conflict = noteViewModel.hasConflict(toSaveNote.name)
+                            Timber.d("New note: conflict: $conflict")
+                            if (!conflict) {
+                                noteViewModel.add(toSaveNote)?.let {
+                                    navController.popBackStack()
+                                    navigateToNoteView(navController, it)
+                                }
+                            } else {
+                                UiUtil.UIUtilState.navigateToOverride(navController) {
+                                    Timber.d("New note: Overriding $conflict with $toSaveNote...")
+                                    noteViewModel.viewModelScope.launch {
+                                        val newId = noteViewModel.upsert(toSaveNote)
+                                        navController.popBackStack()
+                                        navigateToNoteView(navController, newId!!)
+                                    }
+                                }
                             }
                         }
                     }
@@ -176,14 +184,14 @@ class NoteState(private val navController: NavHostController, private val noteVi
                     offset = offset,
                     navController = navController,
                     onSaveClick = { toSaveNote, existingNote ->
-                        Timber.d("Found new note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
+                        Timber.d("Found edited note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         if (!hasAuthenticated && toSaveNote.secure) {
                             SecurityState.navigateToSecurityPick(navController)
                         } else {
                             noteViewModel.viewModelScope.launch {
                                 // If note name == same as before, there is no conflict. Otherwise, we must check.
                                 val conflict = if (toSaveNote.name == existingNote!!.name) false else noteViewModel.hasConflict(toSaveNote.name)
-                                Timber.d("Edit note: edited note has changed name=${toSaveNote.name != existingNote.name}, now conflict: ${conflict}")
+                                Timber.d("Edit note: edited note has changed name=${toSaveNote.name != existingNote.name}, now conflict: $conflict")
                                 if (!conflict) {
                                     noteViewModel.update(existingNote, toSaveNote)
                                     navController.navigateUp()
@@ -193,8 +201,8 @@ class NoteState(private val navController: NavHostController, private val noteVi
                                         noteViewModel.viewModelScope.launch {
                                             noteViewModel.delete(existingNote)
                                             noteViewModel.upsert(toSaveNote)
+                                            navController.navigateUp()
                                         }
-                                        navController.navigateUp()
                                     }
                                 }
                             }

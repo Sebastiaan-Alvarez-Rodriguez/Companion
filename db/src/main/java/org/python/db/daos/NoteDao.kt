@@ -58,7 +58,7 @@ interface NoteDao {
     suspend fun add(item: RoomNote): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(item: RoomNote)
+    suspend fun upsert(item: RoomNote): Long
 
     @Update
     suspend fun update(item: RoomNote)
