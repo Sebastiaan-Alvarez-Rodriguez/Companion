@@ -249,7 +249,6 @@ object UiUtil {
         showItemFunc: @Composable LazyItemScope.(item: T) -> Unit,
         fab: (@Composable BoxScope.() -> Unit)? = null
     ) {
-        //    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
         val defaultPadding = dimensionResource(id = R.dimen.padding_default)
         val lazyCollectItems: LazyPagingItems<T> = items.collectAsLazyPagingItems()
         val listState: LazyListState = rememberLazyListState()

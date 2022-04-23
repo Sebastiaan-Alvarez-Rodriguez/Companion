@@ -127,8 +127,7 @@ class NoteCategoryState(
                 NoteCategoryScreenEdit(
                     noteCategoryViewModel = noteCategoryViewModel,
                     id = categoryId,
-                    onDeleteClick =
-                        when (categoryId) {
+                    onDeleteClick = when (categoryId) {
                             NoteCategory.DEFAULT.categoryId -> null
                             else -> { category ->
                                 if (category != null) // existing category, delete and return
@@ -172,12 +171,6 @@ class NoteCategoryState(
     }
     companion object {
         val noteCategoryDestination = "${NoteState.noteDestination}/category"
-
-        fun navigateToCategoryScreen(navController: NavController) {
-            navController.navigate(noteCategoryDestination) {
-                launchSingleTop = true
-            }
-        }
 
         fun navigateToCategorySelect(navController: NavController, noteId: Long) =
             navController.navigate(createRoute("$noteCategoryDestination/select", args = listOf(noteId.toString())))

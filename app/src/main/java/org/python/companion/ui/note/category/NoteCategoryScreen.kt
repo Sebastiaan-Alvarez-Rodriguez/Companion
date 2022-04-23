@@ -44,18 +44,16 @@ fun NoteCategoryScreen(
 
 @Composable
 fun NoteCategoryScreenListHeader(message: String? = null, onSearchClick: () -> Unit) {
-    val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     UiUtil.GenericListHeader(
         listOf(
             message?.let {
                 {
-                    Text(text = message, modifier = Modifier.padding(horizontal = tinyPadding))
+                    Text(text = message, modifier = Modifier.padding(horizontal = defaultPadding))
                 }
             } ?: {},
             {
-                IconButton(
-                    modifier = Modifier.padding(tinyPadding),
-                    onClick = { onSearchClick() }) {
+                IconButton(onClick = { onSearchClick() }) {
                     Icon(Icons.Filled.Search, "Search")
                 }
             }
@@ -108,6 +106,7 @@ fun NoteCategoryItemRadio(
  * @param noteCategory NoteCategory to display.
  * @param onNoteCategoryClick Lambda to perform on noteCategory clicks.
  * @param onFavoriteClick Lambda to perform on noteCategory favorite clicks.
+ * @param selectorBox Optional box rendered left of the item to display selections.
  */
 @Composable
 fun NoteCategoryItem(
@@ -116,6 +115,8 @@ fun NoteCategoryItem(
     onFavoriteClick: (NoteCategory) -> Unit,
     selectorBox: @Composable (RowScope.() -> Unit)? = null
 ) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
     Card(border = BorderStroke(width = 1.dp, Color(noteCategory.color.toArgb())), elevation = 5.dp) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -123,7 +124,7 @@ fun NoteCategoryItem(
             modifier = Modifier.fillMaxWidth().clickable { onNoteCategoryClick(noteCategory) }.semantics(mergeDescendants = true) {},
         ) {
             selectorBox?.let { it() }
-            Text(modifier = Modifier.weight(1f, fill = false), text = noteCategory.name)
+            Text(modifier = Modifier.weight(1f, fill = false).padding(horizontal = defaultPadding), text = noteCategory.name)
             IconButton(onClick = { onFavoriteClick(noteCategory) }) {
                 Icon(
                     imageVector = if (noteCategory.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
@@ -198,8 +199,3 @@ fun NoteCategorySearch(searchParameters: NoteCategorySearchParameters, onQueryUp
         }
     }
 }
-
-
-
-
-

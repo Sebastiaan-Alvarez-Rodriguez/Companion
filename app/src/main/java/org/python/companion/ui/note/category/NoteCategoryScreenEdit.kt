@@ -23,7 +23,6 @@ import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
-import java.lang.RuntimeException
 
 
 /** Loads notecategory to edit, then shows edit screen. */
@@ -110,7 +109,7 @@ fun NoteCategoryScreenEditReady(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
     Column {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = defaultPadding)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = defaultPadding).padding(top = defaultPadding)) {
             NoteCategoryItem(noteCategory = createNoteCategoryObject(), onNoteCategoryClick = {}, onFavoriteClick = { favorite = !favorite})
         }
         Card(modifier = Modifier.fillMaxWidth().padding(defaultPadding).verticalScroll(rememberScrollState()), elevation = 5.dp) {

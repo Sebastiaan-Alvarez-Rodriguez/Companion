@@ -33,7 +33,6 @@ fun AnniversaryBody(
     onFavoriteClick: (Anniversary) -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-//    TODO: Maybe add sticky headers: https://developer.android.com/jetpack/compose/lists
     val items: LazyPagingItems<Anniversary> = anniversaryList.collectAsLazyPagingItems()
     Box(
         Modifier
