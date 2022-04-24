@@ -47,6 +47,9 @@ interface NoteDao {
     @Query("select exists(select 1 from RoomNote where name = :name)")
     suspend fun hasConflict(name: String): Boolean
 
+    @Query("select secure from RoomNote where name = :name")
+    suspend fun securityLevelForName(name: String): Boolean?
+
     @Query("update RoomNote set favorite = :favorite where noteId == :noteId")
     suspend fun setFavorite(noteId: Long, favorite: Boolean)
     suspend fun setFavorite(note: RoomNote, favorite: Boolean) = setFavorite(note.noteId, favorite)

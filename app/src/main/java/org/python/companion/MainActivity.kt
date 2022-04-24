@@ -63,11 +63,12 @@ class MainActivity : FragmentActivity() {
                     activity = this,
                     navController = navController,
                     securityViewModel = securityViewModel,
-                    noteViewModel = noteViewModel,
+                    noteViewModel = noteViewModel
                 )
                 val noteState = NoteState.rememberState(
                     navController = navController,
-                    noteViewModel = noteViewModel
+                    noteViewModel = noteViewModel,
+                    scaffoldState = scaffoldState
                 )
                 val noteCategoryState = NoteCategoryState.rememberState(
                     navController = navController,

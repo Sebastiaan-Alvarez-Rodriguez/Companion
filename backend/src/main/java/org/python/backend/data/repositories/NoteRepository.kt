@@ -59,6 +59,9 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
     /** @return `true` if a conflicting note name was found, `false` otherwise */
     suspend fun hasConflict(name: String): Boolean = noteStore.hasConflict(name)
 
+    /** @return `true` if a note may be overridden, `false` otherwise. If no conflict for given note name exists, returns `true.*/
+    suspend fun mayOverride(name: String) = noteStore.mayOverride(name, securityActor.authenticated.value)
+
     /**
      * Sets note to be a regular or favored note.
      * @param note to set value for.

@@ -68,6 +68,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)
 
     suspend fun hasConflict(name: String): Boolean = noteRepository.hasConflict(name)
+    suspend fun mayOverride(name: String): Boolean = noteRepository.mayOverride(name)
 
     /** Sets a note to be or not be favored */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)

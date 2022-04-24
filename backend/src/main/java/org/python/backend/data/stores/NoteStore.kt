@@ -44,6 +44,8 @@ class NoteStore(database: CompanionDatabase) {
 
     suspend fun hasConflict(name: String): Boolean = noteDao.hasConflict(name)
 
+    suspend fun mayOverride(name: String, clearanceLevel: Boolean): Boolean = noteDao.securityLevelForName(name)?.let { !it || clearanceLevel } ?: true
+
     suspend fun setFavorite(note: Note, favorite: Boolean) = noteDao.setFavorite(note.noteId, favorite)
 
     suspend fun add(note: Note): Long? {
