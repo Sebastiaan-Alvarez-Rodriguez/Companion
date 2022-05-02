@@ -10,39 +10,37 @@ import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.stores.NoteStore
-import org.python.backend.security.Securer
-import org.python.backend.security.SecurityActor
+import org.python.datacomm.DataResult
+import org.python.datacomm.Result
+import org.python.security.Securer
+import org.python.security.SecurityActor
 import org.python.db.CompanionDatabase
 
 class NoteRepository(private val securityActor: SecurityActor, private val noteStore: NoteStore) {
-    constructor(securityActor: SecurityActor, companionDatabase: CompanionDatabase) :
-            this(securityActor, NoteStore(companionDatabase))
+    constructor(securityActor: SecurityActor, companionDatabase: CompanionDatabase) : this(securityActor, NoteStore(companionDatabase))
+
+    ////////////////////////////////
+    // Secure section;
+    // All functions here have user verification checks built-in.
+    ////////////////////////////////
 
     /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
-    fun allNotes(): Flow<PagingData<NoteWithCategory>> = securityActor.authenticated.flatMapLatest { authed ->
-        if (authed)
-            noteStore.getAllNotesWithSecure().map { page -> page.map {
-                NoteWithCategory(
-                    (secureToUI(it.note) ?: throw IllegalStateException("Could not decrypt note")),
-                    it.noteCategory
-                )
-            } }
-        else
-            noteStore.getAllNotes()
+    fun allNotes(): Flow<PagingData<NoteWithCategory>> = securityActor.clearance.flatMapLatest { clearance ->
+        noteStore.getAllNotes(clearance).map { page -> page.map {
+            NoteWithCategory((secureToUI(it.note) ?: throw IllegalStateException("Could not decrypt note")), it.noteCategory)
+        } }
     }
 
-    fun hasSecureNotes(): Flow<Boolean> = noteStore.hasSecureNotes()
-
-    suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.authenticated.value)?.let { secureToUI(it) }
+    suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.clearance.value)?.let { secureToUI(it) }
     suspend fun getWithCategory(id: Long): NoteWithCategory? =
-        noteStore.getWithCategory(id, securityActor.authenticated.value)?.let { data ->
-                NoteWithCategory(
-                    data.note.let { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") },
-                    data.noteCategory
-                )
+        noteStore.getWithCategory(id, securityActor.clearance.value)?.let { data ->
+            NoteWithCategory(
+                data.note.let { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") },
+                data.noteCategory
+            )
         }
     fun getWithCategoryLive(id: Long): Flow<NoteWithCategory?> =
-        noteStore.getWithCategoryLive(id, securityActor.authenticated.value).map { item ->
+        noteStore.getWithCategoryLive(id, securityActor.clearance.value).map { item ->
             item?.let { data ->
                 NoteWithCategory(
                     data.note.let { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") },
@@ -50,67 +48,84 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
                 )
             }
         }
+
     /**
      * Rerieves a note by name.
      * @return found note on success, `null` if no such name exists.
      */
-    suspend fun getByName(name: String): Note? = noteStore.getByName(name, securityActor.authenticated.value)?.let { secureToUI(it) }
-
-    /** @return `true` if a conflicting note name was found, `false` otherwise */
-    suspend fun hasConflict(name: String): Boolean = noteStore.hasConflict(name)
-
-    /** @return `true` if a note may be overridden, `false` otherwise. If no conflict for given note name exists, returns `true.*/
-    suspend fun mayOverride(name: String) = noteStore.mayOverride(name, securityActor.authenticated.value)
+    suspend fun getByName(name: String): Note? = noteStore.getByName(name, securityActor.clearance.value)?.let { secureToUI(it) }
 
     /**
      * Sets note to be a regular or favored note.
      * @param note to set value for.
      * @param favorite new favored status.
      */
-    suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteStore.setFavorite(note, favorite)
+    suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteStore.setFavorite(note, favorite, securityActor.clearance.value)
 
-    /**
-     * Adds a note. If a conflict exists, skips adding proposed item.
-     * @return Inserted id on success, `null on conflict.
-     */
-    suspend fun add(note: Note): Long? = secureToStorage(note)?.let { noteStore.add(it) }
+    /** Inserts-or-updates [Note]. [Result] contains [Long], the updated id, on success. */
+    suspend fun upsert(note: Note): Result =
+        secureToStorage(note).pipeData<Note> { it.let { noteStore.upsert(it, securityActor.clearance.value) } }
 
-    /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
-    suspend fun upsert(note: Note): Long? = secureToStorage(note)?.let { noteStore.upsert(it) }
-
-    suspend fun update(oldNote: Note, updatedNote: Note): Boolean = secureUpdate(oldNote, updatedNote)?.let { noteStore.update(it); true } ?: false
+    /** Updates [Note]. [Result] contains [Long], the updated id, on success. */
+    suspend fun update(oldNote: Note, updatedNote: Note): Result =
+        secureToStorage(updatedNote)
+            .pipeData<Note> { it.let { note -> noteStore.update(note, securityActor.clearance.value) } }
+            .pipe { secureUpdate(oldNote, updatedNote) }
+            .pipe { DataResult.from(updatedNote.noteId) }
 
     suspend fun delete(items: Collection<Note>): Unit = coroutineScope {
         for (item in items)
             launch {
-                secureDelete(item)
-                noteStore.delete(item)
+                noteStore.delete(item, securityActor.clearance.value).apply { secureDelete(item) }
             }
     }
-    suspend fun delete(note: Note): Unit = noteStore.delete(secureDelete(note))
+    suspend fun delete(note: Note): Result = noteStore.delete(note, securityActor.clearance.value).apply { secureDelete(note) }
 
     suspend fun deleteAllSecure(): Unit = noteStore.deleteAllSecure { name -> secureDelete(name) }
 
 
-    private fun secureToStorage(note: Note): Note? {
-        if (note.secure) {
-            val encrypted = Securer.encrypt(data = note.content, alias = note.name) ?: return null
-            return note.copy(content = encrypted.dataString(), iv = encrypted.iv)
+    ////////////////////////////////
+    // Insecure section;
+    // Only crucial information may pass through here.
+    ////////////////////////////////
+
+    fun hasSecureNotes(): Flow<Boolean> = noteStore.hasSecureNotes()
+
+    /** @return `true` if a conflicting note name was found, `false` otherwise */
+    suspend fun hasConflict(name: String): Boolean = noteStore.hasConflict(name)
+
+    /** @return `true` if a note may be overridden, `false` otherwise. If no conflict for given note name exists, returns `true.*/
+    suspend fun mayOverride(name: String) = noteStore.mayOverride(name, securityActor.clearance.value)
+
+
+    /**
+     * Adds a note. If a conflict exists, skips adding proposed item.
+     * @return [DataResult]<[Long]> Inserted id on success, failure result otherwise.
+     */
+    suspend fun add(note: Note): Result = secureToStorage(note).pipeData<Note> { noteStore.add(it) }
+
+    ////////////////////////////////
+    // Utility section;
+    ////////////////////////////////
+
+    /** Returns a [DataResult]<[Note]> on success, failure result otherwise */
+    private fun secureToStorage(note: Note): Result = Result.fromObject(failMessage = "Could not encrypt note '${note.name}'") {
+        when {
+            note.securityLevel > 0 -> Securer.encrypt(data = note.content, alias = note.name)?.let { note.copy(content = it.dataString(), iv = it.iv) }
+            else -> note
         }
-        return note
     }
-    private fun secureUpdate(oldNote: Note, updatedNote: Note): Note? {
-        if (oldNote.secure) {
-            if (oldNote.name != updatedNote.name) // alias change -> remove keystore alias
-                secureDelete(oldNote)
-            else if (!updatedNote.secure) // no longer secured -> remove keystore alias
-                secureDelete(oldNote)
+
+    private fun secureUpdate(oldNote: Note, updatedNote: Note): Result {
+        when {
+            oldNote.securityLevel > 0 && oldNote.name != updatedNote.name -> secureDelete(oldNote) // alias change -> remove keystore alias
+            oldNote.securityLevel > 0 && updatedNote.securityLevel == 0 -> secureDelete(oldNote) // no longer secured -> remove keystore alias
         }
-        return secureToStorage(updatedNote)
+        return Result.DEFAULT_SUCCESS
     }
 
     private fun secureToUI(note: Note): Note? {
-        if (note.secure) {
+        if (note.securityLevel > 0) {
             val decrypted = Securer.decrypt(data = note.content, iv = note.iv, alias = note.name) ?: return null
             return note.copy(content = decrypted)
         }
@@ -118,7 +133,7 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
     }
 
     private fun secureDelete(note: Note): Note {
-        if (note.secure)
+        if (note.securityLevel > 0)
             secureDelete(note.name)
         return note
     }

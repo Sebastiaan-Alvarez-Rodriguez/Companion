@@ -4,7 +4,7 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.stores.NoteCategoryStore
-import org.python.backend.security.SecurityActor
+import org.python.security.SecurityActor
 import org.python.db.CompanionDatabase
 
 class NoteCategoryRepository(private val securityActor: SecurityActor, private val noteCategoryStore: NoteCategoryStore) {
@@ -33,7 +33,7 @@ class NoteCategoryRepository(private val securityActor: SecurityActor, private v
 
     /** Returns the live category for a note */
     fun categoryForNoteLive(noteId: Long): Flow<NoteCategory> =
-        noteCategoryStore.categoryForNoteLive(noteId, securityActor.authenticated.value)
+        noteCategoryStore.categoryForNoteLive(noteId, securityActor.clearance.value)
 
     /** Sets note category for given note */
     suspend fun updateCategoryForNote(noteId: Long, categoryId: Long): Unit = noteCategoryStore.updateCategoryForNote(noteId, categoryId)

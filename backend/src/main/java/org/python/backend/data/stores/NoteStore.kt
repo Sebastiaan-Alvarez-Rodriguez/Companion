@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.mapLatest
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
+import org.python.datacomm.DataResult
+import org.python.datacomm.Result
+import org.python.datacomm.ResultType
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNote
 import org.python.db.entities.note.RoomNoteCategory
@@ -15,56 +18,68 @@ import org.python.db.entities.note.RoomNoteWithCategory
 class NoteStore(database: CompanionDatabase) {
     private val noteDao = database.noteDao
 
-    fun getAllNotes(): Flow<PagingData<NoteWithCategory>> = pagingNote { noteDao.getAll() }
+    ////////////////////////////////
+    // Secure section;
+    // All functions here have user verification checks built-in.
+    ////////////////////////////////
 
-    fun getAllNotesWithSecure(): Flow<PagingData<NoteWithCategory>> = pagingNote { noteDao.getAllWithSecure() }
-
-    fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()
+    fun getAllNotes(clearance: Int): Flow<PagingData<NoteWithCategory>> = pagingNote { noteDao.getAll(clearance) }
 
     /**
      * Searches note by id.
      * @param id Id to search for.
-     * @param secure If set, searches secure notes and insecure notes. Otherwise, only searches insecure notes.
+     * @param clearance Current clearance level of the user.
      * @return Found note if present, null otherwise
      */
-    suspend fun get(id: Long, secure: Boolean = false): Note? = noteDao.get(id, secure)?.toUI()
-    suspend fun getWithCategory(id: Long, secure: Boolean = false): NoteWithCategory? =
-        noteDao.getWithCategory(id, secure)?.toUI()
+    suspend fun get(id: Long, clearance: Int): Note? = noteDao.get(id, clearance)?.toUI()
+    suspend fun getWithCategory(id: Long, clearance: Int): NoteWithCategory? = noteDao.getWithCategory(id, clearance)?.toUI()
 
-    fun getWithCategoryLive(id: Long, secure: Boolean = false): Flow<NoteWithCategory?> =
-        noteDao.getWithCategoryLive(id, secure).mapLatest { it?.toUI() }
+    fun getWithCategoryLive(id: Long, clearance: Int): Flow<NoteWithCategory?> =
+        noteDao.getWithCategoryLive(id, clearance).mapLatest { it?.toUI() }
 
     /**
      * Searches note by name.
      * @param name Exact name of note.
-     * @param secure If set, searches secure notes and insecure notes. Otherwise, only searches insecure notes.
+     * @param clearance Current clearance level of the user.
      * @return Found note if present, null otherwise
      */
-    suspend fun getByName(name: String, secure: Boolean = false): Note? = noteDao.getByName(name, secure)?.toUI()
+    suspend fun getByName(name: String, clearance: Int): Note? = noteDao.getByName(name, clearance)?.toUI()
+
+    suspend fun setFavorite(note: Note, favorite: Boolean, clearance: Int) = noteDao.setFavorite(note.noteId, favorite, clearance)
+
+    suspend fun upsert(note: Note, clearance: Int): Result = noteDao.upsert(note.toRoom(), clearance)
+
+    suspend fun update(note: Note, clearance: Int) = when (noteDao.update(note.toRoom(), clearance)) {
+        0 -> Result(message = "Could not update note '${note.name}' (does not exist)", type = ResultType.FAILED)
+        else -> Result.DEFAULT_SUCCESS
+    }
+
+    suspend fun delete(note: Note, clearance: Int): Result = when (noteDao.delete(note.toRoom(), clearance)) {
+        0 -> Result(message = "Could not delete note '${note.name}' (does not exist)", type = ResultType.FAILED)
+        else -> Result.DEFAULT_SUCCESS
+    }
+
+    suspend fun deleteAllSecure(foreach: ((String) -> Unit)? = null) = noteDao.deleteAllSecure(foreach)
+
+    ////////////////////////////////
+    // Insecure section;
+    // Only crucial information may pass through here.
+    ////////////////////////////////
+
+    fun hasSecureNotes(): Flow<Boolean> = noteDao.hasSecureNotes()
 
     suspend fun hasConflict(name: String): Boolean = noteDao.hasConflict(name)
 
-    suspend fun mayOverride(name: String, clearanceLevel: Boolean): Boolean = noteDao.securityLevelForName(name)?.let { !it || clearanceLevel } ?: true
+    suspend fun mayOverride(name: String, clearance: Int): Boolean =
+        noteDao.clearanceLevelForName(name)?.let { it <= clearance } ?: true
 
-    suspend fun setFavorite(note: Note, favorite: Boolean) = noteDao.setFavorite(note.noteId, favorite)
-
-    suspend fun add(note: Note): Long? {
+    suspend fun add(note: Note): Result {
         return try {
-            noteDao.add(note.toRoom())
+            DataResult.from(noteDao.add(note.toRoom()))
         } catch (e: android.database.sqlite.SQLiteConstraintException) {
-            null
-        } catch (e: Exception) {
-            null
+            Result(message = "Could not insert note due to conflict", type = ResultType.FAILED)
         }
     }
-
-    suspend fun upsert(note: Note): Long = noteDao.upsert(note.toRoom())
-
-    suspend fun update(note: Note) = noteDao.update(note.toRoom())
-
-    suspend fun delete(note: Note) = noteDao.delete(note.toRoom())
-
-    suspend fun deleteAllSecure(foreach: ((String) -> Unit)? = null) = noteDao.deleteAllSecure(foreach)
 }
 
 private fun pagingNote(block: () -> PagingSource<Int, RoomNoteWithCategory>): Flow<PagingData<NoteWithCategory>> =
@@ -76,7 +91,7 @@ private fun Note.toRoom() = RoomNote(
     name = name,
     content = content,
     favorite = favorite,
-    secure = secure,
+    securityLevel = securityLevel,
     iv = iv,
     categoryKey = categoryKey
 )
@@ -86,7 +101,7 @@ private fun RoomNote.toUI() = Note(
     name = name,
     content = content,
     favorite = favorite,
-    secure = secure,
+    securityLevel = securityLevel,
     iv = iv,
     categoryKey = categoryKey
 )

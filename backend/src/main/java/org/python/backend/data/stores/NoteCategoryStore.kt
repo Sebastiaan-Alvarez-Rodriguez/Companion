@@ -28,7 +28,7 @@ class NoteCategoryStore(database: CompanionDatabase) {
 
     suspend fun setFavorite(category: NoteCategory, favorite: Boolean) = noteCategoryDao.setFavorite(category.categoryId, favorite)
 
-    fun categoryForNoteLive(noteId: Long, secure: Boolean): Flow<NoteCategory> = noteCategoryDao.categoryForNoteLive(noteId, secure).map { it.toUI() }
+    fun categoryForNoteLive(noteId: Long, clearance: Int): Flow<NoteCategory> = noteCategoryDao.categoryForNoteLive(noteId, clearance).map { it.toUI() }
 
     suspend fun updateCategoryForNote(noteId: Long, categoryId: Long) = noteCategoryDao.updateCategoryForNote(noteId, categoryId)
 

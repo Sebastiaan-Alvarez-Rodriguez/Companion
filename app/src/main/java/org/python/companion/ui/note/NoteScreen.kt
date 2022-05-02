@@ -168,7 +168,7 @@ fun NoteItem(
                         contentDescription = "Favorite"
                     )
                 }
-                if (item.note.secure)
+                if (item.note.securityLevel > 0)
                     Icon(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Protected",

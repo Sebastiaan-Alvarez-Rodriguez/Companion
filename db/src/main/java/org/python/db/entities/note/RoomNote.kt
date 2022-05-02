@@ -8,11 +8,11 @@ data class RoomNote(
     val name: String,
     val content: String,
     val favorite: Boolean,
-    val secure: Boolean,
+    val securityLevel: Int,
     val iv: ByteArray,
     val categoryKey: Long,
 ) {
-    override fun equals(other: Any?): Boolean =  other is RoomNote && this.noteId == other.noteId
+    override fun equals(other: Any?): Boolean = other is RoomNote && this.noteId == other.noteId
     override fun hashCode(): Int = this.noteId.hashCode()
 }
 
@@ -22,5 +22,5 @@ data class RoomNoteWithCategory(
         parentColumn = "categoryKey",
         entityColumn = "categoryId"
     )
-    @Embedded val noteCategory: RoomNoteCategory
+    val noteCategory: RoomNoteCategory
 )

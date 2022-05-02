@@ -1,4 +1,4 @@
-package org.python.backend.security
+package org.python.security
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
-import org.python.backend.util.CoroutineUtil
+import org.python.datacomm.Result
+import org.python.datacomm.ResultType
+import org.python.security.util.CoroutineUtil
 import timber.log.Timber
 
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE)
@@ -52,10 +54,9 @@ interface SecurityInterfaceBase {
 
     /**
      * Whether this actor is available at this time.
-     * @return Message with <code>message.type == SEC_CORRECT</code> and no body on success,
-     * message with a human-readable error otherwise.
+     * @return `true` when actor is available, `false` otherwise.
      */
-    fun actorAvailable(): VerificationMessage
+    fun actorAvailable(): Result
 
     /** Whether a credential has been set or not. */
     fun hasCredentials(): Boolean
@@ -63,9 +64,9 @@ interface SecurityInterfaceBase {
     /**
      * Verifies given token for correctness.
      * @param token Token to verify. Can be <code>null</code>, as some actors do not need anything from users.
-     * @return message indicating verification result status.
+     * @return Verification result indicating new status.
      */
-    suspend fun verify(token: VerificationToken? = null): VerificationMessage
+    suspend fun verify(token: VerificationToken? = null): VerificationResult
 }
 
 interface SecurityInterface : SecurityInterfaceBase {
@@ -77,7 +78,7 @@ interface SecurityInterface : SecurityInterfaceBase {
      * @return Message providing status.
      * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
-    suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken): VerificationMessage
+    suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken): Result
 }
 
 internal interface SecurityInterfaceInternal : SecurityInterfaceBase {
@@ -86,16 +87,16 @@ internal interface SecurityInterfaceInternal : SecurityInterfaceBase {
      * In such cases, caller must pass a verification object.
      * @param oldToken Optional object to call with verify-call. Required if a credential exists.
      * @param newToken Credentials to set.
-     * @param authenticated Whether we are authenticated at the moment.
+     * @param clearance Current clearance level.
      * @return Message providing status.
      * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
-    suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken, authenticated: Boolean): VerificationMessage
+    suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken, clearance: Int): Result
 
 }
 class SecurityActor : SecurityInterface {
     private var internalActor: SecurityInterfaceInternal? = null
-    var authenticated = MutableStateFlow(false)
+    var clearance = MutableStateFlow<Int>(0)
     private val mutex = Mutex()
 
     suspend fun <T> withLock(action: () -> T): T {
@@ -113,32 +114,24 @@ class SecurityActor : SecurityInterface {
         }
     }
 
-    fun logout() = setAuthenticated(false)
+    fun logout() = setClearanceLevel(0)
 
-    private fun setAuthenticated(newValue: Boolean) = authenticated.update { newValue }
+    private fun setClearanceLevel(newValue: Int) = clearance.update { newValue }
 
     override val type: Int = internalActor?.type ?: TYPE_UNDEFINED
 
-    override fun actorAvailable(): VerificationMessage {
-        return internalActor?.actorAvailable()
-            ?: throw IllegalAccessException("Must set internal actor first")
+    override fun actorAvailable(): Result = internalActor?.actorAvailable() ?: Result(ResultType.FAILED, "Internal problem with security actor")
+
+    override fun hasCredentials(): Boolean = internalActor?.hasCredentials() ?: throw IllegalAccessException("Internal problem with security actor")
+
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): Result {
+        return internalActor?.setCredentials(oldToken, newToken, clearance.value) ?: Result(ResultType.FAILED, "Internal problem with security actor")
     }
 
-    override fun hasCredentials(): Boolean {
-        return internalActor?.hasCredentials()
-            ?: throw IllegalAccessException("Must set internal actor first")
-    }
-
-    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): VerificationMessage {
-        return internalActor?.setCredentials(oldToken, newToken, authenticated.value)
-            ?: throw IllegalAccessException("Must set internal actor first")
-    }
-
-    override suspend fun verify(token: VerificationToken?): VerificationMessage {
-        val msg = internalActor?.verify(token)
-            ?: throw IllegalAccessException("Must set internal actor first")
-        if (msg.type == VerificationMessage.SEC_CORRECT)
-            setAuthenticated(true)
+    override suspend fun verify(token: VerificationToken?): VerificationResult {
+        val msg = internalActor?.verify(token) ?: throw IllegalAccessException("Internal problem with security actor")
+        if (msg.type == ResultType.SUCCESS && msg.resultStatus == VerificationResult.SEC_CORRECT)
+            setClearanceLevel(1)
         return msg
     }
 
@@ -147,7 +140,7 @@ class SecurityActor : SecurityInterface {
         const val TYPE_BIO = 2
         /* Indicates that user has not yet set a preference */
         const val TYPE_UNDEFINED = -1
-        const val security_storage = "SECURITY_ACTOR_STORAGE"
+        const val security_storage = "SECURITY_ACTOR_STORAGE" // dictionary key for security-related storage
     }
 }
 
@@ -168,65 +161,46 @@ internal class BioActor(
 
     override val type: Int = SecurityActor.TYPE_BIO
 
-    override fun actorAvailable(): VerificationMessage {
+    override fun actorAvailable(): Result {
         val biometricManager = BiometricManager.from(activity.baseContext)
         return when (val status = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)) {
-            BiometricManager.BIOMETRIC_SUCCESS -> VerificationMessage.createCorrect()
-            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> VerificationMessage.createIncorrect(
-                body = StatusBody.IncorrectBody("Biometrics hardware in use by other app.")
-            )
-            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> VerificationMessage.createIncorrect(
-                body = StatusBody.IncorrectBody("No biometrics enrolled")
-            )
-            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> VerificationMessage.createIncorrect(
-                body = StatusBody.IncorrectBody("No biometrics hardware detected")
-            )
-            BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> VerificationMessage.createIncorrect(
-                body = StatusBody.IncorrectBody("Biometrics hardware does not satisfy this app's requirements")
-            )
-            BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED -> VerificationMessage.createIncorrect(
-                body = StatusBody.IncorrectBody("Outdated software for biometrics hardware detected. Update required.")
-            )
-            BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> VerificationMessage.createIncorrect(
-                body = StatusBody.IncorrectBody("Unknown error occurred. Please try again.")
-            )
+            BiometricManager.BIOMETRIC_SUCCESS -> Result.DEFAULT_SUCCESS
+            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> Result(ResultType.FAILED, "Biometrics hardware in use by other app.")
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> Result(ResultType.FAILED,"No biometrics enrolled")
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> Result(ResultType.FAILED,"No biometrics hardware detected")
+            BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> Result(ResultType.FAILED, "Biometrics hardware does not satisfy this app's requirements")
+            BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED -> Result(ResultType.FAILED, "Outdated software for biometrics hardware detected. Update required.")
+            BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> Result(ResultType.FAILED, "Unknown error occurred. Please try again.")
             else -> {
                 Timber.w("actorAvailable: BioActor: Received unknown biometrics status code '$status'")
-                VerificationMessage.createIncorrect(
-                    body = StatusBody.IncorrectBody("Unknown error occurred. Please try again.")
-                )
+                Result(ResultType.FAILED, "Unknown error occurred. Please try again.")
             }
         }
     }
 
     override fun hasCredentials(): Boolean = BiometricManager.from(activity.baseContext).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
 
-    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, authenticated: Boolean): VerificationMessage = VerificationMessage.createCorrect()
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, clearance: Int): Result = Result.DEFAULT_SUCCESS
 
-    override suspend fun verify(token: VerificationToken?): VerificationMessage = verify()
+    override suspend fun verify(token: VerificationToken?): VerificationResult = verify()
 
-    suspend fun verify(): VerificationMessage {
+    suspend fun verify(): VerificationResult {
         return withContext(Dispatchers.Main) {
-            CoroutineUtil.awaitCallback { callback: CoroutineUtil.Callback<VerificationMessage> ->
+            CoroutineUtil.awaitCallback { callback: CoroutineUtil.Callback<VerificationResult> ->
                 initBiometricPrompt(
                     activity = activity,
                     onError = { errorCode, message ->
                         callback.onResult(when (errorCode) {
                             BiometricPrompt.ERROR_LOCKOUT_PERMANENT, BiometricPrompt.ERROR_CANCELED,
                             BiometricPrompt.ERROR_USER_CANCELED, BiometricPrompt.ERROR_NEGATIVE_BUTTON,
-                            BiometricPrompt.ERROR_TIMEOUT ->
-                                VerificationMessage.createBadInput(body = StatusBody.BadInputBody(message))
-                            BiometricPrompt.ERROR_LOCKOUT ->
-                                VerificationMessage.createIncorrect(body = StatusBody.LockedBody(message))
-                            BiometricPrompt.ERROR_HW_UNAVAILABLE ->
-                                VerificationMessage.createUnavailable(body = StatusBody.UnavailableBody(message))
-                            BiometricPrompt.ERROR_NO_BIOMETRICS ->
-                                VerificationMessage.createNoInit(body = StatusBody.NoInitBody(message))
-                            else ->
-                                VerificationMessage.createOther(body = StatusBody.OtherBody(message))
+                            BiometricPrompt.ERROR_TIMEOUT -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_BADINPUT, message)
+                            BiometricPrompt.ERROR_LOCKOUT -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_LOCKED, message)
+                            BiometricPrompt.ERROR_HW_UNAVAILABLE -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_UNAVAILABLE, message)
+                            BiometricPrompt.ERROR_NO_BIOMETRICS -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_NOINIT, message)
+                            else -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_OTHER, message)
                         })
                     },
-                    onSuccess = { callback.onResult(VerificationMessage.createCorrect()) }
+                    onSuccess = { callback.onResult(VerificationResult.from(VerificationResult.SEC_CORRECT)) }
                 ).authenticate(biometricPromptInfo)
             }
         }
@@ -259,7 +233,8 @@ internal class BioActor(
     }
 }
 
-internal class PassActor(private val sharedPreferences: SharedPreferences) : SecurityInterfaceInternal {
+internal class PassActor(private val sharedPreferences: SharedPreferences) :
+    SecurityInterfaceInternal {
 
     constructor(context: Context) : this(context.getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE))
     constructor(activity: Activity) : this(activity.baseContext)
@@ -270,43 +245,38 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
 
     override val type: Int = SecurityActor.TYPE_PASS
 
-    override fun actorAvailable(): VerificationMessage = VerificationMessage.createCorrect()
+    override fun actorAvailable(): Result = Result.DEFAULT_SUCCESS
 
     override fun hasCredentials(): Boolean = sharedPreferences.contains(pass_storage_key)
 
     @SuppressLint("ApplySharedPref")
-    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, authenticated: Boolean): VerificationMessage = withContext(Dispatchers.Default) {
-        if (hasCredentials() && !authenticated) { // must provide old pass when old pass exists && not logged in
-            val result = when (oldToken) {
-                null -> throw IllegalArgumentException("Existing credentials detected. Caller must provide old verification token for verification.")
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, clearance: Int): Result = withContext(Dispatchers.Default) {
+        when (hasCredentials() && clearance == 0) { // must provide old pass when old pass exists && not logged in
+            true -> when (oldToken) {
+                null -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_INCORRECT, "Existing credentials detected. Caller must provide old verification token for verification.")
                 else -> verify(oldToken)
             }
-            if (result.type != VerificationMessage.SEC_CORRECT)
-                return@withContext result
+            else -> Result.DEFAULT_SUCCESS
+        }.pipe {
+            val preferencesEditor = sharedPreferences.edit()
+            preferencesEditor.putString(pass_storage_key, newToken.toString())
+            preferencesEditor.commit()
+            Result.DEFAULT_SUCCESS
         }
-        val preferencesEditor = sharedPreferences.edit()
-        preferencesEditor.putString(pass_storage_key, newToken.toString())
-        preferencesEditor.commit()
-        return@withContext VerificationMessage.createCorrect()
     }
 
-    override suspend fun verify(token: VerificationToken?): VerificationMessage = withContext(Dispatchers.Default) { verifyInternal(token) }
+    override suspend fun verify(token: VerificationToken?): VerificationResult = withContext(Dispatchers.Default) { verifyInternal(token) }
 
-    @Suppress("RedundantSuspendModifier")
-    private suspend fun verifyInternal(token: VerificationToken?): VerificationMessage = withContext(Dispatchers.Default) {
+    private suspend fun verifyInternal(token: VerificationToken?): VerificationResult = withContext(Dispatchers.Default) {
         if (token == null || token !is PasswordVerificationToken)
-            throw IllegalArgumentException("Password actor requires password verification token")
+            return@withContext VerificationResult(ResultType.FAILED, VerificationResult.SEC_OTHER,"Password actor requires password verification token")
 
         val given: PasswordVerificationToken = token
-        val known = PasswordVerificationToken.fromString(
-            sharedPreferences.getString(pass_storage_key, null)
-                ?: return@withContext VerificationMessage.createNoInit(StatusBody.NoInitBody("Did not initialize security type"))
-        )
+        val known = PasswordVerificationToken.fromString(sharedPreferences.getString(pass_storage_key, null) ?: return@withContext VerificationResult(ResultType.FAILED, VerificationResult.SEC_NOINIT, "Did not initialize security type"))
 
-        return@withContext if (given == known) {
-            VerificationMessage.createCorrect()
-        } else {
-            VerificationMessage.createIncorrect(StatusBody.IncorrectBody("Incorrect Password"))
+        return@withContext when (given == known) {
+            true -> VerificationResult(ResultType.SUCCESS, VerificationResult.SEC_CORRECT)
+            else -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_INCORRECT, "Incorrect Password")
         }
     }
 }

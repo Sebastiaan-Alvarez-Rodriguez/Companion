@@ -47,7 +47,8 @@ Current issue list:
  2. When clicking search, not typing anything, it does match something. It should not be matching anything. Search should be disabled on empty input. Create new listenable state in viewmodel.
 
 ## Ideas
- 1. Using [Material You](https://proandroiddev.com/exploring-material-you-for-jetpack-compose-c2d9e8eb3b2c)
+ 1. Streamline backend data communication to frontend using some form of messaging.
+ 2. Using [Material You](https://proandroiddev.com/exploring-material-you-for-jetpack-compose-c2d9e8eb3b2c)
 
 ## Sample Functionality
  - [auto-complete/expanding search field](https://proandroiddev.com/jetpack-compose-auto-complete-search-bar-853023856f0f)

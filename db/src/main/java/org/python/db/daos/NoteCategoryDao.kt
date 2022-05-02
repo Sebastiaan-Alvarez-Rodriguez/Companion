@@ -21,11 +21,13 @@ interface NoteCategoryDao {
     suspend fun setFavorite(category: RoomNoteCategory, favorite: Boolean) = setFavorite(category.categoryId, favorite)
 
 
-    /** Returns the live category for a note */
-    @Query("select RoomNoteCategory.* from RoomNoteCategory " +
+    /** Returns live category for a note */
+    @Query(
+        "select RoomNoteCategory.* from RoomNoteCategory " +
             "join RoomNote on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
-            "where RoomNote.noteId == :noteId and RoomNote.secure <= :secure")
-    fun categoryForNoteLive(noteId: Long, secure: Boolean = false): Flow<RoomNoteCategory>
+            "where RoomNote.noteId == :noteId and RoomNote.securityLevel <= :clearance"
+    )
+    fun categoryForNoteLive(noteId: Long, clearance: Int): Flow<RoomNoteCategory>
 
     @Query("update RoomNote set categoryKey = :categoryId where noteId == :noteId")
     suspend fun updateCategoryForNote(noteId: Long, categoryId: Long)

@@ -9,3 +9,5 @@ rootProject.name = "Companion"
 include ':app'
 include ':backend'
 include ':db'
+include ':security'
+include ':datacomm'

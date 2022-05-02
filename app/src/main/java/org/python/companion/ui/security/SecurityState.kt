@@ -17,12 +17,13 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import org.python.backend.security.*
 import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.createRoute
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.companion.viewmodels.SecurityViewModel
+import org.python.datacomm.ResultType
+import org.python.security.*
 
 
 class SecurityState(
@@ -47,9 +48,9 @@ class SecurityState(
                         else -> throw RuntimeException("How did we get here?!")
                     }
                 }
-                val authenticated by securityViewModel.securityActor.authenticated.collectAsState()
+                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
                 when {
-                    authenticated -> navController.navigateUp()
+                    securityLevel > 0 -> navController.navigateUp()
                     allowedMethods.allowed().isEmpty() -> throw RuntimeException("Cannot pick security type with 0 allowed methods.")
                     allowedMethods.allowed().size == 1 -> {
                         navController.popBackStack()
@@ -83,8 +84,8 @@ class SecurityState(
 
             dialog(route = "$navigationStart/pass/auth", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 val stateMiniState = UiUtil.StateMiniState.rememberState(LoadingState.READY)
-                val authenticated by securityViewModel.securityActor.authenticated.collectAsState()
-                if (authenticated) {
+                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
+                if (securityLevel > 0) {
                     navController.navigateUp()
                 } else {
                     SecurityPasswordDialogContent(
@@ -93,11 +94,12 @@ class SecurityState(
                             stateMiniState.state.value = LoadingState.LOADING
                             securityViewModel.viewModelScope.launch {
                                 val msgSec = securityViewModel.securityActor.verify(token)
-                                if (msgSec.type == VerificationMessage.SEC_CORRECT) {
-                                    stateMiniState.state.value = LoadingState.OK
-                                } else {
-                                    stateMiniState.state.value = LoadingState.FAILED
-                                    stateMiniState.stateMessage.value = msgSec.body?.userMessage
+                                when (msgSec.type == ResultType.SUCCESS && msgSec.resultStatus == VerificationResult.SEC_CORRECT) {
+                                    true -> stateMiniState.state.value = LoadingState.OK
+                                    else -> {
+                                        stateMiniState.state.value = LoadingState.FAILED
+                                        stateMiniState.stateMessage.value = msgSec.message
+                                    }
                                 }
                             }
                         },
@@ -109,9 +111,9 @@ class SecurityState(
 
             dialog(route = "$navigationStart/pass/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 switchActor(type = SecurityActor.TYPE_PASS)
-                val hasAuthenticated by securityViewModel.securityActor.authenticated.collectAsState()
+                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
 
-                if (hasAuthenticated) {
+                if (securityLevel > 0) {
                     val stateMiniState = UiUtil.StateMiniState.rememberState(LoadingState.READY)
                     SecurityPasswordSetupDialogContent(
                         onNegativeClick = { navController.navigateUp() },
@@ -119,13 +121,13 @@ class SecurityState(
                             stateMiniState.state.value = LoadingState.LOADING
                             securityViewModel.viewModelScope.launch {
                                 val msgSet = securityViewModel.securityActor.setCredentials(null, token)
-                                if (msgSet.type == VerificationMessage.SEC_CORRECT) {
+                                if (msgSet.type == ResultType.SUCCESS) {
                                     securityViewModel.securityActor.verify(token)
                                     stateMiniState.state.value = LoadingState.OK
                                     navController.popBackStack()
                                 } else {
                                     stateMiniState.state.value = LoadingState.FAILED
-                                    stateMiniState.stateMessage.value = msgSet.body?.userMessage
+                                    stateMiniState.stateMessage.value = msgSet.message
                                 }
                             }
                         },
@@ -156,13 +158,13 @@ class SecurityState(
                         stateMiniState.state.value = LoadingState.LOADING
                         securityViewModel.viewModelScope.launch {
                             val msgSet = securityViewModel.securityActor.setCredentials(null, token)
-                            if (msgSet.type == VerificationMessage.SEC_CORRECT) {
+                            if (msgSet.type == ResultType.SUCCESS) {
                                 securityViewModel.securityActor.verify(token)
                                 stateMiniState.state.value = LoadingState.OK
                                 navController.navigateUp()
                             } else {
                                 stateMiniState.state.value = LoadingState.FAILED
-                                stateMiniState.stateMessage.value = msgSet.body?.userMessage
+                                stateMiniState.stateMessage.value = msgSet.message
                             }
                         }
                     },
@@ -178,9 +180,9 @@ class SecurityState(
                 var state by remember { mutableStateOf(LoadingState.READY) }
                 var stateMessage by remember { mutableStateOf<String?>(null) }
 
-                val authenticated by securityViewModel.securityActor.authenticated.collectAsState()
+                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
                 when {
-                    authenticated -> navController.navigateUp()
+                    securityLevel > 0 -> navController.navigateUp()
                     securityViewModel.securityActor.hasCredentials() -> {
                         SecurityBioDialogContent(
                             onNegativeClick = { navController.navigateUp() },
@@ -188,11 +190,11 @@ class SecurityState(
                                 state = LoadingState.LOADING
                                 securityViewModel.viewModelScope.launch {
                                     val msgSec = securityViewModel.securityActor.verify(null)
-                                    if (msgSec.type == VerificationMessage.SEC_CORRECT) {
+                                    if (msgSec.type == ResultType.SUCCESS) {
                                         state = LoadingState.OK
                                     } else {
                                         state = LoadingState.FAILED
-                                        stateMessage = msgSec.body?.userMessage
+                                        stateMessage = msgSec.message
                                     }
                                 }
                             },
@@ -224,8 +226,8 @@ class SecurityState(
             securityViewModel.securityActor.switchTo(activity, type)
 
         val msgAvailable = securityViewModel.securityActor.actorAvailable()
-        if (msgAvailable.type != VerificationMessage.SEC_CORRECT) {
-            UiUtil.SimpleText("Security method is unavailable. ${msgAvailable.body?.userMessage}")
+        if (msgAvailable.type != ResultType.SUCCESS) {
+            UiUtil.SimpleText("Security method is unavailable: ${msgAvailable.message}")
             return false
         }
         return true

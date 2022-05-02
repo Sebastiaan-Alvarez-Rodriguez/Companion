@@ -17,7 +17,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.python.backend.security.PasswordVerificationToken
+import org.python.security.PasswordVerificationToken
 import org.python.companion.R
 import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
@@ -173,6 +173,7 @@ fun SecurityPasswordSetupDialogContent(
                 when (state.state.value) {
                     LoadingState.LOADING -> CircularProgressIndicator()
                     LoadingState.OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
+                    else -> {}
                 }
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                     TextButton(onClick = onNegativeClick) {

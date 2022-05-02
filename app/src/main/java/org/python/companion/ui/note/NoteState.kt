@@ -22,6 +22,8 @@ import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.note.category.NoteCategoryState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.viewmodels.NoteViewModel
+import org.python.datacomm.Result
+import org.python.datacomm.ResultType
 import timber.log.Timber
 
 class NoteState(
@@ -37,13 +39,13 @@ class NoteState(
                 val notes by noteViewModel.notes.collectAsState()
                 val isLoading by noteViewModel.isLoading.collectAsState()
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
-                val hasAuthenticated by noteViewModel.authenticated.collectAsState()
+                val clearance by noteViewModel.clearance.collectAsState()
 
                 val searchParameters by noteViewModel.searchParameters.collectAsState()
 
                 val selectedItems = remember { mutableStateListOf<Note>() }
                 val securityItem: @Composable (LazyItemScope.() -> Unit)? = if (hasSecureNotes) {
-                    if (hasAuthenticated) {
+                    if (clearance > 0) {
                         {
                             SecurityClickItem(
                                 text = "Lock secure notes",
@@ -145,18 +147,18 @@ class NoteState(
                     }
                 )
             ) {
-                val hasAuthenticated by noteViewModel.authenticated.collectAsState()
+                val clearance by noteViewModel.clearance.collectAsState()
 
                 NoteScreenEditNew(navController = navController) { toSaveNote ->
-                    Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
+                    Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, lvl=${toSaveNote.securityLevel}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
                     noteViewModel.viewModelScope.launch {
-                        if (!hasAuthenticated && toSaveNote.secure)
+                        if (clearance == 0 && toSaveNote.securityLevel > 0)
                             return@launch SecurityState.navigateToSecurityPick(navController)
 
                         val conflict = noteViewModel.hasConflict(toSaveNote.name)
                         val conflictBlocking = conflict && !noteViewModel.mayOverride(toSaveNote.name)
 
-                        Timber.d("New note: conflict: $conflict")
+                        Timber.d("New note: conflict: $conflict (critical: $conflictBlocking)")
                         when {
                             conflictBlocking -> {
                                 val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
@@ -169,17 +171,22 @@ class NoteState(
                                     else -> {}
                                 }
                             }
-                            conflict -> UiUtil.UIUtilState.navigateToOverride(navController) {
-                                Timber.d("New note: Overriding $conflict with $toSaveNote...")
-                                noteViewModel.viewModelScope.launch {
-                                    val newId = noteViewModel.upsert(toSaveNote)
-                                    navController.popBackStack()
-                                    navigateToNoteView(navController, newId!!)
+                            else -> {
+                                val func: suspend (Result) -> Unit = { result ->
+                                    when(result.type) {
+                                        ResultType.SUCCESS -> result.pipeData<Long, Unit> { newId ->
+                                            navController.popBackStack()
+                                            navigateToNoteView(navController, newId)
+                                        }
+                                        else -> result.message?.let {
+                                            scaffoldState.snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
+                                        }
+                                    }
                                 }
-                            }
-                            else -> noteViewModel.add(toSaveNote)?.let {
-                                navController.popBackStack()
-                                navigateToNoteView(navController, it)
+                                if (conflict)
+                                    UiUtil.UIUtilState.navigateToOverride(navController) { noteViewModel.viewModelScope.launch {func(noteViewModel.upsert(toSaveNote)) } }
+                                else
+                                    func(noteViewModel.add(toSaveNote))
                             }
                         }
                     }
@@ -194,7 +201,7 @@ class NoteState(
                 val noteId = entry.arguments?.getLong("noteId")!!
                 val offset = entry.arguments?.getInt("offset")
 
-                val hasAuthenticated by noteViewModel.authenticated.collectAsState()
+                val clearance by noteViewModel.clearance.collectAsState()
 
                 NoteScreenEdit(
                     noteViewModel = noteViewModel,
@@ -204,12 +211,13 @@ class NoteState(
                     onSaveClick = { toSaveNote, existingNote ->
                         Timber.d("Found edited note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         noteViewModel.viewModelScope.launch {
-                            if (!hasAuthenticated && toSaveNote.secure) // authenticate before saving notes with authentication enabled)
+                            if (clearance == 0 && toSaveNote.securityLevel > 0) // authenticate before saving notes with authentication enabled)
                                 return@launch SecurityState.navigateToSecurityPick(navController)
+
                             // If note name == same as before, there is no conflict. Otherwise, we must check.
                             val conflict = if (toSaveNote.name == existingNote!!.name) false else noteViewModel.hasConflict(toSaveNote.name)
                             val conflictBlocking = conflict && !noteViewModel.mayOverride(toSaveNote.name)
-                            Timber.d("Edit note: edited note has changed name=${toSaveNote.name != existingNote.name}, now conflict: $conflict (resolvable: $conflictBlocking)")
+                            Timber.d("Edit note: edited note has changed name=${toSaveNote.name != existingNote.name}, now conflict: $conflict (critical: $conflictBlocking)")
                             when {
                                 conflictBlocking -> {
                                     val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
@@ -222,18 +230,24 @@ class NoteState(
                                         else -> {}
                                     }
                                 }
-                                conflict -> UiUtil.UIUtilState.navigateToOverride(navController) {
-                                    Timber.d("Edit note: Overriding note (new name=${toSaveNote.name})")
-                                    noteViewModel.viewModelScope.launch {
-                                        noteViewModel.delete(existingNote)
-                                        val newId = noteViewModel.upsert(toSaveNote)
-                                        navController.popBackStack()
-                                        navigateToNoteView(navController, newId!!)
-                                    }
-                                }
                                 else -> {
-                                    noteViewModel.update(existingNote, toSaveNote)
-                                    navController.navigateUp()
+                                    val func: suspend (Result) -> Unit = { result ->
+                                        when(result.type) {
+                                            ResultType.SUCCESS -> result.pipeData<Long, Unit> { newId ->
+                                                navController.popBackStack()
+                                                navigateToNoteView(navController, newId)
+                                            }
+                                            else -> result.message?.let {
+                                                scaffoldState.snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
+                                            }
+                                        }
+                                    }
+                                    if (conflict)
+                                        UiUtil.UIUtilState.navigateToOverride(navController) {
+                                            noteViewModel.viewModelScope.launch { func(noteViewModel.delete(existingNote) pipe { noteViewModel.upsert(toSaveNote) }) }
+                                        }
+                                    else
+                                        func(noteViewModel.update(existingNote, toSaveNote))
                                 }
                             }
                         }
@@ -246,7 +260,9 @@ class NoteState(
 
     private fun navigateToNoteSettings(navController: NavController) = navController.navigate("$noteDestination/settings")
     private fun navigateToNoteView(navController: NavController, note: Note) = navigateToNoteView(navController, note.noteId)
-    private fun navigateToNoteView(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/view/$noteId")
+    private fun navigateToNoteView(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/view/$noteId") {
+        launchSingleTop = true
+    }
 
     private fun navigateToNoteCreate(navController: NavController, onCreated: (Long?) -> Unit) =
         navController.navigateForResult<Long?>(route = "$noteDestination/create", key = resultKeyNoteCreate) {

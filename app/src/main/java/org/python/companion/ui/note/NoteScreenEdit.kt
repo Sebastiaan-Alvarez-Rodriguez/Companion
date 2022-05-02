@@ -80,15 +80,15 @@ fun NoteScreenEditReady(
     var title by remember { mutableStateOf(note?.name ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
     var favorite by remember { mutableStateOf(note?.favorite ?: false)}
-    var secure by remember { mutableStateOf(note?.secure ?: false)}
+    var securityLevel by remember { mutableStateOf(note?.securityLevel ?: 0)}
 
     val categoryKey = noteCategory?.categoryId ?: NoteCategory.DEFAULT.categoryId
 
     val noteChanged = lazy {
         if (note == null)
-            title != "" || content != "" || favorite || secure
+            title != "" || content != "" || favorite || securityLevel > 0
         else
-            title != note.name || content != note.content || favorite != note.favorite || secure != note.secure
+            title != note.name || content != note.content || favorite != note.favorite || securityLevel != note.securityLevel
     }
 
     val createNoteObject: () -> Note = {
@@ -96,14 +96,14 @@ fun NoteScreenEditReady(
             name = title,
             content = content,
             favorite = favorite,
-            secure = secure,
+            securityLevel = securityLevel,
             categoryKey = categoryKey
         ) ?:
         Note(
             name = title,
             content = content,
             favorite = favorite,
-            secure = secure,
+            securityLevel = securityLevel,
             categoryKey = categoryKey
         )
     }
@@ -126,10 +126,10 @@ fun NoteScreenEditReady(
                             contentDescription = if (favorite) "Stop favoring" else "Favorite"
                         )
                     }
-                    IconButton(onClick = { secure = !secure }) {
+                    IconButton(onClick = { securityLevel = if (securityLevel == 0) 1 else 0 }) {
                         Icon(
-                            imageVector = if (secure) Icons.Filled.Lock else Icons.Outlined.Lock,
-                            contentDescription = if (secure) "Stop securing" else "Secure"
+                            imageVector = if (securityLevel > 0) Icons.Filled.Lock else Icons.Outlined.Lock,
+                            contentDescription = if (securityLevel > 0) "Stop securing" else "Secure"
                         )
                     }
                 }

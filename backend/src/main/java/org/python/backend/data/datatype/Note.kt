@@ -8,7 +8,7 @@ data class Note(
     val name: String,
     val content: String,
     val favorite: Boolean,
-    val secure: Boolean,
+    val securityLevel: Int,
     val iv: ByteArray = ByteArray(0),
     val categoryKey: Long = -1L
 ) {
@@ -16,7 +16,7 @@ data class Note(
         name == other.name &&
         content == other.content &&
         favorite == other.favorite &&
-        secure == other.secure &&
+        securityLevel == other.securityLevel &&
         iv.contentEquals(other.iv) &&
         categoryKey == other.categoryKey
 

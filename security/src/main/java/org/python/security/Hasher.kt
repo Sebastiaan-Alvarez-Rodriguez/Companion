@@ -1,4 +1,4 @@
-package org.python.backend.security
+package org.python.security
 
 import com.lambdapioneer.argon2kt.Argon2Kt
 import com.lambdapioneer.argon2kt.Argon2Mode

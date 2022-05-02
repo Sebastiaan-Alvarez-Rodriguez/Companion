@@ -1,4 +1,4 @@
-package org.python.backend.security
+package org.python.security
 
 import java.nio.ByteBuffer
 
@@ -31,7 +31,7 @@ class PasswordVerificationToken(private val pass: ByteBuffer) : VerificationToke
      * Password builder.
      * @note Updating values from an instance in multiple threads is explicitly not supported.
      */
-    class PassBuilder : VerificationToken.Builder() {
+    class PassBuilder : Builder() {
         private var pass: ByteBuffer? = null
 
         fun with(password: ByteBuffer, salt: ByteBuffer? = null): PassBuilder {

@@ -20,13 +20,14 @@ import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.NoteSearchParameters
 import org.python.companion.ui.theme.DarkColorPalette
 import org.python.companion.ui.theme.Purple500
+import org.python.datacomm.Result
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
     val securityActor = (application as CompanionApplication).securityActor
 
     val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
-    var authenticated = securityActor.authenticated.stateInViewModel(viewModelScope, false)
+    var clearance = securityActor.clearance.stateInViewModel(viewModelScope, 0)
 
     private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
 
@@ -51,13 +52,16 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = false
         }
     }
-    suspend fun add(note: Note): Long? = noteRepository.add(note)
-    suspend fun upsert(note: Note): Long? = noteRepository.upsert(note)
-    suspend fun update(oldNote: Note, updateNote: Note): Boolean = noteRepository.update(oldNote, updateNote)
+    suspend fun add(note: Note): Result = noteRepository.add(note)
+
+    /** Inserts-or-updates [Note]. [Result] contains [Long], the updated id, on success. */
+    suspend fun upsert(note: Note): Result = noteRepository.upsert(note)
+    /** Updates [Note]. [Result] contains [Long], the updated id, on success. */
+    suspend fun update(oldNote: Note, updateNote: Note): Result = noteRepository.update(oldNote, updateNote)
 
     /** Delete notes by id */
     suspend fun delete(items: Collection<Note>): Unit = noteRepository.delete(items)
-    suspend fun delete(note: Note): Unit = noteRepository.delete(note)
+    suspend fun delete(note: Note): Result = noteRepository.delete(note)
     suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
 
     suspend fun get(id: Long): Note? = noteRepository.get(id)
