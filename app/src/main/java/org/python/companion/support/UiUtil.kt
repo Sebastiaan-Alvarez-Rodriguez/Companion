@@ -428,23 +428,6 @@ object UiUtil {
         }
     }
 
-    open class OpenableMiniState(val open: MutableState<Boolean>) {
-        open fun open() {
-            open.value = true
-        }
-
-        open fun close() {
-            open.value = false
-        }
-
-        companion object {
-            @Composable
-            fun rememberState(open: Boolean = false) = remember(open) {
-                OpenableMiniState(open = mutableStateOf(open))
-            }
-        }
-    }
-
     open class StateMiniState(val state: MutableState<LoadingState>, val stateMessage: MutableState<String?>) {
         companion object {
             @Composable

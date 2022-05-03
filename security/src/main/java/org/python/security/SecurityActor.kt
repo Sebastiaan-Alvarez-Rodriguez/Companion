@@ -48,6 +48,7 @@ data class CompactSecurityTypeArray(val types: Int) {
     }
 }
 
+/** Shared components between public-facing and internal interface */
 interface SecurityInterfaceBase {
     /** security type being implemented by this actor */
     val type: @SecurityType Int
@@ -69,18 +70,20 @@ interface SecurityInterfaceBase {
     suspend fun verify(token: VerificationToken? = null): VerificationResult
 }
 
-interface SecurityInterface : SecurityInterfaceBase {
+/** Public-facing interface */
+interface SecurityMetaInterface : SecurityInterfaceBase {
     /** Setup a credential.
      * If a credential exists, this function calls <code>verify()</code>.
      * In such cases, caller must pass a verification object.
      * @param oldToken Optional object to call with verify-call. Required if a credential exists.
      * @param newToken Credentials to set.
-     * @return Message providing status.
+     * @return Result object providing status.
      * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
-    suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken): Result
+    suspend fun setCredentials(activity: FragmentActivity, oldToken: VerificationToken? = null, newToken: VerificationToken): Result
 }
 
+/** Internal interface */
 internal interface SecurityInterfaceInternal : SecurityInterfaceBase {
     /** Setup a credential.
      * If a credential exists, this function calls <code>verify()</code>.
@@ -94,9 +97,9 @@ internal interface SecurityInterfaceInternal : SecurityInterfaceBase {
     suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken, clearance: Int): Result
 
 }
-class SecurityActor : SecurityInterface {
+class SecurityActor : SecurityMetaInterface {
     private var internalActor: SecurityInterfaceInternal? = null
-    var clearance = MutableStateFlow<Int>(0)
+    val clearance = MutableStateFlow<Int>(0)
     private val mutex = Mutex()
 
     suspend fun <T> withLock(action: () -> T): T {
@@ -106,17 +109,19 @@ class SecurityActor : SecurityInterface {
         return result
     }
 
-    fun switchTo(activity: FragmentActivity, @SecurityType ofType: Int) {
-        internalActor = when (ofType) {
-            TYPE_PASS -> PassActor(activity)
-            TYPE_BIO -> BioActor(activity)
-            else -> null
-        }
+    fun switchTo(activity: FragmentActivity, @SecurityType type: Int) {
+        internalActor = getActorOfType(activity, type)
     }
 
     fun logout() = setClearanceLevel(0)
 
     private fun setClearanceLevel(newValue: Int) = clearance.update { newValue }
+
+    private fun getActorOfType(activity: FragmentActivity, type: @SecurityType Int) = when (type) {
+        TYPE_PASS -> PassActor(activity)
+        TYPE_BIO -> BioActor(activity)
+        else -> null
+    }
 
     override val type: Int = internalActor?.type ?: TYPE_UNDEFINED
 
@@ -124,7 +129,10 @@ class SecurityActor : SecurityInterface {
 
     override fun hasCredentials(): Boolean = internalActor?.hasCredentials() ?: throw IllegalAccessException("Internal problem with security actor")
 
-    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): Result {
+    override suspend fun setCredentials(activity: FragmentActivity, oldToken: VerificationToken?, newToken: VerificationToken): Result {
+        val hasAnyCredentials = clearance.value == 0 && SecurityTypes.any { type -> getActorOfType(activity, type)?.hasCredentials() ?: false }
+        if (hasAnyCredentials)
+            return Result(ResultType.FAILED, "Cannot reset credentials: Another method has already been setup. Login first using that method.")
         return internalActor?.setCredentials(oldToken, newToken, clearance.value) ?: Result(ResultType.FAILED, "Internal problem with security actor")
     }
 
@@ -233,8 +241,7 @@ internal class BioActor(
     }
 }
 
-internal class PassActor(private val sharedPreferences: SharedPreferences) :
-    SecurityInterfaceInternal {
+internal class PassActor(private val sharedPreferences: SharedPreferences) : SecurityInterfaceInternal {
 
     constructor(context: Context) : this(context.getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE))
     constructor(activity: Activity) : this(activity.baseContext)

@@ -120,7 +120,7 @@ class SecurityState(
                         onPositiveClick = { token ->
                             stateMiniState.state.value = LoadingState.LOADING
                             securityViewModel.viewModelScope.launch {
-                                val msgSet = securityViewModel.securityActor.setCredentials(null, token)
+                                val msgSet = securityViewModel.securityActor.setCredentials(activity, null, token)
                                 if (msgSet.type == ResultType.SUCCESS) {
                                     securityViewModel.securityActor.verify(token)
                                     stateMiniState.state.value = LoadingState.OK
@@ -157,7 +157,7 @@ class SecurityState(
                     onPositiveClick = { token ->
                         stateMiniState.state.value = LoadingState.LOADING
                         securityViewModel.viewModelScope.launch {
-                            val msgSet = securityViewModel.securityActor.setCredentials(null, token)
+                            val msgSet = securityViewModel.securityActor.setCredentials(activity,null, token)
                             if (msgSet.type == ResultType.SUCCESS) {
                                 securityViewModel.securityActor.verify(token)
                                 stateMiniState.state.value = LoadingState.OK
