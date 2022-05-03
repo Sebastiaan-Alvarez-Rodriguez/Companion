@@ -44,7 +44,7 @@ Current issue list:
     Unsolved problem in Android community, see:
     https://issuetracker.google.com/issues/192043120?pli=1
     https://askandroidquestions.com/2021/08/19/jetpack-compose-textfield-soft-keyboard-obscures-text-entry/
- 2. When clicking search, not typing anything, it does match something. It should not be matching anything. Search should be disabled on empty input. Create new listenable state in viewmodel.
+ 2. Splash screen returns after screen lock -> screen unlock (perhaps a `rememberSaveable` solution)
 
 ## Ideas
  1. Streamline backend data communication to frontend using some form of messaging.
