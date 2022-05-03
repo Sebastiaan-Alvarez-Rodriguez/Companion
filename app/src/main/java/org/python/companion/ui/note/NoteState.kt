@@ -69,11 +69,13 @@ class NoteState(
                         if (selectedItems.isEmpty())
                             NoteScreenListHeader(
                                 onSettingsClick = { navigateToNoteSettings(navController = navController) },
+                                onSortClick = { TODO() },
                                 onSearchClick = { noteViewModel.toggleSearchQuery() }
                             )
                         else
                             NoteScreenContextListHeader(
                                 onDeleteClick = { noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) } },
+                                onSortClick = { TODO() },
                                 onSearchClick = {  noteViewModel.toggleSearchQuery() },
                             )
 

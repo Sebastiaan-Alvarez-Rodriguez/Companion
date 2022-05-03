@@ -43,7 +43,7 @@ fun NoteScreen(
 }
 
 @Composable
-fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit) {
+fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSortClick: () -> Unit, onSearchClick: () -> Unit) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
 
     UiUtil.GenericListHeader(
@@ -54,8 +54,13 @@ fun NoteScreenListHeader(onSettingsClick: () -> Unit, onSearchClick: () -> Unit)
                 }
             },
             {
-                IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
-                    Icon(Icons.Filled.Search, "Search")
+                Row {
+                    IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSortClick() }) {
+                        Icon(Icons.Filled.Sort, "Sort")
+                    }
+                    IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
+                        Icon(Icons.Filled.Search, "Search")
+                    }
                 }
             }
         )
@@ -78,7 +83,7 @@ fun NoteScreenSearchListHeader(searchParameters: NoteSearchParameters, onBack: (
 }
 
 @Composable
-fun NoteScreenContextListHeader(onDeleteClick: () -> Unit, onSearchClick: () -> Unit) {
+fun NoteScreenContextListHeader(onDeleteClick: () -> Unit, onSortClick: () -> Unit, onSearchClick: () -> Unit) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
     UiUtil.GenericListHeader(
         listOf(
@@ -88,8 +93,13 @@ fun NoteScreenContextListHeader(onDeleteClick: () -> Unit, onSearchClick: () -> 
                 }
             },
             {
-                IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
-                    Icon(Icons.Filled.Search, "Search")
+                Row {
+                    IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSortClick() }) {
+                        Icon(Icons.Filled.Sort, "Sort")
+                    }
+                    IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
+                        Icon(Icons.Filled.Search, "Search")
+                    }
                 }
             }
         )

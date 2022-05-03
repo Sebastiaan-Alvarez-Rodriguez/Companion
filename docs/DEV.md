@@ -45,7 +45,16 @@ Current issue list:
     https://issuetracker.google.com/issues/192043120?pli=1
     https://askandroidquestions.com/2021/08/19/jetpack-compose-textfield-soft-keyboard-obscures-text-entry/
  2. Splash screen returns after screen lock -> screen unlock (perhaps a `rememberSaveable` solution)
-
+ 3. Sorting notes is not possible yet:
+    Our data comes from asynchronous flows.
+    Flows are not meant to be sorted, since the entire collection must be known, which removes async capabilities.
+    https://github.com/Kotlin/kotlinx.coroutines/issues/2672
+    This problem is not circumventable:
+        I can make 2 lazy columns; 1 for favorite, 1 for non-favorite.
+        However, I cannot make more lazy columns for sorting on alpha, creation date etc etc.
+    Conclusion:
+        I can do this efficiently by handling sorting at the source of the request (i.e. Room)
+        or collect beforehand, destroying efficiency
 ## Ideas
  1. Streamline backend data communication to frontend using some form of messaging.
  2. Using [Material You](https://proandroiddev.com/exploring-material-you-for-jetpack-compose-c2d9e8eb3b2c)

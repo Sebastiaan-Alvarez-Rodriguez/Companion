@@ -20,7 +20,8 @@ interface NoteDao {
     @Query(
         "select * from RoomNote " +
             "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
-            "where securityLevel <= :clearance"
+            "where securityLevel <= :clearance " +
+            "order by favorite"
     )
     fun getAll(clearance: Int): PagingSource<Int, RoomNoteWithCategory>
 
