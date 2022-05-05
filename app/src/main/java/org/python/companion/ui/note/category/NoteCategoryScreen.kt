@@ -1,5 +1,8 @@
 package org.python.companion.ui.note.category
 
+import android.app.Activity
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -10,6 +13,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,6 +30,7 @@ import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.SimpleFAB
+import org.python.db.entities.note.RoomNoteCategory
 
 
 @Composable
@@ -43,7 +48,7 @@ fun NoteCategoryScreen(
 }
 
 @Composable
-fun NoteCategoryScreenListHeader(message: String? = null, onSearchClick: () -> Unit) {
+fun NoteCategoryScreenListHeader(sortParameters: NoteCategorySortParameters, message: String? = null, onSearchClick: () -> Unit, onSortClick: (NoteCategorySortParameters) -> Unit) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     UiUtil.GenericListHeader(
         listOf(
@@ -53,8 +58,11 @@ fun NoteCategoryScreenListHeader(message: String? = null, onSearchClick: () -> U
                 }
             } ?: {},
             {
-                IconButton(onClick = { onSearchClick() }) {
-                    Icon(Icons.Filled.Search, "Search")
+                Row {
+                    NoteCategorySort(sortParameters, onSortClick)
+                    IconButton(onClick = { onSearchClick() }) {
+                        Icon(Icons.Filled.Search, "Search")
+                    }
                 }
             }
         )
@@ -151,11 +159,70 @@ fun NoteCategoryScreenSearchListHeader(searchParameters: NoteCategorySearchParam
 }
 
 
+data class NoteCategorySortParameters(
+    val column: RoomNoteCategory.Companion.SortableField,
+    val ascending: Boolean = true
+) {
+
+    fun toPreferences(activity: Activity) = toPreferences(activity.baseContext)
+    fun toPreferences(context: Context) {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences(sortKey, Context.MODE_PRIVATE)
+        val preferencesEditor = sharedPreferences.edit()
+        preferencesEditor.putInt(columnKey, column.ordinal)
+        preferencesEditor.putBoolean(ascendingKey, ascending)
+        preferencesEditor.apply()
+    }
+
+    companion object {
+        private const val sortKey = "noteCategorySortParameters"
+        private const val columnKey = "${sortKey}Column"
+        private const val ascendingKey = "${sortKey}Ascending"
+
+        const val DEFAULT_SORT_COLUMNNAME = 0
+        const val DEFAULT_ASCENDING = true
+        fun fromPreferences(activity: Activity) = fromPreferences(activity.baseContext)
+        fun fromPreferences(context: Context): NoteCategorySortParameters {
+            val sharedPreferences: SharedPreferences = context.getSharedPreferences(sortKey, Context.MODE_PRIVATE)
+            return NoteCategorySortParameters(
+                column = RoomNoteCategory.Companion.SortableField.values()[sharedPreferences.getInt(columnKey, DEFAULT_SORT_COLUMNNAME)],
+                ascending = sharedPreferences.getBoolean(ascendingKey, DEFAULT_ASCENDING)
+            )
+        }
+    }
+}
+
 data class NoteCategorySearchParameters(
     val text: String = "",
     val regex: Boolean = false,
     val caseSensitive: Boolean = false
 )
+
+@Composable
+fun NoteCategorySort(sortParameters: NoteCategorySortParameters, onSortClick: (NoteCategorySortParameters) -> Unit, modifier: Modifier = Modifier) {
+    IconButton(modifier = modifier, onClick = { onSortClick(
+        sortParameters.copy(ascending = !sortParameters.ascending)
+    ) }) {
+        Icon(if (sortParameters.ascending) Icons.Rounded.ArrowDownward else Icons.Rounded.ArrowUpward, contentDescription = "Sort direction ${if (sortParameters.ascending) "ascending" else "descending"}")
+    }
+    IconButton(modifier = modifier, onClick = { onSortClick(
+        sortParameters.copy(
+            column = when(sortParameters.column) {
+                RoomNoteCategory.Companion.SortableField.NAME -> RoomNoteCategory.Companion.SortableField.DATE
+                RoomNoteCategory.Companion.SortableField.DATE -> RoomNoteCategory.Companion.SortableField.NAME
+            }
+        )
+    ) }) {
+        UiUtil.NestedIcon(
+            mainIcon = when(sortParameters.column) {
+                RoomNoteCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
+                RoomNoteCategory.Companion.SortableField.DATE -> Icons.Rounded.Schedule
+            },
+            description = "Sort on ${sortParameters.column}",
+            sideIcon = Icons.Rounded.Sort,
+            sideModifier = Modifier.size(10.dp)
+        )
+    }
+}
 
 @Composable
 fun NoteCategorySearch(searchParameters: NoteCategorySearchParameters, onQueryUpdate: (NoteCategorySearchParameters) -> Unit) {

@@ -4,6 +4,7 @@ import android.graphics.Color
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.time.Instant
 
 @Entity(indices = [Index("categoryName", unique = true)])
 data class RoomNoteCategory(
@@ -11,6 +12,7 @@ data class RoomNoteCategory(
     val categoryName: String,
     val color: Color,
     val favorite: Boolean,
+    val categoryDate: Instant
 ) {
     override fun equals(other: Any?): Boolean {
         if (other !is RoomNoteCategory)
@@ -27,7 +29,13 @@ data class RoomNoteCategory(
             categoryId = 0,
             categoryName = "default",
             color = Color.valueOf(Color.WHITE),
-            favorite = false
+            favorite = false,
+            categoryDate = Instant.EPOCH
         )
+
+        enum class SortableField {
+            NAME,
+            DATE
+        }
     }
 }

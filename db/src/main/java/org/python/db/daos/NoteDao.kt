@@ -24,9 +24,9 @@ interface NoteDao {
             "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
             "where securityLevel <= :clearance " +
             "order by favorite desc, " +
-            "(case when :ascending == 0 then securityLevel end) desc, " +
-            "(case when :ascending != 0 then securityLevel end) asc")
-    fun getAll_sortSecurityLevel(clearance: Int, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory>
+            "(case when :ascending == 0 then date end) desc, " +
+            "(case when :ascending != 0 then date end) asc")
+    fun getAll_sortDate(clearance: Int, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory>
 
     @Transaction
     @Query("select * from RoomNote " +
@@ -37,17 +37,26 @@ interface NoteDao {
             "(case when :ascending != 0 then categoryName end) asc")
     fun getAll_sortCategoryName(clearance: Int, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory>
 
+    @Transaction
+    @Query("select * from RoomNote " +
+            "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "where securityLevel <= :clearance " +
+            "order by favorite desc, " +
+            "(case when :ascending == 0 then securityLevel end) desc, " +
+            "(case when :ascending != 0 then securityLevel end) asc")
+    fun getAll_sortSecurityLevel(clearance: Int, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory>
+
     ////////////////////////////////
     // Secure section;
     // All functions here have user verification checks built-in.
     ////////////////////////////////
-    fun getAll(clearance: Int, sortColumn: RoomNoteWithCategory.Companion.SortableField, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory> {
-        return when(sortColumn) {
+    fun getAll(clearance: Int, sortColumn: RoomNoteWithCategory.Companion.SortableField, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory> =
+        when(sortColumn) {
             RoomNoteWithCategory.Companion.SortableField.NAME -> getAll_sortName(clearance, ascending)
-            RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> getAll_sortSecurityLevel(clearance, ascending)
+            RoomNoteWithCategory.Companion.SortableField.DATE -> getAll_sortDate(clearance, ascending)
             RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> getAll_sortCategoryName(clearance, ascending)
+            RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> getAll_sortSecurityLevel(clearance, ascending)
         }
-    }
 
     @Query("select * from RoomNote where noteId == :id and securityLevel <= :clearance")
     suspend fun get(id: Long, clearance: Int): RoomNote?

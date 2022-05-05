@@ -41,6 +41,7 @@ class NoteCategoryState(
                 val noteId: Long = entry.arguments?.getLong("noteId")!!
                 val selectedCategory by noteCategoryViewModel.categoryForNoteLive(noteId).collectAsState(NoteCategory.DEFAULT)
 
+                val sortParameters by noteCategoryViewModel.sortParameters.collectAsState()
                 val searchParameters by noteCategoryViewModel.searchParameters.collectAsState()
 
                 val defaultPadding = dimensionResource(id = R.dimen.padding_default)
@@ -48,16 +49,18 @@ class NoteCategoryState(
                 NoteCategoryScreen(
                     header = {
                         NoteCategoryScreenListHeader(
+                            sortParameters = sortParameters,
                             message = "Select a category.",
-                            onSearchClick = { noteCategoryViewModel.toggleSearchQuery() }
+                            onSearchClick = { noteCategoryViewModel.toggleSearch() },
+                            onSortClick = { params -> noteCategoryViewModel.updateSortParameters(params) }
                         )
 
                         searchParameters?.let {
                             Spacer(modifier = Modifier.height(defaultPadding))
                             NoteCategoryScreenSearchListHeader(
                                 searchParameters = it,
-                                onBack = { noteCategoryViewModel.toggleSearchQuery() },
-                                onUpdate = { params -> noteCategoryViewModel.updateSearchQuery(params) }
+                                onBack = { noteCategoryViewModel.toggleSearch() },
+                                onUpdate = { params -> noteCategoryViewModel.updateSearchParameters(params) }
                             )
                         }
                     },

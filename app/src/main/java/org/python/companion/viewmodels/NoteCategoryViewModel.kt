@@ -14,18 +14,23 @@ import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.category.NoteCategorySearchParameters
+import org.python.companion.ui.note.category.NoteCategorySortParameters
 
 class NoteCategoryViewModel(application: Application) : AndroidViewModel(application) {
     private val noteCategoryRepository = (application as CompanionApplication).noteCategoryRepository
 
     private val allNoteCategories = MutableStateFlow(emptyFlow<PagingData<NoteCategory>>().cachedIn(viewModelScope))
 
+    private val _sortParameters = MutableStateFlow(NoteCategorySortParameters.fromPreferences(application.baseContext))
     private val _searchParameters = MutableStateFlow<NoteCategorySearchParameters?>(null)
     private val _isLoading = MutableStateFlow(true)
 
 
+    /** Sort parameters to sort [noteCategories] with. */
+    val sortParameters: StateFlow<NoteCategorySortParameters> = _sortParameters
+
     /**
-     * Search parameters to filter [noteCategories] with. If {{null}}, there is no ongoing search.
+     * Search parameters to filter [noteCategories] with. If `null`, there is no ongoing search.
      * This data is also used inside note views to highlight matches.
      */
     val searchParameters: StateFlow<NoteCategorySearchParameters?> = _searchParameters
@@ -37,7 +42,7 @@ class NoteCategoryViewModel(application: Application) : AndroidViewModel(applica
     fun load() {
         UiUtil.effect(viewModelScope) {
             _isLoading.value = true
-            allNoteCategories.value = noteCategoryRepository.allNoteCategories().cachedIn(viewModelScope)
+            allNoteCategories.value = _sortParameters.flatMapLatest { params -> noteCategoryRepository.allNoteCategories(params.column, params.ascending).cachedIn(viewModelScope) }
             _isLoading.value = false
         }
     }
@@ -61,17 +66,23 @@ class NoteCategoryViewModel(application: Application) : AndroidViewModel(applica
 
     suspend fun updateCategoryForNote(noteId: Long, categoryId: Long): Unit = noteCategoryRepository.updateCategoryForNote(noteId, categoryId)
 
-    fun updateSearchQuery(searchParameters: NoteCategorySearchParameters?) {
+    fun updateSortParameters(sortParameters: NoteCategorySortParameters) {
+        _sortParameters.value = sortParameters
+        sortParameters.toPreferences((getApplication() as CompanionApplication).baseContext)
+    }
+
+    fun updateSearchParameters(searchParameters: NoteCategorySearchParameters?) {
         _searchParameters.value = searchParameters
     }
-    fun toggleSearchQuery() {
+    fun toggleSearch() {
         _searchParameters.value = if (_searchParameters.value == null) NoteCategorySearchParameters() else null
     }
 
-    fun filterNoteCategories(category: NoteCategory, params: NoteCategorySearchParameters) =
+
+    private fun filterNoteCategories(category: NoteCategory, params: NoteCategorySearchParameters) =
         category.name.contains(params.text, ignoreCase = !params.caseSensitive)
 
-    fun filterNoteCategories(category: NoteCategory, re: Regex) =
+    private fun filterNoteCategories(category: NoteCategory, re: Regex) =
         category.name.contains(re)
 
     @OptIn(ExperimentalCoroutinesApi::class)

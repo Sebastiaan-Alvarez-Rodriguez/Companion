@@ -2,6 +2,7 @@ package org.python.backend.data.datatype
 
 import android.graphics.Color
 import org.python.db.entities.note.RoomNoteCategory
+import java.time.Instant
 
 data class Note(
     val noteId: Long = 0L,
@@ -10,6 +11,7 @@ data class Note(
     val favorite: Boolean,
     val securityLevel: Int,
     val iv: ByteArray = ByteArray(0),
+    val date: Instant,
     val categoryKey: Long = -1L
 ) {
     override fun equals(other: Any?): Boolean = other is Note && noteId == other.noteId &&
@@ -18,6 +20,7 @@ data class Note(
         favorite == other.favorite &&
         securityLevel == other.securityLevel &&
         iv.contentEquals(other.iv) &&
+        date.equals(other.date) &&
         categoryKey == other.categoryKey
 
     override fun hashCode(): Int = this.noteId.toInt()
@@ -27,7 +30,8 @@ data class NoteCategory(
     val categoryId: Long = 0,
     val name: String,
     val color: Color,
-    val favorite: Boolean
+    val favorite: Boolean,
+    val categoryDate: Instant
 ) {
     override fun equals(other: Any?): Boolean {
         if (other !is NoteCategory)
@@ -42,7 +46,8 @@ data class NoteCategory(
             categoryId = RoomNoteCategory.DEFAULT.categoryId,
             name = RoomNoteCategory.DEFAULT.categoryName,
             color = RoomNoteCategory.DEFAULT.color,
-            favorite = RoomNoteCategory.DEFAULT.favorite
+            favorite = RoomNoteCategory.DEFAULT.favorite,
+            categoryDate = RoomNoteCategory.DEFAULT.categoryDate
         )
     }
 }

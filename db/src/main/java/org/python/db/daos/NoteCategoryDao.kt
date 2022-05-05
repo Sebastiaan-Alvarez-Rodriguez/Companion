@@ -4,11 +4,26 @@ import androidx.paging.PagingSource
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import org.python.db.entities.note.RoomNoteCategory
+import org.python.db.entities.note.RoomNoteWithCategory
 
 @Dao
 interface NoteCategoryDao {
-    @Query("select * from RoomNoteCategory")
-    fun getAll(): PagingSource<Int, RoomNoteCategory>
+    @Transaction
+    @Query("select * from RoomNoteCategory order by favorite desc, " +
+            "(case when :ascending == 0 then categoryName end) desc, " +
+            "(case when :ascending != 0 then categoryName end) asc")
+    fun getAll_sortName(ascending: Boolean): PagingSource<Int, RoomNoteCategory>
+
+    @Transaction
+    @Query("select * from RoomNoteCategory order by favorite desc, " +
+            "(case when :ascending == 0 then categoryDate end) desc, " +
+            "(case when :ascending != 0 then categoryDate end) asc")
+    fun getAll_sortDate(ascending: Boolean): PagingSource<Int, RoomNoteCategory>
+    fun getAll(sortColumn: RoomNoteCategory.Companion.SortableField, ascending: Boolean): PagingSource<Int, RoomNoteCategory> =
+        when (sortColumn) {
+            RoomNoteCategory.Companion.SortableField.NAME -> getAll_sortName(ascending)
+            RoomNoteCategory.Companion.SortableField.DATE -> getAll_sortDate(ascending)
+        }
 
     @Query("select * from RoomNoteCategory where categoryId == :id")
     suspend fun get(id: Long): RoomNoteCategory?

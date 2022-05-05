@@ -6,11 +6,13 @@ import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.NoteCategory
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNoteCategory
+import org.python.db.entities.note.RoomNoteWithCategory
 
 class NoteCategoryStore(database: CompanionDatabase) {
     private val noteCategoryDao = database.noteCategoryDao
 
-    fun getAll(): Flow<PagingData<NoteCategory>> = pagingNoteCategory { noteCategoryDao.getAll() }
+    fun getAll(sortColumn: RoomNoteCategory.Companion.SortableField, ascending: Boolean): Flow<PagingData<NoteCategory>> =
+        pagingNoteCategory { noteCategoryDao.getAll(sortColumn, ascending) }
 
     /**
      * Searches note by id.
@@ -53,6 +55,18 @@ class NoteCategoryStore(database: CompanionDatabase) {
 private fun pagingNoteCategory(block: () -> PagingSource<Int, RoomNoteCategory>): Flow<PagingData<NoteCategory>> =
     Pager(PagingConfig(pageSize = 20)) { block() }.flow.map { page -> page.map { it.toUI() } }
 
-private fun NoteCategory.toRoom() = RoomNoteCategory(categoryId = categoryId, categoryName = name, color = color, favorite = favorite)
+private fun NoteCategory.toRoom() = RoomNoteCategory(
+    categoryId = categoryId,
+    categoryName = name,
+    color = color,
+    favorite = favorite,
+    categoryDate = categoryDate
+)
 
-private fun RoomNoteCategory.toUI() = NoteCategory(categoryId = categoryId, name = categoryName, color = color, favorite = favorite)
+private fun RoomNoteCategory.toUI() = NoteCategory(
+    categoryId = categoryId,
+    name = categoryName,
+    color = color,
+    favorite = favorite,
+    categoryDate = categoryDate
+)

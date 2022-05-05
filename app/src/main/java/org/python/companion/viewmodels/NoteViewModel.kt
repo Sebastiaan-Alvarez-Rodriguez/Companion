@@ -93,10 +93,10 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun filterNote(note: Note, params: NoteSearchParameters) =
+    private fun filterNote(note: Note, params: NoteSearchParameters) =
         (params.inTitle && note.name.contains(params.text, ignoreCase = !params.caseSensitive)) ||
                 (params.inContent && note.content.contains(params.text, ignoreCase = !params.caseSensitive))
-    fun filterNote(note: Note, params: NoteSearchParameters, re: Regex) =
+    private fun filterNote(note: Note, params: NoteSearchParameters, re: Regex) =
         (params.inTitle && note.name.contains(re)) || (params.inContent && note.content.contains(re))
 
     /** Given a text, finds all matches for [searchParameters] */

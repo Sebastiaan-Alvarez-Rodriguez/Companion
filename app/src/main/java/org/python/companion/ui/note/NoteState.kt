@@ -41,8 +41,8 @@ class NoteState(
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
                 val clearance by noteViewModel.clearance.collectAsState()
 
-                val searchParameters by noteViewModel.searchParameters.collectAsState()
                 val sortParameters by noteViewModel.sortParameters.collectAsState()
+                val searchParameters by noteViewModel.searchParameters.collectAsState()
 
                 val selectedItems = remember { mutableStateListOf<Note>() }
                 val securityItem: @Composable (LazyItemScope.() -> Unit)? = if (hasSecureNotes) {

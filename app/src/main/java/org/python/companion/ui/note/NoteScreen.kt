@@ -5,11 +5,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,12 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -35,7 +30,6 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.SimpleFAB
-import org.python.companion.ui.theme.DarkBlue900
 import org.python.db.entities.note.RoomNoteWithCategory
 
 
@@ -79,16 +73,6 @@ fun NoteScreenListHeader(
             }
         )
     )
-}
-@Composable
-fun NestedIcon(mainIcon: ImageVector, description: String? = null, sideIcon: ImageVector, sideDescription: String? = null,) {
-    Box {
-        Icon(mainIcon, contentDescription = description)
-        Icon(sideIcon, modifier = Modifier
-            .size(10.dp)
-            .align(Alignment.BottomEnd)
-            .background(DarkBlue900, shape = CircleShape), contentDescription = sideDescription)
-    }
 }
 
 @Composable
@@ -279,7 +263,7 @@ data class NoteSearchParameters(
 )
 
 @Composable
-fun NoteSort(sortParameters: NoteSortParameters, modifier: Modifier = Modifier, onSortClick: (NoteSortParameters) -> Unit) {
+fun NoteSort(sortParameters: NoteSortParameters, onSortClick: (NoteSortParameters) -> Unit, modifier: Modifier = Modifier) {
     IconButton(modifier = modifier, onClick = { onSortClick(
         sortParameters.copy(ascending = !sortParameters.ascending)
     ) }) {
@@ -288,21 +272,23 @@ fun NoteSort(sortParameters: NoteSortParameters, modifier: Modifier = Modifier, 
     IconButton(modifier = modifier, onClick = { onSortClick(
         sortParameters.copy(
             column = when(sortParameters.column) {
-                RoomNoteWithCategory.Companion.SortableField.NAME -> RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL
-                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME
-                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> RoomNoteWithCategory.Companion.SortableField.NAME
+                RoomNoteWithCategory.Companion.SortableField.NAME -> RoomNoteWithCategory.Companion.SortableField.DATE
+                RoomNoteWithCategory.Companion.SortableField.DATE -> RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME
+                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL
+                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> RoomNoteWithCategory.Companion.SortableField.NAME
             }
         )
     ) }) {
-        NestedIcon(
+        UiUtil.NestedIcon(
             mainIcon = when(sortParameters.column) {
                 RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
-                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
+                RoomNoteWithCategory.Companion.SortableField.DATE -> Icons.Rounded.Schedule
                 RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> Icons.Rounded.Bolt
-                else -> throw RuntimeException("Got unknown column ${sortParameters.column}")
+                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
             },
             description = "Sort on ${sortParameters.column}",
-            sideIcon = Icons.Rounded.Sort
+            sideIcon = Icons.Rounded.Sort,
+            sideModifier = Modifier.size(10.dp)
         )
     }
 }

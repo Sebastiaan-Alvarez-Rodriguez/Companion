@@ -26,6 +26,7 @@ import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
 import timber.log.Timber
+import java.time.Instant
 
 
 /** Loads note to edit, then shows edit screen. */
@@ -97,14 +98,16 @@ fun NoteScreenEditReady(
             content = content,
             favorite = favorite,
             securityLevel = securityLevel,
-            categoryKey = categoryKey
+            categoryKey = categoryKey,
+            date = Instant.now()
         ) ?:
         Note(
             name = title,
             content = content,
             favorite = favorite,
             securityLevel = securityLevel,
-            categoryKey = categoryKey
+            categoryKey = categoryKey,
+            date = Instant.now()
         )
     }
 

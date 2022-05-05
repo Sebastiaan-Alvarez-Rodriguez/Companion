@@ -6,14 +6,16 @@ import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.stores.NoteCategoryStore
 import org.python.security.SecurityActor
 import org.python.db.CompanionDatabase
+import org.python.db.entities.note.RoomNoteCategory
+import org.python.db.entities.note.RoomNoteWithCategory
 
 class NoteCategoryRepository(private val securityActor: SecurityActor, private val noteCategoryStore: NoteCategoryStore) {
     constructor(securityActor: SecurityActor, companionDatabase: CompanionDatabase) :
             this(securityActor, NoteCategoryStore(companionDatabase))
 
     /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
-    fun allNoteCategories(): Flow<PagingData<NoteCategory>> =
-        noteCategoryStore.getAll()
+    fun allNoteCategories(sortColumn: RoomNoteCategory.Companion.SortableField, ascending: Boolean): Flow<PagingData<NoteCategory>> =
+        noteCategoryStore.getAll(sortColumn, ascending)
 
 
     suspend fun get(id: Long): NoteCategory? = noteCategoryStore.get(id)

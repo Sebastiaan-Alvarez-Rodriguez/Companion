@@ -3,6 +3,7 @@ package org.python.companion.support
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -52,6 +54,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.python.companion.R
+import org.python.companion.ui.theme.DarkBlue900
 import kotlin.math.roundToInt
 
 /** Simple enum representing loading state of asynchronously loading objects. */
@@ -60,6 +63,14 @@ enum class LoadingState {
 }
 
 object UiUtil {
+    @Composable
+    fun NestedIcon(mainIcon: ImageVector, modifier: Modifier = Modifier, description: String? = null, sideIcon: ImageVector, sideModifier: Modifier = Modifier, sideDescription: String? = null) {
+        Box {
+            Icon(mainIcon, modifier = modifier, contentDescription = description)
+            Icon(sideIcon, modifier = sideModifier.align(Alignment.BottomEnd).background(DarkBlue900, shape = CircleShape), contentDescription = sideDescription)
+        }
+    }
+
     @Composable
     fun LabelledCheckBox(checked: Boolean, label: AnnotatedString, onCheckedChange: (Boolean) -> Unit) {
         val interactionSource = remember { MutableInteractionSource() }

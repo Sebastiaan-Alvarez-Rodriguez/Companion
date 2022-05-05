@@ -23,6 +23,7 @@ import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import timber.log.Timber
+import java.time.Instant
 
 
 /** Loads notecategory to edit, then shows edit screen. */
@@ -97,12 +98,14 @@ fun NoteCategoryScreenEditReady(
         noteCategory?.copy(
             name = name,
             color = color,
-            favorite = favorite
+            favorite = favorite,
+            categoryDate = Instant.now()
         ) ?:
         NoteCategory(
             name = name,
             color = color,
             favorite = favorite,
+            categoryDate = Instant.now()
         )
     }
 

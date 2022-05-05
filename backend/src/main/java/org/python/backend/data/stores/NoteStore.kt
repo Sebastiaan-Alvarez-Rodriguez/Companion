@@ -98,6 +98,7 @@ private fun Note.toRoom() = RoomNote(
     favorite = favorite,
     securityLevel = securityLevel,
     iv = iv,
+    date = date,
     categoryKey = categoryKey
 )
 
@@ -108,12 +109,25 @@ private fun RoomNote.toUI() = Note(
     favorite = favorite,
     securityLevel = securityLevel,
     iv = iv,
+    date = date,
     categoryKey = categoryKey
 )
 
-private fun NoteCategory.toRoom() = RoomNoteCategory(categoryId = categoryId, categoryName = name, color = color, favorite = favorite)
+private fun NoteCategory.toRoom() = RoomNoteCategory(
+    categoryId = categoryId,
+    categoryName = name,
+    color = color,
+    favorite = favorite,
+    categoryDate = categoryDate
+)
 
-private fun RoomNoteCategory.toUI() = NoteCategory(categoryId = categoryId, name = categoryName, color = color, favorite = favorite)
+private fun RoomNoteCategory.toUI() = NoteCategory(
+    categoryId = categoryId,
+    name = categoryName,
+    color = color,
+    favorite = favorite,
+    categoryDate = categoryDate
+)
 
 private fun NoteWithCategory.toRoom() = RoomNoteWithCategory(note = note.toRoom(), noteCategory = noteCategory.toRoom())
 

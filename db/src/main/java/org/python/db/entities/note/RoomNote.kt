@@ -1,6 +1,7 @@
 package org.python.db.entities.note
 
 import androidx.room.*
+import java.time.Instant
 
 @Entity(indices = [Index("name", unique = true)])
 data class RoomNote(
@@ -10,6 +11,7 @@ data class RoomNote(
     val favorite: Boolean,
     val securityLevel: Int,
     val iv: ByteArray,
+    val date: Instant,
     val categoryKey: Long,
 ) {
     override fun equals(other: Any?): Boolean = other is RoomNote && this.noteId == other.noteId
@@ -28,8 +30,9 @@ data class RoomNoteWithCategory(
     companion object {
         enum class SortableField {
             NAME,
-            SECURITYLEVEL,
-            CATEGORYNAME;
+            DATE,
+            CATEGORYNAME,
+            SECURITYLEVEL
         }
     }
 }
