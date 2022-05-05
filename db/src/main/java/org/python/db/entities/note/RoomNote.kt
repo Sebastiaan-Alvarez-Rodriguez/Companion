@@ -20,7 +20,8 @@ data class RoomNoteWithCategory(
     @Embedded val note: RoomNote,
     @Relation(
         parentColumn = "categoryKey",
-        entityColumn = "categoryId"
+        entityColumn = "categoryId",
+        entity = RoomNoteCategory::class
     )
     val noteCategory: RoomNoteCategory
 ) {
@@ -28,7 +29,7 @@ data class RoomNoteWithCategory(
         enum class SortableField {
             NAME,
             SECURITYLEVEL,
-            CATEGORYNAME
+            CATEGORYNAME;
         }
     }
 }

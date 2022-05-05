@@ -5,25 +5,26 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Sort
-import androidx.compose.material.icons.rounded.Title
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.SimpleFAB
+import org.python.companion.ui.theme.DarkBlue900
 import org.python.db.entities.note.RoomNoteWithCategory
 
 
@@ -69,26 +71,7 @@ fun NoteScreenListHeader(
             },
             {
                 Row {
-                    IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSortClick(
-                        sortParameters.copy(
-                            column = when(sortParameters.column) { // TODO: Use nice dialog instead
-                                RoomNoteWithCategory.Companion.SortableField.NAME -> RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL
-                                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME
-                                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> RoomNoteWithCategory.Companion.SortableField.NAME
-                            }
-                        )
-                    ) }) {
-                        NestedIcon(
-                            mainIcon = when(sortParameters.column) { // TODO: Show nice dialog instead
-                                RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
-                                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
-                                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> Icons.Rounded.Bolt
-                                else -> throw RuntimeException("Got unknown column ${sortParameters.column}")
-                            },
-                            description = "Sort on ${sortParameters.column}",
-                            sideIcon = Icons.Rounded.Sort
-                        )
-                    }
+                    NoteSort(sortParameters, modifier = Modifier.padding(tinyPadding), onSortClick = onSortClick)
                     IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
                         Icon(Icons.Filled.Search, "Search")
                     }
@@ -101,7 +84,10 @@ fun NoteScreenListHeader(
 fun NestedIcon(mainIcon: ImageVector, description: String? = null, sideIcon: ImageVector, sideDescription: String? = null,) {
     Box {
         Icon(mainIcon, contentDescription = description)
-        Icon(sideIcon, modifier = Modifier.size(8.dp).align(Alignment.BottomEnd), contentDescription = sideDescription)
+        Icon(sideIcon, modifier = Modifier
+            .size(10.dp)
+            .align(Alignment.BottomEnd)
+            .background(DarkBlue900, shape = CircleShape), contentDescription = sideDescription)
     }
 }
 
@@ -137,26 +123,7 @@ fun NoteScreenContextListHeader(
             },
             {
                 Row {
-                    IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSortClick(
-                        sortParameters.copy(
-                            column = when(sortParameters.column) { // TODO: Use nice dialog instead
-                                RoomNoteWithCategory.Companion.SortableField.NAME -> RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL
-                                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME
-                                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> RoomNoteWithCategory.Companion.SortableField.NAME
-                            }
-                        )
-                    ) }) {
-                        NestedIcon(
-                            mainIcon = when(sortParameters.column) { // TODO: Show nice dialog instead
-                                RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
-                                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
-                                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> Icons.Rounded.Bolt
-                                else -> throw RuntimeException("Got unknown column ${sortParameters.column}")
-                            },
-                            description = "Sort on ${sortParameters.column}",
-                            sideIcon = Icons.Rounded.Sort
-                        )
-                    }
+                    NoteSort(sortParameters, modifier = Modifier.padding(tinyPadding), onSortClick = onSortClick)
                     IconButton(modifier = Modifier.padding(tinyPadding), onClick = { onSearchClick() }) {
                         Icon(Icons.Filled.Search, "Search")
                     }
@@ -222,7 +189,10 @@ fun NoteItem(
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().clickable { onNoteClick(item) }.semantics(mergeDescendants = true) {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNoteClick(item) }
+                .semantics(mergeDescendants = true) {},
         ) {
             Checkbox(modifier = Modifier.weight(0.1f, fill = false), checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
             Text(modifier = Modifier.weight(0.8f, fill = false), text = item.note.name)
@@ -258,7 +228,10 @@ fun SecurityClickItem(text: String, onClick: () -> Unit) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(defaultPadding).clickable { onClick() }.fillMaxWidth()
+            modifier = Modifier
+                .padding(defaultPadding)
+                .clickable { onClick() }
+                .fillMaxWidth()
         ) {
             Text(text)
         }
@@ -306,6 +279,35 @@ data class NoteSearchParameters(
 )
 
 @Composable
+fun NoteSort(sortParameters: NoteSortParameters, modifier: Modifier = Modifier, onSortClick: (NoteSortParameters) -> Unit) {
+    IconButton(modifier = modifier, onClick = { onSortClick(
+        sortParameters.copy(ascending = !sortParameters.ascending)
+    ) }) {
+         Icon(if (sortParameters.ascending) Icons.Rounded.ArrowDownward else Icons.Rounded.ArrowUpward, contentDescription = "Sort direction ${if (sortParameters.ascending) "ascending" else "descending"}")
+    }
+    IconButton(modifier = modifier, onClick = { onSortClick(
+        sortParameters.copy(
+            column = when(sortParameters.column) {
+                RoomNoteWithCategory.Companion.SortableField.NAME -> RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL
+                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME
+                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> RoomNoteWithCategory.Companion.SortableField.NAME
+            }
+        )
+    ) }) {
+        NestedIcon(
+            mainIcon = when(sortParameters.column) {
+                RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
+                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
+                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> Icons.Rounded.Bolt
+                else -> throw RuntimeException("Got unknown column ${sortParameters.column}")
+            },
+            description = "Sort on ${sortParameters.column}",
+            sideIcon = Icons.Rounded.Sort
+        )
+    }
+}
+
+@Composable
 fun NoteSearch(searchParameters: NoteSearchParameters, onQueryUpdate: (NoteSearchParameters) -> Unit) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
     val focusRequester = remember { FocusRequester() }
@@ -314,7 +316,9 @@ fun NoteSearch(searchParameters: NoteSearchParameters, onQueryUpdate: (NoteSearc
         TextField(
             value = searchParameters.text,
             onValueChange = { onQueryUpdate(searchParameters.copy(text = it)) },
-            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             singleLine = true,
             leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding)) },
             trailingIcon = {

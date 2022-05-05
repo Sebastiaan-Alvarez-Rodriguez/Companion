@@ -2,35 +2,51 @@ package org.python.db.daos
 
 import androidx.paging.PagingSource
 import androidx.room.*
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 import org.python.datacomm.DataResult
 import org.python.datacomm.ResultType
 import org.python.db.entities.note.RoomNote
-import org.python.db.entities.note.RoomNoteCategory
 import org.python.db.entities.note.RoomNoteWithCategory
 
 @Dao
 interface NoteDao {
+    @Transaction
+    @Query("select * from RoomNote " +
+            "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "where securityLevel <= :clearance " +
+            "order by favorite desc, " +
+                "(case when :ascending == 0 then name end) desc, " +
+                "(case when :ascending != 0 then name end) asc")
+    fun getAll_sortName(clearance: Int, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory>
+
+    @Transaction
+    @Query("select * from RoomNote " +
+            "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "where securityLevel <= :clearance " +
+            "order by favorite desc, " +
+            "(case when :ascending == 0 then securityLevel end) desc, " +
+            "(case when :ascending != 0 then securityLevel end) asc")
+    fun getAll_sortSecurityLevel(clearance: Int, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory>
+
+    @Transaction
+    @Query("select * from RoomNote " +
+            "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
+            "where securityLevel <= :clearance " +
+            "order by favorite desc, " +
+            "(case when :ascending == 0 then categoryName end) desc, " +
+            "(case when :ascending != 0 then categoryName end) asc")
+    fun getAll_sortCategoryName(clearance: Int, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory>
 
     ////////////////////////////////
     // Secure section;
     // All functions here have user verification checks built-in.
     ////////////////////////////////
     fun getAll(clearance: Int, sortColumn: RoomNoteWithCategory.Companion.SortableField, ascending: Boolean): PagingSource<Int, RoomNoteWithCategory> {
-        val columnName = when(sortColumn) {
-            RoomNoteWithCategory.Companion.SortableField.NAME -> "name"
-            RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> "securityLevel"
-            RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> "categoryName"
+        return when(sortColumn) {
+            RoomNoteWithCategory.Companion.SortableField.NAME -> getAll_sortName(clearance, ascending)
+            RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> getAll_sortSecurityLevel(clearance, ascending)
+            RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> getAll_sortCategoryName(clearance, ascending)
         }
-        return getAllSortedNotes(
-            SimpleSQLiteQuery("select * from RoomNote " +
-                    "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +
-                    "where securityLevel <= $clearance " +
-                    "order by favorite desc, $columnName ${if (ascending) "asc" else "desc"}"
-            )
-        )
     }
 
     @Query("select * from RoomNote where noteId == :id and securityLevel <= :clearance")
@@ -89,10 +105,6 @@ interface NoteDao {
     // Insecure section;
     // Only crucial information may pass through here.
     ////////////////////////////////
-
-    // TODO: Hide highly insecure database interface to module-level.
-    @RawQuery(observedEntities = [RoomNote::class, RoomNoteCategory::class])
-    fun getAllSortedNotes(query: SupportSQLiteQuery): PagingSource<Int, RoomNoteWithCategory>
 
     @Query("select exists(select 1 from RoomNote where securityLevel != 0)")
     fun hasSecureNotes(): Flow<Boolean>
