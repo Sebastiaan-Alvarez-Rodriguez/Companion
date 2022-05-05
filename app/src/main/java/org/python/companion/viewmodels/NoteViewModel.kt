@@ -18,6 +18,7 @@ import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.NoteSearchParameters
+import org.python.companion.ui.note.NoteSortParameters
 import org.python.companion.ui.theme.DarkColorPalette
 import org.python.companion.ui.theme.Purple500
 import org.python.datacomm.Result
@@ -29,12 +30,13 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
     var clearance = securityActor.clearance.stateInViewModel(viewModelScope, 0)
 
-    private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
-
+    private val _sortParameters = MutableStateFlow(NoteSortParameters.fromPreferences(application.baseContext))
     private val _searchParameters = MutableStateFlow<NoteSearchParameters?>(null)
     private val _isLoading = MutableStateFlow(true)
 
 
+    /** Sort parameters to sort [notes] with. */
+    val sortParameters: StateFlow<NoteSortParameters> = _sortParameters
     /**
      * Search parameters to filter [notes] with.
      * This data is also used inside note views to highlight matches.
@@ -44,11 +46,13 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
+
     /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
     fun load() {
         UiUtil.effect(viewModelScope) {
             _isLoading.value = true
-            allNotes.value = noteRepository.allNotes().cachedIn(viewModelScope)
+            allNotes.value = _sortParameters.flatMapLatest { params -> noteRepository.allNotes(params.column, params.ascending) }
             _isLoading.value = false
         }
     }
@@ -69,7 +73,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     fun getWithCategoryLive(id: Long): Flow<NoteWithCategory?> = noteRepository.getWithCategoryLive(id)
 
 
-    suspend fun getbyName(name: String): Note? = noteRepository.getByName(name)
+    suspend fun getByName(name: String): Note? = noteRepository.getByName(name)
 
     suspend fun hasConflict(name: String): Boolean = noteRepository.hasConflict(name)
     suspend fun mayOverride(name: String): Boolean = noteRepository.mayOverride(name)
@@ -77,10 +81,14 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     /** Sets a note to be or not be favored */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
 
-    fun updateSearchQuery(searchParameters: NoteSearchParameters?) {
+    fun updateSortParameters(sortParameters: NoteSortParameters) {
+        _sortParameters.value = sortParameters
+        sortParameters.toPreferences((getApplication() as CompanionApplication).baseContext)
+    }
+    fun updateSearchParameters(searchParameters: NoteSearchParameters?) {
         _searchParameters.value = searchParameters
     }
-    fun toggleSearchQuery() {
+    fun toggleSearch() {
         _searchParameters.value = if (_searchParameters.value == null) NoteSearchParameters() else null
     }
 

@@ -12,9 +12,10 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.stores.NoteStore
 import org.python.datacomm.DataResult
 import org.python.datacomm.Result
+import org.python.db.CompanionDatabase
+import org.python.db.entities.note.RoomNoteWithCategory
 import org.python.security.Securer
 import org.python.security.SecurityActor
-import org.python.db.CompanionDatabase
 
 class NoteRepository(private val securityActor: SecurityActor, private val noteStore: NoteStore) {
     constructor(securityActor: SecurityActor, companionDatabase: CompanionDatabase) : this(securityActor, NoteStore(companionDatabase))
@@ -24,12 +25,13 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
     // All functions here have user verification checks built-in.
     ////////////////////////////////
 
-    /** @return All notes in the collection when authorized. All non-secure notes when unauthorized. */
-    fun allNotes(): Flow<PagingData<NoteWithCategory>> = securityActor.clearance.flatMapLatest { clearance ->
-        noteStore.getAllNotes(clearance).map { page -> page.map {
-            NoteWithCategory((secureToUI(it.note) ?: throw IllegalStateException("Could not decrypt note")), it.noteCategory)
-        } }
-    }
+    /** @return All notes in the collection (for which the user is authorized), sorted on given column. */
+    fun allNotes(sortColumn: RoomNoteWithCategory.Companion.SortableField, ascending: Boolean): Flow<PagingData<NoteWithCategory>> =
+        securityActor.clearance.flatMapLatest { clearance ->
+            noteStore.getAllNotes(clearance, sortColumn, ascending).map { page -> page.map {
+                NoteWithCategory((secureToUI(it.note) ?: throw IllegalStateException("Could not decrypt note")), it.noteCategory)
+            } }
+        }
 
     suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.clearance.value)?.let { secureToUI(it) }
     suspend fun getWithCategory(id: Long): NoteWithCategory? =

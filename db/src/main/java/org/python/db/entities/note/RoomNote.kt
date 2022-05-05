@@ -23,4 +23,12 @@ data class RoomNoteWithCategory(
         entityColumn = "categoryId"
     )
     val noteCategory: RoomNoteCategory
-)
+) {
+    companion object {
+        enum class SortableField {
+            NAME,
+            SECURITYLEVEL,
+            CATEGORYNAME
+        }
+    }
+}
