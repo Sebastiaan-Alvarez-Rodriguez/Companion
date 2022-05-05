@@ -34,7 +34,9 @@ android {
         useIR = true
         freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
         freeCompilerArgs += kotlin_performance_args
-
+    }
+    lintOptions {
+        disable "Instantiatable"
     }
     buildFeatures {
         compose true

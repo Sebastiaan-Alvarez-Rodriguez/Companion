@@ -45,6 +45,10 @@ Current issue list:
     https://issuetracker.google.com/issues/192043120?pli=1
     https://askandroidquestions.com/2021/08/19/jetpack-compose-textfield-soft-keyboard-obscures-text-entry/
  2. Splash screen returns after screen lock -> screen unlock (perhaps a `rememberSaveable` solution)
+ 3. Android lint refuses to see an indirectly-inheriting `Application` class as an instantiatable `Application` class.
+    Unsolved problem in Android community, see:
+    https://issuetracker.google.com/issues/197428346
+    https://stackoverflow.com/questions/68899665/error-mainactivity-must-extend-android-app-activity-instantiatable
 
 ## Ideas
  1. Streamline backend data communication to frontend using some form of messaging.
