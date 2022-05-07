@@ -85,9 +85,7 @@ class MainActivity : FragmentActivity() {
                     topBar = {
                         CompanionTabRow(
                             allScreens = allScreens,
-                            onTabSelected = { screen ->
-                                    Timber.w("Got tab selected: ${screen.name}")
-                                     navController.navigate(screen.name) { launchSingleTop = true } },
+                            onTabSelected = { screen -> navController.navigate(screen.name) { launchSingleTop = true } },
                             currentScreen = selectedTabScreen
                         )
                     },
