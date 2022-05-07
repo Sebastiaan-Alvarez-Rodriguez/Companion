@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.mapLatest
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
+import org.python.backend.data.datatype.RenderType
 import org.python.datacomm.DataResult
 import org.python.datacomm.Result
 import org.python.datacomm.ResultType
@@ -99,6 +100,7 @@ private fun Note.toRoom() = RoomNote(
     securityLevel = securityLevel,
     iv = iv,
     date = date,
+    renderType = renderType.ordinal,
     categoryKey = categoryKey
 )
 
@@ -110,6 +112,7 @@ private fun RoomNote.toUI() = Note(
     securityLevel = securityLevel,
     iv = iv,
     date = date,
+    renderType = RenderType.values()[renderType],
     categoryKey = categoryKey
 )
 

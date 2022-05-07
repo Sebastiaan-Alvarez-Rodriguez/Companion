@@ -12,6 +12,7 @@ data class Note(
     val securityLevel: Int,
     val iv: ByteArray = ByteArray(0),
     val date: Instant,
+    val renderType: RenderType,
     val categoryKey: Long = -1L
 ) {
     override fun equals(other: Any?): Boolean = other is Note && noteId == other.noteId &&
@@ -20,10 +21,15 @@ data class Note(
         favorite == other.favorite &&
         securityLevel == other.securityLevel &&
         iv.contentEquals(other.iv) &&
-        date.equals(other.date) &&
+        date == other.date &&
+        renderType == other.renderType &&
         categoryKey == other.categoryKey
 
     override fun hashCode(): Int = this.noteId.toInt()
+}
+
+enum class RenderType {
+    DEFAULT, MARKDOWN, LATEX
 }
 
 data class NoteCategory(

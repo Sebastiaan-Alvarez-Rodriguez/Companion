@@ -12,6 +12,7 @@ data class RoomNote(
     val securityLevel: Int,
     val iv: ByteArray,
     val date: Instant,
+    val renderType: Int,
     val categoryKey: Long,
 ) {
     override fun equals(other: Any?): Boolean = other is RoomNote && this.noteId == other.noteId
