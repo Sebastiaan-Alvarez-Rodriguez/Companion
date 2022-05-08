@@ -134,11 +134,14 @@ class NoteState(
                 NoteScreenViewSingle(
                     noteViewModel = noteViewModel,
                     id = noteId,
-                    onEditClick = { note, offset -> navigateToNoteEdit(navController = navController, note = note, offset = offset) },
                     onDeleteClick = {
                         noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
                         navController.navigateUp()
                     },
+                    onRenderTypeClick = {
+                                        TODO("Handle render clicks!")
+                    },
+                    onEditClick = { note, offset -> navigateToNoteEdit(navController = navController, note = note, offset = offset) },
                     onCategoryClick = { NoteCategoryState.navigateToCategorySelect(navController, noteId) }
                 )
             }

@@ -11,17 +11,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
+import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
@@ -32,15 +35,16 @@ fun NoteScreenViewSingle(
     noteViewModel: NoteViewModel,
     id: Long,
     onDeleteClick: ((Note) -> Unit),
-    onEditClick: ((Note, Int) -> Unit),
+    onRenderTypeClick: (RenderType) -> Unit,
     onCategoryClick: ((NoteCategory) -> Unit),
+    onEditClick: ((Note, Int) -> Unit),
 ) {
     val noteWithCategory by noteViewModel.getWithCategoryLive(id).collectAsState(null)
     noteWithCategory.let {
         if (it == null)
             UiUtil.SimpleLoading()
         else
-            NoteScreenViewSingleReady(it, noteViewModel, onEditClick, onDeleteClick, onCategoryClick)
+            NoteScreenViewSingleReady(it, noteViewModel, onDeleteClick, onRenderTypeClick, onEditClick, onCategoryClick)
     }
 }
 
@@ -52,12 +56,13 @@ fun NoteScreenViewSingle(
  * @param onCategoryClick Lambda for category clicks.
  */
 @Composable
-fun NoteScreenViewSingleReady(
+private fun NoteScreenViewSingleReady(
     noteWithCategory: NoteWithCategory,
     noteViewModel: NoteViewModel,
-    onEditClick: ((Note, Int) -> Unit),
-    onDeleteClick: ((Note) -> Unit),
-    onCategoryClick: ((NoteCategory) -> Unit),
+    onDeleteClick: (Note) -> Unit,
+    onRenderTypeClick: (RenderType) -> Unit,
+    onCategoryClick: (NoteCategory) -> Unit,
+    onEditClick: (Note, Int) -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
@@ -99,15 +104,33 @@ fun NoteScreenViewSingleReady(
                 IconButton(onClick = { onDeleteClick(noteWithCategory.note) }) {
                     Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete note")
                 }
-                IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
-                    Icon(
-                        tint = Color(noteWithCategory.noteCategory.color.toArgb()),
-                        imageVector = Icons.Outlined.Bolt,
-                        contentDescription = "Edit category"
-                    )
-                }
-                IconButton(onClick = { onEditClick(noteWithCategory.note, scrollState.value) }) {
-                    Icon(imageVector = Icons.Outlined.Edit,contentDescription = "Edit note")
+                Row {
+                    IconButton(onClick = { onRenderTypeClick(noteWithCategory.note.renderType) }) {
+                        when (noteWithCategory.note.renderType) {
+                            RenderType.DEFAULT -> Icon(
+                                imageVector = Icons.Outlined.TextFields,
+                                contentDescription = "Text rendering"
+                            )
+                            RenderType.MARKDOWN -> Icon(
+                                painter = painterResource(id = R.drawable.ic_menu_markdown),
+                                contentDescription = "Markdown rendering"
+                            )
+                            RenderType.LATEX -> Icon(
+                                painter = painterResource(id = R.drawable.ic_menu_latex),
+                                contentDescription = "Latex rendering"
+                            )
+                        }
+                    }
+                    IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
+                        Icon(
+                            tint = Color(noteWithCategory.noteCategory.color.toArgb()),
+                            imageVector = Icons.Outlined.Bolt,
+                            contentDescription = "Edit category"
+                        )
+                    }
+                    IconButton(onClick = { onEditClick(noteWithCategory.note, scrollState.value) }) {
+                        Icon(imageVector = Icons.Outlined.Edit,contentDescription = "Edit note")
+                    }
                 }
             }
         }
