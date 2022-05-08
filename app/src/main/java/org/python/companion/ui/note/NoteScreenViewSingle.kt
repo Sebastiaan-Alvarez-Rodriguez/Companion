@@ -44,7 +44,7 @@ fun NoteScreenViewSingle(
         if (it == null)
             UiUtil.SimpleLoading()
         else
-            NoteScreenViewSingleReady(it, noteViewModel, onDeleteClick, onRenderTypeClick, onEditClick, onCategoryClick)
+            NoteScreenViewSingleReady(it, noteViewModel, onDeleteClick, onRenderTypeClick, onCategoryClick, onEditClick)
     }
 }
 
