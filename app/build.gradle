@@ -67,6 +67,14 @@ dependencies {
     implementation "androidx.navigation:navigation-compose:2.4.2"
     implementation "androidx.paging:paging-compose:1.0.0-alpha14"
 
+//    Render dependencies
+    implementation "io.noties.markwon:core:$markwon_version"
+    implementation "io.noties.markwon:ext-strikethrough:$markwon_version"
+    implementation "io.noties.markwon:ext-tables:$markwon_version"
+    implementation "io.noties.markwon:html:$markwon_version"
+    implementation "io.noties.markwon:linkify:$markwon_version"
+    implementation "io.noties.markwon:ext-latex:$markwon_version"
+
 //    Timber for debugging
     implementation "com.jakewharton.timber:timber:$timber_version"
 

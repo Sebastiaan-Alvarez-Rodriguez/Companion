@@ -7,6 +7,7 @@ buildscript {
         paging_version = '3.1.1'
         room_version = '2.4.2'
         timber_version = '5.0.1'
+        markwon_version = '4.6.2'
 
         kotlin_performance_args = ["-Xgc=cms"]
     }
