@@ -53,6 +53,8 @@ class NoteStore(database: CompanionDatabase) {
 
     suspend fun setFavorite(note: Note, favorite: Boolean, clearance: Int) = noteDao.setFavorite(note.noteId, favorite, clearance)
 
+    suspend fun setRenderType(noteId: Long, renderType: RenderType, clearance: Int): Unit = noteDao.setRenderType(noteId, renderType.ordinal, clearance)
+
     suspend fun upsert(note: Note, clearance: Int): Result = noteDao.upsert(note.toRoom(), clearance)
 
     suspend fun update(note: Note, clearance: Int) = when (noteDao.update(note.toRoom(), clearance)) {

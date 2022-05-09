@@ -85,6 +85,9 @@ interface NoteDao {
     suspend fun setFavorite(noteId: Long, favorite: Boolean, clearance: Int)
     suspend fun setFavorite(note: RoomNote, favorite: Boolean, clearance: Int) = setFavorite(note.noteId, favorite, clearance)
 
+    @Query("update RoomNote set renderType = :renderType where noteId = :noteId and securityLevel <= :clearance")
+    suspend fun setRenderType(noteId: Long, renderType: Int, clearance: Int)
+
     @Transaction
     suspend fun upsert(item: RoomNote, clearance: Int): org.python.datacomm.Result {
         if (!hasConflict(item.name))

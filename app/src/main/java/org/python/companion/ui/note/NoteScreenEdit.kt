@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
+import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
@@ -80,8 +81,9 @@ fun NoteScreenEditReady(
 ) {
     var title by remember { mutableStateOf(note?.name ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
-    var favorite by remember { mutableStateOf(note?.favorite ?: false)}
-    var securityLevel by remember { mutableStateOf(note?.securityLevel ?: 0)}
+    var favorite by remember { mutableStateOf(note?.favorite ?: false) }
+    var securityLevel by remember { mutableStateOf(note?.securityLevel ?: 0) }
+    var renderType by remember { mutableStateOf(note?.renderType ?: RenderType.DEFAULT) } // TODO: Add changeable rendertype?
 
     val categoryKey = noteCategory?.categoryId ?: NoteCategory.DEFAULT.categoryId
 
@@ -99,6 +101,7 @@ fun NoteScreenEditReady(
             favorite = favorite,
             securityLevel = securityLevel,
             categoryKey = categoryKey,
+            renderType = renderType,
             date = Instant.now()
         ) ?:
         Note(
@@ -107,6 +110,7 @@ fun NoteScreenEditReady(
             favorite = favorite,
             securityLevel = securityLevel,
             categoryKey = categoryKey,
+            renderType = renderType,
             date = Instant.now()
         )
     }

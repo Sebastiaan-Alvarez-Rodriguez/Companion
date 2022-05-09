@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
+import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.navigateForResult
@@ -139,7 +140,11 @@ class NoteState(
                         navController.navigateUp()
                     },
                     onRenderTypeClick = {
-                                        TODO("Handle render clicks!")
+                        when (it) {
+                            RenderType.DEFAULT -> noteViewModel.viewModelScope.launch { noteViewModel.setRenderType(noteId, RenderType.MARKDOWN) }
+                            RenderType.MARKDOWN -> noteViewModel.viewModelScope.launch { noteViewModel.setRenderType(noteId, RenderType.LATEX) }
+                            RenderType.LATEX -> noteViewModel.viewModelScope.launch { noteViewModel.setRenderType(noteId, RenderType.DEFAULT) }
+                        }
                     },
                     onEditClick = { note, offset -> navigateToNoteEdit(navController = navController, note = note, offset = offset) },
                     onCategoryClick = { NoteCategoryState.navigateToCategorySelect(navController, noteId) }

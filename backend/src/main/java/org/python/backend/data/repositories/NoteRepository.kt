@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
+import org.python.backend.data.datatype.RenderType
 import org.python.backend.data.stores.NoteStore
 import org.python.datacomm.DataResult
 import org.python.datacomm.Result
@@ -63,6 +64,8 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
      * @param favorite new favored status.
      */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteStore.setFavorite(note, favorite, securityActor.clearance.value)
+
+    suspend fun setRenderType(noteId: Long, renderType: RenderType): Unit = noteStore.setRenderType(noteId, renderType, securityActor.clearance.value)
 
     /** Inserts-or-updates [Note]. [Result] contains [Long], the updated id, on success. */
     suspend fun upsert(note: Note): Result =

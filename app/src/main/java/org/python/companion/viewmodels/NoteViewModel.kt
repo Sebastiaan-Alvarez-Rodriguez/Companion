@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
+import org.python.backend.data.datatype.RenderType
 import org.python.companion.CompanionApplication
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
@@ -80,6 +81,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Sets a note to be or not be favored */
     suspend fun setFavorite(note: Note, favorite: Boolean): Unit = noteRepository.setFavorite(note, favorite)
+
+    suspend fun setRenderType(noteId: Long, renderType: RenderType): Unit = noteRepository.setRenderType(noteId, renderType)
 
     fun updateSortParameters(sortParameters: NoteSortParameters) {
         _sortParameters.value = sortParameters
