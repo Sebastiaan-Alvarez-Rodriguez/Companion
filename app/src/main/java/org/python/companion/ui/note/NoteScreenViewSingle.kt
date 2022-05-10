@@ -138,13 +138,23 @@ private fun NoteScreenViewSingleReady(
 
         Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
             Card(elevation = 5.dp) {
-                titleScrollFunction = UiUtil.simpleScrollableText(text = title,  modifier = Modifier.fillMaxWidth().padding(defaultPadding), scrollState = scrollState)
+                titleScrollFunction = UiUtil.simpleScrollableRenderText(
+                    text = title,
+                    renderType = noteWithCategory.note.renderType,
+                    modifier = Modifier.fillMaxWidth().padding(defaultPadding),
+                    scrollState = scrollState
+                )
             }
 
             Spacer(Modifier.height(defaultPadding))
 
             Card(elevation = 5.dp) {
-                contentScrollFunction = UiUtil.simpleScrollableText(text = content, modifier = Modifier.fillMaxWidth().padding(defaultPadding), scrollState = scrollState)
+                contentScrollFunction = UiUtil.simpleScrollableRenderText(
+                    text = content,
+                    renderType = noteWithCategory.note.renderType,
+                    modifier = Modifier.fillMaxWidth().padding(defaultPadding),
+                    scrollState = scrollState
+                )
             }
         }
         if (isSearching) {

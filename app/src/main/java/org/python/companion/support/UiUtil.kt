@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.ui.theme.DarkBlue900
 import kotlin.math.roundToInt
@@ -327,29 +329,57 @@ object UiUtil {
     }
 
     @Composable
-    fun simpleScrollableText(text: AnnotatedString, modifier: Modifier = Modifier, scrollState: ScrollState): (Int) -> Unit {
+    fun simpleScrollable(positions: List<Int>, modifier: Modifier = Modifier, scrollState: ScrollState, scrollableText: @Composable (Modifier, (TextLayoutResult) -> Unit) -> Unit): (Int) -> Unit {
         val scrollDelta = -80
-
         val coroutineScope = rememberCoroutineScope()
-
-        val searchResultPositions = text.spanStyles.map { it.start } // Char offsets for each search result
 
         var parentOffset by remember { mutableStateOf(0f) }
         var contentTextLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) } // Layout rendering collector
 
         val executeScroll: (Int) -> Unit = { spanIndex ->
             coroutineScope.launch {
-                val charOffset = searchResultPositions[spanIndex]
+                val charOffset = positions[spanIndex]
                 val renderedLineOffset = contentTextLayoutResult!!.getLineForOffset(charOffset)
                 val pointOffset = contentTextLayoutResult!!.getLineBottom(renderedLineOffset)
                 val finalOffset = (parentOffset + pointOffset).roundToInt()
                 scrollState.animateScrollTo(finalOffset)
             }
         }
-        Text(text = text, modifier = modifier.onGloballyPositioned { coordinates -> parentOffset = coordinates.parentLayoutCoordinates!!.positionInParent().y+scrollDelta }, onTextLayout = { layout -> contentTextLayoutResult = layout })
+        scrollableText(
+            modifier.onGloballyPositioned { coordinates -> parentOffset = coordinates.parentLayoutCoordinates!!.positionInParent().y+scrollDelta }
+        ) { layout -> contentTextLayoutResult = layout }
         return executeScroll
-
     }
+
+    @Composable
+    fun simpleScrollableRenderText(
+        text: AnnotatedString,
+        renderType: RenderType,
+        modifier: Modifier = Modifier,
+        fontSize: TextUnit = TextUnit.Unspecified,
+        scrollState: ScrollState
+    ) = simpleScrollable(
+        positions = text.spanStyles.map { it.start },
+        modifier = modifier,
+        scrollState = scrollState
+    ) { outModifier, layoutResultFunc ->
+        RenderUtil.RenderText(text = text, renderType = renderType, modifier = outModifier, fontSize = fontSize, onTextLayout = layoutResultFunc)
+    }
+
+    @Composable
+    fun simpleScrollableText(
+        text: AnnotatedString,
+        modifier: Modifier = Modifier,
+        fontSize: TextUnit = TextUnit.Unspecified,
+        scrollState: ScrollState
+    ) = simpleScrollable(
+        positions = text.spanStyles.map { it.start },
+        modifier = modifier,
+        scrollState = scrollState
+    ) { outModifier, layoutResultFunc ->
+        Text(text, modifier = outModifier, fontSize = fontSize, onTextLayout = layoutResultFunc)
+    }
+
 
 
     class UIUtilState(private val navController: NavHostController) {

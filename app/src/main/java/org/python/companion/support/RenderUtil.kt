@@ -5,6 +5,7 @@ import android.text.util.Linkify
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.LocalTextStyle
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -55,22 +57,50 @@ object RenderUtil {
         overflow: TextOverflow = TextOverflow.Clip,
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
+        inlineContent: Map<String, InlineTextContent> = mapOf(),
+        onTextLayout: (TextLayoutResult) -> Unit = {},
+        style: TextStyle = LocalTextStyle.current
+    ) = RenderText(
+        text = AnnotatedString(text), renderType = renderType,
+        modifier, color, fontSize, fontStyle, fontWeight, fontFamily,
+        letterSpacing, textDecoration, textAlign, lineHeight, overflow,
+        softWrap, maxLines, inlineContent, onTextLayout, style
+    )
+
+    @Composable
+    fun RenderText(
+        text: AnnotatedString,
+        renderType: RenderType,
+        modifier: Modifier = Modifier,
+        color: Color = Color.Unspecified,
+        fontSize: TextUnit = TextUnit.Unspecified,
+        fontStyle: FontStyle? = null,
+        fontWeight: FontWeight? = null,
+        fontFamily: FontFamily? = null,
+        letterSpacing: TextUnit = TextUnit.Unspecified,
+        textDecoration: TextDecoration? = null,
+        textAlign: TextAlign? = null,
+        lineHeight: TextUnit = TextUnit.Unspecified,
+        overflow: TextOverflow = TextOverflow.Clip,
+        softWrap: Boolean = true,
+        maxLines: Int = Int.MAX_VALUE,
+        inlineContent: Map<String, InlineTextContent> = mapOf(),
         onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
-                Text(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, onTextLayout, style)
+                Text(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
             RenderType.MARKDOWN ->
-                MarkdownText(text = text, modifier = modifier, useLatex = false, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, onTextLayout, style)
+                MarkdownText(text = text, modifier = modifier, useLatex = false, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
             RenderType.LATEX ->
-                MarkdownText(text = text, modifier = modifier, useLatex = true, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, onTextLayout, style)
+                MarkdownText(text = text, modifier = modifier, useLatex = true, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
 
         }
     }
     @Composable
     fun MarkdownText(
-        text: String,
+        text: AnnotatedString,
         modifier: Modifier = Modifier,
         useLatex: Boolean = false,
         color: Color = Color.Unspecified,
@@ -85,6 +115,7 @@ object RenderUtil {
         overflow: TextOverflow = TextOverflow.Clip,
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
+        inlineContent: Map<String, InlineTextContent> = mapOf(),
         onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current,
         onClick: (() -> Unit)? = null,
@@ -115,7 +146,7 @@ object RenderUtil {
                 )
             },
             update = { textView ->
-                markdownRender.setMarkdown(textView, text)
+                markdownRender.setMarkdown(textView, text.text)
                 if (disableLinkMovementMethod) {
                     textView.movementMethod = null
                 }
