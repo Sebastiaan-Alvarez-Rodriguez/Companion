@@ -5,7 +5,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
@@ -26,6 +29,7 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.support.LoadingState
+import org.python.companion.support.RenderUtil
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
 import timber.log.Timber
@@ -171,8 +175,9 @@ fun NoteScreenEditReady(
 
         Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
             Card(modifier = Modifier.fillMaxWidth(), elevation = 5.dp) {
-                OutlinedTextField(
+                RenderUtil.OutlinedRenderTextField(
                     value = title,
+                    renderType = renderType,
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),
                     onValueChange = { title = it },
                     label = { Text("Title") },
@@ -182,9 +187,10 @@ fun NoteScreenEditReady(
             Spacer(Modifier.height(defaultPadding))
 
             Card(modifier = Modifier.fillMaxSize(), elevation = 5.dp) {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth().padding(defaultPadding),
+                RenderUtil.OutlinedRenderTextField(
                     value = content,
+                    renderType = renderType,
+                    modifier = Modifier.fillMaxWidth().padding(defaultPadding),
                     onValueChange = { content = it },
                     label = { Text("Content") },
                     singleLine = false,
