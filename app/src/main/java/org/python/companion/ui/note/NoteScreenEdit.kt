@@ -12,10 +12,12 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
@@ -83,7 +85,7 @@ fun NoteScreenEditReady(
     var content by remember { mutableStateOf(note?.content ?: "") }
     var favorite by remember { mutableStateOf(note?.favorite ?: false) }
     var securityLevel by remember { mutableStateOf(note?.securityLevel ?: 0) }
-    var renderType by remember { mutableStateOf(note?.renderType ?: RenderType.DEFAULT) } // TODO: Add changeable rendertype?
+    var renderType by remember { mutableStateOf(note?.renderType ?: RenderType.DEFAULT) }
 
     val categoryKey = noteCategory?.categoryId ?: NoteCategory.DEFAULT.categoryId
 
@@ -141,9 +143,26 @@ fun NoteScreenEditReady(
                     }
                 }
                 Spacer(Modifier.width(defaultPadding))
-
-                IconButton(onClick = { onSaveClick(createNoteObject()) }) {
-                    Icon(imageVector = Icons.Filled.Save, contentDescription = "Save")
+                Row {
+                    IconButton(onClick = { renderType = RenderType.nextInLine(renderType) }) {
+                        when (renderType) {
+                            RenderType.DEFAULT -> Icon(
+                                imageVector = Icons.Outlined.TextFields,
+                                contentDescription = "Text rendering"
+                            )
+                            RenderType.MARKDOWN -> Icon(
+                                painter = painterResource(id = R.drawable.ic_menu_markdown),
+                                contentDescription = "Markdown rendering"
+                            )
+                            RenderType.LATEX -> Icon(
+                                painter = painterResource(id = R.drawable.ic_menu_latex),
+                                contentDescription = "Latex rendering"
+                            )
+                        }
+                    }
+                    IconButton(onClick = { onSaveClick(createNoteObject()) }) {
+                        Icon(imageVector = Icons.Filled.Save, contentDescription = "Save")
+                    }
                 }
             }
         }
