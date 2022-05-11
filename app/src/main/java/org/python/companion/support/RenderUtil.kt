@@ -1,6 +1,9 @@
 package org.python.companion.support
 
 import android.content.Context
+import android.text.Editable
+import android.text.Spanned
+import android.text.TextWatcher
 import android.text.util.Linkify
 import android.util.TypedValue
 import android.view.View
@@ -13,7 +16,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -26,6 +28,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -33,8 +36,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.viewinterop.AndroidView
 import io.noties.markwon.Markwon
-import io.noties.markwon.editor.MarkwonEditor
-import io.noties.markwon.editor.MarkwonEditorTextWatcher
+import io.noties.markwon.core.spans.StrongEmphasisSpan
+import io.noties.markwon.editor.*
 import io.noties.markwon.ext.latex.JLatexMathPlugin
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
@@ -44,6 +47,7 @@ import io.noties.markwon.linkify.LinkifyPlugin
 import org.python.backend.data.datatype.RenderType
 import ru.noties.jlatexmath.JLatexMathDrawable
 import java.util.concurrent.Executors
+
 
 object RenderUtil {
 
@@ -113,15 +117,16 @@ object RenderUtil {
         val backgroundColor = colors.backgroundColor(enabled = enabled).value
 
         val context: Context = LocalContext.current
-        val markwonEditor: MarkwonEditor = rememberSaveable {
+        val markwonEditor: MarkwonEditor = remember {
             createMarkdownEditor(context)
         }
-        val backgroundExecutors = rememberSaveable { Executors.newCachedThreadPool() }
+        val backgroundExecutors = remember { Executors.newCachedThreadPool() }
 
         AndroidView(
             modifier = modifier,
             factory = { ctx ->
                 val editText = createEditText(
+                    value = value,
                     context = ctx,
                     enabled = enabled,
                     readOnly = readOnly,
@@ -132,9 +137,27 @@ object RenderUtil {
                     textColor = textColor,
                     backgroundColor = backgroundColor
                 )
-//                editText.addTextChangedListener(
-//                    MarkwonEditorTextWatcher.withPreRender(markwonEditor, backgroundExecutors, editText)
-//                )
+                editText.addTextChangedListener(
+                    MarkwonEditorTextWatcher.withPreRender(markwonEditor, backgroundExecutors, editText)
+                )
+                editText.addTextChangedListener(
+                    object : TextWatcher {
+                        override fun beforeTextChanged(
+                            s: CharSequence?,
+                            start: Int,
+                            count: Int,
+                            after: Int
+                        ) {}
+
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                            if (s != null)
+                                onValueChange(s.toString())
+                        }
+
+                        override fun afterTextChanged(s: Editable?) {}
+
+                    }
+                )
                 return@AndroidView editText
             },
             update = { editText ->
@@ -144,10 +167,8 @@ object RenderUtil {
     }
 
     private fun createEditText(
+        value: String,
         context: Context,
-//        value: String,
-//        renderType: RenderType,
-//        onValueChange: (String) -> Unit,
 //        modifier: Modifier = Modifier,
         enabled: Boolean = true,
         readOnly: Boolean = false,
@@ -168,6 +189,7 @@ object RenderUtil {
         backgroundColor: Color
     ): EditText {
         return EditText(context).apply {
+            setText(value)
             isEnabled = enabled
             if (readOnly)
                 isEnabled = false
@@ -183,7 +205,45 @@ object RenderUtil {
     }
 
 
-    private fun createMarkdownEditor(context: Context) = MarkwonEditor.create(Markwon.create(context))
+    private fun createMarkdownEditor(context: Context) = MarkwonEditor
+        .builder(Markwon.create(context))
+        .useEditHandler(object : AbstractEditHandler<StrongEmphasisSpan>() {
+            override fun configurePersistedSpans(builder: PersistedSpans.Builder) {
+                // Here we define which span is _persisted_ in EditText, it is not removed
+                //  from EditText between text changes, but instead - reused (by changing
+                //  position). Consider it as a cache for spans. We could use `StrongEmphasisSpan`
+                //  here also, but I chose Bold to indicate that this span is not the same
+                //  as in off-screen rendered markdown
+                val haha: PersistedSpans.SpanFactory<FontWeight> = PersistedSpans.SpanFactory<FontWeight> { Bold }
+                val jclass: Class<FontWeight> = Bold::class.java as Class<FontWeight>
+                builder.persistSpan(jclass, haha)
+
+            }
+
+            override fun handleMarkdownSpan(
+                persistedSpans: PersistedSpans,
+                editable: Editable,
+                input: String,
+                span: StrongEmphasisSpan,
+                spanStart: Int,
+                spanTextLength: Int
+            ) {
+                val match = MarkwonEditorUtils.findDelimited(input, spanStart, "**", "__")
+                if (match != null)
+                    editable.setSpan(
+                        // we handle StrongEmphasisSpan and represent it with Bold in EditText
+                        //  we still could use StrongEmphasisSpan, but it must be accessed
+                        //  via persistedSpans
+                        persistedSpans[Bold::class.java],
+                        match.start(),
+                        match.end(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+            }
+
+            override fun markdownSpanType(): Class<StrongEmphasisSpan> = StrongEmphasisSpan::class.java
+        })
+        .build()
 
     @Composable
     fun RenderText(
