@@ -132,6 +132,7 @@ class NoteState(
                 deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/view/{noteId}" }),
             ) { entry ->
                 val noteId = entry.arguments?.getLong("noteId")!!
+                Timber.d("Viewing note with id: $noteId")
                 NoteScreenViewSingle(
                     noteViewModel = noteViewModel,
                     id = noteId,

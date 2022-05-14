@@ -21,6 +21,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
@@ -28,6 +29,7 @@ import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
+import timber.log.Timber
 
 
 @Composable
@@ -76,10 +78,14 @@ private fun NoteScreenViewSingleReady(
             else -> AnnotatedString.Builder(text)
         }
     }
+    Timber.d("Note: ${noteWithCategory.note}")
+    Timber.e("Are we searching=$isSearching; Search parameters: $searchParameters")
 
-    val titleMatches = rememberSaveable { searchParameters.let { if (!isSearching || it == null || !it.inTitle) emptyList() else noteViewModel.findMatches(noteWithCategory.note.name) } }
-    val contentMatches = rememberSaveable {  searchParameters.let { if (!isSearching || it == null || !it.inContent) emptyList() else noteViewModel.findMatches(noteWithCategory.note.content) } }
+    val titleMatches = rememberSaveable(searchParameters, isSearching, noteWithCategory) { searchParameters.let { if (!isSearching || it == null || !it.inTitle) emptyList() else noteViewModel.findMatches(noteWithCategory.note.name) } }
+    val contentMatches = rememberSaveable(searchParameters, isSearching, noteWithCategory) {  searchParameters.let { if (!isSearching || it == null || !it.inContent) emptyList() else noteViewModel.findMatches(noteWithCategory.note.content) } }
     val searchMatchAmount = titleMatches.size + contentMatches.size
+
+    Timber.e("Found $searchMatchAmount = ${titleMatches.size} ${contentMatches.size}")
 
     val title = noteViewModel.highlightSelection(
         input = highlightIfSearching(noteWithCategory.note.name, searchParameters?.inTitle, titleMatches),
