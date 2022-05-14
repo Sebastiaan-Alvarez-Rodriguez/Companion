@@ -95,9 +95,9 @@ fun NoteScreenEditReady(
 
     val noteChanged = lazy {
         if (note == null)
-            title != "" || content != "" || favorite || securityLevel > 0
+            title != "" || content != "" || favorite || securityLevel > 0 || renderType != RenderType.DEFAULT
         else
-            title != note.name || content != note.content || favorite != note.favorite || securityLevel != note.securityLevel
+            title != note.name || content != note.content || favorite != note.favorite || securityLevel != note.securityLevel || renderType != note.renderType
     }
 
     val createNoteObject: () -> Note = {
