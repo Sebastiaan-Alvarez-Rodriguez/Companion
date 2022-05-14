@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Delete
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
@@ -140,8 +142,10 @@ private fun NoteScreenViewSingleReady(
             Card(elevation = 5.dp) {
                 titleScrollFunction = UiUtil.simpleScrollableRenderText(
                     text = title,
+                    fontSize = LocalTextStyle.current.fontSize.times(1.15),
                     renderType = noteWithCategory.note.renderType,
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),
+                    textAlign = TextAlign.Center,
                     scrollState = scrollState
                 )
             }

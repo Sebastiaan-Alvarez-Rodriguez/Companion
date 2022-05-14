@@ -331,7 +331,7 @@ object RenderUtil {
     ) {
         val defaultColor: Color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
         val context: Context = LocalContext.current
-        val textSize = if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize
+        val textSize = (if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize).times(3)
 
         val markdownRender: Markwon = remember(useLatex) {
             createMarkdownRender(context, textSize = textSize, withLatex = useLatex, onError = onError)

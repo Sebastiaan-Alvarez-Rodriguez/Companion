@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -32,7 +33,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -356,14 +363,27 @@ object UiUtil {
         text: AnnotatedString,
         renderType: RenderType,
         modifier: Modifier = Modifier,
+        color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
+        fontStyle: FontStyle? = null,
+        fontWeight: FontWeight? = null,
+        fontFamily: FontFamily? = null,
+        letterSpacing: TextUnit = TextUnit.Unspecified,
+        textDecoration: TextDecoration? = null,
+        textAlign: TextAlign? = null,
+        lineHeight: TextUnit = TextUnit.Unspecified,
+        overflow: TextOverflow = TextOverflow.Clip,
+        softWrap: Boolean = true,
+        maxLines: Int = Int.MAX_VALUE,
+        inlineContent: Map<String, InlineTextContent> = mapOf(),
+        style: TextStyle = LocalTextStyle.current,
         scrollState: ScrollState
     ) = simpleScrollable(
         positions = text.spanStyles.map { it.start },
         modifier = modifier,
         scrollState = scrollState
     ) { outModifier, layoutResultFunc ->
-        RenderUtil.RenderText(text = text, renderType = renderType, modifier = outModifier, fontSize = fontSize, onTextLayout = layoutResultFunc)
+        RenderUtil.RenderText(text = text, renderType = renderType, modifier = outModifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, layoutResultFunc, style)
     }
 
     @Composable
