@@ -45,6 +45,7 @@ import io.noties.markwon.html.HtmlPlugin
 import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import org.python.backend.data.datatype.RenderType
+import org.python.companion.support.UiUtil.LinkifyText
 import ru.noties.jlatexmath.JLatexMathDrawable
 import java.util.concurrent.Executors
 
@@ -118,7 +119,7 @@ object RenderUtil {
 
         val context: Context = LocalContext.current
         val markwonEditor: MarkwonEditor = remember {
-            createMarkdownEditor(context)
+            createMarkdownEditor(context, textSize = textStyle.fontSize, withLatex = renderType == RenderType.LATEX, onError = {_, _ -> })
         }
         val backgroundExecutors = remember { Executors.newCachedThreadPool() }
 
@@ -204,9 +205,8 @@ object RenderUtil {
         }
     }
 
-
-    private fun createMarkdownEditor(context: Context) = MarkwonEditor
-        .builder(Markwon.create(context))
+    private fun createMarkdownEditor(context: Context, textSize: TextUnit, withLatex: Boolean = false, onError: (String, String?) -> Unit) = MarkwonEditor
+        .builder(createMarkdownRender(context, textSize, withLatex, onError))
         .useEditHandler(object : AbstractEditHandler<StrongEmphasisSpan>() {
             override fun configurePersistedSpans(builder: PersistedSpans.Builder) {
                 // Here we define which span is _persisted_ in EditText, it is not removed
@@ -243,6 +243,7 @@ object RenderUtil {
 
             override fun markdownSpanType(): Class<StrongEmphasisSpan> = StrongEmphasisSpan::class.java
         })
+
         .build()
 
     @Composable
@@ -295,7 +296,7 @@ object RenderUtil {
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
-                Text(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
+                LinkifyText(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
             RenderType.MARKDOWN ->
                 MarkdownText(text = text, modifier = modifier, useLatex = false, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
             RenderType.LATEX ->

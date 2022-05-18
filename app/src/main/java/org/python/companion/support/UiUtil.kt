@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,14 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +65,8 @@ import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.ui.theme.DarkBlue900
+import org.python.companion.ui.theme.DarkColorPalette
+import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
 /** Simple enum representing loading state of asynchronously loading objects. */
@@ -76,7 +79,9 @@ object UiUtil {
     fun NestedIcon(mainIcon: ImageVector, modifier: Modifier = Modifier, description: String? = null, sideIcon: ImageVector, sideModifier: Modifier = Modifier, sideDescription: String? = null) {
         Box {
             Icon(mainIcon, modifier = modifier, contentDescription = description)
-            Icon(sideIcon, modifier = sideModifier.align(Alignment.BottomEnd).background(DarkBlue900, shape = CircleShape), contentDescription = sideDescription)
+            Icon(sideIcon, modifier = sideModifier
+                .align(Alignment.BottomEnd)
+                .background(DarkBlue900, shape = CircleShape), contentDescription = sideDescription)
         }
     }
 
@@ -85,11 +90,13 @@ object UiUtil {
         val interactionSource = remember { MutableInteractionSource() }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = { onCheckedChange(checked) }
-            ).semantics(mergeDescendants = true) {}) {
+            modifier = Modifier
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = { onCheckedChange(checked) }
+                )
+                .semantics(mergeDescendants = true) {}) {
             Checkbox(checked = checked, onCheckedChange = onCheckedChange, interactionSource = interactionSource)
             Text(text = label)
         }
@@ -385,6 +392,122 @@ object UiUtil {
     ) { outModifier, layoutResultFunc ->
         RenderUtil.RenderText(text = text, renderType = renderType, modifier = outModifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, layoutResultFunc, style)
     }
+
+    @Composable
+    fun LinkifyText(
+        text: String,
+        modifier: Modifier = Modifier,
+        color: Color = Color.Unspecified,
+        fontSize: TextUnit = TextUnit.Unspecified,
+        fontStyle: FontStyle? = null,
+        fontWeight: FontWeight? = null,
+        fontFamily: FontFamily? = null,
+        letterSpacing: TextUnit = TextUnit.Unspecified,
+        textDecoration: TextDecoration? = null,
+        textAlign: TextAlign? = null,
+        lineHeight: TextUnit = TextUnit.Unspecified,
+        overflow: TextOverflow = TextOverflow.Clip,
+        softWrap: Boolean = true,
+        maxLines: Int = Int.MAX_VALUE,
+        inlineContent: Map<String, InlineTextContent> = mapOf(),
+        onTextLayout: (TextLayoutResult) -> Unit = {},
+        style: TextStyle = LocalTextStyle.current
+    ) {
+        LinkifyText(AnnotatedString(text), modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
+    }
+
+    /**
+     * Just like `Text()` from Compose, but makes links clickable.
+     * If no scheme (http, https) is present, prefixes https.
+     */
+    @Composable
+    fun LinkifyText(
+        text: AnnotatedString,
+        modifier: Modifier = Modifier,
+        color: Color = Color.Unspecified,
+        fontSize: TextUnit = TextUnit.Unspecified,
+        fontStyle: FontStyle? = null,
+        fontWeight: FontWeight? = null,
+        fontFamily: FontFamily? = null,
+        letterSpacing: TextUnit = TextUnit.Unspecified,
+        textDecoration: TextDecoration? = null,
+        textAlign: TextAlign? = null,
+        lineHeight: TextUnit = TextUnit.Unspecified,
+        overflow: TextOverflow = TextOverflow.Clip,
+        softWrap: Boolean = true,
+        maxLines: Int = Int.MAX_VALUE,
+        inlineContent: Map<String, InlineTextContent> = mapOf(),
+        onTextLayout: (TextLayoutResult) -> Unit = {},
+        style: TextStyle = LocalTextStyle.current
+    ) {
+        val uriHandler = LocalUriHandler.current
+        val layoutResult = remember {
+            mutableStateOf<TextLayoutResult?>(null)
+        }
+        val linksList = extractUrls(text)
+        val annotatedString = buildAnnotatedString {
+            append(text)
+            linksList.forEach {
+                addStyle(
+                    style = SpanStyle(
+                        color = DarkColorPalette.primary,
+                        textDecoration = TextDecoration.Underline
+                    ),
+                    start = it.start,
+                    end = it.end
+                )
+                addStringAnnotation(tag = "URL", annotation = it.url, start = it.start, end = it.end)
+            }
+        }
+        Text(
+            text = annotatedString,
+            modifier = modifier.pointerInput(Unit) {
+                detectTapGestures { offsetPosition ->
+                    layoutResult.value?.let {
+                        val position = it.getOffsetForPosition(offsetPosition)
+                        annotatedString.getStringAnnotations(position, position).firstOrNull()?.let { result -> 
+                            if (result.tag == "URL")
+                                uriHandler.openUri(result.item)
+                        }
+                    }
+                }
+            },
+            color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration,
+            textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
+            { layoutResult.value = it; onTextLayout(it) }, style
+        )
+    }
+
+    private fun extractUrls(text: AnnotatedString): List<LinkInfo> {
+        val urlPattern: Pattern = Pattern.compile(
+            "(?:^|[\\W])((ht|f)tp(s?)://|www\\.)" + 
+                    "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+/?)*" +
+                    "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]*$~@!:/{};']*)",
+            Pattern.CASE_INSENSITIVE or Pattern.MULTILINE or Pattern.DOTALL
+        )
+        val matcher = urlPattern.matcher(text)
+        var matchStart: Int
+        var matchEnd: Int
+        val links = arrayListOf<LinkInfo>()
+
+        while (matcher.find()) {
+            matchStart = matcher.start(1)
+            matchEnd = matcher.end()
+
+            var url = text.substring(matchStart, matchEnd)
+            if (!url.startsWith("http://") && !url.startsWith("https://"))
+                url = "https://$url"
+
+            links.add(LinkInfo(url, matchStart, matchEnd))
+        }
+        return links
+    }
+
+    private data class LinkInfo(
+        val url: String,
+        val start: Int,
+        val end: Int
+    )
 
     @Composable
     fun simpleScrollableText(
