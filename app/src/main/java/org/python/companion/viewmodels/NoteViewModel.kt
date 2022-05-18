@@ -16,6 +16,7 @@ import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.CompanionApplication
+import org.python.companion.support.RendererCache
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.NoteSearchParameters
@@ -35,6 +36,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _searchParameters = MutableStateFlow<NoteSearchParameters?>(null)
     private val _isLoading = MutableStateFlow(true)
 
+    val rendererCache: RendererCache = RendererCache()
 
     /** Sort parameters to sort [notes] with. */
     val sortParameters: StateFlow<NoteSortParameters> = _sortParameters

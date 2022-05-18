@@ -23,6 +23,7 @@ UI:
  + [splash screen](https://www.geeksforgeeks.org/animated-splash-screen-in-android-using-jetpack-compose/)
  + [simple color picker](https://stackoverflow.com/a/69116990)
  + [List searching](https://johncodeos.com/how-to-add-search-in-list-with-jetpack-compose/)
+ + [Auto-linkify text](https://stackoverflow.com/questions/66130513/linkify-with-compose-text)
 
 Markdown renderer
  + [markdown rendering](https://github.com/noties/Markwon)
@@ -55,9 +56,6 @@ Current issue list:
     https://issuetracker.google.com/issues/197428346
     https://stackoverflow.com/questions/68899665/error-mainactivity-must-extend-android-app-activity-instantiatable
  3. Splash screen returns after screen lock -> screen unlock (perhaps a `rememberSaveable` solution)
- 4. Auto-linkify text in text component, see:
-    https://stackoverflow.com/questions/65567412/jetpack-compose-text-hyperlink-some-section-of-the-text
-    https://www.geeksforgeeks.org/add-hyperlink-at-a-particular-text-span-in-android-using-jetpack-compose/
 
 ## Ideas
  1. Streamline backend data communication to frontend using some form of messaging.

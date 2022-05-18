@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
+import org.python.companion.support.RenderUtil
+import org.python.companion.support.RendererCache
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.SimpleFAB
 import org.python.db.entities.note.RoomNoteWithCategory
@@ -137,13 +139,16 @@ fun NoteScreenList(
     onNoteClick: (NoteWithCategory) -> Unit,
     onCheckClick: (NoteWithCategory, Boolean) -> Unit,
     onFavoriteClick: (NoteWithCategory) -> Unit,
-    securityItem: (@Composable LazyItemScope.() -> Unit)? = null
+    securityItem: (@Composable LazyItemScope.() -> Unit)? = null,
+    rendererCache: RendererCache? = null
 ) {
     UiUtil.GenericList(
         prefix = securityItem,
         items = notes,
         isLoading = isLoading,
-        showItemFunc = { item -> NoteItem(item, onNoteClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item.note)) },
+        showItemFunc = {
+            item -> NoteItem(item, onNoteClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item.note), rendererCache)
+       },
         fab = { SimpleFAB(onClick = onNewClick) }
     )
 }
@@ -154,6 +159,8 @@ fun NoteScreenList(
  * @param onNoteClick Lambda to perform on note clicks.
  * @param onCheckClick Lambda to perform on checkbox clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
+ * @param selected If set, marks current item as selected.
+ * @param renderer Optional renderer to use. If not set, uses a new renderer for each new item.
  */
 @Composable
 fun NoteItem(
@@ -162,6 +169,7 @@ fun NoteItem(
     onCheckClick: (NoteWithCategory, Boolean) -> Unit,
     onFavoriteClick: (NoteWithCategory) -> Unit,
     selected: Boolean,
+    rendererCache: RendererCache? = null
 ) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
     Card(
@@ -169,22 +177,21 @@ fun NoteItem(
         border = BorderStroke(width = 1.dp, Color(item.noteCategory.color.toArgb())),
         modifier = Modifier.fillMaxWidth()
     ) {
-
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNoteClick(item) }
-                .semantics(mergeDescendants = true) {},
+            modifier = Modifier.fillMaxWidth().clickable { onNoteClick(item) }.semantics(mergeDescendants = true) {},
         ) {
             Checkbox(modifier = Modifier.weight(0.1f, fill = false), checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
-            Text(modifier = Modifier.weight(0.8f, fill = false), text = item.note.name)
+            RenderUtil.RenderText(
+                text = item.note.name,
+                modifier = Modifier.weight(0.8f, fill = false),
+                renderType = item.note.renderType,
+                rendererCache = rendererCache // we store a single renderer, to be reused by all displayed items
+            )
             Column(
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(0.1f, fill = true)
+                modifier = Modifier.fillMaxHeight().weight(0.1f, fill = true)
             ) {
                 IconButton(onClick = { onFavoriteClick(item) }) {
                     Icon(
@@ -196,9 +203,7 @@ fun NoteItem(
                     Icon(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Protected",
-                        modifier = Modifier
-                            .size(width = 12.dp, height = 12.dp)
-                            .padding(end = tinyPadding, bottom = tinyPadding)
+                        modifier = Modifier.size(width = 12.dp, height = 12.dp).padding(end = tinyPadding, bottom = tinyPadding)
                     )
             }
         }
@@ -267,7 +272,10 @@ fun NoteSort(sortParameters: NoteSortParameters, onSortClick: (NoteSortParameter
     IconButton(modifier = modifier, onClick = { onSortClick(
         sortParameters.copy(ascending = !sortParameters.ascending)
     ) }) {
-         Icon(if (sortParameters.ascending) Icons.Rounded.ArrowDownward else Icons.Rounded.ArrowUpward, contentDescription = "Sort direction ${if (sortParameters.ascending) "ascending" else "descending"}")
+         Icon(
+             if (sortParameters.ascending) Icons.Rounded.ArrowDownward else Icons.Rounded.ArrowUpward,
+             contentDescription = "Sort direction ${if (sortParameters.ascending) "ascending" else "descending"}"
+         )
     }
     IconButton(modifier = modifier, onClick = { onSortClick(
         sortParameters.copy(

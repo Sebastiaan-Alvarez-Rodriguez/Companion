@@ -175,7 +175,7 @@ fun NoteScreenEditReady(
 
         Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
             Card(modifier = Modifier.fillMaxWidth(), elevation = 5.dp) {
-                RenderUtil.OutlinedRenderTextField(
+                RenderUtil.RenderTextField(
                     value = title,
                     renderType = renderType,
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),
@@ -187,7 +187,7 @@ fun NoteScreenEditReady(
             Spacer(Modifier.height(defaultPadding))
 
             Card(modifier = Modifier.fillMaxSize(), elevation = 5.dp) {
-                RenderUtil.OutlinedRenderTextField(
+                RenderUtil.RenderTextField(
                     value = content,
                     renderType = renderType,
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),

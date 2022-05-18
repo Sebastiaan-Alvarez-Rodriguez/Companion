@@ -47,13 +47,15 @@ import io.noties.markwon.linkify.LinkifyPlugin
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.support.UiUtil.LinkifyText
 import ru.noties.jlatexmath.JLatexMathDrawable
+import timber.log.Timber
 import java.util.concurrent.Executors
 
 
+/** Helper utils to render text with special meaning. */
 object RenderUtil {
 
     @Composable
-    fun OutlinedRenderTextField(
+    fun RenderTextField(
         value: String,
         renderType: RenderType,
         onValueChange: (String) -> Unit,
@@ -119,7 +121,7 @@ object RenderUtil {
 
         val context: Context = LocalContext.current
         val markwonEditor: MarkwonEditor = remember {
-            createMarkdownEditor(context, textSize = textStyle.fontSize, withLatex = renderType == RenderType.LATEX, onError = {_, _ -> })
+            createMarkdownEditor(renderType, context, textSize = textStyle.fontSize, onError = {_, _ -> })
         }
         val backgroundExecutors = remember { Executors.newCachedThreadPool() }
 
@@ -143,12 +145,7 @@ object RenderUtil {
                 )
                 editText.addTextChangedListener(
                     object : TextWatcher {
-                        override fun beforeTextChanged(
-                            s: CharSequence?,
-                            start: Int,
-                            count: Int,
-                            after: Int
-                        ) {}
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
                         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                             if (s != null)
@@ -156,7 +153,6 @@ object RenderUtil {
                         }
 
                         override fun afterTextChanged(s: Editable?) {}
-
                     }
                 )
                 return@AndroidView editText
@@ -205,8 +201,8 @@ object RenderUtil {
         }
     }
 
-    private fun createMarkdownEditor(context: Context, textSize: TextUnit, withLatex: Boolean = false, onError: (String, String?) -> Unit) = MarkwonEditor
-        .builder(createMarkdownRender(context, textSize, withLatex, onError))
+    private fun createMarkdownEditor(renderType: RenderType, context: Context, textSize: TextUnit, onError: (String, String?) -> Unit) = MarkwonEditor
+        .builder(createMarkdownRender(renderType, context, textSize, onError))
         .useEditHandler(object : AbstractEditHandler<StrongEmphasisSpan>() {
             override fun configurePersistedSpans(builder: PersistedSpans.Builder) {
                 // Here we define which span is _persisted_ in EditText, it is not removed
@@ -243,14 +239,14 @@ object RenderUtil {
 
             override fun markdownSpanType(): Class<StrongEmphasisSpan> = StrongEmphasisSpan::class.java
         })
-
         .build()
 
     @Composable
     fun RenderText(
         text: String,
-        renderType: RenderType,
         modifier: Modifier = Modifier,
+        renderType: RenderType,
+        rendererCache: RendererCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
         fontStyle: FontStyle? = null,
@@ -267,8 +263,9 @@ object RenderUtil {
         onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current
     ) = RenderText(
-        text = AnnotatedString(text), renderType = renderType,
-        modifier, color, fontSize, fontStyle, fontWeight, fontFamily,
+        text = AnnotatedString(text), modifier = modifier, renderType = renderType,
+        rendererCache = rendererCache,
+        color, fontSize, fontStyle, fontWeight, fontFamily,
         letterSpacing, textDecoration, textAlign, lineHeight, overflow,
         softWrap, maxLines, inlineContent, onTextLayout, style
     )
@@ -276,8 +273,9 @@ object RenderUtil {
     @Composable
     fun RenderText(
         text: AnnotatedString,
-        renderType: RenderType,
         modifier: Modifier = Modifier,
+        renderType: RenderType,
+        rendererCache: RendererCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
         fontStyle: FontStyle? = null,
@@ -296,11 +294,22 @@ object RenderUtil {
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
-                LinkifyText(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
+                LinkifyText(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight,
+                    fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap,
+                    maxLines, inlineContent, onTextLayout, style
+                )
             RenderType.MARKDOWN ->
-                MarkdownText(text = text, modifier = modifier, useLatex = false, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
+                MarkdownText(
+                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+                    color, fontSize, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
+                    onTextLayout, style
+                )
             RenderType.LATEX ->
-                MarkdownText(text = text, modifier = modifier, useLatex = true, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout, style)
+                MarkdownText(
+                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+                    color, fontSize, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
+                    onTextLayout, style
+                )
         }
     }
 
@@ -308,14 +317,10 @@ object RenderUtil {
     fun MarkdownText(
         text: AnnotatedString,
         modifier: Modifier = Modifier,
-        useLatex: Boolean = false,
+        renderType: RenderType,
+        rendererCache: RendererCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
-        fontStyle: FontStyle? = null,
-        fontWeight: FontWeight? = null,
-        fontFamily: FontFamily? = null,
-        letterSpacing: TextUnit = TextUnit.Unspecified,
-        textDecoration: TextDecoration? = null,
         textAlign: TextAlign? = null,
         lineHeight: TextUnit = TextUnit.Unspecified,
         overflow: TextOverflow = TextOverflow.Clip,
@@ -334,9 +339,12 @@ object RenderUtil {
         val context: Context = LocalContext.current
         val textSize = (if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize).times(3)
 
-        val markdownRender: Markwon = remember(useLatex) {
-            createMarkdownRender(context, textSize = textSize, withLatex = useLatex, onError = onError)
+        val markdownRender: Markwon = remember(renderType, rendererCache) {
+            rendererCache?.getOrPut(renderType) {
+                rendererCache.create(renderType = renderType, context, textSize, onError)
+            } ?: createMarkdownRender(renderType = renderType, context, textSize, onError)
         }
+        var previousTextHash: Int = "".hashCode()
         AndroidView(
             modifier = modifier,
             factory = { ctx ->
@@ -352,9 +360,15 @@ object RenderUtil {
                 )
             },
             update = { textView ->
-                markdownRender.setMarkdown(textView, text.text)
-                if (disableLinkMovementMethod) {
-                    textView.movementMethod = null
+                val newHash = text.hashCode()
+                if (newHash != previousTextHash) {
+                    Timber.e("Recompose rendering! Text: $newHash (was $previousTextHash)")
+                    //TODO: Prevent rerenders
+                    previousTextHash = newHash
+                    markdownRender.setMarkdown(textView, text.text)
+                    if (disableLinkMovementMethod) {
+                        textView.movementMethod = null
+                    }
                 }
             }
         )
@@ -395,9 +409,17 @@ object RenderUtil {
         }
     }
 
-    private fun createMarkdownRender(context: Context, textSize: TextUnit, withLatex: Boolean = false, onError: (String, String?) -> Unit): Markwon {
+    @Composable
+    fun createMarkdownRender(renderType: RenderType, fontSize: TextUnit = TextUnit.Unspecified, onError: (String, String?) -> Unit): Markwon {
+        val context: Context = LocalContext.current
+        val textSize = (if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize).times(3)
+        return createMarkdownRender(renderType, context, textSize, onError)
+    }
+
+    /** Creates a markdown renderer */
+    fun createMarkdownRender(renderType: RenderType, context: Context, textSize: TextUnit, onError: (String, String?) -> Unit): Markwon {
         val builder = getStandardMDRenderer(context)
-        if (withLatex)
+        if (renderType == RenderType.LATEX)
             builder
                 .usePlugin(MarkwonInlineParserPlugin.create())
                 .usePlugin(JLatexMathPlugin.create(textSize.value) { latexConfigBuilder ->
@@ -423,5 +445,32 @@ object RenderUtil {
             .usePlugin(StrikethroughPlugin.create())
             .usePlugin(TablePlugin.create(context))
             .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS))
+    }
+}
+
+class RendererCache(_cache: MutableMap<RenderType, Markwon?>? = null) {
+    val cache: MutableMap<RenderType, Markwon?> = _cache ?: mutableMapOf()
+
+    init {
+        cache[RenderType.DEFAULT] = null
+    }
+
+    fun get(renderType: RenderType): Markwon? = cache.get(renderType)
+
+    fun getOrPut(renderType: RenderType, orPut: () -> Markwon?): Markwon? = cache.getOrPut(renderType, orPut)
+
+    @Composable
+    fun create(renderType: RenderType, fontSize: TextUnit = TextUnit.Unspecified, onError: (String, String?) -> Unit): Markwon {
+        val context: Context = LocalContext.current
+        val textSize = (if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize).times(3)
+        return RenderUtil.createMarkdownRender(renderType = renderType, context = context, textSize = textSize, onError = onError)
+    }
+
+    fun create(renderType: RenderType, context: Context, textSize: TextUnit, onError: (String, String?) -> Unit): Markwon =
+        RenderUtil.createMarkdownRender(renderType = renderType, context = context, textSize = textSize, onError = onError)
+
+
+    fun store(renderType: RenderType, renderer: Markwon?) {
+        cache[renderType] = renderer
     }
 }
