@@ -247,6 +247,7 @@ object RenderUtil {
         modifier: Modifier = Modifier,
         renderType: RenderType,
         rendererCache: RendererCache? = null,
+        itemDrawCache: ItemDrawCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
         fontStyle: FontStyle? = null,
@@ -263,8 +264,7 @@ object RenderUtil {
         onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current
     ) = RenderText(
-        text = AnnotatedString(text), modifier = modifier, renderType = renderType,
-        rendererCache = rendererCache,
+        text = AnnotatedString(text), modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
         color, fontSize, fontStyle, fontWeight, fontFamily,
         letterSpacing, textDecoration, textAlign, lineHeight, overflow,
         softWrap, maxLines, inlineContent, onTextLayout, style
@@ -276,6 +276,7 @@ object RenderUtil {
         modifier: Modifier = Modifier,
         renderType: RenderType,
         rendererCache: RendererCache? = null,
+        itemDrawCache: ItemDrawCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
         fontStyle: FontStyle? = null,
@@ -300,13 +301,13 @@ object RenderUtil {
                 )
             RenderType.MARKDOWN ->
                 MarkdownText(
-                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
                     color, fontSize, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
                     onTextLayout, style
                 )
             RenderType.LATEX ->
                 MarkdownText(
-                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
                     color, fontSize, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
                     onTextLayout, style
                 )
@@ -319,6 +320,7 @@ object RenderUtil {
         modifier: Modifier = Modifier,
         renderType: RenderType,
         rendererCache: RendererCache? = null,
+        itemDrawCache: ItemDrawCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
         textAlign: TextAlign? = null,
@@ -344,7 +346,7 @@ object RenderUtil {
                 rendererCache.create(renderType = renderType, context, textSize, onError)
             } ?: createMarkdownRender(renderType = renderType, context, textSize, onError)
         }
-        var previousTextHash: Int = "".hashCode()
+
         AndroidView(
             modifier = modifier,
             factory = { ctx ->
@@ -360,15 +362,14 @@ object RenderUtil {
                 )
             },
             update = { textView ->
-                val newHash = text.hashCode()
-                if (newHash != previousTextHash) {
-                    Timber.e("Recompose rendering! Text: $newHash (was $previousTextHash)")
-                    //TODO: Prevent rerenders
-                    previousTextHash = newHash
-                    markdownRender.setMarkdown(textView, text.text)
-                    if (disableLinkMovementMethod) {
-                        textView.movementMethod = null
+                if (itemDrawCache != null) {
+                    val hashCode = text.hashCode()
+                    if (itemDrawCache.hash != hashCode) {
+                        itemDrawCache.set(hashCode, markdownRender.toMarkdown(text.text))
                     }
+                    markdownRender.setParsedMarkdown(textView, itemDrawCache.cached!!)
+                } else {
+                    markdownRender.setMarkdown(textView, text.text)
                 }
             }
         )
@@ -472,5 +473,47 @@ class RendererCache(_cache: MutableMap<RenderType, Markwon?>? = null) {
 
     fun store(renderType: RenderType, renderer: Markwon?) {
         cache[renderType] = renderer
+    }
+}
+
+class DrawCache<T>(_cache: MutableMap<T, ItemDrawCache>? = null) {
+    val cache: MutableMap<T, ItemDrawCache> = _cache ?: mutableMapOf()
+
+    fun get(key: T): ItemDrawCache? = cache.get(key)
+
+    inline fun getOrPut(key: T, orPut: () -> ItemDrawCache): ItemDrawCache = cache.getOrPut(key, orPut)
+
+    fun getOrDefaultPut(key: T, default: ItemDrawCache): ItemDrawCache = cache.getOrPut(key) { default }
+}
+
+class ItemDrawCache {
+    var hash: Int = 0
+    private set
+
+    var cached: Spanned? = null
+    private set
+
+//
+//    fun cache(text: CharSequence): Boolean {
+//        val hashCode = text.hashCode()
+//        if (hashCode != legacyHash) {
+//            legacyHash = hashCode
+//            return true
+//        }
+//        return false
+//    }
+//    public var legacyHash: CharSequence = ""
+
+//    fun cache(text: CharSequence): Boolean {
+//        if (text != legacyHash) {
+//            legacyHash = text
+//            return true
+//        }
+//        return false
+//    }
+
+    fun set(hash: Int, spanned: Spanned): Unit {
+        this.hash = hash
+        this.cached = spanned
     }
 }

@@ -28,9 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.companion.R
-import org.python.companion.support.RenderUtil
-import org.python.companion.support.RendererCache
-import org.python.companion.support.UiUtil
+import org.python.companion.support.*
 import org.python.companion.support.UiUtil.SimpleFAB
 import org.python.db.entities.note.RoomNoteWithCategory
 
@@ -129,6 +127,9 @@ fun NoteScreenContextListHeader(
  * @param onCheckClick Lambda to perform on checkbox clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
  * @param securityItem Security item to show as first list item.
+ * @param rendererCache Optional collection of renderers to use.
+ * @param drawCache Optional collection of drawCaches to use.
+ * If not set, re-renders every recomposition for every item.
  */
 @Composable
 fun NoteScreenList(
@@ -140,14 +141,15 @@ fun NoteScreenList(
     onCheckClick: (NoteWithCategory, Boolean) -> Unit,
     onFavoriteClick: (NoteWithCategory) -> Unit,
     securityItem: (@Composable LazyItemScope.() -> Unit)? = null,
-    rendererCache: RendererCache? = null
+    rendererCache: RendererCache? = null,
+    drawCache: DrawCache<Long>? = null
 ) {
     UiUtil.GenericList(
         prefix = securityItem,
         items = notes,
         isLoading = isLoading,
         showItemFunc = {
-            item -> NoteItem(item, onNoteClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item.note), rendererCache)
+            item -> NoteItem(item, onNoteClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item.note), rendererCache, drawCache?.getOrDefaultPut(item.note.noteId, ItemDrawCache()))
        },
         fab = { SimpleFAB(onClick = onNewClick) }
     )
@@ -160,7 +162,8 @@ fun NoteScreenList(
  * @param onCheckClick Lambda to perform on checkbox clicks.
  * @param onFavoriteClick Lambda to perform on note favorite clicks.
  * @param selected If set, marks current item as selected.
- * @param renderer Optional renderer to use. If not set, uses a new renderer for each new item.
+ * @param rendererCache Optional rendererCache to use. If not set, uses a new renderer for each new item.
+ * @param itemDrawCache Optional drawCache to use. If not set, re-renders every recomposition.
  */
 @Composable
 fun NoteItem(
@@ -169,7 +172,8 @@ fun NoteItem(
     onCheckClick: (NoteWithCategory, Boolean) -> Unit,
     onFavoriteClick: (NoteWithCategory) -> Unit,
     selected: Boolean,
-    rendererCache: RendererCache? = null
+    rendererCache: RendererCache? = null,
+    itemDrawCache: ItemDrawCache? = null
 ) {
     val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
     Card(
@@ -187,7 +191,8 @@ fun NoteItem(
                 text = item.note.name,
                 modifier = Modifier.weight(0.8f, fill = false),
                 renderType = item.note.renderType,
-                rendererCache = rendererCache // we store a single renderer, to be reused by all displayed items
+                rendererCache = rendererCache,
+                itemDrawCache = itemDrawCache
             )
             Column(
                 horizontalAlignment = Alignment.End,

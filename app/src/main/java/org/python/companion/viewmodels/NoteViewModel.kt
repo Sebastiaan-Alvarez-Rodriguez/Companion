@@ -16,6 +16,7 @@ import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.CompanionApplication
+import org.python.companion.support.DrawCache
 import org.python.companion.support.RendererCache
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
@@ -37,6 +38,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoading = MutableStateFlow(true)
 
     val rendererCache: RendererCache = RendererCache()
+    val drawCache: DrawCache<Long> = DrawCache()
 
     /** Sort parameters to sort [notes] with. */
     val sortParameters: StateFlow<NoteSortParameters> = _sortParameters

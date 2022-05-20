@@ -106,7 +106,8 @@ class NoteState(
                                 noteViewModel.viewModelScope.launch { noteViewModel.setFavorite(item.note, !item.note.favorite) }
                             },
                             securityItem = securityItem,
-                            rendererCache = noteViewModel.rendererCache
+                            rendererCache = noteViewModel.rendererCache,
+                            drawCache = noteViewModel.drawCache
                         )
                     }
                 )

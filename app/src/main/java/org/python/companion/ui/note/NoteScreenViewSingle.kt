@@ -144,6 +144,7 @@ private fun NoteScreenViewSingleReady(
                     text = title,
                     fontSize = LocalTextStyle.current.fontSize.times(1.15),
                     renderType = noteWithCategory.note.renderType,
+                    // TODO: drawCache?
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),
                     textAlign = TextAlign.Center,
                     scrollState = scrollState
@@ -156,6 +157,7 @@ private fun NoteScreenViewSingleReady(
                 contentScrollFunction = UiUtil.simpleScrollableRenderText(
                     text = content,
                     renderType = noteWithCategory.note.renderType,
+                    // TODO: drawCache?
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),
                     scrollState = scrollState
                 )

@@ -55,7 +55,6 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import io.noties.markwon.Markwon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -372,6 +371,7 @@ object UiUtil {
         modifier: Modifier = Modifier,
         renderType: RenderType,
         rendererCache: RendererCache? = null,
+        itemDrawCache: ItemDrawCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
         fontStyle: FontStyle? = null,
@@ -392,7 +392,11 @@ object UiUtil {
         modifier = modifier,
         scrollState = scrollState
     ) { outModifier, layoutResultFunc ->
-        RenderUtil.RenderText(text = text, modifier = outModifier, renderType = renderType, rendererCache = rendererCache, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, layoutResultFunc, style)
+        RenderUtil.RenderText(
+            text = text, modifier = outModifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
+            color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign,
+            lineHeight, overflow, softWrap, maxLines, inlineContent, layoutResultFunc, style
+        )
     }
 
     @Composable
