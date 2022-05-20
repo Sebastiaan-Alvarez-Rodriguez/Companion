@@ -430,7 +430,7 @@ object RenderUtil {
                             onError(latex, error.localizedMessage)
                             return@errorHandler null
                         }
-//                        .executorService(Executors.newCachedThreadPool()) TODO: Can be removed?
+                        .executorService(Executors.newCachedThreadPool())
                     //Theme stuff
                     tmp.theme()
 //                        .backgroundProvider { ColorDrawable(0) }
@@ -493,26 +493,7 @@ class ItemDrawCache {
     var cached: Spanned? = null
     private set
 
-//
-//    fun cache(text: CharSequence): Boolean {
-//        val hashCode = text.hashCode()
-//        if (hashCode != legacyHash) {
-//            legacyHash = hashCode
-//            return true
-//        }
-//        return false
-//    }
-//    public var legacyHash: CharSequence = ""
-
-//    fun cache(text: CharSequence): Boolean {
-//        if (text != legacyHash) {
-//            legacyHash = text
-//            return true
-//        }
-//        return false
-//    }
-
-    fun set(hash: Int, spanned: Spanned): Unit {
+    fun set(hash: Int, spanned: Spanned) {
         this.hash = hash
         this.cached = spanned
     }
