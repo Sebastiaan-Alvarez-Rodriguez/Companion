@@ -61,6 +61,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = false
         }
     }
+
     suspend fun add(note: Note): Result = noteRepository.add(note)
 
     /** Inserts-or-updates [Note]. [Result] contains [Long], the updated id, on success. */

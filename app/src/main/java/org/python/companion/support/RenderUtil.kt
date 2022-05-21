@@ -47,7 +47,6 @@ import io.noties.markwon.linkify.LinkifyPlugin
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.support.UiUtil.LinkifyText
 import ru.noties.jlatexmath.JLatexMathDrawable
-import timber.log.Timber
 import java.util.concurrent.Executors
 
 

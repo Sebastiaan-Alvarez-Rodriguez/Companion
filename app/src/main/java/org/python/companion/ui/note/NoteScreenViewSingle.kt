@@ -28,6 +28,7 @@ import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
+import org.python.companion.support.ItemDrawCache
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
 
@@ -99,6 +100,7 @@ private fun NoteScreenViewSingleReady(
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
+    val contentDrawCache: ItemDrawCache = remember(noteWithCategory.note.renderType) { ItemDrawCache() }
 
     Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
         Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
@@ -144,7 +146,7 @@ private fun NoteScreenViewSingleReady(
                     text = title,
                     fontSize = LocalTextStyle.current.fontSize.times(1.15),
                     renderType = noteWithCategory.note.renderType,
-                    // TODO: drawCache?
+                    itemDrawCache = noteViewModel.drawCache.getOrDefaultPut(noteWithCategory.note.noteId, ItemDrawCache()),
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),
                     textAlign = TextAlign.Center,
                     scrollState = scrollState
@@ -157,7 +159,7 @@ private fun NoteScreenViewSingleReady(
                 contentScrollFunction = UiUtil.simpleScrollableRenderText(
                     text = content,
                     renderType = noteWithCategory.note.renderType,
-                    // TODO: drawCache?
+                    itemDrawCache = contentDrawCache,
                     modifier = Modifier.fillMaxWidth().padding(defaultPadding),
                     scrollState = scrollState
                 )
