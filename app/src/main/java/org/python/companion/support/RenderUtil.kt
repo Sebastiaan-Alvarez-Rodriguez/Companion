@@ -6,13 +6,11 @@ import android.text.Spanned
 import android.text.TextWatcher
 import android.text.util.Linkify
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,7 +35,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.noties.markwon.Markwon
 import io.noties.markwon.core.spans.StrongEmphasisSpan
@@ -411,14 +408,17 @@ object RenderUtil {
                 lineHeight = lineHeight,
             )
         )
-        return TextView(context).apply {
 
+        return TextView(context).apply {
             onClick?.let { setOnClickListener { onClick() } }
+            height = mergedStyle.fontSize.times(6).value.toInt()
+
+            gravity = Gravity.CENTER_VERTICAL
             setTextColor(textColor.toArgb())
+
             setMaxLines(maxLines)
             setTextSize(TypedValue.COMPLEX_UNIT_DIP, mergedStyle.fontSize.value)
 //            setLetterSpacing(mergedStyle.letterSpacing.value) // Keep turned off
-
             textAlign?.let { align ->
                 textAlignment = when (align) {
                     TextAlign.Left, TextAlign.Start -> View.TEXT_ALIGNMENT_TEXT_START
