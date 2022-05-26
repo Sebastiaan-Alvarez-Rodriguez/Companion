@@ -10,6 +10,9 @@ import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -34,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.noties.markwon.Markwon
 import io.noties.markwon.core.spans.StrongEmphasisSpan
@@ -301,14 +305,14 @@ object RenderUtil {
             RenderType.MARKDOWN ->
                 MarkdownText(
                     text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
-                    color, fontSize, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
-                    onTextLayout, style
+                    color, fontSize, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight,
+                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style
                 )
             RenderType.LATEX ->
                 MarkdownText(
                     text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
-                    color, fontSize, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
-                    onTextLayout, style
+                    color, fontSize, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight,
+                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style
                 )
         }
     }
@@ -322,6 +326,9 @@ object RenderUtil {
         itemDrawCache: ItemDrawCache? = null,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
+        fontFamily: FontFamily? = null,
+        letterSpacing: TextUnit = TextUnit.Unspecified,
+        textDecoration: TextDecoration? = null,
         textAlign: TextAlign? = null,
         lineHeight: TextUnit = TextUnit.Unspecified,
         overflow: TextOverflow = TextOverflow.Clip,
@@ -338,7 +345,7 @@ object RenderUtil {
     ) {
         val defaultColor: Color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
         val context: Context = LocalContext.current
-        val textSize = (if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize).times(3)
+        val textSize = (if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize).times(2)
 
         val markdownRender: Markwon = remember(renderType, rendererCache) {
             rendererCache?.getOrPut(renderType) {
@@ -354,9 +361,13 @@ object RenderUtil {
                     color = color,
                     defaultColor = defaultColor,
                     fontSize = fontSize,
+                    fontFamily = fontFamily,
+                    letterSpacing = letterSpacing,
+                    textDecoration = textDecoration,
                     maxLines = maxLines,
                     style = style,
                     textAlign = textAlign,
+                    lineHeight = lineHeight,
                     onClick = onClick,
                 )
             },
@@ -379,7 +390,11 @@ object RenderUtil {
         color: Color = Color.Unspecified,
         defaultColor: Color,
         fontSize: TextUnit = TextUnit.Unspecified,
+        fontFamily: FontFamily? = null,
+        letterSpacing: TextUnit = TextUnit.Unspecified,
+        textDecoration: TextDecoration? = null,
         textAlign: TextAlign? = null,
+        lineHeight: TextUnit = TextUnit.Unspecified,
         maxLines: Int = Int.MAX_VALUE,
         style: TextStyle,
         onClick: (() -> Unit)? = null
@@ -389,14 +404,20 @@ object RenderUtil {
             TextStyle(
                 color = textColor,
                 fontSize = fontSize,
+                fontFamily = fontFamily,
+                letterSpacing = letterSpacing,
+                textDecoration = textDecoration,
                 textAlign = textAlign,
+                lineHeight = lineHeight,
             )
         )
         return TextView(context).apply {
+
             onClick?.let { setOnClickListener { onClick() } }
             setTextColor(textColor.toArgb())
             setMaxLines(maxLines)
             setTextSize(TypedValue.COMPLEX_UNIT_DIP, mergedStyle.fontSize.value)
+//            setLetterSpacing(mergedStyle.letterSpacing.value) // Keep turned off
 
             textAlign?.let { align ->
                 textAlignment = when (align) {
@@ -406,6 +427,7 @@ object RenderUtil {
                     else -> View.TEXT_ALIGNMENT_TEXT_START
                 }
             }
+            setLineHeight(mergedStyle.lineHeight.value.toInt())
         }
     }
 
