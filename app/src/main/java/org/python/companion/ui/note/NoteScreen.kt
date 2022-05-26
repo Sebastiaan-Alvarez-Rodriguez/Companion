@@ -13,8 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -184,7 +183,10 @@ fun NoteItem(
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().clickable { onNoteClick(item) }.semantics(mergeDescendants = true) {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNoteClick(item) }
+                .semantics(mergeDescendants = true) {},
         ) {
             Checkbox(modifier = Modifier.weight(0.1f, fill = false), checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
             RenderUtil.RenderText(
@@ -196,7 +198,9 @@ fun NoteItem(
             )
             Column(
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier.fillMaxHeight().weight(0.1f, fill = true)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(0.1f, fill = true)
             ) {
                 IconButton(onClick = { onFavoriteClick(item) }) {
                     Icon(
@@ -208,7 +212,9 @@ fun NoteItem(
                     Icon(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Protected",
-                        modifier = Modifier.size(width = 12.dp, height = 12.dp).padding(end = tinyPadding, bottom = tinyPadding)
+                        modifier = Modifier
+                            .size(width = 12.dp, height = 12.dp)
+                            .padding(end = tinyPadding, bottom = tinyPadding)
                     )
             }
         }
@@ -274,6 +280,7 @@ data class NoteSearchParameters(
 
 @Composable
 fun NoteSort(sortParameters: NoteSortParameters, onSortClick: (NoteSortParameters) -> Unit, modifier: Modifier = Modifier) {
+    var sortMenuExpanded by remember { mutableStateOf(false) }
     IconButton(modifier = modifier, onClick = { onSortClick(
         sortParameters.copy(ascending = !sortParameters.ascending)
     ) }) {
@@ -282,27 +289,44 @@ fun NoteSort(sortParameters: NoteSortParameters, onSortClick: (NoteSortParameter
              contentDescription = "Sort direction ${if (sortParameters.ascending) "ascending" else "descending"}"
          )
     }
-    IconButton(modifier = modifier, onClick = { onSortClick(
-        sortParameters.copy(
-            column = when(sortParameters.column) {
-                RoomNoteWithCategory.Companion.SortableField.NAME -> RoomNoteWithCategory.Companion.SortableField.DATE
-                RoomNoteWithCategory.Companion.SortableField.DATE -> RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME
-                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL
-                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> RoomNoteWithCategory.Companion.SortableField.NAME
+
+    Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
+        IconButton(modifier = modifier, onClick = { sortMenuExpanded = !sortMenuExpanded }) {
+            UiUtil.NestedIcon(
+                mainIcon = when(sortParameters.column) {
+                    RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
+                    RoomNoteWithCategory.Companion.SortableField.DATE -> Icons.Rounded.Schedule
+                    RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> Icons.Rounded.Bolt
+                    RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
+                },
+                description = "Sort on ${sortParameters.column}",
+                sideIcon = Icons.Rounded.Sort,
+                sideModifier = Modifier.size(10.dp)
+            )
+        }
+        DropdownMenu(
+            expanded = sortMenuExpanded,
+            onDismissRequest = { sortMenuExpanded = false },
+            modifier = modifier
+        ) {
+            for (value in RoomNoteWithCategory.Companion.SortableField.values()) {
+                if (value != sortParameters.column) {
+                    DropdownMenuItem(onClick = { onSortClick(sortParameters.copy(column = value)) }) {
+                        UiUtil.NestedIcon(
+                            mainIcon = when (value) {
+                                RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
+                                RoomNoteWithCategory.Companion.SortableField.DATE -> Icons.Rounded.Schedule
+                                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> Icons.Rounded.Bolt
+                                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
+                            },
+                            description = "Sort on $value",
+                            sideIcon = Icons.Rounded.Sort,
+                            sideModifier = Modifier.size(10.dp)
+                        )
+                    }
+                }
             }
-        )
-    ) }) {
-        UiUtil.NestedIcon(
-            mainIcon = when(sortParameters.column) {
-                RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
-                RoomNoteWithCategory.Companion.SortableField.DATE -> Icons.Rounded.Schedule
-                RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> Icons.Rounded.Bolt
-                RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> Icons.Rounded.Lock
-            },
-            description = "Sort on ${sortParameters.column}",
-            sideIcon = Icons.Rounded.Sort,
-            sideModifier = Modifier.size(10.dp)
-        )
+        }
     }
 }
 
