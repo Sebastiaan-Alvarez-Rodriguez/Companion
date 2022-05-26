@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package org.python.companion.support
 
 import android.content.Context
@@ -431,15 +433,8 @@ object RenderUtil {
                     else -> View.TEXT_ALIGNMENT_TEXT_START
                 }
             }
-            setLineHeight(mergedStyle.lineHeight.value.toInt())
+//            setLineHeight(mergedStyle.lineHeight.value.toInt()) // Keep turned off
         }
-    }
-
-    @Composable
-    fun createMarkdownRender(renderType: RenderType, fontSize: TextUnit = TextUnit.Unspecified, onError: (String, String?) -> Unit): Markwon {
-        val context: Context = LocalContext.current
-        val textSize = (if (fontSize == TextUnit.Unspecified) LocalTextStyle.current.fontSize else fontSize).times(3)
-        return createMarkdownRender(renderType, context, textSize, onError)
     }
 
     /** Creates a markdown renderer */
