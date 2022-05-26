@@ -19,9 +19,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import org.python.companion.R
 import org.python.companion.support.UiUtil
-import timber.log.Timber
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import kotlin.random.Random
 
 
@@ -33,11 +31,7 @@ private val cacti: Array<Int> = arrayOf(
         R.drawable.ic_cactus_2,
 )
 
-private fun randomCactus(): Int {
-    val rand = Random(Instant.now().toEpochMilli()).nextInt(cacti.size)
-    Timber.e("Random value picked: $rand [${cacti.size}]")
-    return cacti[rand]
-}
+private fun randomCactus(): Int = cacti[Random(Instant.now().toEpochMilli()).nextInt(cacti.size)]
 
 
 /**
