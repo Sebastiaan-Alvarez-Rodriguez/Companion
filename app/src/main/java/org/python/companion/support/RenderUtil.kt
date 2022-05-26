@@ -15,6 +15,8 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -46,6 +49,7 @@ import io.noties.markwon.html.HtmlPlugin
 import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import org.python.backend.data.datatype.RenderType
+import org.python.companion.R
 import org.python.companion.support.UiUtil.LinkifyText
 import ru.noties.jlatexmath.JLatexMathDrawable
 import java.util.concurrent.Executors
@@ -467,6 +471,21 @@ object RenderUtil {
             .usePlugin(StrikethroughPlugin.create())
             .usePlugin(TablePlugin.create(context))
             .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS))
+    }
+
+    fun iconForRenderType(renderType: RenderType): @Composable () -> Unit =  when (renderType) {
+        RenderType.DEFAULT -> {{ Icon(
+            imageVector = Icons.Outlined.TextFields,
+            contentDescription = "Text rendering"
+        ) }}
+        RenderType.MARKDOWN -> {{ Icon(
+            painter = painterResource(id = R.drawable.ic_menu_markdown),
+            contentDescription = "Markdown rendering"
+        ) }}
+        RenderType.LATEX -> {{ Icon(
+            painter = painterResource(id = R.drawable.ic_menu_latex),
+            contentDescription = "Latex rendering"
+        ) }}
     }
 }
 

@@ -143,7 +143,7 @@ class NoteState(
                         navController.navigateUp()
                     },
                     onRenderTypeClick = {
-                        noteViewModel.viewModelScope.launch { noteViewModel.setRenderType(noteId, RenderType.nextInLine(it)) }
+                        noteViewModel.viewModelScope.launch { noteViewModel.setRenderType(noteId, it) }
                     },
                     onEditClick = { note, offset -> navigateToNoteEdit(navController = navController, note = note, offset = offset) },
                     onCategoryClick = { NoteCategoryState.navigateToCategorySelect(navController, noteId) }

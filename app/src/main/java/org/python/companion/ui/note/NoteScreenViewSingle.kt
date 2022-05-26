@@ -4,22 +4,17 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -29,6 +24,7 @@ import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.support.ItemDrawCache
+import org.python.companion.support.RenderUtil
 import org.python.companion.support.UiUtil
 import org.python.companion.viewmodels.NoteViewModel
 
@@ -103,41 +99,7 @@ private fun NoteScreenViewSingleReady(
     val contentDrawCache: ItemDrawCache = remember(noteWithCategory.note.renderType) { ItemDrawCache() }
 
     Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
-        Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                IconButton(onClick = { onDeleteClick(noteWithCategory.note) }) {
-                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete note")
-                }
-                Row {
-                    IconButton(onClick = { onRenderTypeClick(noteWithCategory.note.renderType) }) {
-                        when (noteWithCategory.note.renderType) {
-                            RenderType.DEFAULT -> Icon(
-                                imageVector = Icons.Outlined.TextFields,
-                                contentDescription = "Text rendering"
-                            )
-                            RenderType.MARKDOWN -> Icon(
-                                painter = painterResource(id = R.drawable.ic_menu_markdown),
-                                contentDescription = "Markdown rendering"
-                            )
-                            RenderType.LATEX -> Icon(
-                                painter = painterResource(id = R.drawable.ic_menu_latex),
-                                contentDescription = "Latex rendering"
-                            )
-                        }
-                    }
-                    IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
-                        Icon(
-                            tint = Color(noteWithCategory.noteCategory.color.toArgb()),
-                            imageVector = Icons.Outlined.Bolt,
-                            contentDescription = "Edit category"
-                        )
-                    }
-                    IconButton(onClick = { onEditClick(noteWithCategory.note, scrollState.value) }) {
-                        Icon(imageVector = Icons.Outlined.Edit,contentDescription = "Edit note")
-                    }
-                }
-            }
-        }
+        ViewHeader(noteWithCategory = noteWithCategory, onDeleteClick = onDeleteClick, onRenderTypeClick = onRenderTypeClick, onCategoryClick = onCategoryClick, onEditClick = { onEditClick(it, scrollState.value) })
         Spacer(Modifier.height(defaultPadding))
 
         Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
@@ -174,6 +136,48 @@ private fun NoteScreenViewSingleReady(
                         it < titleMatches.size -> titleScrollFunction(it)
                         else -> contentScrollFunction(it - titleMatches.size)
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ViewHeader(noteWithCategory: NoteWithCategory, onDeleteClick: (Note) -> Unit, onRenderTypeClick: (RenderType) -> Unit, onCategoryClick: (NoteCategory) -> Unit, onEditClick: (Note) -> Unit) {
+    var renderMenuExpanded by remember { mutableStateOf(false) }
+
+    Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            IconButton(onClick = { onDeleteClick(noteWithCategory.note) }) {
+                Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete note")
+            }
+            Row {
+                IconButton(onClick = { renderMenuExpanded = !renderMenuExpanded }) {
+                    RenderUtil.iconForRenderType(noteWithCategory.note.renderType)()
+                }
+                DropdownMenu(
+                    expanded = renderMenuExpanded,
+                    onDismissRequest = { renderMenuExpanded = false },
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    for (value in RenderType.values()) {
+                        if (value != noteWithCategory.note.renderType) {
+                            IconButton(onClick = { onRenderTypeClick(value) }) {
+                                RenderUtil.iconForRenderType(value)()
+                            }
+                        }
+                    }
+                }
+
+                IconButton(onClick = { onCategoryClick(noteWithCategory.noteCategory) }) {
+                    Icon(
+                        tint = Color(noteWithCategory.noteCategory.color.toArgb()),
+                        imageVector = Icons.Outlined.Bolt,
+                        contentDescription = "Edit category"
+                    )
+                }
+                IconButton(onClick = { onEditClick(noteWithCategory.note) }) {
+                    Icon(imageVector = Icons.Outlined.Edit,contentDescription = "Edit note")
                 }
             }
         }

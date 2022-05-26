@@ -77,8 +77,8 @@ enum class LoadingState {
 object UiUtil {
     @Composable
     fun NestedIcon(mainIcon: ImageVector, modifier: Modifier = Modifier, description: String? = null, sideIcon: ImageVector, sideModifier: Modifier = Modifier, sideDescription: String? = null) {
-        Box {
-            Icon(mainIcon, modifier = modifier, contentDescription = description)
+        Box(modifier = modifier) {
+            Icon(mainIcon, contentDescription = description)
             Icon(sideIcon, modifier = sideModifier
                 .align(Alignment.BottomEnd)
                 .background(DarkBlue900, shape = CircleShape), contentDescription = sideDescription)

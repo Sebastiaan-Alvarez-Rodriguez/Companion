@@ -29,11 +29,7 @@ data class Note(
 }
 
 enum class RenderType {
-    DEFAULT, MARKDOWN, LATEX;
-
-    companion object {
-        fun nextInLine(current: RenderType): RenderType = values()[(current.ordinal+1) % values().size]
-    }
+    DEFAULT, MARKDOWN, LATEX
 }
 
 data class NoteCategory(

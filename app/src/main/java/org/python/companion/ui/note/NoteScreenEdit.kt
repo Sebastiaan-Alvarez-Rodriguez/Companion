@@ -5,22 +5,17 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
@@ -126,51 +121,15 @@ fun NoteScreenEditReady(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
     Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
-        Card(modifier = Modifier.fillMaxWidth(), elevation = 5.dp) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row {
-                    IconButton(onClick = { favorite = !favorite }) {
-                        Icon(
-                            imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = if (favorite) "Stop favoring" else "Favorite"
-                        )
-                    }
-                    IconButton(onClick = { securityLevel = if (securityLevel == 0) 1 else 0 }) {
-                        Icon(
-                            imageVector = if (securityLevel > 0) Icons.Filled.Lock else Icons.Outlined.Lock,
-                            contentDescription = if (securityLevel > 0) "Stop securing" else "Secure"
-                        )
-                    }
-                }
-                Spacer(Modifier.width(defaultPadding))
-                Row {
-                    IconButton(onClick = { renderType = RenderType.nextInLine(renderType) }) {
-                        when (renderType) {
-                            RenderType.DEFAULT -> Icon(
-                                imageVector = Icons.Outlined.TextFields,
-                                contentDescription = "Text rendering"
-                            )
-                            RenderType.MARKDOWN -> Icon(
-                                painter = painterResource(id = R.drawable.ic_menu_markdown),
-                                contentDescription = "Markdown rendering"
-                            )
-                            RenderType.LATEX -> Icon(
-                                painter = painterResource(id = R.drawable.ic_menu_latex),
-                                contentDescription = "Latex rendering"
-                            )
-                        }
-                    }
-                    IconButton(onClick = { onSaveClick(createNoteObject()) }) {
-                        Icon(imageVector = Icons.Filled.Save, contentDescription = "Save")
-                    }
-                }
-            }
-        }
-
+        ViewHeader(
+            favorite = favorite,
+            securityLevel = securityLevel,
+            renderType = renderType,
+            onFavoriteClick = { favorite = it },
+            onSecurityLevelChange = { securityLevel = it },
+            onRenderTypeClick = { renderType = it },
+            onSaveClick = {onSaveClick(createNoteObject())}
+        )
         Spacer(Modifier.height(defaultPadding))
 
         Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
@@ -213,6 +172,66 @@ fun NoteScreenEditReady(
     offset?.let {
         UiUtil.LaunchedEffectSaveable(Unit) {
             scrollState.animateScrollTo(it)
+        }
+    }
+}
+
+@Composable
+private fun ViewHeader(
+    favorite: Boolean,
+    securityLevel: Int,
+    renderType: RenderType,
+    onFavoriteClick: (Boolean) -> Unit,
+    onSecurityLevelChange: (Int) -> Unit,
+    onRenderTypeClick: (RenderType) -> Unit,
+    onSaveClick: () -> Unit
+) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+    var renderMenuExpanded by remember { mutableStateOf(false) }
+
+    Card(modifier = Modifier.fillMaxWidth(), elevation = 5.dp) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row {
+                IconButton(onClick = { onFavoriteClick(!favorite) }) {
+                    Icon(
+                        imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (favorite) "Stop favoring" else "Favorite"
+                    )
+                }
+                IconButton(onClick = { onSecurityLevelChange(if (securityLevel == 0) 1 else 0) }) {
+                    Icon(
+                        imageVector = if (securityLevel > 0) Icons.Filled.Lock else Icons.Outlined.Lock,
+                        contentDescription = if (securityLevel > 0) "Stop securing" else "Secure"
+                    )
+                }
+            }
+            Spacer(Modifier.width(defaultPadding))
+            Row {
+                IconButton(onClick = { renderMenuExpanded = !renderMenuExpanded }) {
+                    RenderUtil.iconForRenderType(renderType)()
+                }
+                DropdownMenu(
+                    expanded = renderMenuExpanded,
+                    onDismissRequest = { renderMenuExpanded = false },
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ) {
+                    for (value in RenderType.values()) {
+                        if (value != renderType) {
+                            IconButton(onClick = { onRenderTypeClick(value) }) {
+                                RenderUtil.iconForRenderType(value)()
+                            }
+                        }
+                    }
+                }
+
+                IconButton(onClick = onSaveClick) {
+                    Icon(imageVector = Icons.Filled.Save, contentDescription = "Save")
+                }
+            }
         }
     }
 }

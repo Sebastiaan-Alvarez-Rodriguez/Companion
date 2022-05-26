@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -307,11 +308,11 @@ fun NoteSort(sortParameters: NoteSortParameters, onSortClick: (NoteSortParameter
         DropdownMenu(
             expanded = sortMenuExpanded,
             onDismissRequest = { sortMenuExpanded = false },
-            modifier = modifier
+            modifier = modifier.align(Center)
         ) {
             for (value in RoomNoteWithCategory.Companion.SortableField.values()) {
                 if (value != sortParameters.column) {
-                    DropdownMenuItem(onClick = { onSortClick(sortParameters.copy(column = value)) }) {
+                    IconButton(modifier = modifier, onClick = { onSortClick(sortParameters.copy(column = value)) }) {
                         UiUtil.NestedIcon(
                             mainIcon = when (value) {
                                 RoomNoteWithCategory.Companion.SortableField.NAME -> Icons.Rounded.Title
