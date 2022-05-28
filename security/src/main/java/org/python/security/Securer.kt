@@ -73,12 +73,27 @@ object Securer {
     /**
      * Deletes the given alias key from the keystore.
      * @note Warning: This is a destructive, non-recoverable operation.
-     * @param alias Alias to remove
+     * @param alias Alias to remove.
      */
     fun deleteAlias(alias: String) {
         getKeyStore()?.deleteEntry(alias)
     }
 
+    /**
+     * Generates a secure, random salt.
+     * @param length Length of salt to generate.
+     * @param algorithm Optional algorithm to use for random number generation.
+     */
+    fun generateSalt(length: Int, algorithm: String? = null): ByteArray {
+        return try {
+            val random = algorithm?.let { SecureRandom.getInstance(algorithm) } ?: SecureRandom()
+            val salt = ByteArray(length)
+            random.nextBytes(salt)
+            salt
+        } catch (e: java.lang.Exception) {
+            throw SecurityException("Unable to generate salt", e)
+        }
+    }
     /**
      * Gets cipher object from Android Keystore, to encrypt data.
      * @param alias Name to store key under in Android Keystore.

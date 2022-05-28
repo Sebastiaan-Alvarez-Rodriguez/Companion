@@ -8,7 +8,7 @@ import org.python.datacomm.ResultType
 @IntDef(
     VerificationResult.SEC_CORRECT, VerificationResult.SEC_INCORRECT,
     VerificationResult.SEC_BADINPUT, VerificationResult.SEC_LOCKED,
-    VerificationResult.SEC_NOINIT, VerificationResult.SEC_OTHER
+    VerificationResult.SEC_NOINIT, VerificationResult.SEC_UNAVAILABLE, VerificationResult.SEC_OTHER
 )
 annotation class VerificationStatus
 

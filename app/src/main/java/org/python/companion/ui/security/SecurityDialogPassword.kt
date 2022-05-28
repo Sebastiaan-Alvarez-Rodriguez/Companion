@@ -1,5 +1,6 @@
 package org.python.companion.ui.security
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,13 +18,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.python.security.PasswordVerificationToken
 import org.python.companion.R
 import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil
+import org.python.security.PasswordVerificationToken
 
 @Composable
 fun SecurityPasswordDialogContent(
+    saltContext: Context,
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
     onResetPasswordClick: () -> Unit,
@@ -84,7 +86,7 @@ fun SecurityPasswordDialogContent(
                     }
                     Spacer(modifier = Modifier.width(smallPadding))
                     TextButton(
-                        onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass).build()) },
+                        onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, storedSaltContext = saltContext).build()) },
                         enabled = state.state.value != LoadingState.LOADING
                     ) {
                         Text(text = "SUBMIT")
@@ -111,9 +113,7 @@ fun SecurityPasswordSetupDialogContent(
     var passMatch by remember { mutableStateOf(false) }
 
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-        Column(modifier = Modifier
-            .padding(defaultPadding)
-            .fillMaxSize()) {
+        Column(modifier = Modifier.padding(defaultPadding).fillMaxSize()) {
             Text(
                 text = title,
                 fontWeight = FontWeight.Bold,
@@ -181,7 +181,7 @@ fun SecurityPasswordSetupDialogContent(
                     }
                     Spacer(modifier = Modifier.width(smallPadding))
                     TextButton(
-                        onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass).build()) },
+                        onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, salt = null).build()) },
                         enabled = passMatch
                     ) {
                         Text(text = "SUBMIT")

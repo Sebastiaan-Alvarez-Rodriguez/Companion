@@ -186,7 +186,8 @@ internal class BioActor(
         }
     }
 
-    override fun hasCredentials(): Boolean = BiometricManager.from(activity.baseContext).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+    override fun hasCredentials(): Boolean =
+        BiometricManager.from(activity.baseContext).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, clearance: Int): Result = Result.DEFAULT_SUCCESS
 
@@ -246,27 +247,36 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
     constructor(context: Context) : this(context.getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE))
     constructor(activity: Activity) : this(activity.baseContext)
 
-    private companion object {
-        const val pass_storage_key = "SECURITY_PASS"
+    companion object {
+        const val hash_security_key = "PASS_ACTOR_HASH"
+        const val salt_storage_key = "PASS_ACTOR_SALT"
     }
 
     override val type: Int = SecurityActor.TYPE_PASS
 
     override fun actorAvailable(): Result = Result.DEFAULT_SUCCESS
 
-    override fun hasCredentials(): Boolean = sharedPreferences.contains(pass_storage_key)
+    override fun hasCredentials(): Boolean = sharedPreferences.contains(hash_security_key)
 
     @SuppressLint("ApplySharedPref")
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, clearance: Int): Result = withContext(Dispatchers.Default) {
         when (hasCredentials() && clearance == 0) { // must provide old pass when old pass exists && not logged in
             true -> when (oldToken) {
-                null -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_INCORRECT, "Existing credentials detected. Caller must provide old verification token for verification.")
+                null -> VerificationResult(
+                    ResultType.FAILED,
+                    VerificationResult.SEC_INCORRECT,
+                    "Existing credentials detected. Caller must provide old verification token for verification."
+                )
                 else -> verify(oldToken)
             }
             else -> Result.DEFAULT_SUCCESS
         }.pipe {
+            if (newToken !is PasswordVerificationToken)
+                return@pipe VerificationResult(ResultType.FAILED, VerificationResult.SEC_BADINPUT)
+
             val preferencesEditor = sharedPreferences.edit()
-            preferencesEditor.putString(pass_storage_key, newToken.toString())
+            preferencesEditor.putString(hash_security_key, newToken.hashString())
+            preferencesEditor.putString(salt_storage_key, newToken.saltString())
             preferencesEditor.commit()
             Result.DEFAULT_SUCCESS
         }
@@ -279,7 +289,12 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
             return@withContext VerificationResult(ResultType.FAILED, VerificationResult.SEC_OTHER,"Password actor requires password verification token")
 
         val given: PasswordVerificationToken = token
-        val known = PasswordVerificationToken.fromString(sharedPreferences.getString(pass_storage_key, null) ?: return@withContext VerificationResult(ResultType.FAILED, VerificationResult.SEC_NOINIT, "Did not initialize security type"))
+        val known = PasswordVerificationToken.fromString(
+            hash = sharedPreferences.getString(hash_security_key, null)
+                ?: return@withContext VerificationResult(ResultType.FAILED, VerificationResult.SEC_NOINIT, "Did not initialize security type"),
+            salt = sharedPreferences.getString(salt_storage_key, null)
+                ?: return@withContext VerificationResult(ResultType.FAILED, VerificationResult.SEC_NOINIT, "Did not initialize salt")
+        )
 
         return@withContext when (given == known) {
             true -> VerificationResult(ResultType.SUCCESS, VerificationResult.SEC_CORRECT)

@@ -89,6 +89,7 @@ class SecurityState(
                     navController.navigateUp()
                 } else {
                     SecurityPasswordDialogContent(
+                        saltContext = activity.baseContext,
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { token ->
                             stateMiniState.state.value = LoadingState.LOADING
