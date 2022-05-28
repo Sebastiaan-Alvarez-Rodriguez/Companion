@@ -26,9 +26,23 @@ import kotlin.random.Random
 const val DEFAULT_DELAY_MS = 200
 
 private val cacti: Array<Int> = arrayOf(
-        R.drawable.ic_cactus_0,
-        R.drawable.ic_cactus_1,
-        R.drawable.ic_cactus_2,
+    R.drawable.im_cactus_0,
+    R.drawable.im_cactus_1,
+    R.drawable.im_cactus_2,
+    R.drawable.ic_cactus_colored,
+    R.drawable.im_cactus_outline_0,
+    R.drawable.im_cactus_outline_1,
+    R.drawable.im_cactus_outline_2,
+    R.drawable.im_cactus_outline_3,
+    R.drawable.im_cactus_outline_4,
+    R.drawable.im_cactus_outline_5,
+    R.drawable.im_cactus_outline_6,
+    R.drawable.im_cactus_outline_7,
+    R.drawable.im_cactus_outline_8,
+    R.drawable.im_cactus_outline_9a,
+    R.drawable.im_cactus_outline_9b,
+    R.drawable.im_cactus_outline_9c,
+    R.drawable.im_cactus_outline_9d,
 )
 
 private fun randomCactus(): Int = cacti[Random(Instant.now().toEpochMilli()).nextInt(cacti.size)]
