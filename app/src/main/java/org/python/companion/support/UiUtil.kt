@@ -255,15 +255,13 @@ object UiUtil {
 
     @Composable
     fun GenericListHeader(items: Collection<@Composable RowScope.() -> Unit>) {
-        Card(elevation = 5.dp) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                for (item in items) {
-                    item()
-                }
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            for (item in items) {
+                item()
             }
         }
     }

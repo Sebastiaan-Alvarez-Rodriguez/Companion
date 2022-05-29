@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import org.python.companion.R
 import org.python.companion.support.UiUtil
+import timber.log.Timber
 import java.time.Instant
 import kotlin.random.Random
 
@@ -40,12 +41,14 @@ private val cacti: Array<Int> = arrayOf(
     R.drawable.im_cactus_outline_7,
     R.drawable.im_cactus_outline_8,
     R.drawable.im_cactus_outline_9a,
-    R.drawable.im_cactus_outline_9b,
-    R.drawable.im_cactus_outline_9c,
-    R.drawable.im_cactus_outline_9d,
+    R.drawable.im_cactus_outline_9b
 )
 
-private fun randomCactus(): Int = cacti[Random(Instant.now().toEpochMilli()).nextInt(cacti.size)]
+private fun randomCactus(): Int {
+    val chosenIdx = Random(Instant.now().toEpochMilli()).nextInt(cacti.size)
+    Timber.e("Chosen idx: $chosenIdx")
+    return cacti[chosenIdx]
+}
 
 
 /**
@@ -62,8 +65,8 @@ class SplashBuilder(
     @DrawableRes var drawableRes: Int? = null,
     var minDelayMs: Int = DEFAULT_DELAY_MS
 ) {
-    fun withDrawableRes(@DrawableRes resID: Int): SplashBuilder {
-        drawableRes = resID
+    fun withDrawableRes(@DrawableRes resId: Int): SplashBuilder {
+        drawableRes = resId
         return this
     }
 

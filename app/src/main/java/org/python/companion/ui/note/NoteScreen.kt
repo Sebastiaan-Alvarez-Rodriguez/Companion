@@ -148,8 +148,16 @@ fun NoteScreenList(
         prefix = securityItem,
         items = notes,
         isLoading = isLoading,
-        showItemFunc = {
-            item -> NoteItem(item, onNoteClick, onCheckClick, onFavoriteClick, selected = selectedItems.contains(item.note), rendererCache, drawCache?.getOrDefaultPut(item.note.noteId, ItemDrawCache()))
+        showItemFunc = { item ->
+            NoteItem(
+                item = item,
+                onNoteClick = onNoteClick,
+                onCheckClick = onCheckClick,
+                onFavoriteClick = onFavoriteClick,
+                selected = selectedItems.contains(item.note),
+                rendererCache = rendererCache,
+                itemDrawCache = drawCache?.getOrDefaultPut(item.note.noteId, ItemDrawCache())
+            )
        },
         fab = { SimpleFAB(onClick = onNewClick) }
     )
@@ -184,12 +192,13 @@ fun NoteItem(
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNoteClick(item) }
-                .semantics(mergeDescendants = true) {},
+            modifier = Modifier.fillMaxWidth().clickable { onNoteClick(item) }.semantics(mergeDescendants = true) {},
         ) {
-            Checkbox(modifier = Modifier.weight(0.1f, fill = false), checked = selected, onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)})
+            Checkbox(
+                modifier = Modifier.weight(0.1f, fill = false),
+                checked = selected,
+                onCheckedChange = { nowChecked -> onCheckClick(item, nowChecked)}
+            )
             RenderUtil.RenderText(
                 text = item.note.name,
                 modifier = Modifier.weight(0.8f, fill = false),
@@ -229,10 +238,7 @@ fun SecurityClickItem(text: String, onClick: () -> Unit) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(defaultPadding)
-                .clickable { onClick() }
-                .fillMaxWidth()
+            modifier = Modifier.padding(defaultPadding).clickable { onClick() }.fillMaxWidth()
         ) {
             Text(text)
         }
@@ -344,7 +350,9 @@ fun NoteSearch(searchParameters: NoteSearchParameters, onQueryUpdate: (NoteSearc
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
             singleLine = true,
-            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding)) },
+            leadingIcon = {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding))
+            },
             trailingIcon = {
                 if (searchParameters.text.isNotEmpty()) {
                     IconButton( onClick = { onQueryUpdate(searchParameters.copy(text = "")) }) {

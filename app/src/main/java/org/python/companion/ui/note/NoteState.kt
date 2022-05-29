@@ -15,11 +15,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.backend.data.datatype.Note
-import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.navigateForResult
-import org.python.companion.ui.components.CompanionScreen
 import org.python.companion.ui.note.category.NoteCategoryState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.viewmodels.NoteViewModel
@@ -286,7 +284,7 @@ class NoteState(
         navController.navigate(UiUtil.createRoute(base = "$noteDestination/edit", args = listOf(noteId.toString()), optionals = mapOf("offset" to offset?.toString())))
 
     companion object {
-        val noteDestination: String = CompanionScreen.Note.name
+        const val noteDestination: String = "Note"
 
         private const val resultKeyNoteCreate: String = "noteState|create"
 
