@@ -384,6 +384,7 @@ object UiUtil {
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
         style: TextStyle = LocalTextStyle.current,
+        isTextSelectable: Boolean = false,
         scrollState: ScrollState
     ) = simpleScrollable(
         positions = text.spanStyles.map { it.start },
@@ -393,7 +394,7 @@ object UiUtil {
         RenderUtil.RenderText(
             text = text, modifier = outModifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
             color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign,
-            lineHeight, overflow, softWrap, maxLines, inlineContent, layoutResultFunc, style
+            lineHeight, overflow, softWrap, maxLines, inlineContent, layoutResultFunc, style, isTextSelectable = isTextSelectable
         )
     }
 

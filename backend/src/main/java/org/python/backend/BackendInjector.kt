@@ -1,6 +1,5 @@
 package org.python.backend
 
-import org.python.backend.data.repositories.AnniversaryRepository
 import org.python.backend.data.repositories.NoteCategoryRepository
 import org.python.backend.data.repositories.NoteRepository
 import org.python.security.SecurityActor
@@ -14,6 +13,4 @@ open class BackendInjector : DBInjector() {
     // Repositories
     val noteRepository by lazy { NoteRepository(securityActor, companionDatabase) }
     val noteCategoryRepository by lazy { NoteCategoryRepository(securityActor, companionDatabase) }
-
-    val anniversaryRepository by lazy { AnniversaryRepository(companionDatabase) }
 }

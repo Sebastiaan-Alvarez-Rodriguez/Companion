@@ -3,6 +3,7 @@ package org.python.companion.ui.note
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -109,28 +110,33 @@ private fun NoteScreenViewSingleReady(
         Spacer(Modifier.height(defaultPadding))
 
         Column(modifier = Modifier.weight(0.9f, fill = false).verticalScroll(scrollState)) {
-            Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())),  elevation = 5.dp) {
-                titleScrollFunction = UiUtil.simpleScrollableRenderText(
-                    text = title,
-                    fontSize = LocalTextStyle.current.fontSize.times(1.15),
-                    renderType = noteWithCategory.note.renderType,
-                    itemDrawCache = noteViewModel.drawCache.getOrDefaultPut(noteWithCategory.note.noteId, ItemDrawCache()),
-                    modifier = Modifier.fillMaxWidth().padding(defaultPadding),
-                    textAlign = TextAlign.Center,
-                    scrollState = scrollState
-                )
+            SelectionContainer {
+                Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())),  elevation = 5.dp) {
+                    titleScrollFunction = UiUtil.simpleScrollableRenderText(
+                        text = title,
+                        fontSize = LocalTextStyle.current.fontSize.times(1.15),
+                        renderType = noteWithCategory.note.renderType,
+                        itemDrawCache = noteViewModel.drawCache.getOrDefaultPut(noteWithCategory.note.noteId, ItemDrawCache()),
+                        modifier = Modifier.fillMaxWidth().padding(defaultPadding),
+                        textAlign = TextAlign.Center,
+                        scrollState = scrollState,
+                        isTextSelectable = true
+                    )
+                }
             }
 
             Spacer(Modifier.height(defaultPadding))
-
-            Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
-                contentScrollFunction = UiUtil.simpleScrollableRenderText(
-                    text = content,
-                    renderType = noteWithCategory.note.renderType,
-                    itemDrawCache = contentDrawCache,
-                    modifier = Modifier.fillMaxWidth().padding(defaultPadding),
-                    scrollState = scrollState
-                )
+            SelectionContainer {
+                Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
+                    contentScrollFunction = UiUtil.simpleScrollableRenderText(
+                        text = content,
+                        renderType = noteWithCategory.note.renderType,
+                        itemDrawCache = contentDrawCache,
+                        modifier = Modifier.fillMaxWidth().padding(defaultPadding),
+                        scrollState = scrollState,
+                        isTextSelectable = true
+                    )
+                }
             }
         }
         if (isSearching) {

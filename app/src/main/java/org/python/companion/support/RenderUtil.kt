@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -99,6 +100,7 @@ object RenderUtil {
         }
     }
 
+    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     private fun MarkdownEditorTextField(
         value: String,
@@ -131,42 +133,71 @@ object RenderUtil {
         }
         val backgroundExecutors = remember { Executors.newCachedThreadPool() }
 
-        AndroidView(
-            modifier = modifier,
-            factory = { ctx ->
-                val editText = createEditText(
-                    value = value,
-                    context = ctx,
-                    enabled = enabled,
-                    readOnly = readOnly,
-                    textStyle = textStyle,
-                    isError = isError,
-                    singleLine = singleLine,
-                    maxLines = maxLines,
-                    textColor = textColor,
-                    backgroundColor = backgroundColor
-                )
-                editText.addTextChangedListener(
-                    MarkwonEditorTextWatcher.withPreRender(markwonEditor, backgroundExecutors, editText)
-                )
-                editText.addTextChangedListener(
-                    object : TextWatcher {
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+        val decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit = @Composable { innerTextField ->
+            TextFieldDefaults.OutlinedTextFieldDecorationBox(
+                value = value,
+                visualTransformation = visualTransformation,
+                innerTextField = innerTextField,
+                placeholder = placeholder,
+                label = label,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                singleLine = singleLine,
+                enabled = enabled,
+                isError = isError,
+                interactionSource = interactionSource,
+                colors = colors,
+                border = {
+                    TextFieldDefaults.BorderStroke(
+                        enabled,
+                        isError,
+                        interactionSource,
+                        colors,
+                        shape
+                    )
+                }
+            )
+        }
+        Box(modifier, propagateMinConstraints = true) {
+            decorationBox {
+                AndroidView(
+                    modifier = modifier,
+                    factory = { ctx ->
+                        val editText = createEditText(
+                            value = value,
+                            context = ctx,
+                            enabled = enabled,
+                            readOnly = readOnly,
+                            textStyle = textStyle,
+                            isError = isError,
+                            singleLine = singleLine,
+                            maxLines = maxLines,
+                            textColor = textColor,
+                            backgroundColor = backgroundColor
+                        )
+                        editText.addTextChangedListener(
+                            MarkwonEditorTextWatcher.withPreRender(markwonEditor, backgroundExecutors, editText)
+                        )
+                        editText.addTextChangedListener(
+                            object : TextWatcher {
+                                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                            if (s != null)
-                                onValueChange(s.toString())
-                        }
+                                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                                    if (s != null)
+                                        onValueChange(s.toString())
+                                }
 
-                        override fun afterTextChanged(s: Editable?) {}
+                                override fun afterTextChanged(s: Editable?) {}
+                            }
+                        )
+                        return@AndroidView editText
+                    },
+                    update = { editText ->
+                        MarkwonEditorTextWatcher.withPreRender(markwonEditor, backgroundExecutors, editText)
                     }
                 )
-                return@AndroidView editText
-            },
-            update = { editText ->
-                MarkwonEditorTextWatcher.withPreRender(markwonEditor, backgroundExecutors, editText)
             }
-        )
+        }
     }
 
     private fun createEditText(
@@ -268,12 +299,13 @@ object RenderUtil {
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
         onTextLayout: (TextLayoutResult) -> Unit = {},
-        style: TextStyle = LocalTextStyle.current
+        style: TextStyle = LocalTextStyle.current,
+        isTextSelectable: Boolean = false
     ) = RenderText(
         text = AnnotatedString(text), modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
         color, fontSize, fontStyle, fontWeight, fontFamily,
         letterSpacing, textDecoration, textAlign, lineHeight, overflow,
-        softWrap, maxLines, inlineContent, onTextLayout, style
+        softWrap, maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
     )
 
     @Composable
@@ -297,7 +329,8 @@ object RenderUtil {
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
         onTextLayout: (TextLayoutResult) -> Unit = {},
-        style: TextStyle = LocalTextStyle.current
+        style: TextStyle = LocalTextStyle.current,
+        isTextSelectable: Boolean = false
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
@@ -309,14 +342,14 @@ object RenderUtil {
                 MarkdownText(
                     text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
                     color, fontSize, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight,
-                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style
+                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
                 )
             RenderType.LATEX ->
                 MarkdownText(
                     text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
                     color, fontSize, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight,
-                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style
-                )
+                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
+            )
         }
     }
 
@@ -340,6 +373,7 @@ object RenderUtil {
         inlineContent: Map<String, InlineTextContent> = mapOf(),
         onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current,
+        isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null,
         onError: (String, String?) -> Unit = {_,_->},
         // this option will disable all clicks on links, inside the markdown text
@@ -371,6 +405,7 @@ object RenderUtil {
                     style = style,
                     textAlign = textAlign,
                     lineHeight = lineHeight,
+                    isTextSelectable = isTextSelectable,
                     onClick = onClick,
                 )
             },
@@ -400,6 +435,7 @@ object RenderUtil {
         lineHeight: TextUnit = TextUnit.Unspecified,
         maxLines: Int = Int.MAX_VALUE,
         style: TextStyle,
+        isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null
     ): TextView {
         val textColor = color.takeOrElse { style.color.takeOrElse { defaultColor } }
@@ -416,6 +452,8 @@ object RenderUtil {
         )
 
         return TextView(context).apply {
+
+            setTextIsSelectable(isTextSelectable)
             onClick?.let { setOnClickListener { onClick() } }
             height = mergedStyle.fontSize.times(6).value.toInt()
 
@@ -485,11 +523,7 @@ object RenderUtil {
 }
 
 class RendererCache(_cache: MutableMap<RenderType, Markwon?>? = null) {
-    val cache: MutableMap<RenderType, Markwon?> = _cache ?: mutableMapOf()
-
-    init {
-        cache[RenderType.DEFAULT] = null
-    }
+    val cache: MutableMap<RenderType, Markwon?> = _cache ?: mutableMapOf(RenderType.DEFAULT to null)
 
     fun get(renderType: RenderType): Markwon? = cache.get(renderType)
 
