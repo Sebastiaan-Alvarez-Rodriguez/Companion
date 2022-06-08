@@ -4,6 +4,7 @@ package org.python.companion.support
 
 import android.content.Context
 import android.text.Editable
+import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextWatcher
 import android.text.method.LinkMovementMethod
@@ -29,10 +30,11 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +43,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.viewinterop.AndroidView
 import io.noties.markwon.Markwon
@@ -298,12 +303,12 @@ object RenderUtil {
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
-        onTextLayout: (TextLayoutResult) -> Unit = {},
+        onTextLayout: (TextLayoutResult) -> Unit = {}, // TODO: Change this to work for ol' TextView.
         style: TextStyle = LocalTextStyle.current,
         isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null,
     ) = RenderText(
-        text = AnnotatedString(text), modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+        text = SpannableString(text), modifier = modifier, renderType = renderType, rendererCache = rendererCache,
         itemDrawCache = itemDrawCache, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing,
         textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout,
         style, isTextSelectable = isTextSelectable, onClick = onClick
@@ -311,7 +316,7 @@ object RenderUtil {
 
     @Composable
     fun RenderText(
-        text: AnnotatedString,
+        text: SpannableString,
         modifier: Modifier = Modifier,
         renderType: RenderType,
         rendererCache: RendererCache? = null,
@@ -329,13 +334,17 @@ object RenderUtil {
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
-        onTextLayout: (TextLayoutResult) -> Unit = {},
+        onTextLayout: (TextLayoutResult) -> Unit = {}, // TODO: Change this to work for ol' TextView.
         style: TextStyle = LocalTextStyle.current,
         isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null,
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
+//                UiUtil.LinkifyText(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight,
+//                    fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap,
+//                    maxLines, inlineContent, onTextLayout, style
+//                )
                 StandardText(
                     text = text, modifier = modifier, color, fontSize, fontFamily, letterSpacing,
                     textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
@@ -360,7 +369,7 @@ object RenderUtil {
 
     @Composable
     fun StandardText(
-        text: AnnotatedString,
+        text: SpannableString,
         modifier: Modifier = Modifier,
         color: Color = Color.Unspecified,
         fontSize: TextUnit = TextUnit.Unspecified,
@@ -383,6 +392,9 @@ object RenderUtil {
     ) {
         val defaultColor: Color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
 
+        val density: Density = LocalDensity.current
+        val layoutDirection = LocalLayoutDirection.current
+        val fontFamilyResolver: FontFamily.Resolver = LocalFontFamilyResolver.current
         AndroidView(
             modifier = modifier,
             factory = { ctx ->
@@ -405,16 +417,29 @@ object RenderUtil {
                 textView.movementMethod = LinkMovementMethod.getInstance()
                 return@AndroidView textView
             },
-            update = { textView ->
-                textView.text = text.text
+            update = { textView -> // TODO: Add caching to avoid calling lambda too often
+                textView.text = text
                 Linkify.addLinks(textView, Linkify.WEB_URLS)
+                onTextLayout(
+                    TextLayoutResult(
+                        layoutInput = TextLayoutInput(AnnotatedString(text.toString()), style, placeholders = emptyList(),
+                        maxLines, softWrap, overflow, density = density, layoutDirection = layoutDirection,
+                        fontFamilyResolver = fontFamilyResolver, constraints = Constraints()),
+                        multiParagraph = MultiParagraph(
+                            intrinsics = MultiParagraphIntrinsics(annotatedString = AnnotatedString(text.toString()), style = style, placeholders = emptyList(), density = density, fontFamilyResolver = fontFamilyResolver),
+                            constraints = Constraints(),
+                            maxLines = maxLines
+                        ),
+                        size = IntSize(textView.width, textView.height),
+                    )
+                )
             }
         )
     }
 
     @Composable
     fun MarkdownText(
-        text: AnnotatedString,
+        text: SpannableString,
         modifier: Modifier = Modifier,
         renderType: RenderType,
         rendererCache: RendererCache? = null,
@@ -430,13 +455,11 @@ object RenderUtil {
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
-        onTextLayout: (TextLayoutResult) -> Unit = {},
+        onTextLayout: (TextLayoutResult) -> Unit = {}, // TODO: Change this to work for ol' TextView.
         style: TextStyle = LocalTextStyle.current,
         isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null,
         onError: (String, String?) -> Unit = {_,_->},
-        // this option will disable all clicks on links, inside the markdown text
-        // it also enable the parent view to receive the click event
         disableLinkMovementMethod: Boolean = false
     ) {
         val defaultColor: Color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
@@ -449,6 +472,23 @@ object RenderUtil {
             } ?: createMarkdownRender(renderType = renderType, context, textSize, onError)
         }
 
+        val density: Density = LocalDensity.current
+        val layoutDirection = LocalLayoutDirection.current
+        val fontFamilyResolver: FontFamily.Resolver = LocalFontFamilyResolver.current
+
+        val triggerOnTextLayout: (TextView) -> Unit = { onTextLayout(
+            TextLayoutResult(
+                layoutInput = TextLayoutInput(AnnotatedString(text.toString()), style, placeholders = emptyList(),
+                    maxLines, softWrap, overflow, density = density, layoutDirection = layoutDirection,
+                    fontFamilyResolver = fontFamilyResolver, constraints = Constraints()),
+                multiParagraph = MultiParagraph(
+                    intrinsics = MultiParagraphIntrinsics(annotatedString = AnnotatedString(text.toString()), style = style, placeholders = emptyList(), density = density, fontFamilyResolver = fontFamilyResolver),
+                    constraints = Constraints(),
+                    maxLines = maxLines
+                ),
+                size = IntSize(it.width, it.height),
+            ))
+        }
         AndroidView(
             modifier = modifier,
             factory = { ctx ->
@@ -472,11 +512,13 @@ object RenderUtil {
                 if (itemDrawCache != null) {
                     val hashCode = text.hashCode()
                     if (itemDrawCache.hash != hashCode) {
-                        itemDrawCache.set(hashCode, markdownRender.toMarkdown(text.text))
+                        itemDrawCache.set(hashCode, markdownRender.toMarkdown(text.toString()))
+                        triggerOnTextLayout(textView)
                     }
                     markdownRender.setParsedMarkdown(textView, itemDrawCache.cached!!)
                 } else {
-                    markdownRender.setMarkdown(textView, text.text)
+                    markdownRender.setMarkdown(textView, text.toString())
+                    triggerOnTextLayout(textView)
                 }
             }
         )

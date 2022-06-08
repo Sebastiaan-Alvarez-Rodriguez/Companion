@@ -1,5 +1,12 @@
 package org.python.companion.ui.note
 
+import android.graphics.Typeface
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.BackgroundColorSpan
+import android.text.style.CharacterStyle
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,8 +22,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.python.backend.data.datatype.Note
@@ -27,6 +34,8 @@ import org.python.companion.R
 import org.python.companion.support.ItemDrawCache
 import org.python.companion.support.RenderUtil
 import org.python.companion.support.UiUtil
+import org.python.companion.ui.theme.DarkColorPalette
+import org.python.companion.ui.theme.Purple500
 import org.python.companion.viewmodels.NoteViewModel
 
 
@@ -70,10 +79,10 @@ private fun NoteScreenViewSingleReady(
     val searchParameters by noteViewModel.searchParameters.collectAsState()
     var searchResultIndex by remember { mutableStateOf(0) } // Index of search result the user currently is interested in.
 
-    val highlightIfSearching: (text: String, enable: Boolean?, matches: List<NoteViewModel.FindResult>) -> AnnotatedString.Builder = { text, flag, matches ->
+    val highlightIfSearching: (text: String, enable: Boolean?, matches: List<NoteViewModel.FindResult>) -> SpannableString = { text, enable, matches ->
         when {
-            isSearching && flag != null && flag -> noteViewModel.highlightText(text, matches)
-            else -> AnnotatedString.Builder(text)
+            isSearching && enable != null && enable -> highlightText(text, matches)
+            else -> SpannableString(text)
         }
     }
 
@@ -81,16 +90,16 @@ private fun NoteScreenViewSingleReady(
     val contentMatches = rememberSaveable(searchParameters, isSearching, noteWithCategory) {  searchParameters.let { if (!isSearching || it == null || !it.inContent) emptyList() else noteViewModel.findMatches(noteWithCategory.note.content) } }
     val searchMatchAmount = titleMatches.size + contentMatches.size
 
-    val title = noteViewModel.highlightSelection(
+    val title = highlightSelection(
         input = highlightIfSearching(noteWithCategory.note.name, searchParameters?.inTitle, titleMatches),
         matches = titleMatches,
         selectedHighlightIndex = searchResultIndex
-    ).toAnnotatedString()
-    val content = noteViewModel.highlightSelection(
+    )
+    val content = highlightSelection(
         input = highlightIfSearching(noteWithCategory.note.content, searchParameters?.inContent, contentMatches),
         matches = contentMatches,
         selectedHighlightIndex = searchResultIndex - titleMatches.size
-    ).toAnnotatedString()
+    )
 
     lateinit var titleScrollFunction: (Int) -> Unit
     lateinit var contentScrollFunction: (Int) -> Unit
@@ -114,6 +123,7 @@ private fun NoteScreenViewSingleReady(
                 Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())),  elevation = 5.dp) {
                     titleScrollFunction = UiUtil.simpleScrollableRenderText(
                         text = title,
+                        positions = titleMatches.map { it.start },
                         fontSize = LocalTextStyle.current.fontSize.times(1.15),
                         renderType = noteWithCategory.note.renderType,
                         itemDrawCache = noteViewModel.drawCache.getOrDefaultPut(noteWithCategory.note.noteId, ItemDrawCache()),
@@ -130,6 +140,7 @@ private fun NoteScreenViewSingleReady(
                 Card(border = BorderStroke(width = 1.dp, Color(noteWithCategory.noteCategory.color.toArgb())), elevation = 5.dp) {
                     contentScrollFunction = UiUtil.simpleScrollableRenderText(
                         text = content,
+                        positions = contentMatches.map { it.start },
                         renderType = noteWithCategory.note.renderType,
                         itemDrawCache = contentDrawCache,
                         modifier = Modifier.fillMaxWidth().padding(defaultPadding),
@@ -192,4 +203,29 @@ private fun ViewHeader(noteWithCategory: NoteWithCategory, onDeleteClick: (Note)
             }
         }
     }
+}
+
+private fun highlightSelection(
+    input: SpannableString,
+    matches: List<NoteViewModel.FindResult>,
+    selectedHighlightIndex: Int,
+    selectedStyles: List<CharacterStyle> = listOf(ForegroundColorSpan(DarkColorPalette.primary.toArgb()), StyleSpan(Typeface.BOLD_ITALIC), BackgroundColorSpan(Purple500.toArgb()))
+): SpannableString {
+    if (selectedHighlightIndex >= 0 && selectedHighlightIndex < matches.size)
+        selectedStyles.forEach {
+            input.setSpan(it, matches[selectedHighlightIndex].start, matches[selectedHighlightIndex].end, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+        }
+    return input
+}
+
+private fun highlightText(
+    input: String,
+    matches: List<NoteViewModel.FindResult>
+): SpannableString {
+    val spannableString = SpannableString(input)
+    for (match in matches) {
+            spannableString.setSpan(ForegroundColorSpan(DarkColorPalette.primary.toArgb()), match.start, match.end, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+            spannableString.setSpan(StyleSpan(Typeface.BOLD_ITALIC), match.start, match.end, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+    }
+    return spannableString
 }

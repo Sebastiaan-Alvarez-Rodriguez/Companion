@@ -23,7 +23,6 @@ import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.NoteSearchParameters
 import org.python.companion.ui.note.NoteSortParameters
 import org.python.companion.ui.theme.DarkColorPalette
-import org.python.companion.ui.theme.Purple500
 import org.python.datacomm.Result
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
@@ -133,23 +132,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
-
-    fun highlightSelection(
-        input: AnnotatedString.Builder,
-        matches: List<FindResult>,
-        selectedHighlightIndex: Int,
-        selectedStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic, background = Purple500),
-    ): AnnotatedString.Builder {
-        if (selectedHighlightIndex >= 0 && selectedHighlightIndex < matches.size)
-            input.addStyle(selectedStyle, matches[selectedHighlightIndex].start, matches[selectedHighlightIndex].end)
-        return input
-    }
-
-    fun highlightText(input: String, matches: List<FindResult>, highlightStyle: SpanStyle = SpanStyle(color = DarkColorPalette.primary, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)): AnnotatedString.Builder {
-        val builder = AnnotatedString.Builder(input)
-        matches.forEach { match -> builder.addStyle(highlightStyle, match.start, match.end) }
-        return builder
-    }
 
 
     @OptIn(ExperimentalCoroutinesApi::class)

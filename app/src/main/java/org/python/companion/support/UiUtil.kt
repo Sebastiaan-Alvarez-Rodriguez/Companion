@@ -1,5 +1,6 @@
 package org.python.companion.support
 
+import android.text.SpannableString
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
@@ -358,14 +359,17 @@ object UiUtil {
             }
         }
         scrollableText(
-            modifier.onGloballyPositioned { coordinates -> parentOffset = coordinates.parentLayoutCoordinates!!.positionInParent().y+scrollDelta }
+            modifier.onGloballyPositioned { coordinates ->
+                parentOffset = coordinates.parentLayoutCoordinates!!.positionInParent().y+scrollDelta
+            }
         ) { layout -> contentTextLayoutResult = layout }
         return executeScroll
     }
 
     @Composable
-    fun simpleScrollableRenderText(
-        text: AnnotatedString,
+    fun simpleScrollableRenderText( // TODO: Change this to work for ol' TextView.
+        text: SpannableString,
+        positions: List<Int> = emptyList(),
         modifier: Modifier = Modifier,
         renderType: RenderType,
         rendererCache: RendererCache? = null,
@@ -385,9 +389,10 @@ object UiUtil {
         inlineContent: Map<String, InlineTextContent> = mapOf(),
         style: TextStyle = LocalTextStyle.current,
         isTextSelectable: Boolean = false,
+        onClick: (() -> Unit)? = null,
         scrollState: ScrollState
     ) = simpleScrollable(
-        positions = text.spanStyles.map { it.start },
+        positions = positions,
         modifier = modifier,
         scrollState = scrollState
     ) { outModifier, layoutResultFunc ->
@@ -395,7 +400,7 @@ object UiUtil {
             text = text, modifier = outModifier, renderType = renderType, rendererCache = rendererCache,
             itemDrawCache = itemDrawCache, color, fontSize, fontStyle, fontWeight, fontFamily,
             letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines,
-            inlineContent, layoutResultFunc, style, isTextSelectable = isTextSelectable
+            inlineContent, layoutResultFunc, style, isTextSelectable = isTextSelectable, onClick = onClick
         )
     }
 
@@ -480,7 +485,7 @@ object UiUtil {
             },
             color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration,
             textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
-            { layoutResult.value = it; onTextLayout(it) }, style
+            onTextLayout = { layoutResult.value = it; onTextLayout(it) }, style
         )
     }
 
