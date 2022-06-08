@@ -45,6 +45,8 @@ Kotlin:
 Security:
  + [biometrics](https://www.raywenderlich.com/18782293-android-biometric-api-getting-started)
 
+Multi-platform:
+ + [memory manager sample](https://github.com/Kotlin/kmm-production-sample)
 ## Issues
 Current issue list:
  1. Creating notes longer than the keyboard make the cursor go under the keyboard.
