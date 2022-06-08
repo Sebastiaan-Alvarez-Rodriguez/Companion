@@ -148,7 +148,7 @@ object RenderUtil {
                 interactionSource = interactionSource,
                 colors = colors,
                 border = {
-                    TextFieldDefaults.BorderStroke(
+                    TextFieldDefaults.BorderBox(
                         enabled,
                         isError,
                         interactionSource,

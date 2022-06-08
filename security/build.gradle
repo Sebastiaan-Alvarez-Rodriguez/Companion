@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         minSdk 29
-        targetSdk 32
+        targetSdk 31
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation "androidx.core:core-ktx:$android_kt_core_version" // used $android_kotlin_version
+    implementation "androidx.core:core-ktx:$android_kt_core_version"
 
     implementation "com.lambdapioneer.argon2kt:argon2kt:1.3.0"
     implementation "androidx.biometric:biometric-ktx:1.2.0-alpha04"
