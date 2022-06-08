@@ -300,12 +300,13 @@ object RenderUtil {
         inlineContent: Map<String, InlineTextContent> = mapOf(),
         onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current,
-        isTextSelectable: Boolean = false
+        isTextSelectable: Boolean = false,
+        onClick: (() -> Unit)? = null,
     ) = RenderText(
-        text = AnnotatedString(text), modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
-        color, fontSize, fontStyle, fontWeight, fontFamily,
-        letterSpacing, textDecoration, textAlign, lineHeight, overflow,
-        softWrap, maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
+        text = AnnotatedString(text), modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+        itemDrawCache = itemDrawCache, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing,
+        textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent, onTextLayout,
+        style, isTextSelectable = isTextSelectable, onClick = onClick
     )
 
     @Composable
@@ -330,28 +331,29 @@ object RenderUtil {
         inlineContent: Map<String, InlineTextContent> = mapOf(),
         onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current,
-        isTextSelectable: Boolean = false
+        isTextSelectable: Boolean = false,
+        onClick: (() -> Unit)? = null,
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
                 StandardText(
-                    text = text, modifier = modifier, color, fontSize, fontFamily,
-                    letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap,
-                    maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
+                    text = text, modifier = modifier, color, fontSize, fontFamily, letterSpacing,
+                    textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
+                    onTextLayout, style, isTextSelectable = isTextSelectable, onClick = onClick
                 )
             RenderType.MARKDOWN ->
                 MarkdownText(
                     text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
                     itemDrawCache = itemDrawCache, color, fontSize, fontFamily, letterSpacing,
                     textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
-                    onTextLayout, style, isTextSelectable = isTextSelectable
+                    onTextLayout, style, isTextSelectable = isTextSelectable, onClick = onClick
                 )
             RenderType.LATEX ->
                 MarkdownText(
                     text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
                     itemDrawCache = itemDrawCache, color, fontSize, fontFamily, letterSpacing,
                     textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
-                    onTextLayout, style, isTextSelectable = isTextSelectable
+                    onTextLayout, style, isTextSelectable = isTextSelectable, onClick = onClick
                 )
         }
     }

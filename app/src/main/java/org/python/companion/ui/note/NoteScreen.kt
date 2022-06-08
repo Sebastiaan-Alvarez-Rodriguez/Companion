@@ -204,13 +204,12 @@ fun NoteItem(
                 modifier = Modifier.weight(0.8f, fill = false),
                 renderType = item.note.renderType,
                 rendererCache = rendererCache,
-                itemDrawCache = itemDrawCache
+                itemDrawCache = itemDrawCache,
+                onClick = { onNoteClick(item) }
             )
             Column(
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(0.1f, fill = true)
+                modifier = Modifier.fillMaxHeight().weight(0.1f, fill = true)
             ) {
                 IconButton(onClick = { onFavoriteClick(item) }) {
                     Icon(
