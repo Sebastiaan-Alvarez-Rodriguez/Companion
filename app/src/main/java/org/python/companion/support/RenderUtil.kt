@@ -303,7 +303,7 @@ object RenderUtil {
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
-        onTextLayout: (TextLayoutResult) -> Unit = {}, // TODO: Change this to work for ol' TextView.
+        onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current,
         isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null,
@@ -334,17 +334,13 @@ object RenderUtil {
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
-        onTextLayout: (TextLayoutResult) -> Unit = {}, // TODO: Change this to work for ol' TextView.
+        onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current,
         isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null,
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
-//                UiUtil.LinkifyText(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight,
-//                    fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap,
-//                    maxLines, inlineContent, onTextLayout, style
-//                )
                 StandardText(
                     text = text, modifier = modifier, color, fontSize, fontFamily, letterSpacing,
                     textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
@@ -455,7 +451,7 @@ object RenderUtil {
         softWrap: Boolean = true,
         maxLines: Int = Int.MAX_VALUE,
         inlineContent: Map<String, InlineTextContent> = mapOf(),
-        onTextLayout: (TextLayoutResult) -> Unit = {}, // TODO: Change this to work for ol' TextView.
+        onTextLayout: (TextLayoutResult) -> Unit = {},
         style: TextStyle = LocalTextStyle.current,
         isTextSelectable: Boolean = false,
         onClick: (() -> Unit)? = null,

@@ -367,7 +367,7 @@ object UiUtil {
     }
 
     @Composable
-    fun simpleScrollableRenderText( // TODO: Change this to work for ol' TextView.
+    fun simpleScrollableRenderText(
         text: SpannableString,
         positions: List<Int> = emptyList(),
         modifier: Modifier = Modifier,
