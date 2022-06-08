@@ -6,6 +6,7 @@ import android.content.Context
 import android.text.Editable
 import android.text.Spanned
 import android.text.TextWatcher
+import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.util.TypedValue
 import android.view.Gravity
@@ -53,7 +54,6 @@ import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
-import org.python.companion.support.UiUtil.LinkifyText
 import ru.noties.jlatexmath.JLatexMathDrawable
 import java.util.concurrent.Executors
 
@@ -334,23 +334,80 @@ object RenderUtil {
     ) {
         when (renderType) {
             RenderType.DEFAULT ->
-                LinkifyText(text = text, modifier = modifier, color, fontSize, fontStyle, fontWeight,
-                    fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap,
-                    maxLines, inlineContent, onTextLayout, style
+                StandardText(
+                    text = text, modifier = modifier, color, fontSize, fontFamily,
+                    letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap,
+                    maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
                 )
             RenderType.MARKDOWN ->
                 MarkdownText(
-                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
-                    color, fontSize, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight,
-                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
+                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+                    itemDrawCache = itemDrawCache, color, fontSize, fontFamily, letterSpacing,
+                    textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
+                    onTextLayout, style, isTextSelectable = isTextSelectable
                 )
             RenderType.LATEX ->
                 MarkdownText(
-                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
-                    color, fontSize, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight,
-                    overflow, softWrap, maxLines, inlineContent, onTextLayout, style, isTextSelectable = isTextSelectable
-            )
+                    text = text, modifier = modifier, renderType = renderType, rendererCache = rendererCache,
+                    itemDrawCache = itemDrawCache, color, fontSize, fontFamily, letterSpacing,
+                    textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, inlineContent,
+                    onTextLayout, style, isTextSelectable = isTextSelectable
+                )
         }
+    }
+
+    @Composable
+    fun StandardText(
+        text: AnnotatedString,
+        modifier: Modifier = Modifier,
+        color: Color = Color.Unspecified,
+        fontSize: TextUnit = TextUnit.Unspecified,
+        fontFamily: FontFamily? = null,
+        letterSpacing: TextUnit = TextUnit.Unspecified,
+        textDecoration: TextDecoration? = null,
+        textAlign: TextAlign? = null,
+        lineHeight: TextUnit = TextUnit.Unspecified,
+        overflow: TextOverflow = TextOverflow.Clip,
+        softWrap: Boolean = true,
+        maxLines: Int = Int.MAX_VALUE,
+        inlineContent: Map<String, InlineTextContent> = mapOf(),
+        onTextLayout: (TextLayoutResult) -> Unit = {},
+        style: TextStyle = LocalTextStyle.current,
+        isTextSelectable: Boolean = false,
+        onClick: (() -> Unit)? = null,
+        // this option will disable all clicks on links, inside the markdown text
+        // it also enable the parent view to receive the click event
+        disableLinkMovementMethod: Boolean = false
+    ) {
+        val defaultColor: Color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+
+        AndroidView(
+            modifier = modifier,
+            factory = { ctx ->
+                val textView = createTextView(
+                    context = ctx,
+                    color = color,
+                    defaultColor = defaultColor,
+                    fontSize = fontSize,
+                    fontFamily = fontFamily,
+                    letterSpacing = letterSpacing,
+                    textDecoration = textDecoration,
+                    maxLines = maxLines,
+                    style = style,
+                    textAlign = textAlign,
+                    lineHeight = lineHeight,
+                    isTextSelectable = isTextSelectable,
+                    onClick = onClick,
+                )
+                textView.linksClickable = true
+                textView.movementMethod = LinkMovementMethod.getInstance()
+                return@AndroidView textView
+            },
+            update = { textView ->
+                textView.text = text.text
+                Linkify.addLinks(textView, Linkify.WEB_URLS)
+            }
+        )
     }
 
     @Composable
@@ -452,7 +509,6 @@ object RenderUtil {
         )
 
         return TextView(context).apply {
-
             setTextIsSelectable(isTextSelectable)
             onClick?.let { setOnClickListener { onClick() } }
             height = mergedStyle.fontSize.times(6).value.toInt()

@@ -392,9 +392,10 @@ object UiUtil {
         scrollState = scrollState
     ) { outModifier, layoutResultFunc ->
         RenderUtil.RenderText(
-            text = text, modifier = outModifier, renderType = renderType, rendererCache = rendererCache, itemDrawCache = itemDrawCache,
-            color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, textDecoration, textAlign,
-            lineHeight, overflow, softWrap, maxLines, inlineContent, layoutResultFunc, style, isTextSelectable = isTextSelectable
+            text = text, modifier = outModifier, renderType = renderType, rendererCache = rendererCache,
+            itemDrawCache = itemDrawCache, color, fontSize, fontStyle, fontWeight, fontFamily,
+            letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines,
+            inlineContent, layoutResultFunc, style, isTextSelectable = isTextSelectable
         )
     }
 
