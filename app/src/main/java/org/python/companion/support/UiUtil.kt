@@ -583,6 +583,23 @@ object UiUtil {
                 }
             }
 
+            fun navigateToDelete(navController: NavController, onDeleteClick: () -> Unit) {
+                val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
+                navController.navigate(
+                    route = createRoute("$uiutilDestination/binary",
+                        optionals = mapOf(
+                            "message" to "Deletion cannot be undone. Are you sure?",
+                            "positiveText" to "DELETE"
+                        )
+                    )
+                ) {
+                    launchSingleTop = true
+                }
+                getNavigationResult<Boolean>(navBackStackEntry, resultKeyOverride) {
+                    if (it) onDeleteClick()
+                }
+            }
+
             @Composable
             fun rememberState(navController: NavHostController = rememberNavController()) =
                 remember(navController) { UIUtilState(navController) }

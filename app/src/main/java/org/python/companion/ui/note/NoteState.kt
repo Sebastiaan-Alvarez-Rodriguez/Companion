@@ -76,7 +76,11 @@ class NoteState(
                         else
                             NoteScreenContextListHeader(
                                 sortParameters = sortParameters,
-                                onDeleteClick = { noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) } },
+                                onDeleteClick = {
+                                    UiUtil.UIUtilState.navigateToDelete(navController) {
+                                        noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) }
+                                    }
+                                },
                                 onSortClick = { params -> noteViewModel.updateSortParameters(params) },
                                 onSearchClick = {  noteViewModel.toggleSearch() },
                             )
@@ -137,8 +141,10 @@ class NoteState(
                     noteViewModel = noteViewModel,
                     id = noteId,
                     onDeleteClick = {
-                        noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
-                        navController.navigateUp()
+                        UiUtil.UIUtilState.navigateToDelete(navController) {
+                            noteViewModel.viewModelScope.launch { noteViewModel.delete(it) }
+                            navController.navigateUp()
+                        }
                     },
                     onRenderTypeClick = {
                         noteViewModel.viewModelScope.launch { noteViewModel.setRenderType(noteId, it) }
