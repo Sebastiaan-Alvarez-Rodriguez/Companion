@@ -676,6 +676,7 @@ object UiUtil {
     fun <T> Flow<T>.stateInViewModel(scope: CoroutineScope, initialValue : T): StateFlow<T> =
         stateIn(scope = scope, started = SharingStarted.Lazily, initialValue = initialValue)
 
+    /** Sets a navigation result. We must navigate up only AFTER calling this function. If we use the wrong order, we navigate without setting results. */
     fun <T> NavController.setNavigationResult(result: T?, key: String = "result") = previousBackStackEntry?.savedStateHandle?.set(key, result)
     fun <T> NavController.navigateForResult(route: String, key: String = "result", onResult: (result: T) -> Unit) {
         val navBackStackEntry = currentBackStackEntry!!

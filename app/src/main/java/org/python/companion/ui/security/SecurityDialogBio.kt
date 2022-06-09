@@ -17,32 +17,27 @@ import org.python.companion.support.LoadingState
 import org.python.companion.support.UiUtil.SimpleLoading
 import org.python.companion.support.UiUtil.SimpleOk
 
-
 @Composable
-fun SecurityBioDialogContent(
+fun SecurityBioDialogSetup(
     onNegativeClick: () -> Unit,
-    onPositiveClick: () -> Unit,
-    state: LoadingState = LoadingState.READY,
-    stateMessage: String? = null
+    onPositiveClick: () -> Unit
 ) {
-        Card(
-            elevation = 8.dp,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            when(state) {
-                LoadingState.READY, LoadingState.FAILED ->
-                    SecurityBioDialogReady(onNegativeClick, onPositiveClick, stateMessage)
-                LoadingState.LOADING -> SimpleLoading()
-                LoadingState.OK -> SimpleOk()
-            }
-        }
+    SecurityBioDialogGeneric(onNegativeClick, onPositiveClick, "Setup")
 }
 
 @Composable
-private fun SecurityBioDialogReady(
+fun SecurityBioDialogReset(
+    onNegativeClick: () -> Unit,
+    onPositiveClick: () -> Unit
+) {
+    SecurityBioDialogGeneric(onNegativeClick, onPositiveClick, "Reset")
+}
+
+@Composable
+private fun SecurityBioDialogGeneric(
     onNegativeClick: () -> Unit,
     onPositiveClick: () -> Unit,
-    stateMessage: String? = null
+    type: String
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     dimensionResource(id = R.dimen.padding_small)
@@ -50,32 +45,26 @@ private fun SecurityBioDialogReady(
 
     Column(modifier = Modifier.padding(defaultPadding)) {
         Text(
-            text = "Please authenticate",
+            text = "Fingerprint $type",
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             modifier = Modifier.padding(defaultPadding)
         )
         Spacer(modifier = Modifier.height(defaultPadding))
 
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            IconButton(
-                modifier = Modifier.padding(tinyPadding),
-                onClick = { onPositiveClick() }) {
-                Icon(Icons.Filled.Fingerprint, "Start biometric login")
+        Text(
+            text = "Fingerprint ${type.lowercase()} is handled by the Android Operating System.",
+            modifier = Modifier.padding(defaultPadding)
+        )
+        Spacer(modifier = Modifier.height(defaultPadding))
+
+        Row {
+            TextButton(onClick = onNegativeClick) {
+                Text(text = "CANCEL")
             }
-        }
-
-        Spacer(modifier = Modifier.height(defaultPadding))
-
-        if (stateMessage != null)
-            Text(text = stateMessage, fontSize = 8.sp)
-
-        Spacer(modifier = Modifier.height(defaultPadding))
-        TextButton(onClick = onNegativeClick) {
-            Text(text = "CANCEL")
+            TextButton(onClick = { onPositiveClick }) {
+                Text("Go to Android Fingerprint Settings")
+            }
         }
     }
 }

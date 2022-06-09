@@ -6,7 +6,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
@@ -19,17 +18,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.python.companion.R
-import org.python.companion.support.LoadingState
-import org.python.companion.support.UiUtil
 import org.python.security.PasswordVerificationToken
 
 @Composable
-fun SecurityPasswordDialogContent(
+fun SecurityPasswordDialog(
     saltContext: Context,
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
-    onResetPasswordClick: () -> Unit,
-    state: UiUtil.StateMiniState
+    onResetPasswordClick: (() -> Unit)? = null,
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
@@ -48,8 +44,6 @@ fun SecurityPasswordDialogContent(
             Spacer(modifier = Modifier.height(defaultPadding))
 
             OutlinedTextField(
-                enabled = state.state.value != LoadingState.LOADING,
-                isError = state.state.value == LoadingState.FAILED,
                 value = pass,
                 onValueChange = { pass = it },
                 label = { Text("Enter password...") },
@@ -65,30 +59,22 @@ fun SecurityPasswordDialogContent(
                     }
                 }
             )
-            state.stateMessage.value.let {
-                if (it != null)
-                    Text(text = it, fontSize = 12.sp)
-            }
 
             Spacer(modifier = Modifier.height(defaultPadding))
 
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                when (state.state.value) {
-                    LoadingState.LOADING -> CircularProgressIndicator()
-                    LoadingState.OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
-                    else -> TextButton(onClick = onResetPasswordClick) {
+                onResetPasswordClick?.let {
+                    TextButton(onClick = it) {
                         Text(text = "RESET PASSWORD")
                     }
                 }
+
                 Row(horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onNegativeClick, enabled = state.state.value != LoadingState.LOADING) {
+                    TextButton(onClick = onNegativeClick) {
                         Text(text = "CANCEL")
                     }
                     Spacer(modifier = Modifier.width(smallPadding))
-                    TextButton(
-                        onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, storedSaltContext = saltContext).build()) },
-                        enabled = state.state.value != LoadingState.LOADING
-                    ) {
+                    TextButton(onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, storedSaltContext = saltContext).build()) }) {
                         Text(text = "SUBMIT")
                     }
                 }
@@ -98,11 +84,10 @@ fun SecurityPasswordDialogContent(
 }
 
 @Composable
-fun SecurityPasswordSetupDialogContent(
+fun SecurityPassDialogSetup(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
-    title: String,
-    state: UiUtil.StateMiniState
+    title: String
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
@@ -123,8 +108,6 @@ fun SecurityPasswordSetupDialogContent(
             Spacer(modifier = Modifier.height(defaultPadding))
 
             OutlinedTextField(
-                enabled = state.state.value != LoadingState.LOADING,
-                isError = state.state.value == LoadingState.FAILED,
                 value = pass,
                 onValueChange = {
                     pass = it
@@ -143,8 +126,6 @@ fun SecurityPasswordSetupDialogContent(
                 }
             )
             OutlinedTextField(
-                enabled = state.state.value != LoadingState.LOADING,
-                isError = state.state.value == LoadingState.FAILED,
                 value = repeatPass,
                 onValueChange = {
                     repeatPass = it
@@ -162,30 +143,19 @@ fun SecurityPasswordSetupDialogContent(
                     }
                 }
             )
-            state.stateMessage.value.let {
-                if (it != null)
-                    Text(text = it, fontSize = 12.sp)
-            }
 
             Spacer(modifier = Modifier.height(defaultPadding))
 
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                when (state.state.value) {
-                    LoadingState.LOADING -> CircularProgressIndicator()
-                    LoadingState.OK -> Icon(imageVector = Icons.Filled.CheckCircle, "Ok")
-                    else -> {}
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = onNegativeClick) {
+                    Text(text = "CANCEL")
                 }
-                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = onNegativeClick) {
-                        Text(text = "CANCEL")
-                    }
-                    Spacer(modifier = Modifier.width(smallPadding))
-                    TextButton(
-                        onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, salt = null).build()) },
-                        enabled = passMatch
-                    ) {
-                        Text(text = "SUBMIT")
-                    }
+                Spacer(modifier = Modifier.width(smallPadding))
+                TextButton(
+                    onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, salt = null).build()) },
+                    enabled = passMatch
+                ) {
+                    Text(text = "SUBMIT")
                 }
             }
         }
@@ -193,7 +163,7 @@ fun SecurityPasswordSetupDialogContent(
 }
 
 @Composable
-fun SecurityPasswordResetDialogContent(
+fun SecurityPassDialogReset(
     onNegativeClick: () -> Unit,
     onPickOtherMethodClick: () -> Unit,
     onDestructiveResetPasswordClick: () -> Unit

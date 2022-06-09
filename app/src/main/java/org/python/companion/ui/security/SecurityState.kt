@@ -1,39 +1,40 @@
 package org.python.companion.ui.security
 
-import android.content.Intent
-import android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
-import android.os.Build
-import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
 import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
-import org.python.companion.support.LoadingState
-import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.createRoute
+import org.python.companion.support.UiUtil.navigateForResult
+import org.python.companion.support.UiUtil.setNavigationResult
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.companion.viewmodels.SecurityViewModel
-import org.python.datacomm.ResultType
-import org.python.security.*
+import org.python.security.CompactSecurityTypeArray
+import org.python.security.SecurityActor
+import org.python.security.SecurityType
+import org.python.security.SecurityTypes
 
 
 class SecurityState(
     private val activity: FragmentActivity,
     private val navController: NavHostController,
     private val securityViewModel: SecurityViewModel,
-    private val noteViewModel: NoteViewModel
+    private val noteViewModel: NoteViewModel,
+    private val securityBioState: SecurityBioState,
+    private val securityPassState: SecurityPassState,
 ) {
+
+
     @OptIn(ExperimentalComposeUiApi::class)
     fun NavGraphBuilder.securityGraph() {
+        with(securityBioState) { securityBioGraph() }
+        with(securityPassState) { securityPassGraph() }
+
         navigation(startDestination = navigationStart, route = "sec") {
             dialog(
                 route = "$navigationStart?allowedMethods={allowedMethods}",
@@ -41,230 +42,59 @@ class SecurityState(
                 dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
             ) { entry ->
                 val allowedMethods = CompactSecurityTypeArray(entry.arguments?.getInt("allowedMethods"))
-                val moveToMethod: (@SecurityType Int) -> Unit = { type ->
-                    when (type) {
-                        SecurityActor.TYPE_BIO -> navigateToBio(navController)
-                        SecurityActor.TYPE_PASS -> navigateToPass(navController)
-                        else -> throw RuntimeException("How did we get here?!")
-                    }
-                }
-                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
                 when {
-                    securityLevel > 0 -> navController.navigateUp()
                     allowedMethods.allowed().isEmpty() -> throw RuntimeException("Cannot pick security type with 0 allowed methods.")
                     allowedMethods.allowed().size == 1 -> {
-                        navController.popBackStack()
-                        moveToMethod(allowedMethods.allowed().first())
+                        navController.setNavigationResult(result = allowedMethods.allowed().iterator().next())
+                        navController.navigateUp()
                     }
                     else -> SecurityPickDialogContent(
                         onNegativeClick = { navController.navigateUp() },
-                        onPositiveClick = { type -> moveToMethod(type) },
+                        onPositiveClick = { type ->
+                            navController.setNavigationResult(result = type)
+                            navController.navigateUp()
+                        },
                         allowedMethods = allowedMethods.allowed()
                     )
                 }
             }
-
-
-            dialog(route = "$navigationStart/pass", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                //TODO: Locking/synchronizing
-                // to ensure security type & availability are guaranteed on the same object.
-                // Maybe use fancy lambda function that takes lock, executes function, releases lock?
-                // https://stackoverflow.com/questions/64116377
-                // https://developer.android.com/jetpack/compose/side-effects
-
-                if (!switchActor(SecurityActor.TYPE_PASS))
-                    return@dialog
-                navController.popBackStack()
-                if (securityViewModel.securityActor.hasCredentials()) {
-                    navigateToPassAuth(navController)
-                } else {
-                    navigateToPassSetup(navController)
-                }
-            }
-
-            dialog(route = "$navigationStart/pass/auth", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                val stateMiniState = UiUtil.StateMiniState.rememberState(LoadingState.READY)
-                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
-                if (securityLevel > 0) {
-                    navController.navigateUp()
-                } else {
-                    SecurityPasswordDialogContent(
-                        saltContext = activity.baseContext,
-                        onNegativeClick = { navController.navigateUp() },
-                        onPositiveClick = { token ->
-                            stateMiniState.state.value = LoadingState.LOADING
-                            securityViewModel.viewModelScope.launch {
-                                val msgSec = securityViewModel.securityActor.verify(token)
-                                when (msgSec.type == ResultType.SUCCESS && msgSec.resultStatus == VerificationResult.SEC_CORRECT) {
-                                    true -> stateMiniState.state.value = LoadingState.OK
-                                    else -> {
-                                        stateMiniState.state.value = LoadingState.FAILED
-                                        stateMiniState.stateMessage.value = msgSec.message
-                                    }
-                                }
-                            }
-                        },
-                        onResetPasswordClick = { navigateToPassReset(navController) },
-                        state = stateMiniState
-                    )
-                }
-            }
-
-            dialog(route = "$navigationStart/pass/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                switchActor(type = SecurityActor.TYPE_PASS)
-                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
-
-                if (securityLevel > 0) {
-                    val stateMiniState = UiUtil.StateMiniState.rememberState(LoadingState.READY)
-                    SecurityPasswordSetupDialogContent(
-                        onNegativeClick = { navController.navigateUp() },
-                        onPositiveClick = { token ->
-                            stateMiniState.state.value = LoadingState.LOADING
-                            securityViewModel.viewModelScope.launch {
-                                val msgSet = securityViewModel.securityActor.setCredentials(activity, null, token)
-                                if (msgSet.type == ResultType.SUCCESS) {
-                                    securityViewModel.securityActor.verify(token)
-                                    stateMiniState.state.value = LoadingState.OK
-                                    navController.popBackStack()
-                                } else {
-                                    stateMiniState.state.value = LoadingState.FAILED
-                                    stateMiniState.stateMessage.value = msgSet.message
-                                }
-                            }
-                        },
-                        title = "Reset password",
-                        state = stateMiniState
-                    )
-                } else {
-                    SecurityPasswordResetDialogContent(
-                        onNegativeClick = { navController.navigateUp() },
-                        onPickOtherMethodClick = { navigateToSecurityPick(navController, SecurityTypes.filter { it != SecurityActor.TYPE_PASS }) },
-                        onDestructiveResetPasswordClick = {
-                            //TODO: Need an "are you sure?" for destructive operation.
-                            securityViewModel.viewModelScope.launch {
-                                noteViewModel.deleteAllSecure()
-                                navController.navigateUp()
-                            }
-                        }
-                    )
-                }
-            }
-
-            dialog(route = "$navigationStart/pass/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                switchActor(type = SecurityActor.TYPE_PASS)
-                val stateMiniState = UiUtil.StateMiniState.rememberState(LoadingState.READY)
-                SecurityPasswordSetupDialogContent(
-                    onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { token ->
-                        stateMiniState.state.value = LoadingState.LOADING
-                        securityViewModel.viewModelScope.launch {
-                            val msgSet = securityViewModel.securityActor.setCredentials(activity,null, token)
-                            if (msgSet.type == ResultType.SUCCESS) {
-                                securityViewModel.securityActor.verify(token)
-                                stateMiniState.state.value = LoadingState.OK
-                                navController.navigateUp()
-                            } else {
-                                stateMiniState.state.value = LoadingState.FAILED
-                                stateMiniState.stateMessage.value = msgSet.message
-                            }
-                        }
-                    },
-                    title = "Setup password",
-                    state = stateMiniState
-                )
-            }
-
-            dialog(route = "$navigationStart/bio", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                if (!switchActor(SecurityActor.TYPE_BIO))
-                    return@dialog
-
-                var state by remember { mutableStateOf(LoadingState.READY) }
-                var stateMessage by remember { mutableStateOf<String?>(null) }
-
-                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
-                when {
-                    securityLevel > 0 -> navController.navigateUp()
-                    securityViewModel.securityActor.hasCredentials() -> {
-                        SecurityBioDialogContent(
-                            onNegativeClick = { navController.navigateUp() },
-                            onPositiveClick = {
-                                state = LoadingState.LOADING
-                                securityViewModel.viewModelScope.launch {
-                                    val msgSec = securityViewModel.securityActor.verify(null)
-                                    if (msgSec.type == ResultType.SUCCESS) {
-                                        state = LoadingState.OK
-                                    } else {
-                                        state = LoadingState.FAILED
-                                        stateMessage = msgSec.message
-                                    }
-                                }
-                            },
-                            state = state,
-                            stateMessage = stateMessage
-                        )
-                    }
-                    else -> {
-                        val enrollIntent =
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
-                                    putExtra(Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED, BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
-                                }
-                            } else {
-                                @Suppress("DEPRECATION")
-                                Intent(Settings.ACTION_FINGERPRINT_ENROLL)
-                            }
-                        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
-                        launcher.launch(enrollIntent)
-                    }
-                }
-            }
         }
-    }
-
-    @Composable
-    private fun switchActor(type: @SecurityType Int): Boolean {
-        if (securityViewModel.securityActor.type != type)
-            securityViewModel.securityActor.switchTo(activity, type)
-
-        val msgAvailable = securityViewModel.securityActor.actorAvailable()
-        if (msgAvailable.type != ResultType.SUCCESS) {
-            UiUtil.SimpleText("Security method is unavailable: ${msgAvailable.message}")
-            return false
-        }
-        return true
     }
 
     companion object {
-        private const val navigationStart = "securitydialog"
+        const val navigationStart = "securitydialog"
 
 
-        fun navigateToSecurityPick(navController: NavController, allowedMethods: Collection<@SecurityType Int> = SecurityTypes.toList()) {
-            navController.navigate(
-                createRoute(navigationStart,
+        fun navigateToSecurityPick(navController: NavController, allowedMethods: Collection<@SecurityType Int> = SecurityTypes.toList(), onPicked: (@SecurityType Int) -> Unit) {
+            navController.navigateForResult(
+                route = createRoute(navigationStart,
                     optionals = mapOf(
                         "allowedMethods" to CompactSecurityTypeArray.create(allowedMethods).toString()
                     )
-                )
-            ) {
-                launchSingleTop = true
+                ),
+                onResult = onPicked
+            )
+        }
+
+        fun navigateToLogin(@SecurityType securityType: Int, navController: NavController) {
+            when (securityType) {
+                SecurityActor.TYPE_PASS -> TODO()
+                SecurityActor.TYPE_BIO -> SecurityBioState.navigateToLogin(navController)
             }
         }
-        private fun navigateToBio(navController: NavController) =
-            navController.navigate("$navigationStart/bio") {
-                launchSingleTop = true
+
+        fun navigateToSetup(@SecurityType securityType: Int, navController: NavController) {
+            when (securityType) {
+                SecurityActor.TYPE_PASS -> TODO()
+                    SecurityActor.TYPE_BIO -> SecurityBioState.navigateToSetup(navController)
             }
-        private fun navigateToPass(navController: NavController) =
-            navController.navigate("$navigationStart/pass") {
-                launchSingleTop = true
+        }
+
+        fun navigateToReset(@SecurityType securityType: Int, navController: NavController) {
+            when (securityType) {
+                SecurityActor.TYPE_PASS -> TODO()
+                    SecurityActor.TYPE_BIO -> SecurityBioState.navigateToReset(navController)
             }
-        private fun navigateToPassReset(navController: NavController) = navController.navigate("$navigationStart/pass/reset") {
-            launchSingleTop = true
-        }
-        private fun navigateToPassSetup(navController: NavController) = navController.navigate("$navigationStart/pass/setup") {
-            launchSingleTop = true
-        }
-        private fun navigateToPassAuth(navController: NavController) = navController.navigate("$navigationStart/pass/auth") {
-            launchSingleTop = true
         }
 
         @Composable
@@ -273,6 +103,19 @@ class SecurityState(
             navController: NavHostController = rememberNavController(),
             securityViewModel: SecurityViewModel,
             noteViewModel: NoteViewModel
-        ) = remember(navController) { SecurityState(activity, navController, securityViewModel, noteViewModel) }
+        ): SecurityState {
+            val securityBioState = SecurityBioState.rememberState(activity = activity, securityViewModel = securityViewModel)
+            val securityPassState = SecurityPassState.rememberState(activity = activity, securityViewModel = securityViewModel)
+            return remember(navController) {
+                SecurityState(
+                    activity,
+                    navController,
+                    securityViewModel,
+                    noteViewModel,
+                    securityBioState,
+                    securityPassState
+                )
+            }
+        }
     }
 }

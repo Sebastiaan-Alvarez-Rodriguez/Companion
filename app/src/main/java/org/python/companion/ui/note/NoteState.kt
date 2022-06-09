@@ -56,7 +56,7 @@ class NoteState(
                         {
                             SecurityClickItem(
                                 text = "Unlock secure notes",
-                                onClick = { SecurityState.navigateToSecurityPick(navController) }
+                                onClick = { SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) }) }
                             )
                         }
                     }
@@ -123,10 +123,12 @@ class NoteState(
                     }
                 )
             ) {
-                Timber.d("Note Settings")
                 NoteScreenSettings(
+                    onSecuritySetupClick = { SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToSetup(type, navController) })},
+                    onSecurityResetClick = { SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToReset(type, navController) }) },
                     onExportClick = { /* TODO */ },
-                    onImportClick = { /* TODO */ }
+                    onImportClick = { /* TODO */ },
+                    onBackClick = { navController.navigateUp() }
                 )
             }
 
@@ -169,7 +171,7 @@ class NoteState(
                     Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, lvl=${toSaveNote.securityLevel}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
                     noteViewModel.viewModelScope.launch {
                         if (clearance == 0 && toSaveNote.securityLevel > 0)
-                            return@launch SecurityState.navigateToSecurityPick(navController)
+                            return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
 
                         val conflict = noteViewModel.hasConflict(toSaveNote.name)
                         val conflictBlocking = conflict && !noteViewModel.mayOverride(toSaveNote.name)
@@ -183,7 +185,7 @@ class NoteState(
                                     duration = SnackbarDuration.Short
                                 )
                                 when (snackbarResult) {
-                                    SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController)
+                                    SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
                                     else -> {}
                                 }
                             }
@@ -228,7 +230,7 @@ class NoteState(
                         Timber.d("Found edited note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         noteViewModel.viewModelScope.launch {
                             if (clearance == 0 && toSaveNote.securityLevel > 0) // authenticate before saving notes with authentication enabled)
-                                return@launch SecurityState.navigateToSecurityPick(navController)
+                                return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
 
                             // If note name == same as before, there is no conflict. Otherwise, we must check.
                             val conflict = if (toSaveNote.name == existingNote!!.name) false else noteViewModel.hasConflict(toSaveNote.name)
@@ -242,7 +244,7 @@ class NoteState(
                                         duration = SnackbarDuration.Short
                                     )
                                     when (snackbarResult) {
-                                        SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController)
+                                        SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
                                         else -> {}
                                     }
                                 }
