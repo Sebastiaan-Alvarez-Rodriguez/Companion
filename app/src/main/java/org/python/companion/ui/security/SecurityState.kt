@@ -108,9 +108,9 @@ class SecurityState(
             scaffoldState: ScaffoldState
         ): SecurityState {
             val securityBioState = SecurityBioState.rememberState(
-                activity = activity,
                 navController = navController,
                 securityViewModel = securityViewModel,
+                scaffoldState = scaffoldState
             )
             val securityPassState = SecurityPassState.rememberState(
                 activity = activity,

@@ -40,7 +40,7 @@ private fun SecurityBioDialogGeneric(
     type: String
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding), shape = RoundedCornerShape(12.dp)) {
+    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text(
                 text = "Fingerprint $type",
@@ -56,12 +56,12 @@ private fun SecurityBioDialogGeneric(
             )
             Spacer(modifier = Modifier.height(defaultPadding))
 
-            Row {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onNegativeClick) {
                     Text(text = "CANCEL")
                 }
                 TextButton(onClick = { onPositiveClick }) {
-                    Text("Go to Android Fingerprint Settings")
+                    Text("FINGERPRINT SETTINGS")
                 }
             }
         }

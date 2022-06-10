@@ -32,7 +32,7 @@ fun SecurityPickDialogContent(
         Pair(SecurityActor.TYPE_PASS, Pair(Icons.Filled.Password, "Password")),
         Pair(SecurityActor.TYPE_BIO, Pair(Icons.Filled.Fingerprint, "Fingerprint"))
     )
-    Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
+    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text(text = headerText, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
             Spacer(modifier = Modifier.height(defaultPadding))

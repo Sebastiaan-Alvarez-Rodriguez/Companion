@@ -28,6 +28,7 @@ fun SecurityPasswordDialog(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
     onResetPasswordClick: (() -> Unit)? = null,
+    errorMessage: String? = null
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
@@ -62,6 +63,10 @@ fun SecurityPasswordDialog(
                 }
             )
 
+            errorMessage?.let {
+                Spacer(modifier = Modifier.height(defaultPadding))
+                Text(text = it, style = TextStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic))
+            }
             Spacer(modifier = Modifier.height(defaultPadding))
 
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {

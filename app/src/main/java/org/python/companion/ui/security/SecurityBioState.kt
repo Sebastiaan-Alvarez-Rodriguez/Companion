@@ -7,7 +7,11 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.ScaffoldState
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -23,10 +27,11 @@ import org.python.security.SecurityType
 
 
 class SecurityBioState(
-    private val activity: FragmentActivity,
     private val navController: NavHostController,
-    private val securityViewModel: SecurityViewModel
+    private val securityViewModel: SecurityViewModel,
+    private val scaffoldState: ScaffoldState
 ) {
+    @OptIn(ExperimentalComposeUiApi::class)
     fun NavGraphBuilder.securityBioGraph() {
         navigation(startDestination = navigationStart, route = "sec/bio") {
             dialog(route = "$navigationStart/login") {
@@ -41,13 +46,15 @@ class SecurityBioState(
                 LaunchedEffect(true) {
                     val msgSec = securityViewModel.securityActor.verify(null)
                     if (msgSec.type != ResultType.SUCCESS) {
-                        //TODO: Snackbar with error message given by: msgSec.message.
-                        //TODO: But first, remove 'verificationResult' for something else.
+                        scaffoldState.snackbarHostState.showSnackbar(
+                            message = msgSec.message ?: "There was a login problem.",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }
             }
 
-            dialog(route = "$navigationStart/setup") {
+            dialog(route = "$navigationStart/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_BIO))
                     return@dialog
                 SecurityBioDialogSetup(
@@ -56,7 +63,7 @@ class SecurityBioState(
                 )
             }
 
-            dialog(route = "$navigationStart/reset") {
+            dialog(route = "$navigationStart/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_BIO))
                     return@dialog
                 SecurityBioDialogReset(
@@ -122,9 +129,9 @@ class SecurityBioState(
 
         @Composable
         fun rememberState(
-            activity: FragmentActivity,
             navController: NavHostController = rememberNavController(),
             securityViewModel: SecurityViewModel,
-        ) = remember(navController) { SecurityBioState(activity, navController, securityViewModel) }
+            scaffoldState: ScaffoldState
+        ) = remember(navController) { SecurityBioState(navController, securityViewModel, scaffoldState) }
     }
 }

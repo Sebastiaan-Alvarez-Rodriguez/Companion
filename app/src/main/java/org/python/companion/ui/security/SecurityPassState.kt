@@ -33,79 +33,51 @@ class SecurityPassState(
             dialog(route = "$navigationStart/login", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
-                require(securityViewModel.securityActor.hasCredentials())
+                require(securityViewModel.securityActor.canLogin())
 
                 val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
                 if (securityLevel > 0)
                     navController.navigateUp()
+
+                var errorMessage: String? by remember { mutableStateOf(null) }
 
                 SecurityPasswordDialog(
                     saltContext = activity.baseContext,
                     onNegativeClick = { navController.navigateUp() },
                     onPositiveClick = { token ->
                         securityViewModel.viewModelScope.launch {
-                            val msgSec = securityViewModel.securityActor.verify(token)
-                            if (msgSec.type != ResultType.SUCCESS) {
-                                //TODO: Snackbar with error message given by: msgSec.message.
-                                //TODO: But first, remove 'verificationResult' for something else.
+                            val msg = securityViewModel.securityActor.verify(token)
+                            if (msg.type != ResultType.SUCCESS) {
+                                errorMessage = msg.message ?: "There was a problem setting up a new password."
                             }
                         }
                     },
                     onResetPasswordClick = { navigateToReset(navController) },
+                    errorMessage = errorMessage
                 )
             }
 
             dialog(route = "$navigationStart/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
+                require(securityViewModel.securityActor.canSetup())
 
-                var errorMessage: String? by remember { mutableStateOf(null) }
-                SecurityPassDialogSetup(
-                    onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { token ->
-                        securityViewModel.viewModelScope.launch {
-                            val msgSet = securityViewModel.securityActor.setCredentials(null, token)
-                            if (msgSet.type == ResultType.SUCCESS) {
-                                securityViewModel.securityActor.verify(token) // This line logs user in after setup.
-                                navController.navigateUp()
-                            } else {
-                                errorMessage = msgSet.message ?: "There was a problem setting up a new password."
-                            }
-                        }
-                    },
-                    title = "Setup password",
-                    errorMessage = errorMessage
-                )
+                DoSetCredentials(title = "Setup password")
             }
 
-            dialog(route = "$navigationStart/reset") {
+            dialog(route = "$navigationStart/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
 
-                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
+                require(securityViewModel.securityActor.canSetup() || securityViewModel.securityActor.canReset())
 
-                if (securityLevel > 0) {
-                    SecurityPassDialogSetup( // TODO: Review logic in here!
-                        onNegativeClick = { navController.navigateUp() },
-                        onPositiveClick = { token ->
-                            securityViewModel.viewModelScope.launch {
-                                val msgSet = securityViewModel.securityActor.setCredentials( null, token)
-                                if (msgSet.type == ResultType.SUCCESS) {
-                                    securityViewModel.securityActor.verify(token)
-                                    navController.popBackStack() // TODO: Why no navigateUp?
-                                } else {
-                                    //TODO: Snackbar with error message given by: msgSec.message.
-                                    //TODO: But first, remove 'verificationResult' for something else.
-                                }
-                            }
-                        },
-                        title = "Reset password"
-                    )
+                if (securityViewModel.securityActor.canSetup()) {
+                    DoSetCredentials(title = "Reset password")
                 } else {
                     SecurityPassDialogReset( // TODO: Review logic in here!
                         onNegativeClick = { navController.navigateUp() },
                         onPickOtherMethodClick = {
-                            SecurityState.navigateToSecurityPick(navController, SecurityTypes.filter { it != SecurityActor.TYPE_PASS }, onPicked = {})
+                            SecurityState.navigateToSecurityPick(navController, SecurityTypes.filter { it != SecurityActor.TYPE_PASS }, onPicked = { /* TODO */})
                         },
                         onDestructiveResetPasswordClick = {
                             //TODO: Need an "are you sure?" for destructive operation.
@@ -116,11 +88,6 @@ class SecurityPassState(
                         }
                     )
                 }
-
-                SecurityBioDialogReset(
-                    onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { navigateToSetupOrResetAction(navController) }
-                )
             }
         }
     }
@@ -136,6 +103,27 @@ class SecurityPassState(
             return false
         }
         return true
+    }
+
+    @Composable
+    private fun DoSetCredentials(title: String) {
+        var errorMessage: String? by remember { mutableStateOf(null) }
+        SecurityPassDialogSetup(
+            onNegativeClick = { navController.navigateUp() },
+            onPositiveClick = { token ->
+                securityViewModel.viewModelScope.launch {
+                    val msg = securityViewModel.securityActor.setCredentials(null, token)
+                    if (msg.type == ResultType.SUCCESS) {
+                        securityViewModel.securityActor.verify(token) // This line logs user in after setup.
+                        navController.navigateUp()
+                    } else {
+                        errorMessage = msg.message ?: "There was a problem setting up a new password."
+                    }
+                }
+            },
+            title = title,
+            errorMessage = errorMessage
+        )
     }
 
     companion object {

@@ -139,8 +139,8 @@ class SecurityActor : SecurityMetaInterface {
 
     ///// Information section
     inline fun canLogin() = hasCredentials()
-    fun canSetup() = !hasCredentials() && (clearance.value > 0 || hasAnyCredentials())
-    fun canReset() = hasCredentials() && (clearance.value > 0 || hasAnyCredentials())
+    fun canSetup() = !hasCredentials() && (clearance.value > 0 || !hasAnyCredentials())
+    fun canReset() = hasCredentials() && (clearance.value > 0 || !hasAnyCredentials())
 
 
     /** Returs `true` if any security actor exists with setup credentials, `false` otherwise */
