@@ -8,8 +8,6 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -30,7 +28,7 @@ class SecurityBioState(
     private val securityViewModel: SecurityViewModel
 ) {
     fun NavGraphBuilder.securityBioGraph() {
-        navigation(startDestination = navigationStart, route = "sec") {
+        navigation(startDestination = navigationStart, route = "sec/bio") {
             dialog(route = "$navigationStart/login") {
                 if (!switchActor(SecurityActor.TYPE_BIO))
                     return@dialog
@@ -76,7 +74,7 @@ class SecurityBioState(
     @Composable
     private fun switchActor(type: @SecurityType Int): Boolean {
         if (securityViewModel.securityActor.type != type)
-            securityViewModel.securityActor.switchTo(activity, type)
+            securityViewModel.securityActor.switchTo(type)
 
         val msgAvailable = securityViewModel.securityActor.actorAvailable()
         if (msgAvailable.type != ResultType.SUCCESS) {
@@ -126,7 +124,7 @@ class SecurityBioState(
         fun rememberState(
             activity: FragmentActivity,
             navController: NavHostController = rememberNavController(),
-            securityViewModel: SecurityViewModel
+            securityViewModel: SecurityViewModel,
         ) = remember(navController) { SecurityBioState(activity, navController, securityViewModel) }
     }
 }

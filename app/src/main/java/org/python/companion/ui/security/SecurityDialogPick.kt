@@ -20,7 +20,7 @@ import org.python.companion.R
 
 @Composable
 fun SecurityPickDialogContent(
-    headerText: String = "Select a method to login",
+    headerText: String = "Select a method",
     onNegativeClick: () -> Unit,
     onPositiveClick: (Int) -> Unit,
     allowedMethods: Collection<@SecurityType Int>,

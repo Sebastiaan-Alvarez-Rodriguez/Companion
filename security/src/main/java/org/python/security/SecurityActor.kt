@@ -80,7 +80,7 @@ interface SecurityMetaInterface : SecurityInterfaceBase {
      * @return Result object providing status.
      * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
-    suspend fun setCredentials(activity: FragmentActivity, oldToken: VerificationToken? = null, newToken: VerificationToken): Result
+    suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken): Result
 }
 
 /** Internal interface */
@@ -95,12 +95,21 @@ internal interface SecurityInterfaceInternal : SecurityInterfaceBase {
      * If 'correct', credentials were set/updated. Failure indication otherwise.
      */
     suspend fun setCredentials(oldToken: VerificationToken? = null, newToken: VerificationToken, clearance: Int): Result
-
 }
+
 class SecurityActor : SecurityMetaInterface {
     private var internalActor: SecurityInterfaceInternal? = null
+    override val type: Int = internalActor?.type ?: TYPE_UNDEFINED
+
     val clearance = MutableStateFlow<Int>(0)
+
     private val mutex = Mutex()
+    private lateinit var activity: FragmentActivity
+
+    fun load(activity: FragmentActivity) {
+        if (!this::activity.isInitialized)
+           this.activity = activity
+    }
 
     suspend fun <T> withLock(action: () -> T): T {
         mutex.lock()
@@ -109,7 +118,7 @@ class SecurityActor : SecurityMetaInterface {
         return result
     }
 
-    fun switchTo(activity: FragmentActivity, @SecurityType type: Int) {
+    fun switchTo(@SecurityType type: Int) {
         internalActor = getActorOfType(activity, type)
     }
 
@@ -117,24 +126,25 @@ class SecurityActor : SecurityMetaInterface {
 
     private fun setClearanceLevel(newValue: Int) = clearance.update { newValue }
 
-    private fun getActorOfType(activity: FragmentActivity, type: @SecurityType Int) = when (type) {
-        TYPE_PASS -> PassActor(activity)
-        TYPE_BIO -> BioActor(activity)
-        else -> null
-    }
-
-    override val type: Int = internalActor?.type ?: TYPE_UNDEFINED
-
     override fun actorAvailable(): Result = internalActor?.actorAvailable() ?: Result(ResultType.FAILED, "Internal problem with security actor")
 
     override fun hasCredentials(): Boolean = internalActor?.hasCredentials() ?: throw IllegalAccessException("Internal problem with security actor")
 
-    override suspend fun setCredentials(activity: FragmentActivity, oldToken: VerificationToken?, newToken: VerificationToken): Result {
+    override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): Result {
         val hasAnyCredentials = clearance.value == 0 && SecurityTypes.any { type -> getActorOfType(activity, type)?.hasCredentials() ?: false }
         if (hasAnyCredentials)
             return Result(ResultType.FAILED, "Cannot reset credentials: Another method has already been setup. Login first using that method.")
         return internalActor?.setCredentials(oldToken, newToken, clearance.value) ?: Result(ResultType.FAILED, "Internal problem with security actor")
     }
+
+    ///// Information section
+    inline fun canLogin() = hasCredentials()
+    fun canSetup() = !hasCredentials() && (clearance.value > 0 || hasAnyCredentials())
+    fun canReset() = hasCredentials() && (clearance.value > 0 || hasAnyCredentials())
+
+
+    /** Returs `true` if any security actor exists with setup credentials, `false` otherwise */
+    private fun hasAnyCredentials(): Boolean = types.any { type -> getActorOfType(activity, type)?.hasCredentials() ?: false }
 
     override suspend fun verify(token: VerificationToken?): VerificationResult {
         val msg = internalActor?.verify(token) ?: throw IllegalAccessException("Internal problem with security actor")
@@ -146,9 +156,17 @@ class SecurityActor : SecurityMetaInterface {
     companion object {
         const val TYPE_PASS = 1
         const val TYPE_BIO = 2
+        val types = arrayOf(TYPE_PASS, TYPE_BIO)
+
         /* Indicates that user has not yet set a preference */
         const val TYPE_UNDEFINED = -1
         const val security_storage = "SECURITY_ACTOR_STORAGE" // dictionary key for security-related storage
+
+        private fun getActorOfType(activity: FragmentActivity, type: @SecurityType Int) = when (type) {
+            TYPE_PASS -> PassActor(activity)
+            TYPE_BIO -> BioActor(activity)
+            else -> null
+        }
     }
 }
 

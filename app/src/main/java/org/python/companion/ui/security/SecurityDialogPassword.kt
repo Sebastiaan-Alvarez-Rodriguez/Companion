@@ -11,6 +11,8 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -87,7 +89,8 @@ fun SecurityPasswordDialog(
 fun SecurityPassDialogSetup(
     onNegativeClick: () -> Unit,
     onPositiveClick: (PasswordVerificationToken) -> Unit,
-    title: String
+    title: String,
+    errorMessage: String? = null
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
@@ -97,8 +100,8 @@ fun SecurityPassDialogSetup(
     var passVisible by remember { mutableStateOf(false) }
     var passMatch by remember { mutableStateOf(false) }
 
-    Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-        Column(modifier = Modifier.padding(defaultPadding).fillMaxSize()) {
+    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
+        Column(modifier = Modifier.padding(defaultPadding).fillMaxWidth()) {
             Text(
                 text = title,
                 fontWeight = FontWeight.Bold,
@@ -144,6 +147,11 @@ fun SecurityPassDialogSetup(
                 }
             )
 
+            errorMessage?.let {
+                Spacer(modifier = Modifier.height(defaultPadding))
+                Text(text = it, style = TextStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic))
+            }
+
             Spacer(modifier = Modifier.height(defaultPadding))
 
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
@@ -171,7 +179,7 @@ fun SecurityPassDialogReset(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
-    Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
+    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text(
                 text = "Choose a reset method",

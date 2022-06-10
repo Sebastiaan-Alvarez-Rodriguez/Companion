@@ -40,30 +40,29 @@ private fun SecurityBioDialogGeneric(
     type: String
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    dimensionResource(id = R.dimen.padding_small)
-    val tinyPadding = dimensionResource(id = R.dimen.padding_tiny)
+    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding), shape = RoundedCornerShape(12.dp)) {
+        Column(modifier = Modifier.padding(defaultPadding)) {
+            Text(
+                text = "Fingerprint $type",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(defaultPadding)
+            )
+            Spacer(modifier = Modifier.height(defaultPadding))
 
-    Column(modifier = Modifier.padding(defaultPadding)) {
-        Text(
-            text = "Fingerprint $type",
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            modifier = Modifier.padding(defaultPadding)
-        )
-        Spacer(modifier = Modifier.height(defaultPadding))
+            Text(
+                text = "Fingerprint ${type.lowercase()} is handled by the Android Operating System.",
+                modifier = Modifier.padding(defaultPadding)
+            )
+            Spacer(modifier = Modifier.height(defaultPadding))
 
-        Text(
-            text = "Fingerprint ${type.lowercase()} is handled by the Android Operating System.",
-            modifier = Modifier.padding(defaultPadding)
-        )
-        Spacer(modifier = Modifier.height(defaultPadding))
-
-        Row {
-            TextButton(onClick = onNegativeClick) {
-                Text(text = "CANCEL")
-            }
-            TextButton(onClick = { onPositiveClick }) {
-                Text("Go to Android Fingerprint Settings")
+            Row {
+                TextButton(onClick = onNegativeClick) {
+                    Text(text = "CANCEL")
+                }
+                TextButton(onClick = { onPositiveClick }) {
+                    Text("Go to Android Fingerprint Settings")
+                }
             }
         }
     }

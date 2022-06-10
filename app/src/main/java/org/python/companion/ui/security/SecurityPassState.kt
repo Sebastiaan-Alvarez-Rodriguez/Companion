@@ -1,6 +1,8 @@
 package org.python.companion.ui.security
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -11,6 +13,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import org.python.companion.support.UiUtil
+import org.python.companion.viewmodels.NoteViewModel
 import org.python.companion.viewmodels.SecurityViewModel
 import org.python.datacomm.ResultType
 import org.python.security.SecurityActor
@@ -21,11 +24,13 @@ import org.python.security.SecurityTypes
 class SecurityPassState(
     private val activity: FragmentActivity,
     private val navController: NavHostController,
-    private val securityViewModel: SecurityViewModel
+    private val securityViewModel: SecurityViewModel,
+    private val noteViewModel: NoteViewModel
 ) {
+    @OptIn(ExperimentalComposeUiApi::class)
     fun NavGraphBuilder.securityPassGraph() {
-        navigation(startDestination = navigationStart, route = "sec") {
-            dialog(route = "$navigationStart/login") {
+        navigation(startDestination = navigationStart, route = "sec/pass") {
+            dialog(route = "$navigationStart/login", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
                 require(securityViewModel.securityActor.hasCredentials())
@@ -50,24 +55,26 @@ class SecurityPassState(
                 )
             }
 
-            dialog(route = "$navigationStart/setup") {
+            dialog(route = "$navigationStart/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
+
+                var errorMessage: String? by remember { mutableStateOf(null) }
                 SecurityPassDialogSetup(
                     onNegativeClick = { navController.navigateUp() },
                     onPositiveClick = { token ->
                         securityViewModel.viewModelScope.launch {
-                            val msgSet = securityViewModel.securityActor.setCredentials(activity,null, token)
+                            val msgSet = securityViewModel.securityActor.setCredentials(null, token)
                             if (msgSet.type == ResultType.SUCCESS) {
-                                securityViewModel.securityActor.verify(token)
+                                securityViewModel.securityActor.verify(token) // This line logs user in after setup.
                                 navController.navigateUp()
                             } else {
-                                //TODO: Snackbar with error message given by: msgSec.message.
-                                //TODO: But first, remove 'verificationResult' for something else.
+                                errorMessage = msgSet.message ?: "There was a problem setting up a new password."
                             }
                         }
                     },
-                    title = "Setup password"
+                    title = "Setup password",
+                    errorMessage = errorMessage
                 )
             }
 
@@ -82,7 +89,7 @@ class SecurityPassState(
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { token ->
                             securityViewModel.viewModelScope.launch {
-                                val msgSet = securityViewModel.securityActor.setCredentials(activity, null, token)
+                                val msgSet = securityViewModel.securityActor.setCredentials( null, token)
                                 if (msgSet.type == ResultType.SUCCESS) {
                                     securityViewModel.securityActor.verify(token)
                                     navController.popBackStack() // TODO: Why no navigateUp?
@@ -121,7 +128,7 @@ class SecurityPassState(
     @Composable
     private fun switchActor(type: @SecurityType Int): Boolean {
         if (securityViewModel.securityActor.type != type)
-            securityViewModel.securityActor.switchTo(activity, type)
+            securityViewModel.securityActor.switchTo(type)
 
         val msgAvailable = securityViewModel.securityActor.actorAvailable()
         if (msgAvailable.type != ResultType.SUCCESS) {
@@ -156,7 +163,8 @@ class SecurityPassState(
         fun rememberState(
             activity: FragmentActivity,
             navController: NavHostController = rememberNavController(),
-            securityViewModel: SecurityViewModel
-        ) = remember(navController) { SecurityPassState(activity, navController, securityViewModel) }
+            securityViewModel: SecurityViewModel,
+            noteViewModel: NoteViewModel
+        ) = remember(navController) { SecurityPassState(activity, navController, securityViewModel, noteViewModel) }
     }
 }

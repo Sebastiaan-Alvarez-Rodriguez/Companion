@@ -1,5 +1,6 @@
 package org.python.companion.ui.security
 
+import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -27,8 +28,10 @@ class SecurityState(
     private val noteViewModel: NoteViewModel,
     private val securityBioState: SecurityBioState,
     private val securityPassState: SecurityPassState,
+    private val scaffoldState: ScaffoldState
 ) {
 
+    fun load(activity: FragmentActivity) = securityViewModel.securityActor.load(activity)
 
     @OptIn(ExperimentalComposeUiApi::class)
     fun NavGraphBuilder.securityGraph() {
@@ -64,7 +67,6 @@ class SecurityState(
     companion object {
         const val navigationStart = "securitydialog"
 
-
         fun navigateToSecurityPick(navController: NavController, allowedMethods: Collection<@SecurityType Int> = SecurityTypes.toList(), onPicked: (@SecurityType Int) -> Unit) {
             navController.navigateForResult(
                 route = createRoute(navigationStart,
@@ -78,22 +80,22 @@ class SecurityState(
 
         fun navigateToLogin(@SecurityType securityType: Int, navController: NavController) {
             when (securityType) {
-                SecurityActor.TYPE_PASS -> TODO()
+                SecurityActor.TYPE_PASS -> SecurityPassState.navigateToLogin(navController)
                 SecurityActor.TYPE_BIO -> SecurityBioState.navigateToLogin(navController)
             }
         }
 
         fun navigateToSetup(@SecurityType securityType: Int, navController: NavController) {
             when (securityType) {
-                SecurityActor.TYPE_PASS -> TODO()
-                    SecurityActor.TYPE_BIO -> SecurityBioState.navigateToSetup(navController)
+                SecurityActor.TYPE_PASS -> SecurityPassState.navigateToSetup(navController)
+                SecurityActor.TYPE_BIO -> SecurityBioState.navigateToSetup(navController)
             }
         }
 
         fun navigateToReset(@SecurityType securityType: Int, navController: NavController) {
             when (securityType) {
-                SecurityActor.TYPE_PASS -> TODO()
-                    SecurityActor.TYPE_BIO -> SecurityBioState.navigateToReset(navController)
+                SecurityActor.TYPE_PASS -> SecurityPassState.navigateToReset(navController)
+                SecurityActor.TYPE_BIO -> SecurityBioState.navigateToReset(navController)
             }
         }
 
@@ -102,10 +104,20 @@ class SecurityState(
             activity: FragmentActivity,
             navController: NavHostController = rememberNavController(),
             securityViewModel: SecurityViewModel,
-            noteViewModel: NoteViewModel
+            noteViewModel: NoteViewModel,
+            scaffoldState: ScaffoldState
         ): SecurityState {
-            val securityBioState = SecurityBioState.rememberState(activity = activity, securityViewModel = securityViewModel)
-            val securityPassState = SecurityPassState.rememberState(activity = activity, securityViewModel = securityViewModel)
+            val securityBioState = SecurityBioState.rememberState(
+                activity = activity,
+                navController = navController,
+                securityViewModel = securityViewModel,
+            )
+            val securityPassState = SecurityPassState.rememberState(
+                activity = activity,
+                navController = navController,
+                securityViewModel = securityViewModel,
+                noteViewModel = noteViewModel
+            )
             return remember(navController) {
                 SecurityState(
                     activity,
@@ -113,7 +125,8 @@ class SecurityState(
                     securityViewModel,
                     noteViewModel,
                     securityBioState,
-                    securityPassState
+                    securityPassState,
+                    scaffoldState
                 )
             }
         }

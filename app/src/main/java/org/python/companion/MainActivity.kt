@@ -43,7 +43,8 @@ class MainActivity : FragmentActivity() {
                     activity = this,
                     navController = navController,
                     securityViewModel = securityViewModel,
-                    noteViewModel = noteViewModel
+                    noteViewModel = noteViewModel,
+                    scaffoldState = scaffoldState
                 )
                 val noteState = NoteState.rememberState(
                     navController = navController,
@@ -65,6 +66,7 @@ class MainActivity : FragmentActivity() {
                         composable("splash_screen") {
                             val splashScreenFunc = remember {
                                 SplashBuilder(navController = navController, destination = NoteState.noteDestination).build {
+                                    securityState.load(this@MainActivity)
                                     noteState.load()
                                     noteCategoryState.load()
                                 }
