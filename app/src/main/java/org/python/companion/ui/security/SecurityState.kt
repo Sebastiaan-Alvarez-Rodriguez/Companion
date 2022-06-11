@@ -15,6 +15,7 @@ import org.python.companion.support.UiUtil.navigateForResult
 import org.python.companion.support.UiUtil.setNavigationResult
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.companion.viewmodels.SecurityViewModel
+import org.python.datacomm.ResultType
 import org.python.security.CompactSecurityTypeArray
 import org.python.security.SecurityActor
 import org.python.security.SecurityType
@@ -40,26 +41,57 @@ class SecurityState(
 
         navigation(startDestination = navigationStart, route = "sec") {
             dialog(
-                route = "$navigationStart?allowedMethods={allowedMethods}",
-                arguments = listOf(navArgument("allowedMethods") { defaultValue = CompactSecurityTypeArray.default; type = NavType.IntType }),
+                route = "$navigationStart?allowedMethods={allowedMethods}&key={key}",
+                arguments = listOf(
+                    navArgument("allowedMethods") { defaultValue = CompactSecurityTypeArray.default; type = NavType.IntType },
+                    navArgument("key") { defaultValue = "result"; type = NavType.StringType }
+                ),
                 dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
             ) { entry ->
                 val allowedMethods = CompactSecurityTypeArray(entry.arguments?.getInt("allowedMethods"))
+                val key = entry.arguments?.getString("key") ?: "result"
+                val allowedValues = allowedMethods.allowed()
                 when {
-                    allowedMethods.allowed().isEmpty() -> throw RuntimeException("Cannot pick security type with 0 allowed methods.")
-                    allowedMethods.allowed().size == 1 -> {
-                        navController.setNavigationResult(result = allowedMethods.allowed().iterator().next())
+                    allowedValues.isEmpty() -> throw RuntimeException("Cannot pick security type with 0 allowed methods.")
+                    allowedValues.size == 1 -> {
+                        navController.setNavigationResult(result = allowedValues.iterator().next(), key = key)
                         navController.navigateUp()
                     }
-                    else -> SecurityPickDialogContent(
+                    else -> SecurityDialogPick(
                         onNegativeClick = { navController.navigateUp() },
                         onPositiveClick = { type ->
-                            navController.setNavigationResult(result = type)
+                            navController.setNavigationResult(result = type, key = key)
                             navController.navigateUp()
                         },
-                        allowedMethods = allowedMethods.allowed()
+                        allowedMethods = allowedValues
                     )
                 }
+            }
+
+            dialog(route = "$navigationStart/setupOptions", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
+                SecurityDialogSetup(
+                    onNegativeClick = { navController.navigateUp() },
+                    onLoginClick = {
+                        navController.setNavigationResult(result = false, key = "$navigationStart/setupOptions")
+                        navController.navigateUp()
+                    },
+                    loginMethods = securityViewModel.securityActor.setupMethods().map { securityViewModel.securityActor.methodName(it) }
+                )
+            }
+
+            dialog(route = "$navigationStart/resetOptions", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
+                SecurityDialogReset(
+                    onNegativeClick = { navController.navigateUp() },
+                    onDestroyClick = {
+                        navController.setNavigationResult(result = true, key = "$navigationStart/resetOptions")
+                        navController.navigateUp()
+                    },
+                    onLoginClick = {
+                        navController.setNavigationResult(result = false, key = "$navigationStart/resetOptions")
+                        navController.navigateUp()
+                    },
+                    loginMethods = securityViewModel.securityActor.setupMethods().map { securityViewModel.securityActor.methodName(it) }
+                )
             }
         }
     }
@@ -67,14 +99,37 @@ class SecurityState(
     companion object {
         const val navigationStart = "securitydialog"
 
-        fun navigateToSecurityPick(navController: NavController, allowedMethods: Collection<@SecurityType Int> = SecurityTypes.toList(), onPicked: (@SecurityType Int) -> Unit) {
+        fun navigateToSecurityPick(
+            navController: NavController,
+            allowedMethods: Collection<@SecurityType Int> = SecurityTypes.toList(),
+            onPicked: (@SecurityType Int) -> Unit,
+            key: String = "result"
+        ) {
             navController.navigateForResult(
                 route = createRoute(navigationStart,
                     optionals = mapOf(
-                        "allowedMethods" to CompactSecurityTypeArray.create(allowedMethods).toString()
+                        "allowedMethods" to CompactSecurityTypeArray.create(allowedMethods).toString(),
+                        "key" to key
                     )
                 ),
+                key = key,
                 onResult = onPicked
+            )
+        }
+
+        fun navigateToSetupOptions(navController: NavController, onLoginClick: () -> Unit) {
+            navController.navigateForResult<Boolean>(
+                route = "$navigationStart/setupOptions",
+                key = "$navigationStart/setupOptions",
+                onResult = { onLoginClick() }
+            )
+        }
+
+        fun navigateToResetOptions(navController: NavController, onDestroyClick: () -> Unit, onLoginClick: () -> Unit) {
+            navController.navigateForResult<Boolean>(
+                route = "$navigationStart/resetOptions",
+                key = "$navigationStart/resetOptions",
+                onResult = { destroy -> if (destroy) onDestroyClick() else onLoginClick() }
             )
         }
 
@@ -97,6 +152,13 @@ class SecurityState(
                 SecurityActor.TYPE_PASS -> SecurityPassState.navigateToReset(navController)
                 SecurityActor.TYPE_BIO -> SecurityBioState.navigateToReset(navController)
             }
+        }
+
+        fun switchActor(securityActor: SecurityActor, type: @SecurityType Int): Boolean {
+            securityActor.switchTo(type)
+
+            val msgAvailable = securityActor.actorAvailable()
+            return msgAvailable.type == ResultType.SUCCESS
         }
 
         @Composable

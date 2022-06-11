@@ -157,7 +157,8 @@ object UiUtil {
 
     @Composable
     fun SimpleDialogBinary(
-        message: String,
+        title: String,
+        message: String? = null,
         negativeText: String = "CANCEL",
         positiveText: String = "OK",
         onDismiss: () -> Unit,
@@ -165,16 +166,19 @@ object UiUtil {
         onPositiveClick: () -> Unit,
         showableObjectFunc: @Composable () -> Unit = {}
     ) {
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
         Dialog(onDismissRequest = onDismiss) {
             Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    Text(
-                        text = message,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                Column(modifier = Modifier.padding(defaultPadding)) {
+                    message?.let {
+                        Text(text = it, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
+                        Spacer(modifier = Modifier.height(defaultPadding))
+                    }
+
+                    Text(text = title, modifier = Modifier.padding())
+                    Spacer(modifier = Modifier.height(defaultPadding))
+
+
                     showableObjectFunc()
 
                     Row(
@@ -185,7 +189,7 @@ object UiUtil {
                         TextButton(onClick = onNegativeClick) {
                             Text(text = negativeText.uppercase())
                         }
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(defaultPadding))
                         TextButton(onClick = onPositiveClick) {
                             Text(text = positiveText.uppercase())
                         }
@@ -542,8 +546,9 @@ object UiUtil {
             navigation(startDestination = uiutilDestination, route = "uiutil") {
                 composable(uiutilDestination) {}
 
-                dialog(route = "${uiutilDestination}/binary?message={message}&negativeText={negativeText}&positiveText={positiveText}") { entry ->
+                dialog(route = "${uiutilDestination}/binary/{title}?message={message}&negativeText={negativeText}&positiveText={positiveText}") { entry ->
                     SimpleDialogBinary(
+                        title = entry.arguments?.getString("title") ?: "Default title",
                         message = entry.arguments?.getString("message") ?: "Accept?",
                         negativeText = entry.arguments?.getString("negativeText") ?: "CANCEL",
                         positiveText = entry.arguments?.getString("positiveText") ?: "OK",
@@ -575,6 +580,7 @@ object UiUtil {
                 val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
                 navController.navigate(
                     route = createRoute("$uiutilDestination/binary",
+                        args = listOf("Override"),
                         optionals = mapOf(
                             "message" to "Already exists. Override?",
                             "positiveText" to "OVERRIDE"
@@ -592,6 +598,7 @@ object UiUtil {
                 val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
                 navController.navigate(
                     route = createRoute("$uiutilDestination/binary",
+                        args = listOf("Delete"),
                         optionals = mapOf(
                             "message" to "Deletion cannot be undone. Are you sure?",
                             "positiveText" to "DELETE"
@@ -690,11 +697,10 @@ object UiUtil {
     }
     private fun <T> getNavigationResult(navBackStackEntry: NavBackStackEntry, key: String = "result", onResult: (result: T) -> Unit) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)
-            ) {
+            if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)) {
                 val result = navBackStackEntry.savedStateHandle.get<T>(key)
-                result?.let(onResult)
                 navBackStackEntry.savedStateHandle.remove<T>(key)
+                result?.let(onResult)
             }
         }
         navBackStackEntry.lifecycle.addObserver(observer)

@@ -23,6 +23,7 @@ import org.python.companion.ui.security.SecurityState
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.datacomm.Result
 import org.python.datacomm.ResultType
+import org.python.security.SecurityTypes
 import timber.log.Timber
 
 class NoteState(
@@ -124,8 +125,61 @@ class NoteState(
                 )
             ) {
                 NoteScreenSettings(
-                    onSecuritySetupClick = { SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToSetup(type, navController) })},
-                    onSecurityResetClick = { SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToReset(type, navController) }) },
+                    onSecuritySetupClick = {
+                        SecurityState.navigateToSecurityPick(
+                            navController,
+                            allowedMethods = noteViewModel.securityActor.notSetupMethods(),
+                            key = "pickForSetup",
+                            onPicked = { type ->
+                                require(SecurityState.switchActor(noteViewModel.securityActor, type))
+                                if (noteViewModel.securityActor.canSetup()) {
+                                    SecurityState.navigateToSetup(type, navController)
+                                } else {
+                                    SecurityState.navigateToSetupOptions(navController) {
+                                        SecurityState.navigateToSecurityPick(
+                                            navController,
+                                            allowedMethods = SecurityTypes.filter { it != type },
+                                            key = "pickForSetupOtherLogin",
+                                            onPicked = {
+                                                type -> SecurityState.navigateToLogin(type, navController)
+                                            }
+                                        )
+                                    }
+                                    //TODO: onLogin -> moveToSetup (basically a login listener that cancels when second navigateToSecurityPick cancels)
+                                }
+                            }
+                        )
+                    },
+                    onSecurityResetClick = {
+                        SecurityState.navigateToSecurityPick(
+                            navController,
+                            allowedMethods = noteViewModel.securityActor.setupMethods(),
+                            key = "pickForReset",
+                            onPicked = { type ->
+                                require(SecurityState.switchActor(noteViewModel.securityActor, type))
+
+                                if (noteViewModel.securityActor.canReset()) {
+                                    SecurityState.navigateToReset(type, navController)
+                                } else {
+                                    SecurityState.navigateToResetOptions(
+                                        navController,
+                                        onDestroyClick = { /* TODO: Are you sure? */ noteViewModel.viewModelScope.launch { noteViewModel.deleteAllSecure() } },
+                                        onLoginClick = {
+                                            SecurityState.navigateToSecurityPick(
+                                                navController,
+                                                allowedMethods = SecurityTypes.filter { it != type },
+                                                key = "pickForResetOtherLogin",
+                                                onPicked = {
+                                                    type -> SecurityState.navigateToLogin(type, navController)
+                                                }
+                                            )
+                                        }
+                                        //TODO: onLogin -> moveToReset
+                                    )
+                                }
+                            }
+                        )
+                    },
                     onExportClick = { /* TODO */ },
                     onImportClick = { /* TODO */ },
                     onBackClick = { navController.navigateUp() }

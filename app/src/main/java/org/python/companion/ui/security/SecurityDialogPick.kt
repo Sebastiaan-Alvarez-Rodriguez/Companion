@@ -19,7 +19,7 @@ import org.python.security.SecurityType
 import org.python.companion.R
 
 @Composable
-fun SecurityPickDialogContent(
+fun SecurityDialogPick(
     headerText: String = "Select a method",
     onNegativeClick: () -> Unit,
     onPositiveClick: (Int) -> Unit,

@@ -60,6 +60,7 @@ class SecurityPassState(
             dialog(route = "$navigationStart/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
+
                 require(securityViewModel.securityActor.canSetup())
 
                 DoSetCredentials(title = "Setup password")
@@ -68,26 +69,9 @@ class SecurityPassState(
             dialog(route = "$navigationStart/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_PASS))
                     return@dialog
+                require(securityViewModel.securityActor.canReset())
 
-                require(securityViewModel.securityActor.canSetup() || securityViewModel.securityActor.canReset())
-
-                if (securityViewModel.securityActor.canSetup()) {
-                    DoSetCredentials(title = "Reset password")
-                } else {
-                    SecurityPassDialogReset( // TODO: Review logic in here!
-                        onNegativeClick = { navController.navigateUp() },
-                        onPickOtherMethodClick = {
-                            SecurityState.navigateToSecurityPick(navController, SecurityTypes.filter { it != SecurityActor.TYPE_PASS }, onPicked = { /* TODO */})
-                        },
-                        onDestructiveResetPasswordClick = {
-                            //TODO: Need an "are you sure?" for destructive operation.
-                            securityViewModel.viewModelScope.launch {
-                                noteViewModel.deleteAllSecure()
-                                navController.navigateUp()
-                            }
-                        }
-                    )
-                }
+                DoSetCredentials(title = "Reset password")
             }
         }
     }

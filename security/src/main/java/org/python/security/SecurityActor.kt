@@ -140,11 +140,24 @@ class SecurityActor : SecurityMetaInterface {
     ///// Information section
     inline fun canLogin() = hasCredentials()
     fun canSetup() = !hasCredentials() && (clearance.value > 0 || !hasAnyCredentials())
-    fun canReset() = hasCredentials() && (clearance.value > 0 || !hasAnyCredentials())
+    fun canReset() = hasCredentials() && clearance.value > 0
 
+    fun notSetupMethods() = SecurityTypes.filter { !(getActorOfType(activity, it)?.hasCredentials() ?: false) }
+    fun setupMethods() = SecurityTypes.filter { getActorOfType(activity, it)?.hasCredentials() ?: false }
 
-    /** Returs `true` if any security actor exists with setup credentials, `false` otherwise */
-    private fun hasAnyCredentials(): Boolean = types.any { type -> getActorOfType(activity, type)?.hasCredentials() ?: false }
+    /** Returns name of security method for given type(s). */
+    fun methodName() = methodName(type)
+    fun methodName(@SecurityType types: List<Int>) = types.map { methodName(it) }
+    fun methodName(@SecurityType type: Int) = when (type) {
+        TYPE_BIO -> "Fingerprint"
+        TYPE_PASS -> "Password"
+        else -> throw IllegalArgumentException("Could not find security type for $type")
+    }
+
+    /** Returns `true` if any security actor exists with setup credentials, `false` otherwise */
+    private fun hasAnyCredentials(): Boolean = SecurityTypes.any { type -> getActorOfType(activity, type)?.hasCredentials() ?: false }
+
+    //// End Information section
 
     override suspend fun verify(token: VerificationToken?): VerificationResult {
         val msg = internalActor?.verify(token) ?: throw IllegalAccessException("Internal problem with security actor")
@@ -156,7 +169,6 @@ class SecurityActor : SecurityMetaInterface {
     companion object {
         const val TYPE_PASS = 1
         const val TYPE_BIO = 2
-        val types = arrayOf(TYPE_PASS, TYPE_BIO)
 
         /* Indicates that user has not yet set a preference */
         const val TYPE_UNDEFINED = -1

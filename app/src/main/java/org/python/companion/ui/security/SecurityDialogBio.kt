@@ -60,7 +60,7 @@ private fun SecurityBioDialogGeneric(
                 TextButton(onClick = onNegativeClick) {
                     Text(text = "CANCEL")
                 }
-                TextButton(onClick = { onPositiveClick }) {
+                TextButton(onClick = onPositiveClick) {
                     Text("FINGERPRINT SETTINGS")
                 }
             }

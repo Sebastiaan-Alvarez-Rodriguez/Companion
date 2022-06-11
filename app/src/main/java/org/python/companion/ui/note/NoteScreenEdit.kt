@@ -162,6 +162,7 @@ fun NoteScreenEditReady(
     }
     if (showGoBack.value)
         UiUtil.SimpleDialogBinary(
+            title = "Unsaved changes",
             message = "Found unsaved changes. Are you sure you want to go back?",
             onDismiss = { showGoBack.value = false },
             onNegativeClick = { showGoBack.value = false },
