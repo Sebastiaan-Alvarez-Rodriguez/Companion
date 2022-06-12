@@ -155,8 +155,11 @@ class NoteState(
                     Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, lvl=${toSaveNote.securityLevel}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
                     noteViewModel.viewModelScope.launch {
                         if (clearance == 0 && toSaveNote.securityLevel > 0)
-                            return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
-
+                            return@launch SecurityState.navigateToSecurityPick(
+                                navController,
+                                key = "pickForLogin",
+                                onPicked = { type -> SecurityState.navigateToLogin(type, navController) }
+                            )
                         val conflict = noteViewModel.hasConflict(toSaveNote.name)
                         val conflictBlocking = conflict && !noteViewModel.mayOverride(toSaveNote.name)
 

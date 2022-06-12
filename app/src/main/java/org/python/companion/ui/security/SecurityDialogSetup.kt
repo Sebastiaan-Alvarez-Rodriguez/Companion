@@ -15,9 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import org.python.companion.R
-import org.python.companion.support.UiUtil
+import org.python.companion.ui.security.SecurityState.Companion.switchActor
 import org.python.companion.viewmodels.SecurityViewModel
-import org.python.datacomm.ResultType
 import org.python.security.SecurityActor
 import org.python.security.SecurityType
 
@@ -81,44 +80,4 @@ fun SecurityDialogSetupSpecific(
             )
         }
     }
-}
-
-/** Shows specific reset UI for setting up given security type. */
-@Composable
-fun SecurityDialogResetSpecific(
-    @SecurityType method: Int,
-    securityViewModel: SecurityViewModel,
-    navController: NavHostController
-) {
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
-
-    when(method) {
-        SecurityActor.TYPE_PASS -> {
-            if (!switchActor(securityViewModel.securityActor, SecurityActor.TYPE_PASS))
-                return
-            require(securityViewModel.securityActor.canReset())
-            SecurityPassState.DoSetCredentialsReset(securityViewModel, navController)
-        }
-        SecurityActor.TYPE_BIO -> {
-            if (!switchActor(securityViewModel.securityActor, SecurityActor.TYPE_BIO))
-                return
-            SecurityBioDialogReset(
-                onNegativeClick = { navController.navigateUp() },
-                onPositiveClick = { launcher.launch(SecurityBioState.createSecuritySettingsIntent()) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun switchActor(securityActor: SecurityActor, type: @SecurityType Int): Boolean {
-    if (securityActor.type != type)
-        securityActor.switchTo(type)
-
-    val msgAvailable = securityActor.actorAvailable()
-    if (msgAvailable.type != ResultType.SUCCESS) {
-        UiUtil.SimpleText("Security method is unavailable: ${msgAvailable.message}")
-        return false
-    }
-    return true
 }

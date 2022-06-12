@@ -9,17 +9,19 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.python.datacomm.Result
 import org.python.datacomm.ResultType
 import org.python.security.util.CoroutineUtil
 import timber.log.Timber
+
 
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE)
 @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
@@ -56,9 +58,6 @@ data class CompactSecurityTypeArray(val types: Int) {
 
 /** Shared components between public-facing and internal interface */
 interface SecurityInterfaceBase {
-    /** security type being implemented by this actor */
-    val type: @SecurityType Int
-
     /**
      * Whether this actor is available at this time.
      * @return `true` when actor is available, `false` otherwise.
@@ -67,7 +66,7 @@ interface SecurityInterfaceBase {
 
     /** Whether a credential has been set or not. */
     fun hasCredentials(): Boolean
-
+    fun hasCredentialsLive(): Flow<Boolean>
     /**
      * Verifies given token for correctness.
      * @param token Token to verify. Can be <code>null</code>, as some actors do not need anything from users.
@@ -78,6 +77,10 @@ interface SecurityInterfaceBase {
 
 /** Public-facing interface */
 interface SecurityMetaInterface : SecurityInterfaceBase {
+    fun type(): @SecurityType Int
+    /** security type being implemented by this actor */
+    fun typeLive(): Flow<@SecurityType Int>
+
     /** Setup a credential.
      * If a credential exists, this function calls <code>verify()</code>.
      * In such cases, caller must pass a verification object.
@@ -91,6 +94,9 @@ interface SecurityMetaInterface : SecurityInterfaceBase {
 
 /** Internal interface */
 internal interface SecurityInterfaceInternal : SecurityInterfaceBase {
+    /** security type being implemented by this actor */
+    val type: @SecurityType Int
+
     /** Setup a credential.
      * If a credential exists, this function calls <code>verify()</code>.
      * In such cases, caller must pass a verification object.
@@ -104,8 +110,10 @@ internal interface SecurityInterfaceInternal : SecurityInterfaceBase {
 }
 
 class SecurityActor : SecurityMetaInterface {
-    private var internalActor: SecurityInterfaceInternal? = null
-    override val type: Int = internalActor?.type ?: TYPE_UNDEFINED
+    private val internalActor: MutableStateFlow<SecurityInterfaceInternal?> = MutableStateFlow(null)
+
+    override fun type() = internalActor.value?.type ?: TYPE_UNDEFINED
+    override fun typeLive(): Flow<Int> = internalActor.map { it?.type ?: TYPE_UNDEFINED }
 
     val clearance = MutableStateFlow<Int>(0)
 
@@ -125,26 +133,29 @@ class SecurityActor : SecurityMetaInterface {
     }
 
     fun switchTo(@SecurityType type: Int) {
-        internalActor = getActorOfType(activity, type)
+        internalActor.value = getActorOfType(activity, type)
     }
 
     fun logout() = setClearanceLevel(0)
 
     private fun setClearanceLevel(newValue: Int) = clearance.update { newValue }
 
-    override fun actorAvailable(): Result = internalActor?.actorAvailable() ?: Result(ResultType.FAILED, "Internal problem with security actor")
+    override fun actorAvailable(): Result = internalActor.value?.actorAvailable() ?: Result(ResultType.FAILED, "Internal problem with security actor")
 
-    override fun hasCredentials(): Boolean = internalActor?.hasCredentials() ?: throw IllegalAccessException("Internal problem with security actor")
+    override fun hasCredentials(): Boolean = internalActor.value?.hasCredentials() ?: throw IllegalAccessException("Internal problem with security actor")
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun hasCredentialsLive(): Flow<Boolean> = internalActor.flatMapLatest { it?.hasCredentialsLive()?: MutableStateFlow(false).asStateFlow() }
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken): Result {
         val hasAnyCredentials = clearance.value == 0 && SecurityTypes.any { type -> getActorOfType(activity, type)?.hasCredentials() ?: false }
         if (hasAnyCredentials)
             return Result(ResultType.FAILED, "Cannot reset credentials: Another method has already been setup. Login first using that method.")
-        return internalActor?.setCredentials(oldToken, newToken, clearance.value) ?: Result(ResultType.FAILED, "Internal problem with security actor")
+        return internalActor.value?.setCredentials(oldToken, newToken, clearance.value) ?: Result(ResultType.FAILED, "Internal problem with security actor")
     }
 
     ///// Information section
-    inline fun canLogin() = hasCredentials()
+    fun canLoginLive(): Flow<Boolean> = hasCredentialsLive()
+    fun canLogin() = hasCredentials()
     val canSetup: Flow<Boolean> = clearance.map { clr -> !hasCredentials() && (clr > 0 || !hasAnyCredentials()) }
     fun canSetup(clearance: Int = this.clearance.value) = !hasCredentials() && (clearance > 0 || !hasAnyCredentials())
 
@@ -155,7 +166,6 @@ class SecurityActor : SecurityMetaInterface {
     fun setupMethods() = SecurityTypes.filter { getActorOfType(activity, it)?.hasCredentials() ?: false }
 
     /** Returns name of security method for given type(s). */
-    fun methodName() = methodName(type)
     fun methodName(@SecurityType types: List<Int>) = types.map { methodName(it) }
     fun methodName(@SecurityType type: Int) = when (type) {
         TYPE_BIO -> "Fingerprint"
@@ -169,7 +179,7 @@ class SecurityActor : SecurityMetaInterface {
     //// End Information section
 
     override suspend fun verify(token: VerificationToken?): VerificationResult {
-        val msg = internalActor?.verify(token) ?: throw IllegalAccessException("Internal problem with security actor")
+        val msg = internalActor.value?.verify(token) ?: throw IllegalAccessException("Internal problem with security actor")
         if (msg.type == ResultType.SUCCESS && msg.resultStatus == VerificationResult.SEC_CORRECT)
             setClearanceLevel(1)
         return msg
@@ -225,8 +235,19 @@ internal class BioActor(
         }
     }
 
-    override fun hasCredentials(): Boolean =
-        BiometricManager.from(activity.baseContext).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+    override fun hasCredentials(): Boolean = hasCredentialsLive().value
+    private val _hasCredentials: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override fun hasCredentialsLive(): StateFlow<Boolean> = _hasCredentials.asStateFlow()
+
+    private val biometricManager = BiometricManager.from(activity.baseContext)
+    init {
+        activity.lifecycle.addObserver(object : LifecycleObserver {
+            @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            fun appInResumeState() {
+                _hasCredentials.value = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+            }
+        })
+    }
 
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, clearance: Int): Result = Result.DEFAULT_SUCCESS
 
@@ -296,6 +317,15 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
     override fun actorAvailable(): Result = Result.DEFAULT_SUCCESS
 
     override fun hasCredentials(): Boolean = sharedPreferences.contains(hash_security_key)
+
+    private val _hasCredentials: MutableStateFlow<Boolean> = MutableStateFlow(sharedPreferences.contains(hash_security_key))
+    override fun hasCredentialsLive(): Flow<Boolean> = _hasCredentials.asStateFlow()
+
+    init {
+        sharedPreferences.registerOnSharedPreferenceChangeListener { prefs, key ->
+            _hasCredentials.value = prefs.contains(hash_security_key)
+        }
+    }
 
     @SuppressLint("ApplySharedPref")
     override suspend fun setCredentials(oldToken: VerificationToken?, newToken: VerificationToken, clearance: Int): Result = withContext(Dispatchers.Default) {

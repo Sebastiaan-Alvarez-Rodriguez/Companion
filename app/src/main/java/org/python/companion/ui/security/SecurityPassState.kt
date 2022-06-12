@@ -18,7 +18,6 @@ import org.python.companion.viewmodels.SecurityViewModel
 import org.python.datacomm.ResultType
 import org.python.security.SecurityActor
 import org.python.security.SecurityType
-import org.python.security.SecurityTypes
 
 
 class SecurityPassState(
@@ -31,7 +30,7 @@ class SecurityPassState(
     fun NavGraphBuilder.securityPassGraph() {
         navigation(startDestination = navigationStart, route = "sec/pass") {
             dialog(route = "$navigationStart/login", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                if (!switchActor(SecurityActor.TYPE_PASS))
+                if (!switchActor(SecurityActor.TYPE_PASS)) // TODO: Already represented in SecurityDialogLogin
                     return@dialog
                 require(securityViewModel.securityActor.canLogin())
 
@@ -78,7 +77,7 @@ class SecurityPassState(
 
     @Composable
     private fun switchActor(type: @SecurityType Int): Boolean {
-        if (securityViewModel.securityActor.type != type)
+        if (securityViewModel.securityActor.type() != type)
             securityViewModel.securityActor.switchTo(type)
 
         val msgAvailable = securityViewModel.securityActor.actorAvailable()

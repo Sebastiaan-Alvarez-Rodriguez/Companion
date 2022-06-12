@@ -34,7 +34,7 @@ class SecurityBioState(
     fun NavGraphBuilder.securityBioGraph() {
         navigation(startDestination = navigationStart, route = "sec/bio") {
             dialog(route = "$navigationStart/login") {
-                if (!switchActor(SecurityActor.TYPE_BIO))
+                if (!switchActor(SecurityActor.TYPE_BIO)) // TODO: Presented in SecurityDialogLogin
                     return@dialog
                 require(securityViewModel.securityActor.hasCredentials())
 
@@ -79,7 +79,7 @@ class SecurityBioState(
 
     @Composable
     private fun switchActor(type: @SecurityType Int): Boolean {
-        if (securityViewModel.securityActor.type != type)
+        if (securityViewModel.securityActor.type() != type)
             securityViewModel.securityActor.switchTo(type)
 
         val msgAvailable = securityViewModel.securityActor.actorAvailable()

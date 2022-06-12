@@ -90,6 +90,31 @@ class SecurityState(
             }
 
             dialog(
+                route = "${SettingsState.navigationStart}/login/{securityMethod}",
+                arguments = listOf(navArgument("securityMethod") {type = NavType.IntType}),
+                dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+            ) { entry ->
+                val method: @SecurityType Int = entry.arguments?.getInt("securityMethod") ?: SecurityActor.TYPE_UNDEFINED
+                require(switchActor(noteViewModel.securityActor, method))
+
+                val canLogin by noteViewModel.securityActor.canLoginLive().collectAsState(false)
+
+                if (canLogin) {
+                    SecurityDialogLoginSpecific(
+                        method = method,
+                        securityViewModel = securityViewModel,
+                        scaffoldState = scaffoldState,
+                        navController = navController
+                    )
+                } else {
+                    SecurityDialogLoginOptions(
+                        onNegativeClick = { navController.navigateUp() },
+                        onSetupClick = { navigateToSetup(method, navController) }
+                    )
+                }
+            }
+
+            dialog(
                 route = "${SettingsState.navigationStart}/setup/{securityMethod}",
                 arguments = listOf(navArgument("securityMethod") {type = NavType.IntType}),
                 dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
@@ -187,12 +212,8 @@ class SecurityState(
         fun navigateToReset(@SecurityType securityType: Int, navController: NavController) =
             navController.navigate("${SettingsState.navigationStart}/reset/$securityType")
 
-        fun navigateToLogin(@SecurityType securityType: Int, navController: NavController) {
-            when (securityType) {
-                SecurityActor.TYPE_PASS -> SecurityPassState.navigateToLogin(navController)
-                SecurityActor.TYPE_BIO -> SecurityBioState.navigateToLogin(navController)
-            }
-        }
+        fun navigateToLogin(@SecurityType securityType: Int, navController: NavController) =
+            navController.navigate("${SettingsState.navigationStart}/login/$securityType")
 
         fun switchActor(securityActor: SecurityActor, type: @SecurityType Int): Boolean {
             securityActor.switchTo(type)
