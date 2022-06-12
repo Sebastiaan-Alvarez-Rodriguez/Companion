@@ -90,11 +90,15 @@ class SecurityState(
             }
 
             dialog(
-                route = "${SettingsState.navigationStart}/login/{securityMethod}",
-                arguments = listOf(navArgument("securityMethod") {type = NavType.IntType}),
+                route = "${SettingsState.navigationStart}/login/{securityMethod}?allowResetCalls={allowResetCalls}",
+                arguments = listOf(
+                    navArgument("securityMethod") {type = NavType.IntType},
+                    navArgument("allowResetCalls") {type = NavType.BoolType}
+                ),
                 dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
             ) { entry ->
                 val method: @SecurityType Int = entry.arguments?.getInt("securityMethod") ?: SecurityActor.TYPE_UNDEFINED
+                val allowResetCalls: Boolean = entry.arguments?.getBoolean("allowResetCalls") ?: true
                 require(switchActor(noteViewModel.securityActor, method))
 
                 val canLogin by noteViewModel.securityActor.canLoginLive().collectAsState(false)
@@ -104,6 +108,7 @@ class SecurityState(
                         method = method,
                         securityViewModel = securityViewModel,
                         scaffoldState = scaffoldState,
+                        allowResetCalls = allowResetCalls,
                         navController = navController
                     )
                 } else {
@@ -137,7 +142,7 @@ class SecurityState(
                                 navController,
                                 allowedMethods = SecurityTypes.filter { it != method },
                                 key = "pickForSetupOtherLogin",
-                                onPicked = { type -> navigateToLogin(type, navController) }
+                                onPicked = { type -> navigateToLogin(type, navController = navController) }
                             )
                         },
                         loginMethods = noteViewModel.securityActor.setupMethods().map { noteViewModel.securityActor.methodName(it) }
@@ -170,7 +175,7 @@ class SecurityState(
                                 allowedMethods = SecurityTypes.filter { it != method },
                                 key = "pickForResetOtherLogin",
                                 onPicked = { type ->
-                                    navigateToLogin(type, navController)
+                                    navigateToLogin(type, allowResetCalls = false, navController = navController)
                                 }
                             )
                         },
@@ -212,8 +217,13 @@ class SecurityState(
         fun navigateToReset(@SecurityType securityType: Int, navController: NavController) =
             navController.navigate("${SettingsState.navigationStart}/reset/$securityType")
 
-        fun navigateToLogin(@SecurityType securityType: Int, navController: NavController) =
-            navController.navigate("${SettingsState.navigationStart}/login/$securityType")
+        fun navigateToLogin(@SecurityType securityType: Int, allowResetCalls: Boolean = true, navController: NavController) =
+            navController.navigate(
+                createRoute(
+                    base = "${SettingsState.navigationStart}/login",
+                    args = listOf("$securityType"),
+                    optionals = mapOf("allowResetCalls" to allowResetCalls.toString())
+                ))
 
         fun switchActor(securityActor: SecurityActor, type: @SecurityType Int): Boolean {
             securityActor.switchTo(type)

@@ -48,6 +48,7 @@ fun SecurityDialogLoginSpecific(
     @SecurityType method: Int,
     securityViewModel: SecurityViewModel,
     scaffoldState: ScaffoldState,
+    allowResetCalls: Boolean = true,
     navController: NavHostController
 ) {
     when(method) {
@@ -73,7 +74,10 @@ fun SecurityDialogLoginSpecific(
                         }
                     }
                 },
-                onResetPasswordClick = { SecurityState.navigateToReset(SecurityActor.TYPE_PASS, navController) },
+                onResetPasswordClick = if (allowResetCalls) {
+                    { SecurityState.navigateToReset(SecurityActor.TYPE_PASS, navController) }
+                } else
+                    null,
                 errorMessage = errorMessage
             )
         }

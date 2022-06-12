@@ -57,7 +57,11 @@ class NoteState(
                         {
                             SecurityClickItem(
                                 text = "Unlock secure notes",
-                                onClick = { SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) }) }
+                                onClick = {
+                                    SecurityState.navigateToSecurityPick(navController, onPicked = { type ->
+                                        SecurityState.navigateToLogin(type, navController = navController)
+                                    })
+                                }
                             )
                         }
                     }
@@ -158,7 +162,7 @@ class NoteState(
                             return@launch SecurityState.navigateToSecurityPick(
                                 navController,
                                 key = "pickForLogin",
-                                onPicked = { type -> SecurityState.navigateToLogin(type, navController) }
+                                onPicked = { type -> SecurityState.navigateToLogin(type, navController = navController) }
                             )
                         val conflict = noteViewModel.hasConflict(toSaveNote.name)
                         val conflictBlocking = conflict && !noteViewModel.mayOverride(toSaveNote.name)
@@ -172,7 +176,9 @@ class NoteState(
                                     duration = SnackbarDuration.Short
                                 )
                                 when (snackbarResult) {
-                                    SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
+                                    SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type ->
+                                        SecurityState.navigateToLogin(type, navController = navController)
+                                    })
                                     else -> {}
                                 }
                             }
@@ -217,7 +223,9 @@ class NoteState(
                         Timber.d("Found edited note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         noteViewModel.viewModelScope.launch {
                             if (clearance == 0 && toSaveNote.securityLevel > 0) // authenticate before saving notes with authentication enabled)
-                                return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
+                                return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type ->
+                                    SecurityState.navigateToLogin(type, navController = navController)
+                                })
 
                             // If note name == same as before, there is no conflict. Otherwise, we must check.
                             val conflict = if (toSaveNote.name == existingNote!!.name) false else noteViewModel.hasConflict(toSaveNote.name)
@@ -231,7 +239,9 @@ class NoteState(
                                         duration = SnackbarDuration.Short
                                     )
                                     when (snackbarResult) {
-                                        SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController) })
+                                        SnackbarResult.ActionPerformed -> return@launch SecurityState.navigateToSecurityPick(navController, onPicked = { type ->
+                                            SecurityState.navigateToLogin(type, navController = navController)
+                                        })
                                         else -> {}
                                     }
                                 }
