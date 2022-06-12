@@ -73,7 +73,7 @@ fun SecurityDialogLoginSpecific(
                         }
                     }
                 },
-                onResetPasswordClick = { SecurityPassState.navigateToReset(navController) },
+                onResetPasswordClick = { SecurityState.navigateToReset(SecurityActor.TYPE_PASS, navController) },
                 errorMessage = errorMessage
             )
         }
