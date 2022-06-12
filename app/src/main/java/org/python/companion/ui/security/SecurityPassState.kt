@@ -35,14 +35,14 @@ class SecurityPassState(
                     return@dialog
                 require(securityViewModel.securityActor.canLogin())
 
-                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
-                if (securityLevel > 0)
+                val clearance by securityViewModel.securityActor.clearance.collectAsState()
+                if (clearance > 0)
                     navController.navigateUp()
 
                 var errorMessage: String? by remember { mutableStateOf(null) }
 
                 SecurityPasswordDialog(
-                    saltContext = activity.baseContext,
+                    saltContext = activity.baseContext, //TODO: LocalContext might suffice
                     onNegativeClick = { navController.navigateUp() },
                     onPositiveClick = { token ->
                         securityViewModel.viewModelScope.launch {
@@ -63,7 +63,7 @@ class SecurityPassState(
 
                 require(securityViewModel.securityActor.canSetup())
 
-                DoSetCredentials(title = "Setup password")
+                DoSetCredentialsSetup(securityViewModel, navController)
             }
 
             dialog(route = "$navigationStart/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -71,7 +71,7 @@ class SecurityPassState(
                     return@dialog
                 require(securityViewModel.securityActor.canReset())
 
-                DoSetCredentials(title = "Reset password")
+                DoSetCredentialsReset(securityViewModel, navController)
             }
         }
     }
@@ -89,29 +89,35 @@ class SecurityPassState(
         return true
     }
 
-    @Composable
-    private fun DoSetCredentials(title: String) {
-        var errorMessage: String? by remember { mutableStateOf(null) }
-        SecurityPassDialogSetup(
-            onNegativeClick = { navController.navigateUp() },
-            onPositiveClick = { token ->
-                securityViewModel.viewModelScope.launch {
-                    val msg = securityViewModel.securityActor.setCredentials(null, token)
-                    if (msg.type == ResultType.SUCCESS) {
-                        securityViewModel.securityActor.verify(token) // This line logs user in after setup.
-                        navController.navigateUp()
-                    } else {
-                        errorMessage = msg.message ?: "There was a problem setting up a new password."
-                    }
-                }
-            },
-            title = title,
-            errorMessage = errorMessage
-        )
-    }
-
     companion object {
         private const val navigationStart = "${SecurityState.navigationStart}/pass"
+
+        @Composable
+        fun DoSetCredentialsSetup(securityViewModel: SecurityViewModel, navController: NavHostController) =
+            DoSetCredentials(securityViewModel, navController, "Setup password")
+        @Composable
+        fun DoSetCredentialsReset(securityViewModel: SecurityViewModel, navController: NavHostController) =
+            DoSetCredentials(securityViewModel, navController, "Reset password")
+        @Composable
+        fun DoSetCredentials(securityViewModel: SecurityViewModel, navController: NavHostController, title: String) {
+            var errorMessage: String? by remember { mutableStateOf(null) }
+            SecurityPassDialogSetup(
+                onNegativeClick = { navController.navigateUp() },
+                onPositiveClick = { token ->
+                    securityViewModel.viewModelScope.launch {
+                        val msg = securityViewModel.securityActor.setCredentials(null, token)
+                        if (msg.type == ResultType.SUCCESS) {
+                            securityViewModel.securityActor.verify(token) // This line logs user in after setup.
+                            navController.navigateUp()
+                        } else {
+                            errorMessage = msg.message ?: "There was a problem setting up a new password."
+                        }
+                    }
+                },
+                title = title,
+                errorMessage = errorMessage
+            )
+        }
 
         fun navigateToLogin(navController: NavController) =
             navController.navigate("$navigationStart/login") {

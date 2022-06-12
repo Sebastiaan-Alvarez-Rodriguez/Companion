@@ -20,10 +20,10 @@ import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.navigateForResult
 import org.python.companion.ui.note.category.NoteCategoryState
 import org.python.companion.ui.security.SecurityState
+import org.python.companion.ui.settings.SettingsState
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.datacomm.Result
 import org.python.datacomm.ResultType
-import org.python.security.SecurityTypes
 import timber.log.Timber
 
 class NoteState(
@@ -70,7 +70,7 @@ class NoteState(
                         if (selectedItems.isEmpty())
                             NoteScreenListHeader(
                                 sortParameters = sortParameters,
-                                onSettingsClick = { navigateToNoteSettings(navController = navController) },
+                                onSettingsClick = { SettingsState.navigateToSettings(navController = navController) },
                                 onSortClick = { params -> noteViewModel.updateSortParameters(params) },
                                 onSearchClick = { noteViewModel.toggleSearch() }
                             )
@@ -113,76 +113,6 @@ class NoteState(
                             drawCache = noteViewModel.drawCache
                         )
                     }
-                )
-            }
-
-            composable(
-                route = "$noteDestination/settings",
-                deepLinks = listOf(
-                    navDeepLink {
-                        uriPattern = "companion://$noteDestination/settings"
-                    }
-                )
-            ) {
-                NoteScreenSettings(
-                    onSecuritySetupClick = {
-                        SecurityState.navigateToSecurityPick(
-                            navController,
-                            allowedMethods = noteViewModel.securityActor.notSetupMethods(),
-                            key = "pickForSetup",
-                            onPicked = { type ->
-                                require(SecurityState.switchActor(noteViewModel.securityActor, type))
-                                if (noteViewModel.securityActor.canSetup()) {
-                                    SecurityState.navigateToSetup(type, navController)
-                                } else {
-                                    SecurityState.navigateToSetupOptions(navController) {
-                                        SecurityState.navigateToSecurityPick(
-                                            navController,
-                                            allowedMethods = SecurityTypes.filter { it != type },
-                                            key = "pickForSetupOtherLogin",
-                                            onPicked = {
-                                                type -> SecurityState.navigateToLogin(type, navController)
-                                            }
-                                        )
-                                    }
-                                    //TODO: onLogin -> moveToSetup (basically a login listener that cancels when second navigateToSecurityPick cancels)
-                                }
-                            }
-                        )
-                    },
-                    onSecurityResetClick = {
-                        SecurityState.navigateToSecurityPick(
-                            navController,
-                            allowedMethods = noteViewModel.securityActor.setupMethods(),
-                            key = "pickForReset",
-                            onPicked = { type ->
-                                require(SecurityState.switchActor(noteViewModel.securityActor, type))
-
-                                if (noteViewModel.securityActor.canReset()) {
-                                    SecurityState.navigateToReset(type, navController)
-                                } else {
-                                    SecurityState.navigateToResetOptions(
-                                        navController,
-                                        onDestroyClick = { /* TODO: Are you sure? */ noteViewModel.viewModelScope.launch { noteViewModel.deleteAllSecure() } },
-                                        onLoginClick = {
-                                            SecurityState.navigateToSecurityPick(
-                                                navController,
-                                                allowedMethods = SecurityTypes.filter { it != type },
-                                                key = "pickForResetOtherLogin",
-                                                onPicked = {
-                                                    type -> SecurityState.navigateToLogin(type, navController)
-                                                }
-                                            )
-                                        }
-                                        //TODO: onLogin -> moveToReset
-                                    )
-                                }
-                            }
-                        )
-                    },
-                    onExportClick = { /* TODO */ },
-                    onImportClick = { /* TODO */ },
-                    onBackClick = { navController.navigateUp() }
                 )
             }
 
@@ -330,7 +260,6 @@ class NoteState(
     }
 
 
-    private fun navigateToNoteSettings(navController: NavController) = navController.navigate("$noteDestination/settings")
     private fun navigateToNoteView(navController: NavController, note: Note) = navigateToNoteView(navController, note.noteId)
     private fun navigateToNoteView(navController: NavController, noteId: Long) = navController.navigate("$noteDestination/view/$noteId") {
         launchSingleTop = true

@@ -173,7 +173,7 @@ class NoteCategoryState(
         }
     }
     companion object {
-        val noteCategoryDestination = "${NoteState.noteDestination}/category"
+        const val noteCategoryDestination = "${NoteState.noteDestination}/category"
 
         fun navigateToCategorySelect(navController: NavController, noteId: Long) =
             navController.navigate(createRoute("$noteCategoryDestination/select", args = listOf(noteId.toString())))

@@ -16,6 +16,7 @@ import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.note.category.NoteCategoryState
 import org.python.companion.ui.security.SecurityState
+import org.python.companion.ui.settings.SettingsState
 import org.python.companion.ui.splash.SplashBuilder
 import org.python.companion.ui.theme.CompanionTheme
 import org.python.companion.viewmodels.NoteCategoryViewModel
@@ -43,6 +44,11 @@ class MainActivity : FragmentActivity() {
                     activity = this,
                     navController = navController,
                     securityViewModel = securityViewModel,
+                    noteViewModel = noteViewModel,
+                    scaffoldState = scaffoldState
+                )
+                val settingsState = SettingsState.rememberState(
+                    navController = navController,
                     noteViewModel = noteViewModel,
                     scaffoldState = scaffoldState
                 )
@@ -77,6 +83,7 @@ class MainActivity : FragmentActivity() {
                         with(noteState) { noteGraph() }
                         with(noteCategoryState) { categoryGraph() }
                         with(securityState) { securityGraph() }
+                        with(settingsState) { settingsGraph() }
                     }
                 }
             }

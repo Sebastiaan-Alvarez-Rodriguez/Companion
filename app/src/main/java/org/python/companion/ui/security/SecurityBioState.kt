@@ -12,7 +12,6 @@ import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.DialogProperties
-import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -57,23 +56,23 @@ class SecurityBioState(
             dialog(route = "$navigationStart/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_BIO))
                     return@dialog
+                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
+
                 SecurityBioDialogSetup(
                     onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { navigateToSetupOrResetAction(navController) }
+                    onPositiveClick = { launcher.launch(createSecuritySettingsIntent()) }
                 )
             }
 
             dialog(route = "$navigationStart/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 if (!switchActor(SecurityActor.TYPE_BIO))
                     return@dialog
+                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
+
                 SecurityBioDialogReset(
                     onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { navigateToSetupOrResetAction(navController) }
+                    onPositiveClick = { launcher.launch(createSecuritySettingsIntent()) }
                 )
-            }
-
-            dialog(route = "$navigationStart/setupOrResetAction") {
-                GoToAndroidBiometricSettings()
             }
         }
     }
@@ -91,9 +90,10 @@ class SecurityBioState(
         return true
     }
 
-    @Composable
-    private fun GoToAndroidBiometricSettings() {
-        val enrollIntent =
+    companion object {
+        private const val navigationStart = "${SecurityState.navigationStart}/bio"
+
+        fun createBiometricSettingsCreationIntent() =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
                     putExtra(Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED, BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
@@ -102,12 +102,7 @@ class SecurityBioState(
                 @Suppress("DEPRECATION")
                 Intent(Settings.ACTION_FINGERPRINT_ENROLL)
             }
-        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
-        launcher.launch(enrollIntent)
-    }
-
-    companion object {
-        private const val navigationStart = "${SecurityState.navigationStart}/bio"
+        fun createSecuritySettingsIntent() = Intent(Settings.ACTION_SECURITY_SETTINGS)
 
         fun navigateToLogin(navController: NavController) =
             navController.navigate("$navigationStart/login") {
@@ -119,11 +114,6 @@ class SecurityBioState(
             }
         fun navigateToReset(navController: NavController) =
             navController.navigate("$navigationStart/reset") {
-                launchSingleTop = true
-            }
-
-        private fun navigateToSetupOrResetAction(navController: NavController) =
-            navController.navigate("$navigationStart/setupOrResetAction") {
                 launchSingleTop = true
             }
 

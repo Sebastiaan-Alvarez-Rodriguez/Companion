@@ -10,7 +10,9 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
@@ -43,8 +45,12 @@ data class CompactSecurityTypeArray(val types: Int) {
 
     companion object {
         const val default = Int.MAX_VALUE
-        fun create(vararg allowed: @SecurityType Int): CompactSecurityTypeArray = CompactSecurityTypeArray(allowed.reduce(Int::or))
-        fun create(allowed: Collection<@SecurityType Int>): CompactSecurityTypeArray = CompactSecurityTypeArray(allowed.reduce(Int::or))
+        fun create(vararg allowed: @SecurityType Int): CompactSecurityTypeArray = create(allowed.toList())
+        fun create(allowed: Collection<@SecurityType Int>): CompactSecurityTypeArray =
+            if (allowed.isEmpty())
+                CompactSecurityTypeArray(0)
+            else
+                CompactSecurityTypeArray(allowed.reduce(Int::or))
     }
 }
 
@@ -139,8 +145,11 @@ class SecurityActor : SecurityMetaInterface {
 
     ///// Information section
     inline fun canLogin() = hasCredentials()
-    fun canSetup() = !hasCredentials() && (clearance.value > 0 || !hasAnyCredentials())
-    fun canReset() = hasCredentials() && clearance.value > 0
+    val canSetup: Flow<Boolean> = clearance.map { clr -> !hasCredentials() && (clr > 0 || !hasAnyCredentials()) }
+    fun canSetup(clearance: Int = this.clearance.value) = !hasCredentials() && (clearance > 0 || !hasAnyCredentials())
+
+    val canReset: Flow<Boolean> = clearance.map { clr -> hasCredentials() && clr > 0 }
+    fun canReset(clearance: Int = this.clearance.value) = hasCredentials() && clearance > 0
 
     fun notSetupMethods() = SecurityTypes.filter { !(getActorOfType(activity, it)?.hasCredentials() ?: false) }
     fun setupMethods() = SecurityTypes.filter { getActorOfType(activity, it)?.hasCredentials() ?: false }

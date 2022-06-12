@@ -4,21 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
-import org.python.backend.data.datatype.Note
-import org.python.backend.data.datatype.NoteCategory
-import org.python.backend.data.datatype.NoteWithCategory
-import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
-import org.python.companion.support.RenderUtil
 
 
 /**
@@ -44,12 +35,15 @@ fun NoteScreenSettings(
         Spacer(Modifier.height(defaultPadding))
 
         Card(elevation = 5.dp) {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(defaultPadding)) {
-                Button(onClick = onSecuritySetupClick) {
-                    Text(text = "Setup new security")
-                }
-                Button(onClick = onSecurityResetClick) {
-                    Text(text = "Reset security")
+            Column {
+                Text("Security", modifier = Modifier.padding(defaultPadding))
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(defaultPadding)) {
+                    Button(onClick = onSecuritySetupClick) {
+                        Text(text = "Setup")
+                    }
+                    Button(onClick = onSecurityResetClick) {
+                        Text(text = "Reset")
+                    }
                 }
             }
         }
@@ -57,12 +51,15 @@ fun NoteScreenSettings(
         Spacer(Modifier.height(defaultPadding))
 
         Card(elevation = 5.dp) {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(defaultPadding)) {
-                Button(onClick = onImportClick) {
-                    Text(text = "Import")
-                }
-                Button(onClick = onExportClick) {
-                    Text(text = "Export")
+            Column {
+                Text("Backups", modifier = Modifier.padding(defaultPadding))
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(defaultPadding)) {
+                    Button(onClick = onImportClick) {
+                        Text(text = "Import")
+                    }
+                    Button(onClick = onExportClick) {
+                        Text(text = "Export")
+                    }
                 }
             }
         }
