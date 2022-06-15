@@ -3,6 +3,7 @@ package org.python.security
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
+import timber.log.Timber
 import java.nio.ByteBuffer
 
 @Suppress("EqualsOrHashCode")
@@ -29,10 +30,13 @@ class PasswordVerificationToken(private val hashedObject: Hash) : VerificationTo
         private var hash: Hash? = null
 
         private fun with(password: ByteBuffer, salt: ByteBuffer? = null): PassBuilder {
+            Timber.e("Got password ${ password.array().map { it.toString() }}: Got salt: ${ salt?.array()?.map { it.toString() } ?: "<empty salt>"}")
             hash = Hasher.argon(
                 password = if (password.isDirect) password else toDirectBuffer(password),
                 salt = if (salt == null) null else if(salt.isDirect) salt else toDirectBuffer(salt),
             )
+            Timber.e("Got hash ${ hash!!.hash.array().map { it.toString() }}: Got salt: ${hash!!.salt.array().map { it.toString() }}")
+
             return this
         }
 
@@ -51,12 +55,18 @@ class PasswordVerificationToken(private val hashedObject: Hash) : VerificationTo
             with(toDirectBuffer(password), storedSaltContext)
 
         fun with(password: ByteBuffer, storedSaltContext: Context): PassBuilder =
-            getSalt(storedSaltContext)?.let { with(password, toDirectBuffer(it))} ?: with(password)
+            getSalt(storedSaltContext)?.let {
+                val t2 = toDirectBuffer(it)
+                Timber.e("Salt: $it (len=${it.length}")
+                Timber.e("Salt: $t2 (cap=${t2.capacity()}, lim=${t2.limit()}")
+                Timber.e("Salt: ${t2.array().map { it.toString() }}, size=${t2.array().size}")
+
+                with(password, toDirectBuffer(it))} ?: with(password)
         fun with(password: String, storedSaltContext: Context): PassBuilder =
             with(toDirectBuffer(password), storedSaltContext)
 
         fun with(password: ByteBuffer, storedSaltContext: SharedPreferences): PassBuilder =
-            getSalt(storedSaltContext)?.let { with(password, toDirectBuffer(it))} ?: with(password)
+            getSalt(storedSaltContext)?.let { with(password, toDirectBuffer(it)) } ?: with(password)
         fun with(password: String, storedSaltContext: SharedPreferences): PassBuilder =
             with(toDirectBuffer(password), storedSaltContext)
 
@@ -65,18 +75,6 @@ class PasswordVerificationToken(private val hashedObject: Hash) : VerificationTo
                 return PasswordVerificationToken(hashedObject = it)
             }
             throw IllegalStateException("Must set password & salt when building PasswordVerificationToken")
-        }
-
-        @Suppress("unused")
-        companion object {
-            private fun toDirectBuffer(data: ByteBuffer): ByteBuffer = ByteBuffer.allocateDirect(data.capacity()).put(data)
-            private fun toDirectBuffer(data: ByteArray): ByteBuffer = ByteBuffer.allocateDirect(data.size).put(data)
-            private fun toDirectBuffer(data: String, toISO_8859_1: Boolean = true): ByteBuffer =
-                toDirectBuffer(if (toISO_8859_1) data.toByteArray(charset = Charsets.ISO_8859_1) else data.toByteArray())
-
-            private fun getSalt(activity: Activity): String? = getSalt(activity.baseContext)
-            private fun getSalt(context: Context): String? = getSalt(context.getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE))
-            private fun getSalt(sharedPreferences: SharedPreferences): String? = sharedPreferences.getString(PassActor.salt_storage_key, null)
         }
     }
 
@@ -88,19 +86,52 @@ class PasswordVerificationToken(private val hashedObject: Hash) : VerificationTo
         return when (other) {
             is PasswordVerificationToken -> {
                 val tmp = hashedObject.hash.array().contentEquals(other.hashedObject.hash.array())
+                Timber.e("Other is PasswordVerificationToken. Equal: $tmp")
+                Timber.e("ours: ${hashedObject.hash.array().map { it.toString() }}")
+                Timber.e("thrs: ${other.hashedObject.hash.array().map { it.toString() }}")
                 tmp
             }
-            is Hash -> hashedObject.hash == other.hash
+            is Hash -> {
+                val tmp = hashedObject.hash.array().contentEquals(other.hash.array())
+                Timber.e("Other is Hash. Equal: $tmp")
+                Timber.e("hash 1: ${hashedObject.hash.array().map { it.toString() }}")
+                Timber.e("hash 2: ${other.hash.array().map { it.toString() }}")
+                tmp
+            }
             else -> throw java.lang.IllegalArgumentException("Cannot compare against $other")
         }
     }
 
     fun hashString(): String = String(bytes = hashedObject.hash.array(), charset = Charsets.ISO_8859_1)
-    fun saltString(): String = String(bytes = hashedObject.salt.array(), charset = Charsets.ISO_8859_1)
+    fun saltString(): String {
+        Timber.e("Register: ${hashedObject.salt} (cap: ${hashedObject.salt.capacity()}, lim: ${hashedObject.salt.limit()}")
+        Timber.e("Register: ${hashedObject.salt.array().map { it.toString() }}")
+        Timber.e("Register: ${String(bytes = hashedObject.salt.array(), charset = Charsets.ISO_8859_1)}")
+        TODO("Need method to return 16-byte salt buffer as 16-byte string")
+        return String(bytes = hashedObject.salt.array(), charset = Charsets.ISO_8859_1)
+    }
 
     override fun hashCode(): Int = hashedObject.hash.hashCode()
 
     companion object {
+        private fun toDirectBuffer(data: ByteBuffer,): ByteBuffer = ByteBuffer.allocateDirect(data.capacity()).put(data)
+        private fun toDirectBuffer(data: ByteArray, ): ByteBuffer = ByteBuffer.allocateDirect(data.size).put(data)
+        private fun toDirectBuffer(data: String, toISO_8859_1: Boolean = true): ByteBuffer =
+            toDirectBuffer(if (toISO_8859_1) data.toByteArray(charset = Charsets.ISO_8859_1) else data.toByteArray(), )
+
+        private fun getSalt(activity: Activity): String? = getSalt(activity.baseContext)
+        private fun getSalt(context: Context): String? = getSalt(context.getSharedPreferences(SecurityActor.security_storage, Context.MODE_PRIVATE))
+        private fun getSalt(sharedPreferences: SharedPreferences): String? {
+            val ans = sharedPreferences.getString(PassActor.salt_storage_key, null)
+            val tmp = ByteBuffer.allocateDirect(ans?.length ?: 0)
+                if (ans != null)
+                    tmp.put(ans.toByteArray(charset = Charsets.ISO_8859_1))
+            Timber.e("Login: $tmp (cap: ${tmp.capacity()}, lim: ${tmp.limit()}")
+            Timber.e("Login: ${ans?.toByteArray(charset = Charsets.ISO_8859_1)?.map { it.toString() }}")
+            Timber.e("Login: ${ans} (len = ${ans?.length}, null = ${ans==null})")
+            return ans
+        }
+
         fun fromString(hash: String, salt: String): PasswordVerificationToken = PasswordVerificationToken(
             hashedObject = Hash(
                 hash = ByteBuffer.wrap(hash.toByteArray(charset = Charsets.ISO_8859_1)),

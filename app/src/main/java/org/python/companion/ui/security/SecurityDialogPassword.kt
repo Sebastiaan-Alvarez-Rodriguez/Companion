@@ -81,7 +81,9 @@ fun SecurityPasswordDialog(
                         Text(text = "CANCEL")
                     }
                     Spacer(modifier = Modifier.width(smallPadding))
-                    TextButton(onClick = { onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, storedSaltContext = saltContext).build()) }) {
+                    TextButton(onClick = {
+                        onPositiveClick(PasswordVerificationToken.PassBuilder().with(pass, storedSaltContext = saltContext).build())
+                    }) {
                         Text(text = "SUBMIT")
                     }
                 }

@@ -106,6 +106,7 @@ class SecurityState(
                 if (canLogin) {
                     SecurityDialogLoginSpecific(
                         method = method,
+                        activity = activity,
                         securityViewModel = securityViewModel,
                         scaffoldState = scaffoldState,
                         allowResetCalls = allowResetCalls,
@@ -168,7 +169,13 @@ class SecurityState(
                 } else {
                     SecurityDialogReset(
                         onNegativeClick = { navController.navigateUp() },
-                        onDestroyClick = { /* TODO: Are you sure? */ noteViewModel.viewModelScope.launch { noteViewModel.deleteAllSecure() }},
+                        onDestroyClick = {
+                            /* TODO: Are you sure? */
+                            noteViewModel.viewModelScope.launch {
+                                noteViewModel.deleteAllSecure()
+                                // TODO: Do reset of auth-method!
+                            }
+                        },
                         onLoginClick = {
                             navigateToSecurityPick(
                                 navController,
