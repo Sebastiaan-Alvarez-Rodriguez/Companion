@@ -5,11 +5,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
@@ -46,7 +46,6 @@ fun SecurityDialogLoginOptions(onNegativeClick: () -> Unit, onSetupClick: () -> 
 @Composable
 fun SecurityDialogLoginSpecific(
     @SecurityType method: Int,
-    activity: FragmentActivity,
     securityViewModel: SecurityViewModel,
     scaffoldState: ScaffoldState,
     allowResetCalls: Boolean = true,
@@ -65,7 +64,7 @@ fun SecurityDialogLoginSpecific(
             var errorMessage: String? by remember { mutableStateOf(null) }
 
             SecurityPasswordDialog(
-                saltContext = activity.baseContext, //TODO: Maybe use LocalContext
+                saltContext = LocalContext.current,
                 onNegativeClick = { navController.navigateUp() },
                 onPositiveClick = { token ->
                     securityViewModel.viewModelScope.launch {

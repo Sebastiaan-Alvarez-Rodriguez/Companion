@@ -106,7 +106,6 @@ class SecurityState(
                 if (canLogin) {
                     SecurityDialogLoginSpecific(
                         method = method,
-                        activity = activity,
                         securityViewModel = securityViewModel,
                         scaffoldState = scaffoldState,
                         allowResetCalls = allowResetCalls,
