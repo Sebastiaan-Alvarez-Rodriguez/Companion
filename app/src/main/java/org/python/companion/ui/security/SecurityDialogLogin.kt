@@ -23,7 +23,9 @@ import org.python.security.SecurityType
 fun SecurityDialogLoginOptions(onNegativeClick: () -> Unit, onSetupClick: () -> Unit) {
     val defaultPadding = dimensionResource(id = org.python.companion.R.dimen.padding_default)
     val message = "In order to use this login method, it must be set-up first."
-    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
+    Card(elevation = 8.dp, modifier = Modifier
+        .padding(defaultPadding)
+        .wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text(text = "Login Options", fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
             Spacer(modifier = Modifier.height(defaultPadding))
@@ -84,7 +86,7 @@ fun SecurityDialogLoginSpecific(
         SecurityActor.TYPE_BIO -> {
             if (!switchActor(securityViewModel.securityActor, SecurityActor.TYPE_BIO))
                 return
-            require(securityViewModel.securityActor.hasCredentials())
+            require(securityViewModel.securityActor.canLogin())
 
             val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
             if (securityLevel > 0)
@@ -97,6 +99,7 @@ fun SecurityDialogLoginSpecific(
                         message = msgSec.message ?: "There was a login problem.",
                         duration = SnackbarDuration.Short
                     )
+                    navController.navigateUp()
                 }
             }
         }

@@ -256,7 +256,7 @@ internal class BioActor(
     suspend fun verify(): VerificationResult {
         return withContext(Dispatchers.Main) {
             CoroutineUtil.awaitCallback { callback: CoroutineUtil.Callback<VerificationResult> ->
-                initBiometricPrompt(
+                val prompt = initBiometricPrompt(
                     activity = activity,
                     onError = { errorCode, message ->
                         callback.onResult(when (errorCode) {
@@ -267,10 +267,12 @@ internal class BioActor(
                             BiometricPrompt.ERROR_HW_UNAVAILABLE -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_UNAVAILABLE, message)
                             BiometricPrompt.ERROR_NO_BIOMETRICS -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_NOINIT, message)
                             else -> VerificationResult(ResultType.FAILED, VerificationResult.SEC_OTHER, message)
+
                         })
                     },
                     onSuccess = { callback.onResult(VerificationResult.from(VerificationResult.SEC_CORRECT)) }
-                ).authenticate(biometricPromptInfo)
+                )
+                prompt.authenticate(biometricPromptInfo)
             }
         }
     }

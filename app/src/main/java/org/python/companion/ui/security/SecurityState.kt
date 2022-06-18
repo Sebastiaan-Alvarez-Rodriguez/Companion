@@ -101,7 +101,7 @@ class SecurityState(
                 val allowResetCalls: Boolean = entry.arguments?.getBoolean("allowResetCalls") ?: true
                 require(switchActor(noteViewModel.securityActor, method))
 
-                val canLogin by noteViewModel.securityActor.canLoginLive().collectAsState(false)
+                val canLogin by noteViewModel.securityActor.canLoginLive().collectAsState(true)
 
                 if (canLogin) {
                     SecurityDialogLoginSpecific(
