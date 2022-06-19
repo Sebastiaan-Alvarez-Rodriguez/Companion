@@ -576,41 +576,38 @@ object UiUtil {
             const val uiutilDestination: String = "UiUtil"
             private const val resultKeyOverride = "uiutil|binary"
 
-            fun navigateToOverride(navController: NavController, onOverrideClick: () -> Unit) {
-                val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
-                navController.navigate(
-                    route = createRoute("$uiutilDestination/binary",
-                        args = listOf("Override"),
-                        optionals = mapOf(
-                            "message" to "Already exists. Override?",
-                            "positiveText" to "OVERRIDE"
-                        )
-                    )
+            fun navigateToOverride(navController: NavController, onOverrideClick: () -> Unit) = navigateToBinary(
+                navController = navController,
+                title = "Override",
+                message = "Already exists. Override?",
+                positiveText = "OVERRIDE"
                 ) {
-                    launchSingleTop = true
-                }
-                getNavigationResult<Boolean>(navBackStackEntry, resultKeyOverride) {
                     if (it) onOverrideClick()
                 }
+
+
+            fun navigateToDelete(navController: NavController, onDeleteClick: () -> Unit) = navigateToBinary(
+                navController = navController,
+                title = "Delete",
+                message = "Deletion cannot be undone. Are you sure?",
+                positiveText = "DELETE"
+            ) {
+                if (it) onDeleteClick()
             }
 
-            fun navigateToDelete(navController: NavController, onDeleteClick: () -> Unit) {
-                val navBackStackEntry: NavBackStackEntry = navController.currentBackStackEntry!!
-                navController.navigate(
-                    route = createRoute("$uiutilDestination/binary",
-                        args = listOf("Delete"),
-                        optionals = mapOf(
-                            "message" to "Deletion cannot be undone. Are you sure?",
-                            "positiveText" to "DELETE"
-                        )
+            fun navigateToBinary(navController: NavController, title: String, message: String = "Accept?", negativeText: String = "CANCEL", positiveText: String = "OK", onPositiveClick: (Boolean) -> Unit) = navController.navigateForResult<Boolean>(
+                route = createRoute("$uiutilDestination/binary",
+                    args = listOf(title),
+                    optionals = mapOf(
+                        "message" to message,
+                        "negativeText" to negativeText,
+                        "positiveText" to positiveText
                     )
-                ) {
-                    launchSingleTop = true
-                }
-                getNavigationResult<Boolean>(navBackStackEntry, resultKeyOverride) {
-                    if (it) onDeleteClick()
-                }
-            }
+                ),
+                key = resultKeyOverride,
+                onResult = onPositiveClick
+            )
+
 
             @Composable
             fun rememberState(navController: NavHostController = rememberNavController()) =

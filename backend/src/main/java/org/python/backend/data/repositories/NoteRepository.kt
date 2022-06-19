@@ -36,6 +36,9 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
             } }
         }
 
+    suspend fun getAllNotesSnapShot() = noteStore.getAllNotesSnapShot(securityActor.clearance.value)
+
+
     suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.clearance.value)?.let { secureToUI(it) }
     suspend fun getWithCategory(id: Long): NoteWithCategory? =
         noteStore.getWithCategory(id, securityActor.clearance.value)?.let { data ->

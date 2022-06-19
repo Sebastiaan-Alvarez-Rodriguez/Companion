@@ -115,7 +115,8 @@ class SecurityActor : SecurityMetaInterface {
     override fun type() = internalActor.value?.type ?: TYPE_UNDEFINED
     override fun typeLive(): Flow<Int> = internalActor.map { it?.type ?: TYPE_UNDEFINED }
 
-    val clearance = MutableStateFlow<Int>(0)
+    private val _clearance = MutableStateFlow<Int>(0)
+    val clearance = _clearance.asStateFlow()
 
     private val mutex = Mutex()
     private lateinit var activity: FragmentActivity
@@ -138,7 +139,7 @@ class SecurityActor : SecurityMetaInterface {
 
     fun logout() = setClearanceLevel(0)
 
-    private fun setClearanceLevel(newValue: Int) = clearance.update { newValue }
+    private fun setClearanceLevel(newValue: Int) = _clearance.update { newValue }
 
     override fun actorAvailable(): Result = internalActor.value?.actorAvailable() ?: Result(ResultType.FAILED, "Internal problem with security actor")
 

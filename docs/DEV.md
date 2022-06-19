@@ -25,6 +25,7 @@ UI:
  + [List searching](https://johncodeos.com/how-to-add-search-in-list-with-jetpack-compose/)
  + [Auto-linkify text](https://stackoverflow.com/questions/66130513/)
  + [Custom toolbar](https://stackoverflow.com/questions/68956792/)
+
 Markdown renderer
  + [markdown rendering](https://github.com/noties/Markwon)
  + [markdown in compose](https://github.com/jeziellago/compose-markdown)
@@ -47,6 +48,15 @@ Security:
 
 Multi-platform:
  + [memory manager sample](https://github.com/Kotlin/kmm-production-sample)
+
+Gradle:
+ + [improving compiler performance](https://proandroiddev.com/how-we-reduced-our-gradle-build-times-by-over-80-51f2b6d6b05b)
+
+Parquet:
+ + [parquet writing](https://blog.contactsunny.com/data-science/how-to-generate-parquet-files-in-java)
+ + [parquet writing](https://stackoverflow.com/questions/39728854/)
+ + [parquet writing](https://github.com/macalbert/WriteParquetJavaDemo/blob/master/src/main/java/com.instarsocial.parquet/App.java)
+
 ## Issues
 Current issue list:
  1. Creating notes longer than the keyboard make the cursor go under the keyboard.
@@ -65,3 +75,4 @@ Current issue list:
 
 ## Sample Functionality
  - [auto-complete/expanding search field](https://proandroiddev.com/jetpack-compose-auto-complete-search-bar-853023856f0f)
+ - [modern architecture app](https://github.com/Spikeysanju/Expenso)

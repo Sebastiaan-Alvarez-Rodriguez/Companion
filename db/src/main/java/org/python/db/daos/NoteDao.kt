@@ -1,5 +1,6 @@
 package org.python.db.daos
 
+import android.database.Cursor
 import androidx.paging.PagingSource
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
@@ -57,6 +58,9 @@ interface NoteDao {
             RoomNoteWithCategory.Companion.SortableField.CATEGORYNAME -> getAll_sortCategoryName(clearance, ascending)
             RoomNoteWithCategory.Companion.SortableField.SECURITYLEVEL -> getAll_sortSecurityLevel(clearance, ascending)
         }
+
+    @Query("select * from RoomNote where securityLevel <= :clearance")
+    suspend fun getAllSnapshot(clearance: Int): List<RoomNote>
 
     @Query("select * from RoomNote where noteId == :id and securityLevel <= :clearance")
     suspend fun get(id: Long, clearance: Int): RoomNote?

@@ -38,7 +38,7 @@ class NoteState(
             composable(noteDestination) {
                 val notes by noteViewModel.notes.collectAsState()
                 val isLoading by noteViewModel.isLoading.collectAsState()
-                val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState(initial = false)
+                val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val clearance by noteViewModel.clearance.collectAsState()
 
                 val sortParameters by noteViewModel.sortParameters.collectAsState()

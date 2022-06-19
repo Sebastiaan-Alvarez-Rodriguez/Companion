@@ -29,7 +29,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
     val securityActor = (application as CompanionApplication).securityActor
 
-    val hasSecureNotes: Flow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
+    val hasSecureNotes: StateFlow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
     var clearance = securityActor.clearance.stateInViewModel(viewModelScope, 0)
 
     private val _sortParameters = MutableStateFlow(NoteSortParameters.fromPreferences(application.baseContext))
@@ -73,6 +73,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun delete(items: Collection<Note>): Unit = noteRepository.delete(items)
     suspend fun delete(note: Note): Result = noteRepository.delete(note)
     suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
+
+    suspend fun getAllNotesSnapShot(): List<Note> = noteRepository.getAllNotesSnapShot()
 
     suspend fun get(id: Long): Note? = noteRepository.get(id)
     suspend fun getWithCategory(id: Long): NoteWithCategory? = noteRepository.getWithCategory(id)

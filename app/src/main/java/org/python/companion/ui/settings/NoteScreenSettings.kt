@@ -1,4 +1,4 @@
-package org.python.companion.ui.note
+package org.python.companion.ui.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
