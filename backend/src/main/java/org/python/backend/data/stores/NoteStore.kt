@@ -1,6 +1,7 @@
 package org.python.backend.data.stores
 
 import androidx.paging.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -40,6 +41,7 @@ class NoteStore(database: CompanionDatabase) {
     suspend fun get(id: Long, clearance: Int): Note? = noteDao.get(id, clearance)?.toUI()
     suspend fun getWithCategory(id: Long, clearance: Int): NoteWithCategory? = noteDao.getWithCategory(id, clearance)?.toUI()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getWithCategoryLive(id: Long, clearance: Int): Flow<NoteWithCategory?> =
         noteDao.getWithCategoryLive(id, clearance).mapLatest { it?.toUI() }
 

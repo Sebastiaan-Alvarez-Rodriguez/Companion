@@ -324,7 +324,7 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
     override fun hasCredentialsLive(): Flow<Boolean> = _hasCredentials.asStateFlow()
 
     init {
-        sharedPreferences.registerOnSharedPreferenceChangeListener { prefs, key ->
+        sharedPreferences.registerOnSharedPreferenceChangeListener { prefs, _ ->
             _hasCredentials.value = prefs.contains(hash_security_key)
         }
     }

@@ -7,6 +7,7 @@ enum class ResultType {
 
 open class Result(val type: ResultType, val message: String? = null) {
     fun <T> toDataResult(): DataResult<T> {
+        @Suppress("UNCHECKED_CAST")
         return this as DataResult<T>
     }
 

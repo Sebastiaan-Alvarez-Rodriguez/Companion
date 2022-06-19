@@ -2,6 +2,7 @@ package org.python.companion.ui.security
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewModelScope
@@ -30,49 +31,64 @@ class SecurityPassState(
     fun NavGraphBuilder.securityPassGraph() {
         navigation(startDestination = navigationStart, route = "sec/pass") {
             dialog(route = "$navigationStart/login", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                if (!switchActor(SecurityActor.TYPE_PASS)) // TODO: Already represented in SecurityDialogLogin
-                    return@dialog
-                require(securityViewModel.securityActor.canLogin())
-
-                val clearance by securityViewModel.securityActor.clearance.collectAsState()
-                if (clearance > 0)
-                    navController.navigateUp()
-
-                var errorMessage: String? by remember { mutableStateOf(null) }
-
-                SecurityPasswordDialog(
-                    saltContext = activity.baseContext, //TODO: LocalContext might suffice
-                    onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { token ->
-                        securityViewModel.viewModelScope.launch {
-                            val msg = securityViewModel.securityActor.verify(token)
-                            if (msg.type != ResultType.SUCCESS) {
-                                errorMessage = msg.message ?: "There was a problem setting up a new password."
-                            }
-                        }
-                    },
-                    onResetPasswordClick = { navigateToReset(navController) },
-                    errorMessage = errorMessage
-                )
+                Login()
             }
 
             dialog(route = "$navigationStart/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                if (!switchActor(SecurityActor.TYPE_PASS))
-                    return@dialog
-
-                require(securityViewModel.securityActor.canSetup())
-
-                DoSetCredentialsSetup(securityViewModel, navController)
+                Setup()
             }
 
             dialog(route = "$navigationStart/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                if (!switchActor(SecurityActor.TYPE_PASS))
-                    return@dialog
-                require(securityViewModel.securityActor.canReset())
-
-                DoSetCredentialsReset(securityViewModel, navController)
+                Reset()
             }
         }
+    }
+
+    @Composable
+    fun Login(allowResetCalls: Boolean = true) {
+        if (!SecurityState.switchActor(securityViewModel.securityActor, SecurityActor.TYPE_PASS))
+            return
+        require(securityViewModel.securityActor.canLogin())
+
+        val clearance by securityViewModel.securityActor.clearance.collectAsState()
+        if (clearance > 0)
+            navController.navigateUp()
+
+        var errorMessage: String? by remember { mutableStateOf(null) }
+
+        SecurityPasswordDialog(
+            saltContext = LocalContext.current,
+            onNegativeClick = { navController.navigateUp() },
+            onPositiveClick = { token ->
+                securityViewModel.viewModelScope.launch {
+                    val msg = securityViewModel.securityActor.verify(token)
+                    if (msg.type != ResultType.SUCCESS) {
+                        errorMessage = msg.message ?: "There was a problem setting up a new password."
+                    }
+                }
+            },
+            onResetPasswordClick = if (allowResetCalls) {
+                { SecurityState.navigateToReset(SecurityActor.TYPE_PASS, navController) }
+            } else
+                null,
+            errorMessage = errorMessage
+        )
+    }
+
+    @Composable
+    fun Setup() {
+        if (!SecurityState.switchActor(securityViewModel.securityActor, SecurityActor.TYPE_PASS))
+            return
+        require(securityViewModel.securityActor.canSetup())
+        DoSetCredentialsSetup(securityViewModel, navController)
+    }
+
+    @Composable
+    fun Reset() {
+        if (!SecurityState.switchActor(securityViewModel.securityActor, SecurityActor.TYPE_PASS))
+            return
+        require(securityViewModel.securityActor.canReset())
+        DoSetCredentialsReset(securityViewModel, navController)
     }
 
     @Composable

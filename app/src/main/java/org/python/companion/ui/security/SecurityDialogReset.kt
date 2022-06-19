@@ -1,7 +1,5 @@
 package org.python.companion.ui.security
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -16,10 +14,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import org.python.companion.R
-import org.python.companion.ui.security.SecurityState.Companion.switchActor
-import org.python.companion.viewmodels.SecurityViewModel
 import org.python.security.SecurityActor
 import org.python.security.SecurityType
 
@@ -39,7 +34,9 @@ In order to reset, login using any of these methods.
 Alternatively, if you forgot all ways to login, you can reset the security system, destroying all secure notes PERMANENTLY.""".trimIndent()
         else
             "If you forgot all ways to login, you can reset the security system destroying all secure notes PERMANENTLY."
-    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
+    Card(elevation = 8.dp, modifier = Modifier
+        .padding(defaultPadding)
+        .wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text(text = "Reset Options", fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
             Spacer(modifier = Modifier.height(defaultPadding))
@@ -73,25 +70,11 @@ Alternatively, if you forgot all ways to login, you can reset the security syste
 @Composable
 fun SecurityDialogResetSpecific(
     @SecurityType method: Int,
-    securityViewModel: SecurityViewModel,
-    navController: NavHostController
+    bioState: SecurityBioState,
+    passState: SecurityPassState
 ) {
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
-
     when(method) {
-        SecurityActor.TYPE_PASS -> {
-            if (!switchActor(securityViewModel.securityActor, SecurityActor.TYPE_PASS))
-                return
-            require(securityViewModel.securityActor.canReset())
-            SecurityPassState.DoSetCredentialsReset(securityViewModel, navController)
-        }
-        SecurityActor.TYPE_BIO -> {
-            if (!switchActor(securityViewModel.securityActor, SecurityActor.TYPE_BIO))
-                return
-            SecurityBioDialogReset(
-                onNegativeClick = { navController.navigateUp() },
-                onPositiveClick = { launcher.launch(SecurityBioState.createSecuritySettingsIntent()) }
-            )
-        }
+        SecurityActor.TYPE_PASS -> passState.Reset()
+        SecurityActor.TYPE_BIO -> bioState.Reset()
     }
 }

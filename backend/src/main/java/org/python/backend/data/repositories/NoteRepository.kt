@@ -2,6 +2,7 @@ package org.python.backend.data.repositories
 
 import androidx.paging.PagingData
 import androidx.paging.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -27,6 +28,7 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
     ////////////////////////////////
 
     /** @return All notes in the collection (for which the user is authorized), sorted on given column. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun allNotes(sortColumn: RoomNoteWithCategory.Companion.SortableField, ascending: Boolean): Flow<PagingData<NoteWithCategory>> =
         securityActor.clearance.flatMapLatest { clearance ->
             noteStore.getAllNotes(clearance, sortColumn, ascending).map { page -> page.map {

@@ -104,18 +104,9 @@ class SecurityState(
                 val canLogin by noteViewModel.securityActor.canLoginLive().collectAsState(true)
 
                 if (canLogin) {
-                    SecurityDialogLoginSpecific(
-                        method = method,
-                        securityViewModel = securityViewModel,
-                        scaffoldState = scaffoldState,
-                        allowResetCalls = allowResetCalls,
-                        navController = navController
-                    )
+                    SecurityDialogLoginSpecific(method = method, bioState = securityBioState, passState = securityPassState, allowResetCalls = allowResetCalls)
                 } else {
-                    SecurityDialogLoginOptions(
-                        onNegativeClick = { navController.navigateUp() },
-                        onSetupClick = { navigateToSetup(method, navController) }
-                    )
+                    SecurityDialogLoginOptions(onNegativeClick = { navController.navigateUp() }, onSetupClick = { navigateToSetup(method, navController) })
                 }
             }
 
@@ -129,11 +120,7 @@ class SecurityState(
 
                 val canSetup by noteViewModel.securityActor.canSetup.collectAsState(false)
                 if (canSetup) {
-                    SecurityDialogSetupSpecific(
-                        method = method,
-                        securityViewModel = securityViewModel,
-                        navController = navController
-                    )
+                    SecurityDialogSetupSpecific(method = method, bioState = securityBioState, passState = securityPassState)
                 } else {
                     SecurityDialogSetupOptions(
                         onNegativeClick = { navController.navigateUp() },
@@ -162,8 +149,8 @@ class SecurityState(
                 if (canReset) {
                     SecurityDialogResetSpecific(
                         method = method,
-                        securityViewModel = securityViewModel,
-                        navController = navController
+                        bioState = securityBioState,
+                        passState = securityPassState
                     )
                 } else {
                     SecurityDialogReset(

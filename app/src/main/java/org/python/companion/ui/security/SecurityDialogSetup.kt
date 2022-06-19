@@ -1,7 +1,5 @@
 package org.python.companion.ui.security
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -13,10 +11,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import org.python.companion.R
-import org.python.companion.ui.security.SecurityState.Companion.switchActor
-import org.python.companion.viewmodels.SecurityViewModel
 import org.python.security.SecurityActor
 import org.python.security.SecurityType
 
@@ -31,7 +26,9 @@ fun SecurityDialogSetupOptions(
 In order to setup another method, you must first login using any of these methods.
 
 Alternatively, if you forgot all ways to login, you can reset the security system, (see options > security > reset)""".trimIndent()
-    Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
+    Card(elevation = 8.dp, modifier = Modifier
+        .padding(defaultPadding)
+        .wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text(text = "Setup Options", fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
             Spacer(modifier = Modifier.height(defaultPadding))
@@ -59,25 +56,11 @@ Alternatively, if you forgot all ways to login, you can reset the security syste
 @Composable
 fun SecurityDialogSetupSpecific(
     @SecurityType method: Int,
-    securityViewModel: SecurityViewModel,
-    navController: NavHostController
+    bioState: SecurityBioState,
+    passState: SecurityPassState
 ) {
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
-
     when(method) {
-        SecurityActor.TYPE_PASS -> {
-            if (!switchActor(securityViewModel.securityActor, SecurityActor.TYPE_PASS))
-                return
-            require(securityViewModel.securityActor.canSetup())
-            SecurityPassState.DoSetCredentialsSetup(securityViewModel, navController)
-        }
-        SecurityActor.TYPE_BIO -> {
-            if (!switchActor(securityViewModel.securityActor, SecurityActor.TYPE_BIO))
-                return
-            SecurityBioDialogSetup(
-                onNegativeClick = { navController.navigateUp() },
-                onPositiveClick = { launcher.launch(SecurityBioState.createSecuritySettingsIntent()) }
-            )
-        }
+        SecurityActor.TYPE_PASS -> passState.Setup()
+        SecurityActor.TYPE_BIO -> bioState.Setup()
     }
 }

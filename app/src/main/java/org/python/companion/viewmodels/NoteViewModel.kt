@@ -53,6 +53,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val allNotes = MutableStateFlow(emptyFlow<PagingData<NoteWithCategory>>().cachedIn(viewModelScope))
 
     /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun load() {
         UiUtil.effect(viewModelScope) {
             _isLoading.value = true

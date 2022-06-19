@@ -34,34 +34,11 @@ class SecurityBioState(
     fun NavGraphBuilder.securityBioGraph() {
         navigation(startDestination = navigationStart, route = "sec/bio") {
             dialog(route = "$navigationStart/login") {
-                if (!switchActor(SecurityActor.TYPE_BIO)) // TODO: Presented in SecurityDialogLogin
-                    return@dialog
-                require(securityViewModel.securityActor.hasCredentials())
-
-                val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
-                if (securityLevel > 0)
-                    navController.navigateUp()
-
-                LaunchedEffect(true) {
-                    val msgSec = securityViewModel.securityActor.verify(null)
-                    if (msgSec.type != ResultType.SUCCESS) {
-                        scaffoldState.snackbarHostState.showSnackbar(
-                            message = msgSec.message ?: "There was a login problem.",
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                }
+                Login()
             }
 
             dialog(route = "$navigationStart/setup", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                if (!switchActor(SecurityActor.TYPE_BIO))
-                    return@dialog
-                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
-
-                SecurityBioDialogSetup(
-                    onNegativeClick = { navController.navigateUp() },
-                    onPositiveClick = { launcher.launch(createSecuritySettingsIntent()) }
-                )
+                Setup()
             }
 
             dialog(route = "$navigationStart/reset", dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -75,6 +52,52 @@ class SecurityBioState(
                 )
             }
         }
+    }
+
+    @Composable
+    fun Login() {
+        if (!SecurityState.switchActor(securityViewModel.securityActor, SecurityActor.TYPE_BIO))
+            return
+        require(securityViewModel.securityActor.canLogin())
+
+        val securityLevel by securityViewModel.securityActor.clearance.collectAsState()
+        if (securityLevel > 0)
+            navController.navigateUp()
+
+        LaunchedEffect(true) {
+            val msgSec = securityViewModel.securityActor.verify(null)
+            if (msgSec.type != ResultType.SUCCESS) {
+                scaffoldState.snackbarHostState.showSnackbar(
+                    message = msgSec.message ?: "There was a login problem.",
+                    duration = SnackbarDuration.Short
+                )
+                navController.navigateUp()
+            }
+        }
+    }
+
+    @Composable
+    fun Setup() {
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
+
+        if (!SecurityState.switchActor(securityViewModel.securityActor, SecurityActor.TYPE_BIO))
+            return
+        SecurityBioDialogSetup(
+            onNegativeClick = { navController.navigateUp() },
+            onPositiveClick = { launcher.launch(createSecuritySettingsIntent()) }
+        )
+    }
+
+    @Composable
+    fun Reset() {
+        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { navController.navigateUp() }
+
+        if (!SecurityState.switchActor(securityViewModel.securityActor, SecurityActor.TYPE_BIO))
+            return
+        SecurityBioDialogReset(
+            onNegativeClick = { navController.navigateUp() },
+            onPositiveClick = { launcher.launch(createSecuritySettingsIntent()) }
+        )
     }
 
     @Composable

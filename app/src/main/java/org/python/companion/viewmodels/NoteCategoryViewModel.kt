@@ -39,6 +39,7 @@ class NoteCategoryViewModel(application: Application) : AndroidViewModel(applica
     val isLoading: StateFlow<Boolean> = _isLoading
 
     /** Function to load viewModel data. The loading state can be retrieved with [isLoading]. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun load() {
         UiUtil.effect(viewModelScope) {
             _isLoading.value = true

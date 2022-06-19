@@ -1,3 +1,9 @@
+buildscript {
+    ext {
+        database_version = '1'
+    }
+}
+
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
@@ -25,7 +31,7 @@ android {
         }
 
         // Database version
-        buildConfigField "int", "DB_VERSION", DB_VERSION
+        buildConfigField "int", "DB_VERSION", database_version
     }
 
     buildTypes {
