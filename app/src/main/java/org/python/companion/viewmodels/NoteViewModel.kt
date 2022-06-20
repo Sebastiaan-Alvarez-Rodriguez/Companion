@@ -1,10 +1,6 @@
 package org.python.companion.viewmodels
 
 import android.app.Application
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -22,7 +18,6 @@ import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.NoteSearchParameters
 import org.python.companion.ui.note.NoteSortParameters
-import org.python.companion.ui.theme.DarkColorPalette
 import org.python.datacomm.Result
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
