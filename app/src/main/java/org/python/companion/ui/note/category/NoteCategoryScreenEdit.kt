@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
@@ -35,8 +36,8 @@ fun NoteCategoryScreenEdit(
     onSaveClick: (NoteCategory, NoteCategory?) -> Unit,
     navController: NavController
 ) {
-    var state by remember { mutableStateOf(LoadingState.LOADING) }
-    var existingData by remember { mutableStateOf<NoteCategory?>(null) }
+    var state by rememberSaveable { mutableStateOf(LoadingState.LOADING) }
+    var existingData by rememberSaveable { mutableStateOf<NoteCategory?>(null) }
 
     when (state) {
         LoadingState.LOADING -> if (existingData == null) {
@@ -83,9 +84,9 @@ fun NoteCategoryScreenEditReady(
     onSaveClick: (NoteCategory) -> Unit,
     navController: NavController
 ) {
-    var name by remember { mutableStateOf(noteCategory?.name ?: "") }
-    var color by remember { mutableStateOf(noteCategory?.color ?: NoteCategory.DEFAULT.color) }
-    var favorite by remember { mutableStateOf(noteCategory?.favorite ?: false)}
+    var name by rememberSaveable { mutableStateOf(noteCategory?.name ?: "") }
+    var color by rememberSaveable { mutableStateOf(noteCategory?.color ?: NoteCategory.DEFAULT.color) }
+    var favorite by rememberSaveable { mutableStateOf(noteCategory?.favorite ?: false)}
 
     val hasChanged = lazy {
         if (noteCategory == null)
@@ -112,10 +113,16 @@ fun NoteCategoryScreenEditReady(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
 
     Column {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = defaultPadding).padding(top = defaultPadding)) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = defaultPadding)
+            .padding(top = defaultPadding)) {
             NoteCategoryItem(noteCategory = createNoteCategoryObject(), onNoteCategoryClick = {}, onFavoriteClick = { favorite = !favorite})
         }
-        Card(modifier = Modifier.fillMaxWidth().padding(defaultPadding).verticalScroll(rememberScrollState()), elevation = 5.dp) {
+        Card(modifier = Modifier
+            .fillMaxWidth()
+            .padding(defaultPadding)
+            .verticalScroll(rememberScrollState()), elevation = 5.dp) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -141,7 +148,9 @@ fun NoteCategoryScreenEditReady(
                 Spacer(Modifier.height(defaultPadding))
                 OutlinedTextField(
                     value = name,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = defaultPadding),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = defaultPadding),
                     onValueChange = { name = it },
                     label = { Text("Name") },
                     singleLine = true,
@@ -153,7 +162,7 @@ fun NoteCategoryScreenEditReady(
         }
     }
 
-    val showGoBack = remember { mutableStateOf(false) }
+    val showGoBack = rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = hasChanged.value) {
         showGoBack.value = !showGoBack.value
     }

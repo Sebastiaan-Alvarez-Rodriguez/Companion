@@ -77,7 +77,7 @@ private fun NoteScreenViewSingleReady(
 
     val isSearching by noteViewModel.isSearching.collectAsState()
     val searchParameters by noteViewModel.searchParameters.collectAsState()
-    var searchResultIndex by remember { mutableStateOf(0) } // Index of search result the user currently is interested in.
+    var searchResultIndex by rememberSaveable { mutableStateOf(0) } // Index of search result the user currently is interested in.
 
     val highlightIfSearching: (text: String, enable: Boolean?, matches: List<NoteViewModel.FindResult>) -> SpannableString = { text, enable, matches ->
         when {
@@ -167,7 +167,7 @@ private fun NoteScreenViewSingleReady(
 
 @Composable
 private fun ViewHeader(noteWithCategory: NoteWithCategory, onDeleteClick: (Note) -> Unit, onRenderTypeClick: (RenderType) -> Unit, onCategoryClick: (NoteCategory) -> Unit, onEditClick: (Note) -> Unit) {
-    var renderMenuExpanded by remember { mutableStateOf(false) }
+    var renderMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
     Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         IconButton(onClick = { onDeleteClick(noteWithCategory.note) }) {

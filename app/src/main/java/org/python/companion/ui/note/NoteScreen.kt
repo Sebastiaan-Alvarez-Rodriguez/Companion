@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
@@ -286,7 +287,7 @@ data class NoteSearchParameters(
 
 @Composable
 fun NoteSort(sortParameters: NoteSortParameters, onSortClick: (NoteSortParameters) -> Unit, modifier: Modifier = Modifier) {
-    var sortMenuExpanded by remember { mutableStateOf(false) }
+    var sortMenuExpanded by rememberSaveable { mutableStateOf(false) }
     IconButton(modifier = modifier, onClick = { onSortClick(
         sortParameters.copy(ascending = !sortParameters.ascending)
     ) }) {
@@ -345,9 +346,7 @@ fun NoteSearch(searchParameters: NoteSearchParameters, onQueryUpdate: (NoteSearc
         TextField(
             value = searchParameters.text,
             onValueChange = { onQueryUpdate(searchParameters.copy(text = it)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             singleLine = true,
             leadingIcon = {
                 Icon(imageVector = Icons.Default.Search, contentDescription = "Search", modifier = Modifier.padding(tinyPadding))
