@@ -51,11 +51,19 @@ Multi-platform:
 
 Gradle:
  + [improving compiler performance](https://proandroiddev.com/how-we-reduced-our-gradle-build-times-by-over-80-51f2b6d6b05b)
+ + [github packages](https://github.community/t/gradle-does-not-download-jar-from-package-registry/214178)
+ + [github packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry#authenticating-to-github-packages)
+ + [github packages android](https://proandroiddev.com/publishing-android-libraries-to-the-github-package-registry-part-1-7997be54ea5a)
+ + [github packages android kotlin](https://proandroiddev.com/using-kotlin-dsl-to-publish-an-android-library-to-github-packages-2a6a2140068e)
 
 Parquet:
  + [parquet writing](https://blog.contactsunny.com/data-science/how-to-generate-parquet-files-in-java)
  + [parquet writing](https://stackoverflow.com/questions/39728854/)
  + [parquet writing](https://github.com/macalbert/WriteParquetJavaDemo/blob/master/src/main/java/com.instarsocial.parquet/App.java)
+
+Exporting:
+ + [basics](https://chetangupta.net/db-to-csv/)
+ + [file writing](https://www.baeldung.com/java-write-to-file)
 
 ## Issues
 Current issue list:

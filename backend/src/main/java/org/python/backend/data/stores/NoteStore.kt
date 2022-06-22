@@ -25,10 +25,12 @@ class NoteStore(database: CompanionDatabase) {
     // All functions here have user verification checks built-in.
     ////////////////////////////////
 
-    fun getAllNotes(clearance: Int, sortColumn: RoomNoteWithCategory.Companion.SortableField, ascending: Boolean): Flow<PagingData<NoteWithCategory>> =
+    fun getAllNotes(
+        clearance: Int,
+        sortColumn: RoomNoteWithCategory.Companion.SortableField,
+        ascending: Boolean
+    ): Flow<PagingData<NoteWithCategory>> =
         pagingNote { noteDao.getAll(clearance, sortColumn, ascending) }
-
-    suspend fun getAllNotesSnapShot(clearance: Int) = noteDao.getAllSnapshot(clearance).map { it.toUI() }
 
     /**
      * Searches note by id.

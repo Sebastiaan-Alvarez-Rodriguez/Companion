@@ -1,3 +1,21 @@
+buildscript {
+    repositories {
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+        println "name: " + properties.getProperty("gpr.user")
+        println "token: " + properties.getProperty("gpr.token")
+
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/strategicblue/parquet-floor"
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = properties.getProperty("gpr.token") ?: System.getenv("TOKEN")
+            }
+        }
+    }
+}
+
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
@@ -32,6 +50,7 @@ android {
 
 dependencies {
     implementation "androidx.core:core-ktx:$android_kt_core_version"
+    implementation 'blue.strategic.parquet:parquet-floor:1.33'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
