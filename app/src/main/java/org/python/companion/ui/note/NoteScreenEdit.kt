@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
@@ -33,8 +34,8 @@ import java.time.Instant
 /** Loads note to edit, then shows edit screen. */
 @Composable
 fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, navController: NavController, onSaveClick: (Note, Note?) -> Unit) {
-    var state by remember { mutableStateOf(LoadingState.LOADING) }
-    var existingData by remember { mutableStateOf<NoteWithCategory?>(null) }
+    var state by rememberSaveable { mutableStateOf(LoadingState.LOADING) }
+    var existingData by rememberSaveable { mutableStateOf<NoteWithCategory?>(null) }
 
     when (state) {
         LoadingState.LOADING -> if (existingData == null) {
@@ -78,11 +79,11 @@ fun NoteScreenEditReady(
     navController: NavController,
     onSaveClick: (Note) -> Unit,
 ) {
-    var title by remember { mutableStateOf(note?.name ?: "") }
-    var content by remember { mutableStateOf(note?.content ?: "") }
-    var favorite by remember { mutableStateOf(note?.favorite ?: false) }
-    var securityLevel by remember { mutableStateOf(note?.securityLevel ?: 0) }
-    var renderType by remember { mutableStateOf(note?.renderType ?: RenderType.DEFAULT) }
+    var title by rememberSaveable { mutableStateOf(note?.name ?: "") }
+    var content by rememberSaveable { mutableStateOf(note?.content ?: "") }
+    var favorite by rememberSaveable { mutableStateOf(note?.favorite ?: false) }
+    var securityLevel by rememberSaveable { mutableStateOf(note?.securityLevel ?: 0) }
+    var renderType by rememberSaveable { mutableStateOf(note?.renderType ?: RenderType.DEFAULT) }
 
     val categoryKey = noteCategory?.categoryId ?: NoteCategory.DEFAULT.categoryId
 
@@ -126,7 +127,7 @@ fun NoteScreenEditReady(
             onFavoriteClick = { favorite = it },
             onSecurityLevelChange = { securityLevel = it },
             onRenderTypeClick = { renderType = it },
-            onSaveClick = {onSaveClick(createNoteObject())}
+            onSaveClick = { onSaveClick(createNoteObject()) }
         )
         Spacer(Modifier.height(defaultPadding))
 
@@ -156,7 +157,7 @@ fun NoteScreenEditReady(
         }
     }
 
-    val showGoBack = remember { mutableStateOf(false) }
+    val showGoBack = rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = noteChanged.value) {
         showGoBack.value = !showGoBack.value
     }
@@ -186,7 +187,7 @@ private fun ViewHeader(
     onSaveClick: () -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    var renderMenuExpanded by remember { mutableStateOf(false) }
+    var renderMenuExpanded by rememberSaveable { mutableStateOf(false) }
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
