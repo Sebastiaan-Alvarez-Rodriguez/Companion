@@ -61,6 +61,9 @@ interface NoteDao {
     @Query("select * from RoomNote where noteId == :id and securityLevel <= :clearance")
     suspend fun get(id: Long, clearance: Int): RoomNote?
 
+    @Query("select * from RoomNote where securityLevel <= :clearance")
+    suspend fun getAll(clearance: Int): List<RoomNote>
+
     @Transaction
     @Query("select * from RoomNote " +
             "join RoomNoteCategory on RoomNote.categoryKey = RoomNoteCategory.categoryId " +

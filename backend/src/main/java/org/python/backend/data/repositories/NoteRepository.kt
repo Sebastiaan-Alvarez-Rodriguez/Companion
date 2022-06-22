@@ -37,6 +37,8 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
         }
 
     suspend fun get(id: Long): Note? = noteStore.get(id, securityActor.clearance.value)?.let { secureToUI(it) }
+    suspend fun getAll(): List<Note> = noteStore.getAll(securityActor.clearance.value).map { secureToUI(it) ?: throw IllegalStateException("Could not decrypt note") }
+
     suspend fun getWithCategory(id: Long): NoteWithCategory? =
         noteStore.getWithCategory(id, securityActor.clearance.value)?.let { data ->
             NoteWithCategory(

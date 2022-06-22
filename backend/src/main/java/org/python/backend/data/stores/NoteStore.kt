@@ -39,6 +39,8 @@ class NoteStore(database: CompanionDatabase) {
      * @return Found note if present, null otherwise
      */
     suspend fun get(id: Long, clearance: Int): Note? = noteDao.get(id, clearance)?.toUI()
+    suspend fun getAll(clearance: Int): List<Note> = noteDao.getAll(clearance).map { it.toUI() }
+
     suspend fun getWithCategory(id: Long, clearance: Int): NoteWithCategory? = noteDao.getWithCategory(id, clearance)?.toUI()
 
     @OptIn(ExperimentalCoroutinesApi::class)

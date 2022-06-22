@@ -1,20 +1,20 @@
-buildscript {
-    repositories {
-        Properties properties = new Properties()
-        properties.load(project.rootProject.file('local.properties').newDataInputStream())
-        println "name: " + properties.getProperty("gpr.user")
-        println "token: " + properties.getProperty("gpr.token")
-
-        maven {
-            name = "GitHubPackages"
-            url = "https://maven.pkg.github.com/strategicblue/parquet-floor"
-            credentials {
-                username = properties.getProperty("gpr.user") ?: System.getenv("USERNAME")
-                password = properties.getProperty("gpr.token") ?: System.getenv("TOKEN")
-            }
-        }
-    }
-}
+//buildscript {
+//    repositories {
+//        Properties properties = new Properties()
+//        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+//        println "name: " + properties.getProperty("gpr.user")
+//        println "token: " + properties.getProperty("gpr.token")
+//
+//        maven {
+//            name = "GitHubPackages"
+//            url = "https://maven.pkg.github.com/strategicblue/parquet-floor"
+//            credentials {
+//                username = properties.getProperty("gpr.user") ?: System.getenv("USERNAME")
+//                password = properties.getProperty("gpr.token") ?: System.getenv("TOKEN")
+//            }
+//        }
+//    }
+//}
 
 plugins {
     id 'com.android.library'

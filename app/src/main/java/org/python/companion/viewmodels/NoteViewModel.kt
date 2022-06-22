@@ -69,7 +69,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun delete(note: Note): Result = noteRepository.delete(note)
     suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
 
-    suspend fun getAllNotesSnapShot(): List<Note> = noteRepository.getAllNotesSnapShot()
+    suspend fun getAll(): List<Note> = noteRepository.getAll()
 
     suspend fun get(id: Long): Note? = noteRepository.get(id)
     suspend fun getWithCategory(id: Long): NoteWithCategory? = noteRepository.getWithCategory(id)

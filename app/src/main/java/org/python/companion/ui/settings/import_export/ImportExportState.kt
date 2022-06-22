@@ -60,7 +60,7 @@ class ImportExportState(
 
                 LaunchedEffect(true) {
                     // TODO: Pick a file first.
-                    val notes = noteViewModel.getAllNotesSnapShot()
+                    val notes = noteViewModel.getAll()
                     // TODO: end by navigating to success or going up.
                     // TODO: Use snappy-compressed parquet.
 
