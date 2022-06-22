@@ -1,10 +1,5 @@
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
 rootProject.name = "Companion"
 include ':app'
 include ':backend'
@@ -12,3 +7,14 @@ include ':db'
 include ':security'
 include ':datacomm'
 include ':exim'
+
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    // Projects are responsible for dependencies
+    // If a project does not specify anything, use below sensible defaults.
+    repositories {
+        google()
+        mavenCentral()
+    }
+}

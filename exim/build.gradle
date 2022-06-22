@@ -1,24 +1,45 @@
-//buildscript {
-//    repositories {
-//        Properties properties = new Properties()
-//        properties.load(project.rootProject.file('local.properties').newDataInputStream())
-//        println "name: " + properties.getProperty("gpr.user")
-//        println "token: " + properties.getProperty("gpr.token")
-//
-//        maven {
-//            name = "GitHubPackages"
-//            url = "https://maven.pkg.github.com/strategicblue/parquet-floor"
-//            credentials {
-//                username = properties.getProperty("gpr.user") ?: System.getenv("USERNAME")
-//                password = properties.getProperty("gpr.token") ?: System.getenv("TOKEN")
-//            }
-//        }
-//    }
-//}
+import java.nio.file.Files
+import java.nio.file.Paths
 
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+}
+
+repositories {
+    maven {
+        name = "GitHubPackages"
+        url "https://maven.pkg.github.com/strategicblue/parquet-floor"
+        credentials {
+            String _user = null
+            String _token = null
+            File propertiesFile = project.rootProject.file('local.properties')
+            if (propertiesFile.isFile()) {
+                Properties properties = new Properties()
+                properties.load(propertiesFile.newDataInputStream())
+                _user = properties.getProperty("gpr.user")
+                _token = properties.getProperty("gpr.token")
+            }
+            username = _user ?: System.getenv("USERNAME")
+            password = _token ?: System.getenv("TOKEN")
+            println "User: " + username
+            println "Token: " + password
+
+            if (username == null || password == null)
+                throw RuntimeException("""
+username="$username", token="$token"
+Did you provide a github token? This is (sadly) required. Please see the docs.
+""")
+            // Github presents packages using a maven interface.
+            // Sadly, they force us to provide a stupid token to download a package from this interface,
+            // even when repo is publicly available.
+            // The token requires only the read:package permission.
+            // NEVER publish tokens online.
+            // Always place these tokens in environment variables (which are not accidentally pushed),
+            // or in files that are explicitly not published (e.g. /local.properties).
+            // Once Github fixes this needless token access for public repo packages, we will remove this.
+        }
+    }
 }
 
 android {
@@ -51,6 +72,7 @@ android {
 dependencies {
     implementation "androidx.core:core-ktx:$android_kt_core_version"
     implementation 'blue.strategic.parquet:parquet-floor:1.33'
+    implementation "com.jakewharton.timber:timber:$timber_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
