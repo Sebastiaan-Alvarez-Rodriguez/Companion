@@ -2,6 +2,8 @@ package org.python.exim
 
 import blue.strategic.parquet.Dehydrator
 import blue.strategic.parquet.ParquetWriter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.parquet.schema.MessageType
 import timber.log.Timber
 import java.io.DataOutputStream
@@ -35,17 +37,21 @@ object Export {
             }
         }
 
-        val parquetWriter = ParquetWriter.writeFile(
-            schema,
-            file,
-            dehydrator
-        )
+        withContext(Dispatchers.IO) {
+            kotlin.runCatching {
+                val parquetWriter = ParquetWriter.writeFile(
+                    schema,
+                    file,
+                    dehydrator
+                )
 
-        try {
-            content.forEach { parquetWriter.write(it) }
-        } catch (e: Exception) {
-            parquetWriter.close()
-            Timber.e(e)
+                try {
+                    content.forEach { parquetWriter.write(it) }
+                } catch (e: Exception) {
+                    parquetWriter.close()
+                    Timber.e(e)
+                }
+            }
         }
     }
 }

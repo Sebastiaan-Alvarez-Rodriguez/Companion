@@ -39,6 +39,7 @@ dependencies {
     implementation "com.jakewharton.timber:timber:$timber_version"
 
     api project(path: ':datacomm')
+    api project(path: ':exim')
     api project(path: ':security')
     api project(path: ':db')
 
