@@ -2,9 +2,12 @@ package org.python.backend.data.datatype
 
 import android.graphics.Color
 import org.python.db.entities.note.RoomNoteCategory
+import org.python.db.typeconverters.InstantConverter
+import org.python.exim.ExportInfo
+import org.python.exim.Exportable
 import java.time.Instant
 
-data class Note(
+data class Note (
     val noteId: Long = 0L,
     val name: String,
     val content: String,
@@ -14,7 +17,19 @@ data class Note(
     val date: Instant,
     val renderType: RenderType,
     val categoryKey: Long = -1L
-) {
+) : Exportable {
+    override fun values(): Array<ExportInfo> =
+        arrayOf(
+            ExportInfo(name, "name"),
+            ExportInfo(content, "content"),
+            ExportInfo(favorite, "favorite"),
+            ExportInfo(securityLevel, "securityLevel"),
+            ExportInfo(iv, "iv"),
+            ExportInfo(InstantConverter.dateToTimestamp(date), "date"),
+            ExportInfo(renderType.ordinal, "renderType"),
+            ExportInfo(categoryKey, "categoryKey")
+        )
+
     override fun equals(other: Any?): Boolean = other is Note && noteId == other.noteId &&
         name == other.name &&
         content == other.content &&
@@ -26,6 +41,10 @@ data class Note(
         categoryKey == other.categoryKey
 
     override fun hashCode(): Int = this.noteId.toInt()
+
+    companion object {
+        val EMPTY = Note(noteId = 0L, "", "", false, 0, date = Instant.MIN, renderType = RenderType.DEFAULT)
+    }
 }
 
 enum class RenderType {

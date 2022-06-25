@@ -9,10 +9,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import kotlinx.coroutines.Job
+import org.apache.parquet.schema.MessageType
+import org.apache.parquet.schema.Type
+import org.python.backend.data.datatype.Note
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.viewmodels.NoteViewModel
+import org.python.exim.Export
+import org.python.exim.Exports
 
 class ImportExportState(
     private val navController: NavHostController,
@@ -60,7 +66,22 @@ class ImportExportState(
 
                 LaunchedEffect(true) {
                     // TODO: Pick a file first.
+
+                    val types: List<Type> = Note.EMPTY.values().map { item -> Exports.parquet.transform(item.value, item.name) }
+                    val parquetExport = Exports.parquet(
+                        schema = MessageType("note", types)
+                    )
+
                     val notes = noteViewModel.getAll()
+                    val exportJob: Job = Export.export(
+                        type = parquetExport,
+                        destination = TODO()/**/,
+                        content = notes
+                    ) { item: Note, amountProcessed: Long ->
+                        progress = amountProcessed.toFloat() / notes.size
+                        detailsDescription = "Processing ${item.name}"
+                    }
+
                     // TODO: end by navigating to success or going up.
                     // TODO: Use snappy-compressed parquet.
 
