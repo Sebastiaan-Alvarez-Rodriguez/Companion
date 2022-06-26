@@ -64,7 +64,8 @@ Parquet:
 Exporting:
  + [basics](https://chetangupta.net/db-to-csv/)
  + [file writing](https://www.baeldung.com/java-write-to-file)
-
+ + [zip writing](https://github.com/srikanth-lingala/zip4j)
+ 
 ## Issues
 Current issue list:
  1. Creating notes longer than the keyboard make the cursor go under the keyboard.

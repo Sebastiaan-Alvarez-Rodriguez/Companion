@@ -3,23 +3,19 @@ package org.python.companion.ui.security
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.Card
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.python.companion.R
+import org.python.companion.support.UiUtil
 import org.python.security.PasswordVerificationToken
 
 @Composable
@@ -34,7 +30,6 @@ fun SecurityPasswordDialog(
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
     var pass by remember { mutableStateOf("") }
-    var passVisible by remember { mutableStateOf(false) }
 
     Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(defaultPadding)) {
@@ -46,21 +41,11 @@ fun SecurityPasswordDialog(
             )
             Spacer(modifier = Modifier.height(defaultPadding))
 
-            OutlinedTextField(
-                value = pass,
-                onValueChange = { pass = it },
-                label = { Text("Enter password...") },
+            UiUtil.OutlinedPasswordField(
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                trailingIcon = {
-                    val image =
-                        if (passVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    IconButton(onClick = { passVisible = !passVisible }) {
-                        Icon(imageVector = image, "")
-                    }
-                }
+                value = pass,
+                label = { Text("Enter password...") },
+                onValueChange = {pass = it}
             )
 
             errorMessage?.let {
@@ -104,7 +89,6 @@ fun SecurityPassDialogSetup(
 
     var pass by remember { mutableStateOf("") }
     var repeatPass by remember { mutableStateOf("") }
-    var passVisible by remember { mutableStateOf(false) }
     var passMatch by remember { mutableStateOf(false) }
 
     Card(elevation = 8.dp, modifier = Modifier.padding(defaultPadding).wrapContentHeight(), shape = RoundedCornerShape(12.dp)) {
@@ -117,40 +101,23 @@ fun SecurityPassDialogSetup(
             )
             Spacer(modifier = Modifier.height(defaultPadding))
 
-            OutlinedTextField(
+            UiUtil.OutlinedPasswordField(
+                modifier = Modifier.fillMaxWidth(),
                 value = pass,
+                label = { Text("Enter new password...") },
                 onValueChange = {
                     pass = it
                     passMatch = pass == repeatPass
-                },
-                label = { Text("Enter new password...") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                trailingIcon = {
-                    val image = if (passVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    IconButton(onClick = { passVisible = !passVisible }) {
-                        Icon(imageVector = image, "")
-                    }
                 }
             )
-            OutlinedTextField(
+
+            UiUtil.OutlinedPasswordField(
+                modifier = Modifier.fillMaxWidth(),
                 value = repeatPass,
+                label = { Text("Repeat new password...") },
                 onValueChange = {
                     repeatPass = it
                     passMatch = pass == repeatPass
-                },
-                label = { Text("Repeat new password...") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                trailingIcon = {
-                    val image = if (passVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    IconButton(onClick = { passVisible = !passVisible }) {
-                        Icon(imageVector = image, "")
-                    }
                 }
             )
 

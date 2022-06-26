@@ -16,9 +16,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.ArrowLeft
 import androidx.compose.material.icons.outlined.ArrowRight
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -39,6 +42,9 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -538,7 +544,30 @@ object UiUtil {
         Text(text, modifier = outModifier, fontSize = fontSize, onTextLayout = layoutResultFunc)
     }
 
-
+    @Composable
+    fun OutlinedPasswordField(
+        modifier: Modifier,
+        value: String,
+        label: @Composable (() -> Unit)? = null,
+        onValueChange: (String) -> Unit
+    ) {
+        var passVisible by remember { mutableStateOf(false) }
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = label,
+            modifier = modifier,
+            visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true,
+            trailingIcon = {
+                val image = if (passVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                IconButton(onClick = { passVisible = !passVisible }) {
+                    Icon(imageVector = image, "")
+                }
+            }
+        )
+    }
 
     class UIUtilState(private val navController: NavHostController) {
 

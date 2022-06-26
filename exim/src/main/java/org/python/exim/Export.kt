@@ -3,9 +3,17 @@ package org.python.exim
 import blue.strategic.parquet.Dehydrator
 import blue.strategic.parquet.ParquetWriter
 import kotlinx.coroutines.*
+import net.lingala.zip4j.ZipFile
+import net.lingala.zip4j.model.ZipParameters
+import net.lingala.zip4j.model.enums.AesKeyStrength
+import net.lingala.zip4j.model.enums.EncryptionMethod
+import net.lingala.zip4j.progress.ProgressMonitor
 import org.apache.parquet.schema.*
 import timber.log.Timber
 import java.io.File
+import java.nio.file.Path
+import java.time.Instant
+
 
 data class ExportInfo(
     val value: Any?,
@@ -73,6 +81,59 @@ object Export {
                     }
                 }
             }
+        }
+    }
+
+    data class ZippingState(val state: FinishState, val error: String? = null)
+
+    enum class FinishState {
+        SUCCESS,
+        ERROR,
+        CANCELLED
+    }
+    suspend fun zip(
+        file: File,
+        password: CharArray,
+        zipName: String? = null,
+        path: Path,
+        pollTimeMS: Long,
+        onProgress: (Float) -> Unit
+    ): Deferred<ZippingState> = withContext(Dispatchers.IO) {
+        async {
+            val progressMonitor = zip(file, password, path, zipName)
+            while (progressMonitor.result == ProgressMonitor.Result.WORK_IN_PROGRESS) {
+                delay(pollTimeMS)
+                onProgress(progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork)
+            }
+
+            return@async when (progressMonitor.result) {
+                ProgressMonitor.Result.SUCCESS -> ZippingState(FinishState.SUCCESS)
+                ProgressMonitor.Result.ERROR -> ZippingState(FinishState.ERROR, progressMonitor.exception.message)
+                ProgressMonitor.Result.CANCELLED -> ZippingState(FinishState.CANCELLED, "Zipping was cancelled")
+                else -> throw IllegalStateException("Unexpected zipping progress '${progressMonitor.result}'")
+            }
+        }
+    }
+
+    private fun zip(file: File, password: CharArray, path: Path, zipName: String? = null): ProgressMonitor {
+        val zipParameters = ZipParameters()
+        zipParameters.isEncryptFiles = true
+        zipParameters.encryptionMethod = EncryptionMethod.AES
+        zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
+//        zipParameters.fileNameInZip = file.name
+        val finalName = zipName ?: "companion-${Instant.now()}"
+
+        try {
+            val zipFile = ZipFile(finalName, password)
+            zipFile.isRunInThread = true
+            zipFile.comment = "Companion-generated backup files"
+            val progressMonitor = zipFile.progressMonitor
+
+            zipFile.addFile(file, zipParameters)
+            return progressMonitor
+        } catch (e: Exception) {
+            Timber.e("Got error during zipping process: ", e)
+            throw e
         }
     }
 }
