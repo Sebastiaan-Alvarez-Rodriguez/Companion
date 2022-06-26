@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import org.python.companion.R
@@ -36,6 +37,8 @@ fun ImportExportScreenSettings(
     isExport: Boolean = true,
     path: String? = null,
     password: String,
+    pathError: String? = null,
+    passwordError: String? = null,
     onStartClick: () -> Unit,
     onLocationSelectClick: () -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -61,7 +64,7 @@ fun ImportExportScreenSettings(
             progress = animatedProgress
         )
 
-        Spacer(Modifier.height(defaultPadding))
+        Spacer(Modifier.height(defaultPadding*4))
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.align(Alignment.CenterHorizontally).padding(defaultPadding)) {
@@ -70,13 +73,17 @@ fun ImportExportScreenSettings(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = path ?: "Please select a path...")
+                    Text(text = path ?: "Please select a path...", color = if (pathError != null) Color.Red else Color.Unspecified)
                     IconButton(onClick = onLocationSelectClick) {
                         Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = "Pick a file")
                     }
                 }
                 Spacer(Modifier.height(smallPadding))
                 Text("pick a path to place the backup.")
+                if (pathError != null) {
+                    Spacer(Modifier.height(smallPadding))
+                    Text(text = pathError, color = Color.Red)
+                }
             }
         }
 
@@ -88,13 +95,18 @@ fun ImportExportScreenSettings(
                     modifier = Modifier.fillMaxWidth(),
                     value = password,
                     onValueChange = onPasswordChange,
-                    label = { Text("Enter a backup password") }
+                    label = { Text("Enter a backup password") },
+                    isError = passwordError != null
                 )
                 Spacer(Modifier.height(smallPadding))
                 Text(text = "Pick a password for this backup." +
                         "All data will be encrypted using this password." +
                         "You need this password to import the data, so remember it well."
                 )
+                if (passwordError != null) {
+                    Spacer(Modifier.height(smallPadding))
+                    Text(text = passwordError, color = Color.Red)
+                }
             }
         }
 
@@ -116,9 +128,7 @@ fun ImportExportExecutionScreen(
     var detailsExpanded by rememberSaveable { mutableStateOf(false) }
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(defaultPadding)) {
+    Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
         ViewHeader(onBackClick = onBackClick)
 
         Spacer(Modifier.height(defaultPadding))
@@ -160,10 +170,7 @@ private fun NestedCircularProgressIndicator(progresses: List<Float>) {
             ).value
 
             CircularProgressIndicator(
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .scale(scale)
-                    .align(Alignment.Center),
+                modifier = Modifier.aspectRatio(1f).scale(scale).align(Alignment.Center),
                 color = DarkColorPalette.primary,
                 progress = animatedProgress
             )

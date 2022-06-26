@@ -549,7 +549,8 @@ object UiUtil {
         modifier: Modifier,
         value: String,
         label: @Composable (() -> Unit)? = null,
-        onValueChange: (String) -> Unit
+        onValueChange: (String) -> Unit,
+        isError: Boolean = false
     ) {
         var passVisible by remember { mutableStateOf(false) }
         OutlinedTextField(
@@ -565,7 +566,8 @@ object UiUtil {
                 IconButton(onClick = { passVisible = !passVisible }) {
                     Icon(imageVector = image, "")
                 }
-            }
+            },
+            isError = isError
         )
     }
 

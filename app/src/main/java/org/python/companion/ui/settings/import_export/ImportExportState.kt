@@ -29,13 +29,13 @@ import org.python.exim.Exports
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Instant
 
 class ImportExportState(
     private val navController: NavHostController,
     private val noteViewModel: NoteViewModel,
     private val scaffoldState: ScaffoldState
 ) {
-
     fun NavGraphBuilder.importExportGraph() {
         navigation(startDestination = navigationStart, route = "export") {
             composable(route = navigationStart) {
@@ -48,39 +48,48 @@ class ImportExportState(
 //                    Intent finalIntent = Intent.createChooser(intent, "Select file to import from");
 //                    startActivityForResult(finalIntent, REQUEST_CODE_IMPORT);
 //                });
-//                exportView.setOnClickListener(v -> {
-//                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("*/*");
-//                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-//                    Intent finalIntent = Intent.createChooser(intent, "Select location to export to");
-//                    startActivityForResult(finalIntent, REQUEST_CODE_EXPORT);
-//                });
-                val location = rememberSaveable { mutableStateOf<Uri?>(null) }
-                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) {
-                    location.value = it
+                var location by rememberSaveable { mutableStateOf<Uri?>(null) }
+                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) {
+                    location = it
                 }
 
-                val password = rememberSaveable { mutableStateOf("") }
+                var pathError by rememberSaveable { mutableStateOf<String?>(null) }
+                var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+
+                var password by rememberSaveable { mutableStateOf("") }
 
                 if (!hasSecureNotes || isAuthorized > 0) {
                     ImportExportScreenSettings(
                         isExport = true,
-                        path = location.value?.path,
-                        password = password.value,
-                        onLocationSelectClick = { launcher.launch("*/*") },
-                        onPasswordChange = { password.value = it },
+                        path = location?.path,
+                        password = password,
+                        pathError = pathError,
+                        passwordError = passwordError,
+                        onLocationSelectClick = {
+                            launcher.launch(zipName())
+                            pathError = null
+                        },
+                        onPasswordChange = {
+                            password = it
+                            passwordError = null
+                        },
                         onBackClick = { navController.navigateUp() },
                         onStartClick = {
-                            val _location = location.value
-                            val _password = password.value
+                            val _location = location
+                            val _password = password
+
+                            var hasErrors = false
                             if (_location == null) {
-                                //TODO: display error
-                                return@ImportExportScreenSettings
+                                pathError = "Path has not been set"
+                                hasErrors = true
                             }
-                            if (_password.isEmpty()) {
-                                //TODO: display error
-                                return@ImportExportScreenSettings
+                            if (_password.length < 12) {
+                                passwordError = "Password length is too short (must be > 12, was ${_password.length})"
+                                hasErrors = true
                             }
-                            navigateToExportExecute(navController, _location, _password) }
+                            if (hasErrors)
+                                return@ImportExportScreenSettings
+                            navigateToExportExecute(navController, _location!!, _password) }
                     )
                 } else {
                     // TODO "Log in to continue" -> log in
@@ -89,8 +98,8 @@ class ImportExportState(
             }
 
             composable(route = "$navigationStart/execute/{location}/{password}") { entry ->
-                val location: String = entry.arguments?.getString("title") ?: throw IllegalStateException("Exporting requires a location")
-                val pass: String = entry.arguments?.getString("title") ?: throw IllegalStateException("Exporting requires a password")
+                val location: String = entry.arguments?.getString("location") ?: throw IllegalStateException("Exporting requires a location")
+                val pass: String = entry.arguments?.getString("password") ?: throw IllegalStateException("Exporting requires a password")
 
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
@@ -162,49 +171,51 @@ class ImportExportState(
 //        return finalIntent
 //    }
 
-    private suspend fun <T: Exportable> doExport(
-        data: List<T>,
-        outputFile: File,
-        onProgress: (Float, T) -> Unit,
-    ): Job {
-        val types: List<Type> = Note.EMPTY.values().map { item -> Exports.parquet.transform(item.value, item.name) }
-        val parquetExport = Exports.parquet(schema = MessageType("note", types))
-
-        return Export.export(
-            type = parquetExport,
-            destination = outputFile,
-            content = data
-        ) { item: T, amountProcessed: Long ->
-            onProgress(amountProcessed.toFloat() / data.size, item)
-        }
-    }
-
-    private suspend fun doZip(
-        input: File,
-        password: CharArray,
-        destination: Path,
-        onProgress: (Float) -> Unit
-    ): Deferred<Export.ZippingState> {
-        //TODO: When also writing categories: write lock?
-        return Export.zip(
-            file = input,
-            password = password,
-            pollTimeMS = 80,
-            path = destination,
-            onProgress = onProgress
-        )
-    }
-
     companion object {
         const val navigationStart: String = "${NoteState.noteDestination}/export"
 
         fun navigateToExport(navController: NavController) =
             navController.navigate(navigationStart)
 
+        private fun zipName() = "companion-${Instant.now()}"
+
+        private suspend fun <T: Exportable> doExport(
+            data: List<T>,
+            outputFile: File,
+            onProgress: (Float, T) -> Unit,
+        ): Job {
+            val types: List<Type> = Note.EMPTY.values().map { item -> Exports.parquet.transform(item.value, item.name) }
+            val parquetExport = Exports.parquet(schema = MessageType("note", types))
+
+            return Export.export(
+                type = parquetExport,
+                destination = outputFile,
+                content = data
+            ) { item: T, amountProcessed: Long ->
+                onProgress(amountProcessed.toFloat() / data.size, item)
+            }
+        }
+
+        private suspend fun doZip(
+            input: File,
+            password: CharArray,
+            destination: Path,
+            onProgress: (Float) -> Unit
+        ): Deferred<Export.ZippingState> {
+            //TODO: When also writing categories: write lock?
+            return Export.zip(
+                file = input,
+                password = password,
+                pollTimeMS = 80,
+                path = destination,
+                onProgress = onProgress
+            )
+        }
+
         private fun navigateToExportExecute(navController: NavController, location: Uri, password: String) =
             navController.navigate(UiUtil.createRoute(
                 "$navigationStart/execute",
-                args = listOf(location.toString(), password)
+                args = listOf(Uri.encode(location.path), password)
             ))
 
         private fun navigateToStop(navController: NavHostController, isExport: Boolean = true, onStopClick: () -> Unit) =

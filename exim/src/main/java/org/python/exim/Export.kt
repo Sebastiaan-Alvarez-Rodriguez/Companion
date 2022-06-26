@@ -23,10 +23,6 @@ interface Exportable {
     fun values(): Array<ExportInfo>
 }
 
-interface Progress {
-    fun onProgress(amount: Long)
-}
-
 // List of supported export functionality
 sealed class Exports {
     data class parquet(val schema: MessageType) : Exports() {
@@ -39,7 +35,7 @@ sealed class Exports {
                     is Float -> Types.required(PrimitiveType.PrimitiveTypeName.FLOAT)
                     is Double -> Types.required(PrimitiveType.PrimitiveTypeName.DOUBLE)
                     is String -> Types.required(PrimitiveType.PrimitiveTypeName.BINARY).`as`(LogicalTypeAnnotation.stringType())
-                    is ByteArray -> Types.required(PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
+                    is ByteArray -> Types.required(PrimitiveType.PrimitiveTypeName.BINARY)
                     else -> throw IllegalArgumentException("No support for transforming object '$primitiveType' of type '${primitiveType?.javaClass?.name ?: "<null>"}'")
                 }.named(name)
             }
@@ -120,7 +116,7 @@ object Export {
         zipParameters.isEncryptFiles = true
         zipParameters.encryptionMethod = EncryptionMethod.AES
         zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
-//        zipParameters.fileNameInZip = file.name
+//        zipParameters.fileNameInZip = file.name TODO: Needed?
         val finalName = zipName ?: "companion-${Instant.now()}"
 
         try {
