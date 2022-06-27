@@ -18,7 +18,6 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.Type
-import org.python.backend.data.datatype.Note
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
@@ -26,6 +25,7 @@ import org.python.companion.viewmodels.NoteViewModel
 import org.python.exim.Export
 import org.python.exim.Exportable
 import org.python.exim.Exports
+import timber.log.Timber
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -83,7 +83,7 @@ class ImportExportState(
                                 pathError = "Path has not been set"
                                 hasErrors = true
                             }
-                            if (_password.length < 12) {
+                            if (_password.length < 1) { //todo make 12 again
                                 passwordError = "Password length is too short (must be > 12, was ${_password.length})"
                                 hasErrors = true
                             }
@@ -126,14 +126,21 @@ class ImportExportState(
                 )
 
                 LaunchedEffect(true) {
+                    Timber.e("launching export job")
+
                     val exportJob = doExport(
                         data = noteViewModel.getAll(),
                         outputFile = tmpNotesFile
                     ) { progress, item ->
                         progressNotes = progress
                         detailsDescription = "Processing note '${item.name}'"
-                    }
+                        Timber.e("export ($progress%): $detailsDescription")
+                    } ?: throw IllegalStateException("No notes to process")//return@LaunchedEffect
+                    Timber.e("starting export job")
+                    exportJob.start()
+                    Timber.e("joining export job")
                     exportJob.join()
+                    Timber.e("launching zip job")
 
                     val zippingJob = doZip(
                         input = tmpNotesFile,
@@ -142,6 +149,7 @@ class ImportExportState(
                     ) { progress ->
                         progressZipNotes = progress
                         detailsDescription = "Archiving notes..."
+                        Timber.e("zip ($progress%): $detailsDescription")
                     }
 
                     val zippingState = zippingJob.await()
@@ -183,10 +191,14 @@ class ImportExportState(
             data: List<T>,
             outputFile: File,
             onProgress: (Float, T) -> Unit,
-        ): Job {
-            val types: List<Type> = Note.EMPTY.values().map { item -> Exports.parquet.transform(item.value, item.name) }
+        ): Job? {
+            if (data.isEmpty()) {
+                return null
+            }
+            val types: List<Type> = data.first().values().map { item -> Exports.parquet.transform(item.value, item.name) }
             val parquetExport = Exports.parquet(schema = MessageType("note", types))
 
+            Timber.e("export2: $data")
             return Export.export(
                 type = parquetExport,
                 destination = outputFile,

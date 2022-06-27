@@ -46,6 +46,7 @@ object Export {
     suspend fun <T: Exportable> export(type: Exports, destination: File, content: List<T>, onProgress: (T, Long) -> Unit): Job =
         when (type) {
             is Exports.parquet -> writeToParquet(type.schema, destination, content, onProgress)
+            else -> throw IllegalArgumentException("Unknown export type '$type'")
         }
 
     private suspend fun <T: Exportable> writeToParquet(schema: MessageType, file: File, content: List<T>, onProgress: (T, Long) -> Unit): Job {
@@ -54,27 +55,26 @@ object Export {
                 valueWriter!!.write(it.name, it.value)
             }
         }
+        Timber.e("Returning job...")
 
         return withContext(Dispatchers.IO) {
-            this.launch(start = CoroutineStart.LAZY) {
-                kotlin.runCatching {
-                    val parquetWriter = ParquetWriter.writeFile(
-                        schema,
-                        file,
-                        dehydrator
-                    )
+            return@withContext launch(start = CoroutineStart.LAZY) {
+                val parquetWriter = ParquetWriter.writeFile(
+                    schema,
+                    file,
+                    dehydrator
+                )
 
-                    try {
-                        var count = 0L
-                        content.forEach {
-                            parquetWriter.write(it)
-                            count += 1L
-                            onProgress(it, count)
-                        }
-                    } catch (e: Exception) {
-                        parquetWriter.close()
-                        Timber.e(e)
+                try {
+                    var count = 0L
+                    content.forEach {
+                        parquetWriter.write(it)
+                        count += 1L
+                        onProgress(it, count)
                     }
+                } catch (e: Exception) {
+                    parquetWriter.close()
+                    Timber.e(e)
                 }
             }
         }

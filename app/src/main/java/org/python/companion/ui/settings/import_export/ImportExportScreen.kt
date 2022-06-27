@@ -127,8 +127,10 @@ fun ImportExportExecutionScreen(
 ) {
     var detailsExpanded by rememberSaveable { mutableStateOf(false) }
 
+    val scrollState = rememberScrollState()
+
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Column(modifier = Modifier.fillMaxSize().padding(defaultPadding)) {
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState).padding(defaultPadding)) {
         ViewHeader(onBackClick = onBackClick)
 
         Spacer(Modifier.height(defaultPadding))
@@ -137,9 +139,13 @@ fun ImportExportExecutionScreen(
 
         Spacer(Modifier.height(defaultPadding))
 
-        Card(elevation = 5.dp) {
-            Column {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Card(elevation = 5.dp, modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     TextButton(onClick = { detailsExpanded = !detailsExpanded }) {
                         Text("Show details", modifier = Modifier.padding(defaultPadding))
                     }
