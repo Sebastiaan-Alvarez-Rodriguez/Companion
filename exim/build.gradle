@@ -32,9 +32,14 @@ android {
 
 dependencies {
     implementation "androidx.core:core-ktx:$android_kt_core_version"
-    api("blue.strategic.parquet:parquet-floor:1.33") {
+    // TODO: https://github.com/shevek/jarjar/blob/master/jarjar-gradle/example/build.gradle
+    // https://stackoverflow.com/questions/44913406/
+    // Use library to remove shared shaded stuff from parquet-column and parquet-hadoop
+    implementation("blue.strategic.parquet:parquet-floor:1.33") {
         exclude group: 'org.apache.parquet', module: 'parquet-hadoop'
+//        exclude group: 'org.apache.parquet', module: 'parquet-column'
     }
+
     implementation "net.lingala.zip4j:zip4j:2.11.1"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.1"

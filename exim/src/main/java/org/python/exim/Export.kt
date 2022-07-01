@@ -58,7 +58,7 @@ object Export {
         Timber.e("Returning job...")
 
         return withContext(Dispatchers.IO) {
-            return@withContext launch(start = CoroutineStart.LAZY) {
+            return@withContext launch {
                 val parquetWriter = ParquetWriter.writeFile(
                     schema,
                     file,

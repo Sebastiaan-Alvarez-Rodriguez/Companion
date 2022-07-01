@@ -16,15 +16,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
-import org.apache.parquet.schema.MessageType
-import org.apache.parquet.schema.Type
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.exim.Export
 import org.python.exim.Exportable
-import org.python.exim.Exports
 import timber.log.Timber
 import java.io.File
 import java.nio.file.Path
@@ -195,12 +192,12 @@ class ImportExportState(
             if (data.isEmpty()) {
                 return null
             }
-            val types: List<Type> = data.first().values().map { item -> Exports.parquet.transform(item.value, item.name) }
-            val parquetExport = Exports.parquet(schema = MessageType("note", types))
+//            val types: List<Type> = data.first().values().map { item -> Exports.parquet.transform(item.value, item.name) }
+//            val parquetExport = Exports.parquet(schema = MessageType("note", types))
 
             Timber.e("export2: $data")
             return Export.export(
-                type = parquetExport,
+                type = TODO(),//parquetExport,
                 destination = outputFile,
                 content = data
             ) { item: T, amountProcessed: Long ->
