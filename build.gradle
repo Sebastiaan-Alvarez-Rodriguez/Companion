@@ -10,6 +10,11 @@ buildscript {
         timber_version = '5.0.1'
         markwon_version = '4.6.2'
 
+        android_java_version_src = JavaVersion.VERSION_11
+        android_java_version_target = JavaVersion.VERSION_11
+
+        kotlin_jvm_target = android_java_version_target.toString()
+
         kotlin_performance_args = []
     }
     repositories {
@@ -33,7 +38,7 @@ allprojects {
 
         maven {
             name = "GitHubPackages"
-            url "https://maven.pkg.github.com/strategicblue/parquet-floor"
+            url "https://maven.pkg.github.com/Sebastiaan-Alvarez-Rodriguez/parquet-android"
             credentials {
                 String _user = null
                 String _token = null
@@ -49,7 +54,7 @@ allprojects {
 
                 if (username == null || password == null)
                     throw RuntimeException("""
-username="$username", token="$token"
+username="$username", token="$password"
 Did you provide a github token? This is (sadly) required. Please see the docs.
 """)
                 // Github presents packages using a maven interface.

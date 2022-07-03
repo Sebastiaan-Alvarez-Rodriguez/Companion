@@ -31,11 +31,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility android_java_version_src
+        targetCompatibility android_java_version_target
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = kotlin_jvm_target
         freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
         freeCompilerArgs += kotlin_performance_args
     }
@@ -44,7 +44,6 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
-        kotlinCompilerVersion kotlin_version
     }
     packagingOptions {
         resources {

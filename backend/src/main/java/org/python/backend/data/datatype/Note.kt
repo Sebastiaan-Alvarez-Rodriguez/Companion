@@ -24,7 +24,7 @@ data class Note (
             ExportInfo(content, "content"),
             ExportInfo(favorite, "favorite"),
             ExportInfo(securityLevel, "securityLevel"),
-            ExportInfo(iv, "iv"),
+            ExportInfo(String(iv, Charsets.ISO_8859_1), "iv"),
             ExportInfo(InstantConverter.dateToTimestamp(date), "date"),
             ExportInfo(renderType.ordinal, "renderType"),
             ExportInfo(categoryKey, "categoryKey")

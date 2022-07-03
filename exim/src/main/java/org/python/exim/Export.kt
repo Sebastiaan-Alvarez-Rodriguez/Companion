@@ -52,10 +52,10 @@ object Export {
     private suspend fun <T: Exportable> writeToParquet(schema: MessageType, file: File, content: List<T>, onProgress: (T, Long) -> Unit): Job {
         val dehydrator = Dehydrator<T> { record, valueWriter ->
             record.values().forEach {
+                Timber.e(it.toString())
                 valueWriter!!.write(it.name, it.value)
             }
         }
-        Timber.e("Returning job...")
 
         return withContext(Dispatchers.IO) {
             return@withContext launch {
@@ -72,9 +72,11 @@ object Export {
                         count += 1L
                         onProgress(it, count)
                     }
+                    parquetWriter.close()
                 } catch (e: Exception) {
                     parquetWriter.close()
                     Timber.e(e)
+                    throw e
                 }
             }
         }
@@ -97,14 +99,16 @@ object Export {
     ): Deferred<ZippingState> = withContext(Dispatchers.IO) {
         async {
             val progressMonitor = zip(file, password, path, zipName)
-            while (progressMonitor.result == ProgressMonitor.Result.WORK_IN_PROGRESS) {
+            while (progressMonitor.result == ProgressMonitor.Result.WORK_IN_PROGRESS || progressMonitor.result == null) {
                 delay(pollTimeMS)
                 onProgress(progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork)
+                Timber.e("Export zip tick: ${progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork}")
             }
+            Timber.e("Export zip tick completed: ${progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork}")
 
             return@async when (progressMonitor.result) {
                 ProgressMonitor.Result.SUCCESS -> ZippingState(FinishState.SUCCESS)
-                ProgressMonitor.Result.ERROR -> ZippingState(FinishState.ERROR, progressMonitor.exception.message)
+                ProgressMonitor.Result.ERROR -> throw progressMonitor.exception //ZippingState(FinishState.ERROR, progressMonitor.exception.message)
                 ProgressMonitor.Result.CANCELLED -> ZippingState(FinishState.CANCELLED, "Zipping was cancelled")
                 else -> throw IllegalStateException("Unexpected zipping progress '${progressMonitor.result}'")
             }
@@ -119,15 +123,16 @@ object Export {
 //        zipParameters.fileNameInZip = file.name TODO: Needed?
         val finalName = zipName ?: "companion-${Instant.now()}"
 
+        val zipFile = ZipFile(finalName, password)
         try {
-            val zipFile = ZipFile(finalName, password)
             zipFile.isRunInThread = true
-            zipFile.comment = "Companion-generated backup files"
             val progressMonitor = zipFile.progressMonitor
 
             zipFile.addFile(file, zipParameters)
+            zipFile.close()
             return progressMonitor
         } catch (e: Exception) {
+            zipFile.close()
             Timber.e("Got error during zipping process: ", e)
             throw e
         }

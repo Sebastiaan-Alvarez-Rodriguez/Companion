@@ -20,12 +20,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility android_java_version_src
+        targetCompatibility android_java_version_target
     }
+
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = kotlin_jvm_target
         freeCompilerArgs += kotlin_performance_args
     }
 }
@@ -35,9 +37,8 @@ dependencies {
     // TODO: https://github.com/shevek/jarjar/blob/master/jarjar-gradle/example/build.gradle
     // https://stackoverflow.com/questions/44913406/
     // Use library to remove shared shaded stuff from parquet-column and parquet-hadoop
-    implementation("blue.strategic.parquet:parquet-floor:1.33") {
-        exclude group: 'org.apache.parquet', module: 'parquet-hadoop'
-//        exclude group: 'org.apache.parquet', module: 'parquet-column'
+    api("org.parquet.android:parquet-android:1.0.0") {
+        exclude group: "org.xerial.snappy"
     }
 
     implementation "net.lingala.zip4j:zip4j:2.11.1"
