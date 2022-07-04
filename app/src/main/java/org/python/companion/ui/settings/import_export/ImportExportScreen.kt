@@ -26,31 +26,13 @@ import org.python.companion.support.UiUtil
 import org.python.companion.ui.theme.DarkColorPalette
 
 
-/**
- * Import/Export settings screen, where users can start import/export.
- * @param isExport If `true`, assumes export context. Assumes import context otherwise.
- * @param onStartClick Lambda to perform on start clicks.
- * @param onBackClick Lambda to perform on back clicks.
- */
 @Composable
 fun ImportExportScreenSettings(
-    isExport: Boolean = true,
-    path: String? = null,
-    password: String,
-    pathError: String? = null,
-    passwordError: String? = null,
-    onStartClick: () -> Unit,
-    onLocationSelectClick: () -> Unit,
-    onPasswordChange: (String) -> Unit,
+    progressContent: @Composable () -> Unit,
+    subContent: @Composable () -> Unit,
     onBackClick: () -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    val smallPadding = dimensionResource(id = R.dimen.padding_small)
-    val animatedProgress = animateFloatAsState(
-        targetValue = 1f,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
-    ).value
-
     val scrollState = rememberScrollState()
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState).padding(defaultPadding)) {
@@ -58,62 +40,107 @@ fun ImportExportScreenSettings(
 
         Spacer(Modifier.height(defaultPadding))
 
-        CircularProgressIndicator(
-            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-            color = DarkColorPalette.secondary,
-            progress = animatedProgress
-        )
+        progressContent()
 
         Spacer(Modifier.height(defaultPadding*4))
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.align(Alignment.CenterHorizontally).padding(defaultPadding)) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = path ?: "Please select a path...", color = if (pathError != null) Color.Red else Color.Unspecified)
-                    IconButton(onClick = onLocationSelectClick) {
-                        Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = "Pick a file")
-                    }
-                }
-                Spacer(Modifier.height(smallPadding))
-                Text("pick a path to place the backup.")
-                if (pathError != null) {
-                    Spacer(Modifier.height(smallPadding))
-                    Text(text = pathError, color = Color.Red)
-                }
-            }
-        }
+        subContent()
+    }
+}
 
-        Spacer(Modifier.height(defaultPadding))
+@Composable
+fun ExportPickFileCard(
+    path: String? = null,
+    pathError: String? = null,
+    onLocationSelectClick: () -> Unit,
+) {
+    PickFileCard(
+        path = path,
+        explanationText = "pick a path to place the backup.",
+        pathError = pathError,
+        onLocationSelectClick = onLocationSelectClick
+    )
+}
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(defaultPadding)) {
-                UiUtil.OutlinedPasswordField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = password,
-                    onValueChange = onPasswordChange,
-                    label = { Text("Enter a backup password") },
-                    isError = passwordError != null
-                )
-                Spacer(Modifier.height(smallPadding))
-                Text(text = "Pick a password for this backup." +
-                        "All data will be encrypted using this password." +
-                        "You need this password to import the data, so remember it well."
-                )
-                if (passwordError != null) {
-                    Spacer(Modifier.height(smallPadding))
-                    Text(text = passwordError, color = Color.Red)
+@Composable
+fun PickFileCard(
+    path: String? = null,
+    explanationText: String? = null,
+    pathError: String? = null,
+    onLocationSelectClick: () -> Unit,
+) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+    val smallPadding = dimensionResource(id = R.dimen.padding_small)
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(defaultPadding)) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = path ?: "Please select a path...", color = if (pathError != null) Color.Red else Color.Unspecified)
+                IconButton(onClick = onLocationSelectClick) {
+                    Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = "Pick a file")
                 }
             }
+            explanationText?.let {
+                Spacer(Modifier.height(smallPadding))
+                Text(explanationText)
+            }
+            if (pathError != null) {
+                Spacer(Modifier.height(smallPadding))
+                Text(text = pathError, color = Color.Red)
+            }
         }
+    }
+}
 
-        Spacer(Modifier.height(defaultPadding))
+@Composable
+fun ExportPasswordCard(
+    password: String,
+    passwordError: String? = null,
+    onPasswordChange: (String) -> Unit
+) {
+    ImportExportPasswordCard(
+        password = password,
+        hintText = "Enter a backup password",
+        explanationText = "Pick a password for this backup." +
+                "All data will be encrypted using this password." +
+                "You need this password to import the data, so remember it well.",
+        passwordError = passwordError,
+        onPasswordChange = onPasswordChange
+    )
+}
 
-        Button(modifier = Modifier.fillMaxWidth(), onClick = onStartClick) {
-            Text("Begin ${if (isExport) "export" else "import"}", modifier = Modifier.padding(defaultPadding))
+@Composable
+fun ImportExportPasswordCard(
+    password: String,
+    hintText: String,
+    explanationText: String? = null,
+    passwordError: String? = null,
+    onPasswordChange: (String) -> Unit
+) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+    val smallPadding = dimensionResource(id = R.dimen.padding_small)
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(defaultPadding)) {
+            UiUtil.OutlinedPasswordField(
+                modifier = Modifier.fillMaxWidth(),
+                value = password,
+                onValueChange = onPasswordChange,
+                label = { Text(hintText) },
+                isError = passwordError != null
+            )
+            Spacer(Modifier.height(smallPadding))
+            explanationText?.let {
+                Text(text = it)
+            }
+            if (passwordError != null) {
+                Spacer(Modifier.height(smallPadding))
+                Text(text = passwordError, color = Color.Red)
+            }
         }
     }
 }
@@ -165,7 +192,7 @@ fun ImportExportExecutionScreen(
 }
 
 @Composable
-private fun NestedCircularProgressIndicator(progresses: List<Float>) {
+fun NestedCircularProgressIndicator(progresses: List<Float>) {
     val scaleDecrease = 0.2f
     val scales = (1..progresses.size).map {idx -> idx * scaleDecrease}
     Box(modifier = Modifier.aspectRatio(1f)) {// had .weight(1f) once

@@ -4,10 +4,18 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
 import androidx.compose.material.ScaffoldState
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -18,6 +26,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.Type
+import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
@@ -42,63 +51,132 @@ class ImportExportState(
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
 
+                if (hasSecureNotes && isAuthorized <= 0) {
+                    // TODO "Log in to continue" -> log in
+                    SecurityState.navigateToSecurityPick(navController = navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController = navController)})
+                    return@composable
+                }
+
+                val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
+                // TODO: Use below import code
 //                importView.setOnClickListener(v -> {
 //                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*");
 //                    intent.addCategory(Intent.CATEGORY_OPENABLE);
 //                    Intent finalIntent = Intent.createChooser(intent, "Select file to import from");
 //                    startActivityForResult(finalIntent, REQUEST_CODE_IMPORT);
 //                });
+
+                var isExporting by rememberSaveable { mutableStateOf(false) }
+
+                // settings for exporting
                 var location by rememberSaveable { mutableStateOf<Uri?>(null) }
+                var password by rememberSaveable { mutableStateOf("") }
+
+                // launcher to make user select file
                 val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) {
                     location = it
                 }
 
-                var pathError by rememberSaveable { mutableStateOf<String?>(null) }
-                var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+                if (!isExporting) {
+                    // error indicators
+                    var pathError by rememberSaveable { mutableStateOf<String?>(null) }
+                    var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
 
-                var password by rememberSaveable { mutableStateOf("") }
-
-                if (!hasSecureNotes || isAuthorized > 0) {
                     ImportExportScreenSettings(
-                        isExport = true,
-                        path = location?.path,
-                        password = password,
-                        pathError = pathError,
-                        passwordError = passwordError,
-                        onLocationSelectClick = {
-                            launcher.launch(zipName())
-                            pathError = null
-                        },
-                        onPasswordChange = {
-                            password = it
-                            passwordError = null
-                        },
-                        onBackClick = { navController.navigateUp() },
-                        onStartClick = {
-                            val _location = location
-                            val _password = password
+                        progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f)) },
+                        subContent = {
+                            ExportPickFileCard(location?.path, pathError) {
+                                launcher.launch(zipName())
+                                pathError = null
+                            }
+                            Spacer(Modifier.height(defaultPadding))
+                            ExportPasswordCard(password, passwordError) {
+                                password = it
+                                passwordError = null
+                            }
+                            Spacer(Modifier.height(defaultPadding))
+                            Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                                val _location = location
+                                val _password = password
 
-                            var hasErrors = false
-                            if (_location == null) {
-                                pathError = "Path has not been set"
-                                hasErrors = true
+                                var hasErrors = false
+                                if (_location == null) {
+                                    pathError = "Path has not been set"
+                                    hasErrors = true
+                                }
+                                if (_password.length < 1) { //todo make 12 again
+                                    passwordError = "Password length is too short (must be > 12, was ${_password.length})"
+                                    hasErrors = true
+                                }
+                                if (!hasErrors) {
+                                    isExporting = true
+                                }
+                            }) {
+                                Text("Begin export}", modifier = Modifier.padding(defaultPadding))
                             }
-                            if (_password.length < 1) { //todo make 12 again
-                                passwordError = "Password length is too short (must be > 12, was ${_password.length})"
-                                hasErrors = true
-                            }
-                            if (hasErrors)
-                                return@ImportExportScreenSettings
-                            navigateToExportExecute(navController, _location!!, _password) }
+                        },
+                        onBackClick = { navController.navigateUp() }
                     )
                 } else {
-                    // TODO "Log in to continue" -> log in
-                    SecurityState.navigateToSecurityPick(navController = navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController = navController)})
+                    // metrics for exporting
+                    var progressNotes by remember { mutableStateOf(0f) }
+                    var progressZipNotes by remember { mutableStateOf(0f) }
+                    var detailsDescription by remember { mutableStateOf("") }
+
+                    //TODO: Add export UI
+
+                    // tmpfile to write to
+                    val context = LocalContext.current
+                    val outputDir = context.cacheDir // context being the Activity pointer
+
+                    LaunchedEffect(true) {
+                        val tmpNotesFile = File.createTempFile("notes", ".pq", outputDir)
+                        val exportJob = doExport(
+                            data = noteViewModel.getAll(),
+                            outputFile = tmpNotesFile
+                        ) { progress, item ->
+                            progressNotes = progress
+                            detailsDescription = "Processing note '${item.name}'"
+                            Timber.e("export ($progress%): $detailsDescription")
+                        } ?: throw IllegalStateException("No notes to process")//return@LaunchedEffect
+                        Timber.e("starting export job")
+                        exportJob.start()
+                        Timber.e("joining export job")
+                        exportJob.join()
+                        Timber.e("launching zip job")
+
+                        val zippingJob = doZip(
+                            input = tmpNotesFile,
+                            password = password.toCharArray(),
+                            destination = location!!
+                        ) { progress ->
+                            progressZipNotes = progress
+                            detailsDescription = "Archiving notes..."
+                            Timber.e("zip ($progress%): $detailsDescription")
+                        }
+
+                        val zippingState = zippingJob.await()
+                        if (zippingState.state != Export.FinishState.SUCCESS) {
+                            scaffoldState.snackbarHostState.showSnackbar(
+                                message = zippingState.error ?: "Error during zipping"
+                            )
+                        }
+                        tmpNotesFile.delete()
+                    }
+
+                    BackHandler(enabled = true) {
+                        navigateToStop(navController, isExport = true) {
+                            // TODO: Sure you want to go back? -> delete export file & go back.
+                            navController.navigateUp()
+                        }
+                    }
                 }
             }
 
             composable(route = "$navigationStart/execute/{location}/{password}") { entry ->
                 val location: String = entry.arguments?.getString("location") ?: throw IllegalStateException("Exporting requires a location")
+//                Uri.decode()
                 val pass: String = entry.arguments?.getString("password") ?: throw IllegalStateException("Exporting requires a password")
 
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
@@ -168,14 +246,6 @@ class ImportExportState(
             }
         }
     }
-
-//    private fun doPickFileImport(): Intent {
-//        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-//        intent.type = "*/*"
-//        intent.addCategory(Intent.CATEGORY_OPENABLE)
-//        val finalIntent = Intent.createChooser(intent, "Select location to export to");
-//        return finalIntent
-//    }
 
     companion object {
         const val navigationStart: String = "${NoteState.noteDestination}/export"
