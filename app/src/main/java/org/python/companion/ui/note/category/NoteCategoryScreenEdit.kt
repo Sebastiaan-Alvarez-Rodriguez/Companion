@@ -85,9 +85,10 @@ fun NoteCategoryScreenEditReady(
     navController: NavController
 ) {
     var name by rememberSaveable { mutableStateOf(noteCategory?.name ?: "") }
-    var color by rememberSaveable { mutableStateOf(noteCategory?.color ?: NoteCategory.DEFAULT.color) }
+    var _color by rememberSaveable { mutableStateOf((noteCategory?.color ?: NoteCategory.DEFAULT.color).toArgb()) }
     var favorite by rememberSaveable { mutableStateOf(noteCategory?.favorite ?: false)}
 
+    val color: android.graphics.Color = android.graphics.Color.valueOf(_color)
     val hasChanged = lazy {
         if (noteCategory == null)
             name != "" || color != NoteCategory.DEFAULT.color || favorite
@@ -157,7 +158,7 @@ fun NoteCategoryScreenEditReady(
                 )
 
                 Spacer(Modifier.height(defaultPadding))
-                UiUtil.SimpleColorPick(color = color, onColorUpdate = { color = it })
+                UiUtil.SimpleColorPick(color = color, onColorUpdate = { _color = it.toArgb() })
             }
         }
     }

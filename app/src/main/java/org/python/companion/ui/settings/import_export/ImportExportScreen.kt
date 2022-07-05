@@ -145,47 +145,32 @@ fun ImportExportPasswordCard(
     }
 }
 
-
 @Composable
-fun ImportExportExecutionScreen(
-    progress: List<Float> = listOf(0f),
-    detailsDescription: String? = null,
-    onBackClick: () -> Unit
+fun DetailsCard(
+    detailsDescription: String? = null
 ) {
     var detailsExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val scrollState = rememberScrollState()
-
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-    Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState).padding(defaultPadding)) {
-        ViewHeader(onBackClick = onBackClick)
-
-        Spacer(Modifier.height(defaultPadding))
-
-        NestedCircularProgressIndicator(progress)
-
-        Spacer(Modifier.height(defaultPadding))
-
-        Card(elevation = 5.dp, modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = { detailsExpanded = !detailsExpanded }) {
-                        Text("Show details", modifier = Modifier.padding(defaultPadding))
-                    }
-                    IconButton(onClick = { detailsExpanded = !detailsExpanded }) {
-                        Icon(
-                            if (detailsExpanded) Icons.Rounded.ArrowUpward else Icons.Rounded.ArrowDownward,
-                            contentDescription = "${if (detailsExpanded) "Open" else "Close"} details"
-                        )
-                    }
+    Card(elevation = 5.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { detailsExpanded = !detailsExpanded }) {
+                    Text("Show details", modifier = Modifier.padding(defaultPadding))
                 }
-                if (detailsExpanded) {
-                    Text(text = detailsDescription ?: "Processing...", modifier = Modifier.padding(defaultPadding), maxLines = 1)
+                IconButton(onClick = { detailsExpanded = !detailsExpanded }) {
+                    Icon(
+                        if (detailsExpanded) Icons.Rounded.ArrowUpward else Icons.Rounded.ArrowDownward,
+                        contentDescription = "${if (detailsExpanded) "Open" else "Close"} details"
+                    )
                 }
+            }
+            if (detailsExpanded) {
+                Text(text = detailsDescription ?: "Processing...", modifier = Modifier.padding(defaultPadding), maxLines = 1)
             }
         }
     }

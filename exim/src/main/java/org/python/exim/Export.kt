@@ -11,8 +11,6 @@ import net.lingala.zip4j.progress.ProgressMonitor
 import org.apache.parquet.schema.*
 import timber.log.Timber
 import java.io.File
-import java.nio.file.Path
-import java.time.Instant
 
 
 data class ExportInfo(
@@ -92,13 +90,12 @@ object Export {
     suspend fun zip(
         file: File,
         password: CharArray,
-        zipName: String? = null,
-        path: Path,
+        destination: File,
         pollTimeMS: Long,
         onProgress: (Float) -> Unit
     ): Deferred<ZippingState> = withContext(Dispatchers.IO) {
         async {
-            val progressMonitor = zip(file, password, path, zipName)
+            val progressMonitor = zip(file, password, destination)
             while (progressMonitor.result == ProgressMonitor.Result.WORK_IN_PROGRESS || progressMonitor.result == null) {
                 delay(pollTimeMS)
                 onProgress(progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork)
@@ -115,15 +112,14 @@ object Export {
         }
     }
 
-    private fun zip(file: File, password: CharArray, path: Path, zipName: String? = null): ProgressMonitor {
+    private fun zip(file: File, password: CharArray, destination: File): ProgressMonitor {
         val zipParameters = ZipParameters()
         zipParameters.isEncryptFiles = true
         zipParameters.encryptionMethod = EncryptionMethod.AES
         zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
 //        zipParameters.fileNameInZip = file.name TODO: Needed?
-        val finalName = zipName ?: "companion-${Instant.now()}"
 
-        val zipFile = ZipFile(finalName, password)
+        val zipFile = ZipFile(destination, password)
         try {
             zipFile.isRunInThread = true
             val progressMonitor = zipFile.progressMonitor

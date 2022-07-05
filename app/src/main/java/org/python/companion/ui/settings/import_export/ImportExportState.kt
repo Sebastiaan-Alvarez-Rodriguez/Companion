@@ -1,7 +1,8 @@
 package org.python.companion.ui.settings.import_export
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -27,6 +29,7 @@ import kotlinx.coroutines.Job
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.Type
 import org.python.companion.R
+import org.python.companion.support.PathUtil
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
@@ -36,8 +39,6 @@ import org.python.exim.Exportable
 import org.python.exim.Exports
 import timber.log.Timber
 import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.Instant
 
 class ImportExportState(
@@ -57,8 +58,6 @@ class ImportExportState(
                     return@composable
                 }
 
-                val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-
                 // TODO: Use below import code
 //                importView.setOnClickListener(v -> {
 //                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*");
@@ -67,186 +66,155 @@ class ImportExportState(
 //                    startActivityForResult(finalIntent, REQUEST_CODE_IMPORT);
 //                });
 
-                var isExporting by rememberSaveable { mutableStateOf(false) }
+                val isExporting = rememberSaveable { mutableStateOf(false) }
 
                 // settings for exporting
-                var location by rememberSaveable { mutableStateOf<Uri?>(null) }
-                var password by rememberSaveable { mutableStateOf("") }
+                val location = rememberSaveable { mutableStateOf<Uri?>(null) }
+                val password = rememberSaveable { mutableStateOf("") }
 
-                // launcher to make user select file
-                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) {
-                    location = it
-                }
-
-                if (!isExporting) {
-                    // error indicators
-                    var pathError by rememberSaveable { mutableStateOf<String?>(null) }
-                    var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
-
-                    ImportExportScreenSettings(
-                        progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f)) },
-                        subContent = {
-                            ExportPickFileCard(location?.path, pathError) {
-                                launcher.launch(zipName())
-                                pathError = null
-                            }
-                            Spacer(Modifier.height(defaultPadding))
-                            ExportPasswordCard(password, passwordError) {
-                                password = it
-                                passwordError = null
-                            }
-                            Spacer(Modifier.height(defaultPadding))
-                            Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                                val _location = location
-                                val _password = password
-
-                                var hasErrors = false
-                                if (_location == null) {
-                                    pathError = "Path has not been set"
-                                    hasErrors = true
-                                }
-                                if (_password.length < 1) { //todo make 12 again
-                                    passwordError = "Password length is too short (must be > 12, was ${_password.length})"
-                                    hasErrors = true
-                                }
-                                if (!hasErrors) {
-                                    isExporting = true
-                                }
-                            }) {
-                                Text("Begin export}", modifier = Modifier.padding(defaultPadding))
-                            }
-                        },
-                        onBackClick = { navController.navigateUp() }
-                    )
+                if (!isExporting.value) {
+                    ExportSettingsScreen(location, password, isExporting)
                 } else {
-                    // metrics for exporting
-                    var progressNotes by remember { mutableStateOf(0f) }
-                    var progressZipNotes by remember { mutableStateOf(0f) }
-                    var detailsDescription by remember { mutableStateOf("") }
-
-                    //TODO: Add export UI
-
-                    // tmpfile to write to
-                    val context = LocalContext.current
-                    val outputDir = context.cacheDir // context being the Activity pointer
-
-                    LaunchedEffect(true) {
-                        val tmpNotesFile = File.createTempFile("notes", ".pq", outputDir)
-                        val exportJob = doExport(
-                            data = noteViewModel.getAll(),
-                            outputFile = tmpNotesFile
-                        ) { progress, item ->
-                            progressNotes = progress
-                            detailsDescription = "Processing note '${item.name}'"
-                            Timber.e("export ($progress%): $detailsDescription")
-                        } ?: throw IllegalStateException("No notes to process")//return@LaunchedEffect
-                        Timber.e("starting export job")
-                        exportJob.start()
-                        Timber.e("joining export job")
-                        exportJob.join()
-                        Timber.e("launching zip job")
-
-                        val zippingJob = doZip(
-                            input = tmpNotesFile,
-                            password = password.toCharArray(),
-                            destination = location!!
-                        ) { progress ->
-                            progressZipNotes = progress
-                            detailsDescription = "Archiving notes..."
-                            Timber.e("zip ($progress%): $detailsDescription")
-                        }
-
-                        val zippingState = zippingJob.await()
-                        if (zippingState.state != Export.FinishState.SUCCESS) {
-                            scaffoldState.snackbarHostState.showSnackbar(
-                                message = zippingState.error ?: "Error during zipping"
-                            )
-                        }
-                        tmpNotesFile.delete()
-                    }
-
-                    BackHandler(enabled = true) {
-                        navigateToStop(navController, isExport = true) {
-                            // TODO: Sure you want to go back? -> delete export file & go back.
-                            navController.navigateUp()
-                        }
-                    }
-                }
-            }
-
-            composable(route = "$navigationStart/execute/{location}/{password}") { entry ->
-                val location: String = entry.arguments?.getString("location") ?: throw IllegalStateException("Exporting requires a location")
-//                Uri.decode()
-                val pass: String = entry.arguments?.getString("password") ?: throw IllegalStateException("Exporting requires a password")
-
-                val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
-                val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
-
-                require(!hasSecureNotes || isAuthorized > 0)
-
-                var progressNotes by remember { mutableStateOf(0f) }
-                var progressZipNotes by remember { mutableStateOf(0f) }
-                var detailsDescription by remember { mutableStateOf("") }
-
-                val context = LocalContext.current
-                val outputDir = context.cacheDir // context being the Activity pointer
-                val tmpNotesFile = File.createTempFile("notes", ".pq", outputDir)
-
-                ImportExportExecutionScreen(
-                    progress = listOf(progressNotes, progressZipNotes),
-                    detailsDescription = detailsDescription,
-                    onBackClick = {
-                        navigateToStop(navController, isExport = true) {
-                            tmpNotesFile.delete()
-                            navController.navigateUp()
-                        }
-                    },
-                )
-
-                LaunchedEffect(true) {
-                    val exportJob = doExport(
-                        data = noteViewModel.getAll(),
-                        outputFile = tmpNotesFile
-                    ) { progress, item ->
-                        progressNotes = progress
-                        detailsDescription = "Processing note '${item.name}'"
-                        Timber.e("export ($progress%): $detailsDescription")
-                    } ?: throw IllegalStateException("No notes to process")//return@LaunchedEffect
-                    Timber.e("starting export job")
-                    exportJob.start()
-                    Timber.e("joining export job")
-                    exportJob.join()
-                    Timber.e("launching zip job")
-
-                    val zippingJob = doZip(
-                        input = tmpNotesFile,
-                        password = pass.toCharArray(),
-                        destination = Paths.get(location)
-                    ) { progress ->
-                        progressZipNotes = progress
-                        detailsDescription = "Archiving notes..."
-                        Timber.e("zip ($progress%): $detailsDescription")
-                    }
-
-                    val zippingState = zippingJob.await()
-                    if (zippingState.state != Export.FinishState.SUCCESS) {
-                        scaffoldState.snackbarHostState.showSnackbar(
-                            message = zippingState.error ?: "Error during zipping"
-                        )
-                    }
-                    tmpNotesFile.delete()
-                }
-
-                BackHandler(enabled = true) {
-                    navigateToStop(navController, isExport = true) {
-                        // TODO: delete export file & go back.
-                        navController.navigateUp()
-                    }
+                    ExportExecuteScreen(location.value!!, password.value)
                 }
             }
         }
     }
 
+    @Composable
+    private fun ExportSettingsScreen(location: MutableState<Uri?>, password: MutableState<String>, isExporting: MutableState<Boolean>) {
+        // error indicators
+        var pathError by rememberSaveable { mutableStateOf<String?>(null) }
+        var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
+        val context = LocalContext.current
+
+        // launcher to make user select file
+        val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) {
+            location.value = it
+        }
+
+        val requestLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                Timber.e("perm granted")
+                isExporting.value = true
+            } else {
+                Timber.e("perm denied")
+
+                // TODO Snackbar: 'need permission'
+            }
+        }
+        ImportExportScreenSettings(
+            progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f)) },
+            subContent = {
+                ExportPickFileCard(location.value?.path, pathError) {
+                    fileLauncher.launch(zipName())
+                    pathError = null
+                }
+                Spacer(Modifier.height(defaultPadding))
+                ExportPasswordCard(password.value, passwordError) {
+                    password.value = it
+                    passwordError = null
+                }
+                Spacer(Modifier.height(defaultPadding))
+                Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                    var hasErrors = false
+                    if (location.value == null) {
+                        pathError = "Path has not been set"
+                        hasErrors = true
+                    }
+                    if (password.value.length < 1) { //todo make 12 again
+                        passwordError = "Password length is too short (must be > 12, was ${password.value.length})"
+                        hasErrors = true
+                    }
+                    if (!hasErrors) {
+                        when (PackageManager.PERMISSION_GRANTED) {
+                            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) -> {
+                                Timber.e("Got permission")
+                                isExporting.value = true
+                            }
+                            else -> {
+                                Timber.e("Requesting read storage permission")
+                                requestLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                            }
+                        }
+                    }
+                }) {
+                    Text("Begin export", modifier = Modifier.padding(defaultPadding))
+                }
+            },
+            onBackClick = { navController.navigateUp() }
+        )
+    }
+
+    @Composable
+    private fun ExportExecuteScreen(location: Uri, password: String) {
+        // metrics for exporting
+        var progressNotes by remember { mutableStateOf(0f) }
+        var progressZipNotes by remember { mutableStateOf(0f) }
+        var detailsDescription by remember { mutableStateOf("") }
+
+        ImportExportScreenSettings(
+            progressContent = { NestedCircularProgressIndicator(progresses = listOf(progressNotes, progressZipNotes)) },
+            subContent = {
+                DetailsCard(detailsDescription = detailsDescription)
+            },
+            onBackClick = {
+                // TODO: Sure you want to go back? -> delete export file & go back.
+                navigateToStop(navController, isExport = true) {
+                    navController.navigateUp()
+                }
+            }
+        )
+
+        // tmpfile to write to
+        val context = LocalContext.current
+        val outputDir = context.cacheDir // context being the Activity pointer
+
+        Timber.e("Uri: $location")
+        Timber.e("Location: ${location.path}")
+
+        val contentResolver = LocalContext.current.contentResolver
+
+        Timber.e("Location: ${PathUtil.getPath(contentResolver, location)}")
+
+        LaunchedEffect(true) {
+            val tmpNotesFile = File.createTempFile("notes", ".pq", outputDir)
+            val exportJob = doExport(
+                data = noteViewModel.getAll(),
+                outputFile = tmpNotesFile
+            ) { progress, item ->
+                progressNotes = progress
+                detailsDescription = "Processing note '${item.name}'"
+                Timber.e("export ($progress%): $detailsDescription")
+            } ?: throw IllegalStateException("No notes to process")//return@LaunchedEffect
+            Timber.e("starting export job")
+            exportJob.start()
+            Timber.e("joining export job")
+            exportJob.join()
+            Timber.e("launching zip job")
+
+            val zippingJob = doZip(
+                input = tmpNotesFile,
+                password = password.toCharArray(),
+                destination = File(PathUtil.getPath(contentResolver, location))//location.toFile()
+            ) { progress ->
+                progressZipNotes = progress
+                detailsDescription = "Archiving notes..."
+                Timber.e("zip ($progress%): $detailsDescription")
+            }
+
+            val zippingState = zippingJob.await()
+            if (zippingState.state != Export.FinishState.SUCCESS) {
+                scaffoldState.snackbarHostState.showSnackbar(
+                    message = zippingState.error ?: "Error during zipping"
+                )
+            }
+            tmpNotesFile.delete()
+        }
+    }
     companion object {
         const val navigationStart: String = "${NoteState.noteDestination}/export"
 
@@ -278,7 +246,7 @@ class ImportExportState(
         private suspend fun doZip(
             input: File,
             password: CharArray,
-            destination: Path,
+            destination: File,
             onProgress: (Float) -> Unit
         ): Deferred<Export.ZippingState> {
             //TODO: When also writing categories: write lock?
@@ -286,16 +254,10 @@ class ImportExportState(
                 file = input,
                 password = password,
                 pollTimeMS = 80,
-                path = destination,
+                destination = destination,
                 onProgress = onProgress
             )
         }
-
-        private fun navigateToExportExecute(navController: NavController, location: Uri, password: String) =
-            navController.navigate(UiUtil.createRoute(
-                "$navigationStart/execute",
-                args = listOf(Uri.encode(location.path), password)
-            ))
 
         private fun navigateToStop(navController: NavHostController, isExport: Boolean = true, onStopClick: () -> Unit) =
             UiUtil.UIUtilState.navigateToBinary(
