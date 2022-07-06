@@ -13,10 +13,8 @@ import timber.log.Timber
 import java.io.File
 
 
-data class ExportInfo(
-    val value: Any?,
-    val name: String
-)
+data class ExportInfo(val value: Any?, val name: String)
+
 interface Exportable {
     fun values(): Array<ExportInfo>
 }
@@ -25,6 +23,7 @@ interface Exportable {
 sealed class Exports {
     data class parquet(val schema: MessageType) : Exports() {
         companion object {
+            /** Helper function to transform from primitive type to parquet schema type */
             fun transform(primitiveType: Any?, name: String): Type =
                 when(primitiveType) {
                     is Int -> Types.required(PrimitiveType.PrimitiveTypeName.INT32)
@@ -90,7 +89,7 @@ object Export {
     suspend fun zip(
         file: File,
         password: CharArray,
-        destination: File,
+        destination: String,
         pollTimeMS: Long,
         onProgress: (Float) -> Unit
     ): Deferred<ZippingState> = withContext(Dispatchers.IO) {
@@ -112,14 +111,14 @@ object Export {
         }
     }
 
-    private fun zip(file: File, password: CharArray, destination: File): ProgressMonitor {
+    private fun zip(file: File, password: CharArray, destination: String): ProgressMonitor {
         val zipParameters = ZipParameters()
         zipParameters.isEncryptFiles = true
         zipParameters.encryptionMethod = EncryptionMethod.AES
         zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
 //        zipParameters.fileNameInZip = file.name TODO: Needed?
 
-        val zipFile = ZipFile(destination, password)
+        val zipFile = ZipFile(destination.toString(), password)
         try {
             zipFile.isRunInThread = true
             val progressMonitor = zipFile.progressMonitor

@@ -178,8 +178,8 @@ fun DetailsCard(
 
 @Composable
 fun NestedCircularProgressIndicator(progresses: List<Float>) {
-    val scaleDecrease = 0.2f
-    val scales = (1..progresses.size).map {idx -> idx * scaleDecrease}
+    val scaleDecrease = 0.1f
+    val scales = (1..progresses.size).map { idx -> 1f-(idx * scaleDecrease) }
     Box(modifier = Modifier.aspectRatio(1f)) {// had .weight(1f) once
         for ((progress, scale) in progresses.zip(scales)) {
             val animatedProgress = animateFloatAsState(
