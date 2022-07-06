@@ -195,7 +195,6 @@ class ImportExportState(
      * Exports all data to a parquet file.
      * @return error string on error, null otherwise
      */
-    // TODO: return better type. I had something for this.
     private suspend fun export(
         cacheDir: File, contentResolver: ContentResolver,
         location: Uri, password: String,
