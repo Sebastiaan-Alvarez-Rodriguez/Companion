@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.theme.DarkColorPalette
+import org.python.exim.MergeStrategy
 
 
 @Composable
@@ -35,7 +36,10 @@ fun ImportExportScreenSettings(
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val scrollState = rememberScrollState()
 
-    Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState).padding(defaultPadding)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .verticalScroll(scrollState)
+        .padding(defaultPadding)) {
         ViewHeader(onBackClick = onBackClick)
 
         Spacer(Modifier.height(defaultPadding))
@@ -46,20 +50,6 @@ fun ImportExportScreenSettings(
 
         subContent()
     }
-}
-
-@Composable
-fun ExportPickFileCard(
-    path: String? = null,
-    pathError: String? = null,
-    onLocationSelectClick: () -> Unit,
-) {
-    PickFileCard(
-        path = path,
-        explanationText = "pick a path to place the backup.",
-        pathError = pathError,
-        onLocationSelectClick = onLocationSelectClick
-    )
 }
 
 @Composable
@@ -94,6 +84,22 @@ fun PickFileCard(
             }
         }
     }
+}
+
+@Composable
+fun ImportPasswordCard(
+    password: String,
+    passwordError: String? = null,
+    onPasswordChange: (String) -> Unit
+) {
+    ImportExportPasswordCard(
+        password = password,
+        hintText = "Enter backup password",
+        explanationText = "Enter the same password as was set for exporting " +
+                "to decrypt the data.",
+        passwordError = passwordError,
+        onPasswordChange = onPasswordChange
+    )
 }
 
 @Composable
@@ -146,6 +152,34 @@ fun ImportExportPasswordCard(
 }
 
 @Composable
+fun ImportMergeStrategyCard(mergeStrategy: MergeStrategy, onMergeStrategyChange: (MergeStrategy) -> Unit) {
+    val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+    val smallPadding = dimensionResource(id = R.dimen.padding_small)
+
+    val explanations = mapOf(
+        MergeStrategy.DELETE_ALL_BEFORE to "Keep only imported notes, categories, delete all local content",
+        MergeStrategy.SKIP_ON_CONFLICT to "Skip conflicting notes, categories",
+        MergeStrategy.OVERRIDE_ON_CONFLICT to "Override conflicting notes, categories"
+    )
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(defaultPadding)) {
+            Text("Merge strategy:")
+            MergeStrategy.values().forEach {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    RadioButton(selected = it == mergeStrategy, onClick = { onMergeStrategyChange(it) })
+                    Text(
+                        text = explanations.getValue(it),
+                        style = MaterialTheme.typography.body1.merge()
+                    )
+                }
+                Spacer(Modifier.height(smallPadding))
+            }
+        }
+    }
+}
+
+@Composable
 fun DetailsCard(
     detailsDescription: String? = null
 ) {
@@ -188,7 +222,10 @@ fun NestedCircularProgressIndicator(progresses: List<Float>) {
             ).value
 
             CircularProgressIndicator(
-                modifier = Modifier.aspectRatio(1f).scale(scale).align(Alignment.Center),
+                modifier = Modifier
+                    .aspectRatio(1f)
+                    .scale(scale)
+                    .align(Alignment.Center),
                 color = DarkColorPalette.primary,
                 progress = animatedProgress
             )

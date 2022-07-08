@@ -40,6 +40,7 @@ import org.python.datacomm.ResultType
 import org.python.exim.Export
 import org.python.exim.Exportable
 import org.python.exim.Exports
+import org.python.exim.MergeStrategy
 import timber.log.Timber
 import java.io.File
 import java.time.Instant
@@ -50,7 +51,7 @@ class ImportExportState(
     private val scaffoldState: ScaffoldState
 ) {
     fun NavGraphBuilder.importExportGraph() {
-        navigation(startDestination = navigationStart, route = "export") {
+        navigation(startDestination = navigationStart, route = "exim") {
             composable(route = navigationStart) {
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
@@ -64,14 +65,6 @@ class ImportExportState(
                     return@composable
                 }
 
-                // TODO: Use below import code
-//                importView.setOnClickListener(v -> {
-//                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*");
-//                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-//                    Intent finalIntent = Intent.createChooser(intent, "Select file to import from");
-//                    startActivityForResult(finalIntent, REQUEST_CODE_IMPORT);
-//                });
-
                 val isExporting = rememberSaveable { mutableStateOf(false) }
 
                 // settings for exporting
@@ -82,6 +75,33 @@ class ImportExportState(
                     ExportSettingsScreen(location, password, isExporting)
                 } else {
                     ExportExecuteScreen(location.value!!, password.value)
+                }
+            }
+
+            composable(route = "$navigationStart/import") {
+                val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
+                val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
+
+                if (hasSecureNotes && isAuthorized <= 0) {
+                    // TODO "Log in to continue" -> log in
+                    SecurityState.navigateToSecurityPick(
+                        navController = navController,
+                        onPicked = { type -> SecurityState.navigateToLogin(type, navController = navController)}
+                    )
+                    return@composable
+                }
+
+                val isImporting = rememberSaveable { mutableStateOf(false) }
+
+                // settings for importing
+                val location = rememberSaveable { mutableStateOf<Uri?>(null) }
+                val password = rememberSaveable { mutableStateOf("") }
+                val mergeStrategy = rememberSaveable { mutableStateOf(MergeStrategy.DELETE_ALL_BEFORE) }
+
+                if (!isImporting.value) {
+                    ImportSettingsScreen(location, password, mergeStrategy, isImporting)
+                } else {
+                    ImportExecuteScreen(location.value!!, password.value, mergeStrategy.value)
                 }
             }
         }
@@ -104,7 +124,7 @@ class ImportExportState(
 
         val requestLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                isExporting.value = true
+                fileLauncher.launch(zipName())
             } else {
                 // TODO Snackbar: 'need permission'
             }
@@ -112,8 +132,15 @@ class ImportExportState(
         ImportExportScreenSettings(
             progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f, 1f)) },
             subContent = {
-                ExportPickFileCard(location.value?.path, pathError) {
-                    fileLauncher.launch(zipName())
+                PickFileCard(
+                    path = location.value?.path,
+                    explanationText = "pick a path to place the backup.",
+                    pathError = pathError
+                ) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                        fileLauncher.launch(zipName())
+                    else
+                        requestLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                     pathError = null
                 }
                 Spacer(Modifier.height(defaultPadding))
@@ -133,10 +160,7 @@ class ImportExportState(
                         hasErrors = true
                     }
                     if (!hasErrors) {
-                        when (PackageManager.PERMISSION_GRANTED) {
-                            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) -> isExporting.value = true
-                            else -> requestLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        }
+                        isExporting.value = true
                     }
                 }) {
                     Text("Begin export", modifier = Modifier.padding(defaultPadding))
@@ -176,87 +200,212 @@ class ImportExportState(
         val contentResolver = LocalContext.current.contentResolver
 
         LaunchedEffect(true) {
-
-        val exportResult = export(
-            cacheDir, contentResolver, location, password,
-            progressExportNotes, progressZipNotes, progressCopyZip,
-            detailsDescription
-        )
-        if (exportResult.type == ResultType.FAILED) {
-            scaffoldState.snackbarHostState.showSnackbar(
-                message = exportResult.message ?: "Error during exporting"
+            val exportResult = export(
+                noteViewModel, cacheDir, contentResolver, location, password,
+                progressExportNotes, progressZipNotes, progressCopyZip,
+                detailsDescription
             )
-            // TODO: Do something here?
-            }
-        }
-    }
-
-    /**
-     * Exports all data to a parquet file.
-     * @return error string on error, null otherwise
-     */
-    private suspend fun export(
-        cacheDir: File, contentResolver: ContentResolver,
-        location: Uri, password: String,
-        progressExportNotes: MutableState<Float>,
-        progressZipNotes: MutableState<Float>,
-        progressCopyZip: MutableState<Float>,
-        detailsDescription: MutableState<String>
-    ): Result {
-        val tmpNotesFile = File.createTempFile("notes", ".pq", cacheDir)
-        val tmpZipFile = File.createTempFile("companion", ".zip", cacheDir)
-
-        try {
-            val exportJob = doExport(data = noteViewModel.getAll(), outputFile = tmpNotesFile) { progress, item ->
-                progressExportNotes.value = progress
-                detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
-            } ?: throw IllegalStateException("No notes to process")
-
-            Timber.e("starting export job")
-            exportJob.start()
-            Timber.e("joining export job")
-            exportJob.join()
-            Timber.e("launching zip job")
-
-            val zipFilePath = tmpZipFile.path
-            tmpZipFile.delete() // Otherwise zip library thinks our empty tmp file is a zip and crashes.
-            val zippingJob = doZip(input = tmpNotesFile, password = password.toCharArray(), destination = zipFilePath) { progress ->
-                progressZipNotes.value = progress
-                detailsDescription.value = "Archiving notes..."
-            }
-            val zippingState = zippingJob.await()
-            if (zippingState.state != Export.FinishState.SUCCESS) {
-                return Result(ResultType.FAILED, zippingState.error)
+            if (exportResult.type == ResultType.FAILED) {
+                scaffoldState.snackbarHostState.showSnackbar(
+                    message = exportResult.message ?: "Error during exporting"
+                )
+                // TODO: Do something here?
             } else {
-                val movingJob = FileUtil.copyStream(
-                    size = tmpZipFile.length(),
-                    inStream = tmpZipFile.inputStream(),
-                    outStream = contentResolver.openOutputStream(location, "w")!!
-                ) { progress ->
-                    progressCopyZip.value = progress
-                    detailsDescription.value = "Moving archive"
-                }
-                Timber.e("launching move job")
-                movingJob.start()
-                movingJob.join()
-                detailsDescription.value = "Done"
-                Timber.e("All jobs completed - success")
+                // TODO: Indicate up, maybe go back up
             }
-            return Result.DEFAULT_SUCCESS
-        } finally {
-            Timber.e("Cleaning up")
-            tmpNotesFile.delete()
-            tmpZipFile.delete()
         }
     }
+
+    @Composable
+    private fun ImportSettingsScreen(
+        location: MutableState<Uri?>,
+        password: MutableState<String>,
+        mergeStrategy: MutableState<MergeStrategy>,
+        isImporting: MutableState<Boolean>
+    ) {
+        // error indicators
+        var pathError by rememberSaveable { mutableStateOf<String?>(null) }
+        var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+
+        val context = LocalContext.current
+
+        // launcher to make user select an existing file
+        val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+            location.value = it
+        }
+
+        val requestLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                fileLauncher.launch(arrayOf("application/zip"))
+            } else {
+                // TODO Snackbar: 'need permission'
+            }
+        }
+        ImportExportScreenSettings(
+            progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f, 1f)) },
+            subContent = {
+                PickFileCard(
+                    path = location.value?.path,
+                    explanationText = "Pick file to import",
+                    pathError = pathError
+                ) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                        fileLauncher.launch(arrayOf("application/zip"))
+                    else
+                        requestLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    pathError = null
+                }
+                Spacer(Modifier.height(defaultPadding))
+                ImportPasswordCard(password.value, passwordError) {
+                    password.value = it
+                    passwordError = null
+                }
+                Spacer(Modifier.height(defaultPadding))
+                ImportMergeStrategyCard(
+                    mergeStrategy = mergeStrategy.value,
+                    onMergeStrategyChange = { mergeStrategy.value = it }
+                )
+                Spacer(Modifier.height(defaultPadding))
+                Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                    var hasErrors = false
+                    if (location.value == null) {
+                        pathError = "Path has not been set"
+                        hasErrors = true
+                    }
+                    if (password.value.isEmpty()) {
+                        passwordError = "Password has not been set."
+                        hasErrors = true
+                    }
+                    if (!hasErrors) {
+                        isImporting.value = true
+                    }
+                }) {
+                    Text("Begin import", modifier = Modifier.padding(defaultPadding))
+                }
+            },
+            onBackClick = { navController.navigateUp() }
+        )
+    }
+
+    @Composable
+    private fun ImportExecuteScreen(location: Uri, password: String, mergeStrategy: MergeStrategy) {
+        // metrics for exporting
+        val progressCopyZip = remember { mutableStateOf(0f) }
+        val progressExtractZip = remember { mutableStateOf(0f) }
+        val progressImportNotes = remember { mutableStateOf(0f) }
+
+        val detailsDescription = remember { mutableStateOf("") }
+
+        ImportExportScreenSettings(
+            progressContent = {
+                NestedCircularProgressIndicator(progresses = listOf(progressCopyZip.value, progressExtractZip.value, progressImportNotes.value))
+            },
+            subContent = {
+                DetailsCard(detailsDescription = detailsDescription.value)
+            },
+            onBackClick = {
+                // TODO: Sure you want to go back? -> delete export file & go back.
+                navigateToStop(navController, isExport = true) {
+                    navController.navigateUp()
+                }
+            }
+        )
+
+        val context = LocalContext.current
+        val cacheDir = context.cacheDir
+
+        val contentResolver = LocalContext.current.contentResolver
+
+        LaunchedEffect(true) {
+            val importResult = import(
+                noteViewModel, cacheDir, contentResolver, location, password,
+                progressCopyZip, progressExtractZip, progressImportNotes,
+                detailsDescription
+            )
+            if (importResult.type == ResultType.FAILED) {
+                scaffoldState.snackbarHostState.showSnackbar(
+                    message = importResult.message ?: "Error during exporting"
+                )
+                // TODO: Do something here?
+            } else {
+                // TODO: Indicate up, maybe go back up
+            }
+        }
+    }
+
 
     companion object {
-        const val navigationStart: String = "${NoteState.noteDestination}/export"
+        const val navigationStart: String = "${NoteState.noteDestination}/exim"
 
         fun navigateToExport(navController: NavController) =
             navController.navigate(navigationStart)
 
+        fun navigateToImport(navController: NavController) =
+            navController.navigate("$navigationStart/import")
+
         private fun zipName() = "companion-${Instant.now()}"
+
+        /**
+         * Exports all data to a parquet file.
+         * @return result containing error message on error, success otherwise
+         */
+        private suspend fun export(
+            noteViewModel: NoteViewModel,
+            cacheDir: File, contentResolver: ContentResolver,
+            location: Uri, password: String,
+            progressExportNotes: MutableState<Float>,
+            progressZipNotes: MutableState<Float>,
+            progressCopyZip: MutableState<Float>,
+            detailsDescription: MutableState<String>
+        ): Result {
+            val tmpNotesFile = File.createTempFile("notes", ".pq", cacheDir)
+            val tmpZipFile = File.createTempFile("companion", ".zip", cacheDir)
+
+            try {
+                val exportJob = doExport(data = noteViewModel.getAll(), outputFile = tmpNotesFile) { progress, item ->
+                    progressExportNotes.value = progress
+                    detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
+                } ?: throw IllegalStateException("No notes to process")
+
+                Timber.e("starting export job")
+                exportJob.start()
+                Timber.e("joining export job")
+                exportJob.join()
+                Timber.e("launching zip job")
+
+                val zipFilePath = tmpZipFile.path
+                tmpZipFile.delete() // Otherwise zip library thinks our empty tmp file is a zip and crashes.
+                val zippingJob = doZip(input = tmpNotesFile, password = password.toCharArray(), destination = zipFilePath) { progress ->
+                    progressZipNotes.value = progress
+                    detailsDescription.value = "Archiving notes..."
+                }
+                val zippingState = zippingJob.await()
+                if (zippingState.state != Export.FinishState.SUCCESS) {
+                    return Result(ResultType.FAILED, zippingState.error)
+                } else {
+                    val copyJob = FileUtil.copyStream(
+                        size = tmpZipFile.length(),
+                        inStream = tmpZipFile.inputStream(),
+                        outStream = contentResolver.openOutputStream(location, "w")!!
+                    ) { progress ->
+                        progressCopyZip.value = progress
+                        detailsDescription.value = "Moving archive"
+                    }
+                    Timber.e("launching move job")
+                    copyJob.start()
+                    copyJob.join()
+                    detailsDescription.value = "Done"
+                    Timber.e("All jobs completed - success")
+                }
+                return Result.DEFAULT_SUCCESS
+            } finally {
+                Timber.e("Cleaning up")
+                tmpNotesFile.delete()
+                tmpZipFile.delete()
+            }
+        }
 
         /**
          * Handles Parquet exporting.
@@ -287,6 +436,62 @@ class ImportExportState(
                 onProgress(amountProcessed.toFloat() / data.size, item)
             }
         }
+
+        private suspend fun import(
+            noteViewModel: NoteViewModel,
+            cacheDir: File, contentResolver: ContentResolver,
+            location: Uri, password: String,
+            progressCopyZip: MutableState<Float>,
+            progressExtractZip: MutableState<Float>,
+            progressImportNotes: MutableState<Float>,
+            detailsDescription: MutableState<String>
+        ): Result {
+            val tmpZipFile = File.createTempFile("companion", ".zip", cacheDir)
+            val tmpNotesFile = File.createTempFile("notes-import", ".pq", cacheDir)
+
+            try {
+                // TODO: Check if picked file is a zip
+                val copyJob = FileUtil.copyStream(
+                    size = tmpZipFile.length(),
+                    inStream = contentResolver.openInputStream(location)!!,
+                    outStream = tmpZipFile.outputStream()
+                ) { progress ->
+                    progressCopyZip.value = progress
+                    detailsDescription.value = "Moving archive"
+                }
+                Timber.e("launching copy job")
+                copyJob.start()
+                copyJob.join()
+
+                Timber.e("launching zip job")
+                val zippingJob = doUnzip(input = tmpZipFile, password = password.toCharArray()) { progress ->
+                    progressExtractZip.value = progress
+                    detailsDescription.value = "Extracting archive..."
+                }
+                val zippingState = zippingJob.await()
+                if (zippingState.state != Export.FinishState.SUCCESS) {
+                    return Result(ResultType.FAILED, zippingState.error)
+                }
+                val exportJob = doImport(data = noteViewModel.getAll(), outputFile = tmpNotesFile) { progress, item ->
+                    progressImportNotes.value = progress
+                    detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
+                } ?: throw IllegalStateException("No notes to process")
+
+                Timber.e("starting export job")
+                exportJob.start()
+                Timber.e("joining export job")
+                exportJob.join()
+
+                detailsDescription.value = "Done"
+                Timber.e("All jobs completed - success")
+                return Result.DEFAULT_SUCCESS
+            } finally {
+                Timber.e("Cleaning up")
+                tmpNotesFile.delete()
+                tmpZipFile.delete()
+            }
+        }
+
 
         private suspend fun doZip(
             input: File,
