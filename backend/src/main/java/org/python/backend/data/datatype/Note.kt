@@ -3,7 +3,7 @@ package org.python.backend.data.datatype
 import android.graphics.Color
 import org.python.db.entities.note.RoomNoteCategory
 import org.python.db.typeconverters.InstantConverter
-import org.python.exim.ExportInfo
+import org.python.exim.EximUtil
 import org.python.exim.Exportable
 import java.time.Instant
 
@@ -18,16 +18,16 @@ data class Note (
     val renderType: RenderType,
     val categoryKey: Long = -1L
 ) : Exportable {
-    override fun values(): Array<ExportInfo> =
+    override fun values(): Array<EximUtil.FieldInfo> =
         arrayOf(
-            ExportInfo(name, "name"),
-            ExportInfo(content, "content"),
-            ExportInfo(favorite, "favorite"),
-            ExportInfo(securityLevel, "securityLevel"),
-            ExportInfo(String(iv, Charsets.ISO_8859_1), "iv"),
-            ExportInfo(InstantConverter.dateToTimestamp(date), "date"),
-            ExportInfo(renderType.ordinal, "renderType"),
-            ExportInfo(categoryKey, "categoryKey")
+            EximUtil.FieldInfo(name, "name"),
+            EximUtil.FieldInfo(content, "content"),
+            EximUtil.FieldInfo(favorite, "favorite"),
+            EximUtil.FieldInfo(securityLevel, "securityLevel"),
+            EximUtil.FieldInfo(String(iv, Charsets.ISO_8859_1), "iv"),
+            EximUtil.FieldInfo(InstantConverter.dateToTimestamp(date), "date"),
+            EximUtil.FieldInfo(renderType.ordinal, "renderType"),
+            EximUtil.FieldInfo(categoryKey, "categoryKey")
         )
 
     override fun equals(other: Any?): Boolean = other is Note && noteId == other.noteId &&

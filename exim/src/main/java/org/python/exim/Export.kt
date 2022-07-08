@@ -9,14 +9,13 @@ import net.lingala.zip4j.model.enums.AesKeyStrength
 import net.lingala.zip4j.model.enums.EncryptionMethod
 import net.lingala.zip4j.progress.ProgressMonitor
 import org.apache.parquet.schema.*
+import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
 
 
-data class ExportInfo(val value: Any?, val name: String)
-
 interface Exportable {
-    fun values(): Array<ExportInfo>
+    fun values(): Array<EximUtil.FieldInfo>
 }
 
 // List of supported export functionality
@@ -62,63 +61,37 @@ object Export {
                     dehydrator
                 )
 
-                try {
+                parquetWriter.use { parquetWriter ->
                     var count = 0L
                     content.forEach {
                         parquetWriter.write(it)
                         count += 1L
                         onProgress(it, count)
                     }
-                    parquetWriter.close()
-                } catch (e: Exception) {
-                    parquetWriter.close()
-                    Timber.e(e)
-                    throw e
                 }
             }
         }
     }
 
-    data class ZippingState(val state: FinishState, val error: String? = null)
-
-    enum class FinishState {
-        SUCCESS,
-        ERROR,
-        CANCELLED
-    }
     suspend fun zip(
-        file: File,
+        input: File,
+        inZipName: String,
         password: CharArray,
         destination: String,
         pollTimeMS: Long,
         onProgress: (Float) -> Unit
-    ): Deferred<ZippingState> = withContext(Dispatchers.IO) {
-        async {
-            val progressMonitor = zip(file, password, destination)
-            while (progressMonitor.result == ProgressMonitor.Result.WORK_IN_PROGRESS || progressMonitor.result == null) {
-                delay(pollTimeMS)
-                onProgress(progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork)
-                Timber.e("Export zip tick: ${progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork}")
-            }
-            Timber.e("Export zip tick completed: ${progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork}")
-
-            return@async when (progressMonitor.result) {
-                ProgressMonitor.Result.SUCCESS -> ZippingState(FinishState.SUCCESS)
-                ProgressMonitor.Result.ERROR -> throw progressMonitor.exception //ZippingState(FinishState.ERROR, progressMonitor.exception.message)
-                ProgressMonitor.Result.CANCELLED -> ZippingState(FinishState.CANCELLED, "Zipping was cancelled")
-                else -> throw IllegalStateException("Unexpected zipping progress '${progressMonitor.result}'")
-            }
-        }
+    ): Deferred<EximUtil.ZippingState> = withContext(Dispatchers.IO) {
+        pollForZipFunc(func = { zip(input, inZipName, password, destination) }, pollTimeMS = pollTimeMS, onProgress = onProgress)
     }
 
-    private fun zip(file: File, password: CharArray, destination: String): ProgressMonitor {
+    private fun zip(file: File, inZipName: String, password: CharArray, destination: String): ProgressMonitor {
         val zipParameters = ZipParameters()
         zipParameters.isEncryptFiles = true
         zipParameters.encryptionMethod = EncryptionMethod.AES
         zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
-//        zipParameters.fileNameInZip = file.name TODO: Needed?
+        zipParameters.fileNameInZip = inZipName
 
-        val zipFile = ZipFile(destination.toString(), password)
+        val zipFile = ZipFile(destination, password)
         try {
             zipFile.isRunInThread = true
             val progressMonitor = zipFile.progressMonitor

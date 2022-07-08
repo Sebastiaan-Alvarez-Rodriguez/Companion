@@ -37,13 +37,15 @@ import org.python.companion.ui.security.SecurityState
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.datacomm.Result
 import org.python.datacomm.ResultType
-import org.python.exim.Export
-import org.python.exim.Exportable
-import org.python.exim.Exports
-import org.python.exim.MergeStrategy
+import org.python.exim.*
 import timber.log.Timber
 import java.io.File
+import java.io.FileNotFoundException
+import java.nio.file.Files
 import java.time.Instant
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.name
 
 class ImportExportState(
     private val navController: NavHostController,
@@ -96,7 +98,7 @@ class ImportExportState(
                 // settings for importing
                 val location = rememberSaveable { mutableStateOf<Uri?>(null) }
                 val password = rememberSaveable { mutableStateOf("") }
-                val mergeStrategy = rememberSaveable { mutableStateOf(MergeStrategy.DELETE_ALL_BEFORE) }
+                val mergeStrategy = rememberSaveable { mutableStateOf(EximUtil.MergeStrategy.DELETE_ALL_BEFORE) }
 
                 if (!isImporting.value) {
                     ImportSettingsScreen(location, password, mergeStrategy, isImporting)
@@ -220,7 +222,7 @@ class ImportExportState(
     private fun ImportSettingsScreen(
         location: MutableState<Uri?>,
         password: MutableState<String>,
-        mergeStrategy: MutableState<MergeStrategy>,
+        mergeStrategy: MutableState<EximUtil.MergeStrategy>,
         isImporting: MutableState<Boolean>
     ) {
         // error indicators
@@ -290,7 +292,7 @@ class ImportExportState(
     }
 
     @Composable
-    private fun ImportExecuteScreen(location: Uri, password: String, mergeStrategy: MergeStrategy) {
+    private fun ImportExecuteScreen(location: Uri, password: String, mergeStrategy: EximUtil.MergeStrategy) {
         // metrics for exporting
         val progressCopyZip = remember { mutableStateOf(0f) }
         val progressExtractZip = remember { mutableStateOf(0f) }
@@ -339,6 +341,11 @@ class ImportExportState(
     companion object {
         const val navigationStart: String = "${NoteState.noteDestination}/exim"
 
+        private const val PARQUET_EXTENSION = "pq"
+        private const val ZIP_EXTENSION = "zip"
+        private const val NOTEFILE_NAME = "notes.pq"
+        private const val NOTECATEGORYFILE_NAME = "notecategories.$PARQUET_EXTENSION"
+
         fun navigateToExport(navController: NavController) =
             navController.navigate(navigationStart)
 
@@ -360,8 +367,8 @@ class ImportExportState(
             progressCopyZip: MutableState<Float>,
             detailsDescription: MutableState<String>
         ): Result {
-            val tmpNotesFile = File.createTempFile("notes", ".pq", cacheDir)
-            val tmpZipFile = File.createTempFile("companion", ".zip", cacheDir)
+            val tmpNotesFile = File.createTempFile("notes", ".$PARQUET_EXTENSION", cacheDir)
+            val tmpZipFile = File.createTempFile("companion", ".$ZIP_EXTENSION", cacheDir)
 
             try {
                 val exportJob = doExport(data = noteViewModel.getAll(), outputFile = tmpNotesFile) { progress, item ->
@@ -377,12 +384,12 @@ class ImportExportState(
 
                 val zipFilePath = tmpZipFile.path
                 tmpZipFile.delete() // Otherwise zip library thinks our empty tmp file is a zip and crashes.
-                val zippingJob = doZip(input = tmpNotesFile, password = password.toCharArray(), destination = zipFilePath) { progress ->
+                val zippingJob = doZip(input = tmpNotesFile, inZipName = NOTEFILE_NAME, password = password.toCharArray(), destination = zipFilePath) { progress ->
                     progressZipNotes.value = progress
                     detailsDescription.value = "Archiving notes..."
                 }
                 val zippingState = zippingJob.await()
-                if (zippingState.state != Export.FinishState.SUCCESS) {
+                if (zippingState.state != EximUtil.FinishState.SUCCESS) {
                     return Result(ResultType.FAILED, zippingState.error)
                 } else {
                     val copyJob = FileUtil.copyStream(
@@ -404,6 +411,65 @@ class ImportExportState(
                 Timber.e("Cleaning up")
                 tmpNotesFile.delete()
                 tmpZipFile.delete()
+            }
+        }
+
+        private suspend fun import(
+            noteViewModel: NoteViewModel,
+            cacheDir: File, contentResolver: ContentResolver,
+            location: Uri, password: String,
+            progressCopyZip: MutableState<Float>,
+            progressExtractZip: MutableState<Float>,
+            progressImportNotes: MutableState<Float>,
+            detailsDescription: MutableState<String>
+        ): Result {
+            val tmpZipFile = File.createTempFile("companion", ".zip", cacheDir)
+            val tmpZipExtractDir = Files.createTempDirectory("companion")
+
+            try {
+                // TODO: Check if picked file is a zip
+                val copyJob = FileUtil.copyStream(
+                    size = tmpZipFile.length(),
+                    inStream = contentResolver.openInputStream(location)!!,
+                    outStream = tmpZipFile.outputStream()
+                ) { progress ->
+                    progressCopyZip.value = progress
+                    detailsDescription.value = "Moving archive"
+                }
+                Timber.e("launching copy job")
+                copyJob.start()
+                copyJob.join()
+
+                Timber.e("launching zip job")
+                val zippingJob = doUnzip(input = tmpZipFile, password = password.toCharArray(), destination = tmpZipExtractDir.toString()) { progress ->
+                    progressExtractZip.value = progress
+                    detailsDescription.value = "Extracting archive..."
+                }
+                val zippingState = zippingJob.await()
+                if (zippingState.state != EximUtil.FinishState.SUCCESS) {
+                    return Result(ResultType.FAILED, zippingState.error)
+                }
+                val extractedNotesFile = tmpZipExtractDir.resolve(NOTEFILE_NAME)
+                if (!extractedNotesFile.isRegularFile())
+                    throw FileNotFoundException("Could not find extracted notes file")
+
+                val importJob = doImport(input = extractedNotesFile, noteViewModel.getAll()) { progress, item ->
+                    progressImportNotes.value = progress
+                    detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
+                } ?: throw IllegalStateException("No notes to process")
+
+                Timber.e("starting import job")
+                importJob.start()
+                Timber.e("joining import job")
+                importJob.join()
+
+                detailsDescription.value = "Done"
+                Timber.e("All jobs completed - success")
+                return Result.DEFAULT_SUCCESS
+            } finally {
+                Timber.e("Cleaning up")
+                tmpZipFile.delete()
+                tmpZipExtractDir.deleteIfExists()
             }
         }
 
@@ -437,77 +503,24 @@ class ImportExportState(
             }
         }
 
-        private suspend fun import(
-            noteViewModel: NoteViewModel,
-            cacheDir: File, contentResolver: ContentResolver,
-            location: Uri, password: String,
-            progressCopyZip: MutableState<Float>,
-            progressExtractZip: MutableState<Float>,
-            progressImportNotes: MutableState<Float>,
-            detailsDescription: MutableState<String>
-        ): Result {
-            val tmpZipFile = File.createTempFile("companion", ".zip", cacheDir)
-            val tmpNotesFile = File.createTempFile("notes-import", ".pq", cacheDir)
-
-            try {
-                // TODO: Check if picked file is a zip
-                val copyJob = FileUtil.copyStream(
-                    size = tmpZipFile.length(),
-                    inStream = contentResolver.openInputStream(location)!!,
-                    outStream = tmpZipFile.outputStream()
-                ) { progress ->
-                    progressCopyZip.value = progress
-                    detailsDescription.value = "Moving archive"
-                }
-                Timber.e("launching copy job")
-                copyJob.start()
-                copyJob.join()
-
-                Timber.e("launching zip job")
-                val zippingJob = doUnzip(input = tmpZipFile, password = password.toCharArray()) { progress ->
-                    progressExtractZip.value = progress
-                    detailsDescription.value = "Extracting archive..."
-                }
-                val zippingState = zippingJob.await()
-                if (zippingState.state != Export.FinishState.SUCCESS) {
-                    return Result(ResultType.FAILED, zippingState.error)
-                }
-                val exportJob = doImport(data = noteViewModel.getAll(), outputFile = tmpNotesFile) { progress, item ->
-                    progressImportNotes.value = progress
-                    detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
-                } ?: throw IllegalStateException("No notes to process")
-
-                Timber.e("starting export job")
-                exportJob.start()
-                Timber.e("joining export job")
-                exportJob.join()
-
-                detailsDescription.value = "Done"
-                Timber.e("All jobs completed - success")
-                return Result.DEFAULT_SUCCESS
-            } finally {
-                Timber.e("Cleaning up")
-                tmpNotesFile.delete()
-                tmpZipFile.delete()
-            }
-        }
-
 
         private suspend fun doZip(
+            input: File,
+            inZipName: String,
+            password: CharArray,
+            destination: String,
+            onProgress: (Float) -> Unit
+        ): Deferred<EximUtil.ZippingState> {
+            //TODO: When also writing categories: write lock?
+            return Export.zip(input = input, inZipName = inZipName, password = password, pollTimeMS = 100, destination = destination, onProgress = onProgress)
+        }
+
+        private suspend fun doUnzip(
             input: File,
             password: CharArray,
             destination: String,
             onProgress: (Float) -> Unit
-        ): Deferred<Export.ZippingState> {
-            //TODO: When also writing categories: write lock?
-            return Export.zip(
-                file = input,
-                password = password,
-                pollTimeMS = 80,
-                destination = destination,
-                onProgress = onProgress
-            )
-        }
+        ): Deferred<EximUtil.ZippingState> = Import.unzip(input = input, password = password, destination = destination, pollTimeMS = 100, onProgress = onProgress)
 
         private fun navigateToStop(navController: NavHostController, isExport: Boolean = true, onStopClick: () -> Unit) =
             UiUtil.UIUtilState.navigateToBinary(

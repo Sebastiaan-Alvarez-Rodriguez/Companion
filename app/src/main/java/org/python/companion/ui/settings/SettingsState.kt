@@ -52,7 +52,7 @@ class SettingsState(
                         )
                     },
                     onExportClick = { ImportExportState.navigateToExport(navController) },
-                    onImportClick = { /* TODO */ },
+                    onImportClick = { ImportExportState.navigateToImport(navController) },
                     onBackClick = { navController.navigateUp() }
                 )
             }
