@@ -29,6 +29,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.Type
+import org.python.backend.data.datatype.Note
 import org.python.companion.R
 import org.python.companion.support.FileUtil
 import org.python.companion.support.UiUtil
@@ -45,7 +46,6 @@ import java.nio.file.Files
 import java.time.Instant
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isRegularFile
-import kotlin.io.path.name
 
 class ImportExportState(
     private val navController: NavHostController,
@@ -453,10 +453,14 @@ class ImportExportState(
                 if (!extractedNotesFile.isRegularFile())
                     throw FileNotFoundException("Could not find extracted notes file")
 
-                val importJob = doImport(input = extractedNotesFile, noteViewModel.getAll()) { progress, item ->
+                val importJob = doImport(
+                    input = extractedNotesFile.toFile(),
+                    batchSize = 100,
+                    cls = Note::class.java
+                ) { progress, item ->
                     progressImportNotes.value = progress
                     detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
-                } ?: throw IllegalStateException("No notes to process")
+                }
 
                 Timber.e("starting import job")
                 importJob.start()
@@ -478,8 +482,7 @@ class ImportExportState(
          * @param data Data to export.
          * @param outputFile output file location.
          * @param onProgress progress lambda.
-         * Progress ranges from 0f to 1f.
-         * Secondary parameter is the most recently processed item.
+         * Progress ranges from 0f to 1f. Secondary parameter is the most recently processed item.
          * @return executable job.
          */
         private suspend fun <T: Exportable> doExport(
@@ -503,6 +506,32 @@ class ImportExportState(
             }
         }
 
+        /**
+         * Handles Parquet importing.
+         * @param input input file location.
+         * @param batchSize amount of items to process at once.
+         * @param onProgress progress lambda.
+         * Progress ranges from 0f to 1f. Secondary parameter is the most recently processed item.
+         * @return executable job.
+         */
+        private suspend fun <T: Importable<T>> doImport(
+            input: File,
+            batchSize: Int,
+            cls: Class<T>,
+            onProgress: (Float, T?) -> Unit
+        ): Job {
+            val parquetImport = Imports.parquet
+
+            return Import.import(
+                type = parquetImport,
+                source = input,
+                batchSize = batchSize,
+                cls = cls
+            ) { item: T, amountProcessed: Long ->
+                //TODO: get total rows, compute progress
+                onProgress(0.6f, item)
+            }
+        }
 
         private suspend fun doZip(
             input: File,

@@ -42,7 +42,6 @@ object Export {
     suspend fun <T: Exportable> export(type: Exports, destination: File, content: List<T>, onProgress: (T, Long) -> Unit): Job =
         when (type) {
             is Exports.parquet -> writeToParquet(type.schema, destination, content, onProgress)
-            else -> throw IllegalArgumentException("Unknown export type '$type'")
         }
 
     private suspend fun <T: Exportable> writeToParquet(schema: MessageType, file: File, content: List<T>, onProgress: (T, Long) -> Unit): Job {

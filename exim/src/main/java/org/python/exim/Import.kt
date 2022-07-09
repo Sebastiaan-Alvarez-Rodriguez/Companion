@@ -3,44 +3,49 @@ package org.python.exim
 import blue.strategic.parquet.Hydrator
 import blue.strategic.parquet.HydratorSupplier
 import blue.strategic.parquet.ParquetReader
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.AesKeyStrength
 import net.lingala.zip4j.model.enums.EncryptionMethod
 import net.lingala.zip4j.progress.ProgressMonitor
-import org.apache.parquet.schema.MessageType
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
-import java.util.*
 import kotlin.streams.asSequence
 
-interface Importable {
+interface Importable<T> {
     val amountValues: Int
-    fun <T> fromValues(values: Array<Any?>): T
+    fun fromValues(values: List<Any?>): T
+
+    companion object {
+        fun <T: Importable<T>> amountValues(cls: Class<T>) =
+            classToInstance(cls).amountValues
+
+        fun <T: Importable<T>> fromValues(values: List<Any?>, cls: Class<T>): T =
+            classToInstance(cls).fromValues(values)
+
+        private fun <T: Importable<T>> classToInstance(cls: Class<T>) =
+            cls.getDeclaredConstructor().newInstance()
+    }
 }
 
 // List of supported import functionality
 sealed class Imports {
-    data class parquet(val schema: MessageType) : Imports()
+    object parquet : Imports()
 }
 
 object Import {
-    /** Amount of rows to push to read and push into storage at once */
-    private const val ROWS_PER_TABLE_PUSH = 1000
 
-    suspend fun <T: Importable> import(type: Imports, source: File, cls: Class<T>, onProgress: (T, Long) -> Unit): List<T> {
+    /** Import data from given source to given importable type, processing `batchSize` rows at a time */
+    suspend fun <T: Importable<T>> import(type: Imports, source: File, batchSize: Int, cls: Class<T>, onProgress: (T, Long) -> Unit): Job {
         return when (type) {
-            is Imports.parquet -> readFromParquet(type.schema, source, cls, onProgress)
+            is Imports.parquet -> readFromParquet(source, batchSize, cls, onProgress)
         }
     }
 
-    private suspend fun <T: Importable> readFromParquet(schema: MessageType, file: File, cls: Class<T>, onProgress: (T, Long) -> Unit): List<T> {
-        val elementsPerRow = cls.getDeclaredConstructor().newInstance().amountValues
+    private suspend fun <T: Importable<T>> readFromParquet(file: File, batchSize: Int, cls: Class<T>, onProgress: (T, Long) -> Unit): Job {
+        val elementsPerRow = Importable.amountValues(cls)
         val hydrator = object : Hydrator<MutableList<EximUtil.FieldInfo>, List<EximUtil.FieldInfo>> {
             override fun start(): MutableList<EximUtil.FieldInfo> = ArrayList() // TODO: compute likely arraylist size
 
@@ -55,7 +60,7 @@ object Import {
 
             override fun finish(target: MutableList<EximUtil.FieldInfo>?): MutableList<EximUtil.FieldInfo> = target ?: start()
         }
-        withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO) {
             return@withContext launch {
                 val dataStream = ParquetReader.streamContent(file, HydratorSupplier.constantly(hydrator))
 
@@ -63,17 +68,26 @@ object Import {
                     var count = 0L
                     val dataSeq = dataStream.asSequence()
                     while (true) {
-                        val batch = dataSeq.take(ROWS_PER_TABLE_PUSH * elementsPerRow).toList()
+                        val batch = dataSeq.take(batchSize * elementsPerRow).toList()
+//                        batch.chunked(elementsPerRow).first()
+//                        while(true) {
+//                            val rowData =
+//                        }
                         if (batch.isEmpty())
                             break
-                        count += batch.size
-                        //TODO: do something with batch
-                        onProgress(batch.get(0), count)
+                        count += batch.size / elementsPerRow
+
+                        val items = (0..batch.size step elementsPerRow).asSequence().map {
+                            val rowData = batch.subList(it, elementsPerRow)
+                            val item: T = Importable.fromValues(rowData, cls)
+                            onProgress(item, count)
+                            item
+                        }
+                        //TODO: Store items
                     }
                 }
             }
         }
-        return Collections.emptyList()
     }
 
 
