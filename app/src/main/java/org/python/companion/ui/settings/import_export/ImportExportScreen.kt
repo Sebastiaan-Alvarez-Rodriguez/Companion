@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.theme.DarkColorPalette
-import org.python.exim.MergeStrategy
+import org.python.exim.EximUtil
 
 
 @Composable
@@ -152,20 +152,20 @@ fun ImportExportPasswordCard(
 }
 
 @Composable
-fun ImportMergeStrategyCard(mergeStrategy: MergeStrategy, onMergeStrategyChange: (MergeStrategy) -> Unit) {
+fun ImportMergeStrategyCard(mergeStrategy: EximUtil.MergeStrategy, onMergeStrategyChange: (EximUtil.MergeStrategy) -> Unit) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
     val smallPadding = dimensionResource(id = R.dimen.padding_small)
 
     val explanations = mapOf(
-        MergeStrategy.DELETE_ALL_BEFORE to "Keep only imported notes, categories, delete all local content",
-        MergeStrategy.SKIP_ON_CONFLICT to "Skip conflicting notes, categories",
-        MergeStrategy.OVERRIDE_ON_CONFLICT to "Override conflicting notes, categories"
+        EximUtil.MergeStrategy.DELETE_ALL_BEFORE to "Keep only imported notes, categories, delete all local content",
+        EximUtil.MergeStrategy.SKIP_ON_CONFLICT to "Skip conflicting notes, categories",
+        EximUtil.MergeStrategy.OVERRIDE_ON_CONFLICT to "Override conflicting notes, categories"
     )
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(defaultPadding)) {
             Text("Merge strategy:")
-            MergeStrategy.values().forEach {
+            EximUtil.MergeStrategy.values().forEach {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     RadioButton(selected = it == mergeStrategy, onClick = { onMergeStrategyChange(it) })
                     Text(

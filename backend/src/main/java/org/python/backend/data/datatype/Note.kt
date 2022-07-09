@@ -19,6 +19,9 @@ data class Note (
     val renderType: RenderType,
     val categoryKey: Long = -1L
 ) : Exportable, Importable<Note> {
+
+    constructor() : this(noteId = 0L, "", "", false, 0, date = Instant.MIN, renderType = RenderType.DEFAULT)
+
     override fun values(): Array<EximUtil.FieldInfo> =
         arrayOf(
             EximUtil.FieldInfo(noteId, "noteId"),
@@ -61,7 +64,7 @@ data class Note (
     override fun hashCode(): Int = this.noteId.toInt()
 
     companion object {
-        val EMPTY = Note(noteId = 0L, "", "", false, 0, date = Instant.MIN, renderType = RenderType.DEFAULT)
+        val EMPTY = Note()
     }
 }
 

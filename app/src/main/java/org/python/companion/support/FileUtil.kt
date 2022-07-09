@@ -4,8 +4,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.Path
 
 object FileUtil {
     /**
@@ -42,5 +45,12 @@ object FileUtil {
                 outStream.close()
             }
         }
+    }
+
+    suspend fun deleteDirectory(path: Path?) = withContext(Dispatchers.IO) {
+        Files.walk(path)
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)
+            .forEach(File::delete)
     }
 }

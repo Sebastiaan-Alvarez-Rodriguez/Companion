@@ -44,7 +44,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.time.Instant
-import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isRegularFile
 
 class ImportExportState(
@@ -322,7 +321,7 @@ class ImportExportState(
 
         LaunchedEffect(true) {
             val importResult = import(
-                noteViewModel, cacheDir, contentResolver, location, password,
+                noteViewModel, cacheDir, contentResolver, location, password, mergeStrategy,
                 progressCopyZip, progressExtractZip, progressImportNotes,
                 detailsDescription
             )
@@ -389,23 +388,22 @@ class ImportExportState(
                     detailsDescription.value = "Archiving notes..."
                 }
                 val zippingState = zippingJob.await()
-                if (zippingState.state != EximUtil.FinishState.SUCCESS) {
+                if (zippingState.state != EximUtil.FinishState.SUCCESS)
                     return Result(ResultType.FAILED, zippingState.error)
-                } else {
-                    val copyJob = FileUtil.copyStream(
-                        size = tmpZipFile.length(),
-                        inStream = tmpZipFile.inputStream(),
-                        outStream = contentResolver.openOutputStream(location, "w")!!
-                    ) { progress ->
-                        progressCopyZip.value = progress
-                        detailsDescription.value = "Moving archive"
-                    }
-                    Timber.e("launching move job")
-                    copyJob.start()
-                    copyJob.join()
-                    detailsDescription.value = "Done"
-                    Timber.e("All jobs completed - success")
+
+                val copyJob = FileUtil.copyStream(
+                    size = tmpZipFile.length(),
+                    inStream = tmpZipFile.inputStream(),
+                    outStream = contentResolver.openOutputStream(location, "w")!!
+                ) { progress ->
+                    progressCopyZip.value = progress
+                    detailsDescription.value = "Moving archive"
                 }
+                Timber.e("launching move job")
+                copyJob.start()
+                copyJob.join()
+                detailsDescription.value = "Done"
+                Timber.e("All jobs completed - success")
                 return Result.DEFAULT_SUCCESS
             } finally {
                 Timber.e("Cleaning up")
@@ -417,7 +415,7 @@ class ImportExportState(
         private suspend fun import(
             noteViewModel: NoteViewModel,
             cacheDir: File, contentResolver: ContentResolver,
-            location: Uri, password: String,
+            location: Uri, password: String, mergeStrategy: EximUtil.MergeStrategy,
             progressCopyZip: MutableState<Float>,
             progressExtractZip: MutableState<Float>,
             progressImportNotes: MutableState<Float>,
@@ -446,14 +444,15 @@ class ImportExportState(
                     detailsDescription.value = "Extracting archive..."
                 }
                 val zippingState = zippingJob.await()
-                if (zippingState.state != EximUtil.FinishState.SUCCESS) {
+                if (zippingState.state != EximUtil.FinishState.SUCCESS)
                     return Result(ResultType.FAILED, zippingState.error)
-                }
+
                 val extractedNotesFile = tmpZipExtractDir.resolve(NOTEFILE_NAME)
                 if (!extractedNotesFile.isRegularFile())
                     throw FileNotFoundException("Could not find extracted notes file")
 
-                val importJob = doImport(
+                Timber.e("launching import job")
+                val importJob = doImport( // TODO: Do something with data, and apply mergeStrategy
                     input = extractedNotesFile.toFile(),
                     batchSize = 100,
                     cls = Note::class.java
@@ -462,7 +461,6 @@ class ImportExportState(
                     detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
                 }
 
-                Timber.e("starting import job")
                 importJob.start()
                 Timber.e("joining import job")
                 importJob.join()
@@ -473,7 +471,7 @@ class ImportExportState(
             } finally {
                 Timber.e("Cleaning up")
                 tmpZipFile.delete()
-                tmpZipExtractDir.deleteIfExists()
+                FileUtil.deleteDirectory(tmpZipExtractDir)
             }
         }
 

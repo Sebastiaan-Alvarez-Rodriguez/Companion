@@ -12,8 +12,14 @@ import net.lingala.zip4j.progress.ProgressMonitor
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
+import java.util.stream.Collectors
 import kotlin.streams.asSequence
 
+/**
+ * Interface for importable data.
+ * @param T type of importable data.
+ * Requires `T` to have an empty constructor.
+ */
 interface Importable<T> {
     val amountValues: Int
     fun fromValues(values: List<Any?>): T
@@ -64,15 +70,20 @@ object Import {
             return@withContext launch {
                 val dataStream = ParquetReader.streamContent(file, HydratorSupplier.constantly(hydrator))
 
-                dataStream.use { dataStream ->
+//                blue.strategic.parquet.ParquetReader().estimateSize()
+                dataStream.use { stream ->
                     var count = 0L
-                    val dataSeq = dataStream.asSequence()
+                    val dataSeq = stream.collect(Collectors.toList())//.asSequence()
                     while (true) {
-                        val batch = dataSeq.take(batchSize * elementsPerRow).toList()
-//                        batch.chunked(elementsPerRow).first()
-//                        while(true) {
-//                            val rowData =
+                        Timber.e("Taking batch (cur: $count): ${batchSize * elementsPerRow} items")
+//                        val batches = dataSeq.chunked(batchSize * elementsPerRow)
+//
+//                        batches.forEach {
+//
 //                        }
+                        val batch = dataSeq.take(batchSize * elementsPerRow).toList()
+                        Timber.e("Took batch (${batch.size})")
+
                         if (batch.isEmpty())
                             break
                         count += batch.size / elementsPerRow
@@ -83,6 +94,7 @@ object Import {
                             onProgress(item, count)
                             item
                         }
+                        items.forEach { Timber.e("Read item: $it") }
                         //TODO: Store items
                     }
                 }

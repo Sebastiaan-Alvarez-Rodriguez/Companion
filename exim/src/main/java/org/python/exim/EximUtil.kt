@@ -31,9 +31,7 @@ object EximUtil {
                 while (progressMonitor.result == ProgressMonitor.Result.WORK_IN_PROGRESS || progressMonitor.result == null) {
                     delay(pollTimeMS)
                     onProgress(progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork)
-                    Timber.e("Import zip tick: ${progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork}")
                 }
-                Timber.e("Import zip tick completed: ${progressMonitor.workCompleted.toFloat() / progressMonitor.totalWork}")
 
                 return@async when (progressMonitor.result) {
                     ProgressMonitor.Result.SUCCESS -> ZippingState(FinishState.SUCCESS)

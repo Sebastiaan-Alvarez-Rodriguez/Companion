@@ -60,10 +60,10 @@ object Export {
                     dehydrator
                 )
 
-                parquetWriter.use { parquetWriter ->
+                parquetWriter.use { writer ->
                     var count = 0L
                     content.forEach {
-                        parquetWriter.write(it)
+                        writer.write(it)
                         count += 1L
                         onProgress(it, count)
                     }
