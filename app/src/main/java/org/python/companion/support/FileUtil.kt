@@ -7,6 +7,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import java.io.RandomAccessFile
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -52,5 +55,21 @@ object FileUtil {
             .sorted(Comparator.reverseOrder())
             .map(Path::toFile)
             .forEach(File::delete)
+    }
+
+    suspend fun compareByMemoryMappedFiles(path1: Path, path2: Path): Boolean = withContext(Dispatchers.IO) {
+        RandomAccessFile(path1.toFile(), "r").use { randomAccessFile1 ->
+            RandomAccessFile(path2.toFile(), "r").use { randomAccessFile2 ->
+                val ch1: FileChannel = randomAccessFile1.channel
+                val ch2: FileChannel = randomAccessFile2.channel
+                if (ch1.size() != ch2.size()) {
+                    return@use false
+                }
+                val size: Long = ch1.size()
+                val m1: MappedByteBuffer = ch1.map(FileChannel.MapMode.READ_ONLY, 0L, size)
+                val m2: MappedByteBuffer = ch2.map(FileChannel.MapMode.READ_ONLY, 0L, size)
+                return@use m1 == m2
+            }
+        }
     }
 }

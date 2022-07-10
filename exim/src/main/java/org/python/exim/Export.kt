@@ -5,8 +5,6 @@ import blue.strategic.parquet.ParquetWriter
 import kotlinx.coroutines.*
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.model.enums.AesKeyStrength
-import net.lingala.zip4j.model.enums.EncryptionMethod
 import net.lingala.zip4j.progress.ProgressMonitor
 import org.apache.parquet.schema.*
 import org.python.exim.EximUtil.pollForZipFunc
@@ -85,23 +83,18 @@ object Export {
 
     private fun zip(file: File, inZipName: String, password: CharArray, destination: String): ProgressMonitor {
         val zipParameters = ZipParameters()
-        zipParameters.isEncryptFiles = true
-        zipParameters.encryptionMethod = EncryptionMethod.AES
-        zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
+
+//        zipParameters.isEncryptFiles = true
+//        zipParameters.encryptionMethod = EncryptionMethod.AES
+//        zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
         zipParameters.fileNameInZip = inZipName
 
-        val zipFile = ZipFile(destination, password)
-        try {
-            zipFile.isRunInThread = true
+        val zipFile = ZipFile(destination)//, password)
+        zipFile.use { zip ->
+            zip.isRunInThread = true
             val progressMonitor = zipFile.progressMonitor
-
-            zipFile.addFile(file, zipParameters)
-            zipFile.close()
+            zip.addFile(file, zipParameters)
             return progressMonitor
-        } catch (e: Exception) {
-            zipFile.close()
-            Timber.e("Got error during zipping process: ", e)
-            throw e
         }
     }
 }

@@ -379,18 +379,21 @@ class ImportExportState(
                 exportJob.start()
                 Timber.e("joining export job")
                 exportJob.join()
-                Timber.e("launching zip job")
 
+                Timber.e("launching zip job")
                 val zipFilePath = tmpZipFile.path
                 tmpZipFile.delete() // Otherwise zip library thinks our empty tmp file is a zip and crashes.
                 val zippingJob = doZip(input = tmpNotesFile, inZipName = NOTEFILE_NAME, password = password.toCharArray(), destination = zipFilePath) { progress ->
                     progressZipNotes.value = progress
                     detailsDescription.value = "Archiving notes..."
                 }
+                Timber.e("joining zip job")
+                zippingJob.join()
                 val zippingState = zippingJob.await()
                 if (zippingState.state != EximUtil.FinishState.SUCCESS)
                     return Result(ResultType.FAILED, zippingState.error)
 
+                Timber.e("launching copy job")
                 val copyJob = FileUtil.copyStream(
                     size = tmpZipFile.length(),
                     inStream = tmpZipFile.inputStream(),
@@ -399,11 +402,28 @@ class ImportExportState(
                     progressCopyZip.value = progress
                     detailsDescription.value = "Moving archive"
                 }
-                Timber.e("launching move job")
                 copyJob.start()
+                Timber.e("joining copy job")
                 copyJob.join()
                 detailsDescription.value = "Done"
+
+                assert(EximUtil.verifyZip(zipFilePath))
+
+                Timber.e("starting reverse job")
+                val tmpReverseZipFile = File.createTempFile("companion", ".$ZIP_EXTENSION", cacheDir)
+                val reverseJob = FileUtil.copyStream(
+                    size = tmpZipFile.length(),
+                    inStream = contentResolver.openInputStream(location)!!,
+                    outStream =tmpReverseZipFile.outputStream()
+                ) { }
+                reverseJob.start()
+                Timber.e("joining reverse job")
+                reverseJob.join()
+                detailsDescription.value = "Done"
+                assert(FileUtil.compareByMemoryMappedFiles(tmpZipFile.toPath(), tmpReverseZipFile.toPath()))
+                assert(EximUtil.verifyZip(tmpReverseZipFile.path))
                 Timber.e("All jobs completed - success")
+
                 return Result.DEFAULT_SUCCESS
             } finally {
                 Timber.e("Cleaning up")
@@ -426,6 +446,7 @@ class ImportExportState(
 
             try {
                 // TODO: Check if picked file is a zip
+                Timber.e("launching copy job")
                 val copyJob = FileUtil.copyStream(
                     size = tmpZipFile.length(),
                     inStream = contentResolver.openInputStream(location)!!,
@@ -434,8 +455,8 @@ class ImportExportState(
                     progressCopyZip.value = progress
                     detailsDescription.value = "Moving archive"
                 }
-                Timber.e("launching copy job")
                 copyJob.start()
+                Timber.e("joining copy job")
                 copyJob.join()
 
                 Timber.e("launching zip job")
@@ -443,6 +464,9 @@ class ImportExportState(
                     progressExtractZip.value = progress
                     detailsDescription.value = "Extracting archive..."
                 }
+                zippingJob.start()
+                Timber.e("joining zip job")
+                zippingJob.join()
                 val zippingState = zippingJob.await()
                 if (zippingState.state != EximUtil.FinishState.SUCCESS)
                     return Result(ResultType.FAILED, zippingState.error)

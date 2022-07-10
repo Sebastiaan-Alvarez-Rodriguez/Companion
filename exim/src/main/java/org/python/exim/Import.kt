@@ -5,15 +5,11 @@ import blue.strategic.parquet.HydratorSupplier
 import blue.strategic.parquet.ParquetReader
 import kotlinx.coroutines.*
 import net.lingala.zip4j.ZipFile
-import net.lingala.zip4j.model.ZipParameters
-import net.lingala.zip4j.model.enums.AesKeyStrength
-import net.lingala.zip4j.model.enums.EncryptionMethod
 import net.lingala.zip4j.progress.ProgressMonitor
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
 import java.util.stream.Collectors
-import kotlin.streams.asSequence
 
 /**
  * Interface for importable data.
@@ -114,22 +110,19 @@ object Import {
     }
     
     private fun unzip(input: File, password: CharArray, destination: String): ProgressMonitor {
-        val zipParameters = ZipParameters()
-        zipParameters.isEncryptFiles = true
-        zipParameters.encryptionMethod = EncryptionMethod.AES
-        zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
+//        val zipParameters = UnzipParameters()
+//        zipParameters = true
+//        zipParameters.encryptionMethod = EncryptionMethod.AES
+//        zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
 
-        val zipFile = ZipFile(input, password)
-        try {
-            zipFile.isRunInThread = true
-            val progressMonitor = zipFile.progressMonitor
-            zipFile.extractAll(destination)
-            zipFile.close()
+        val zipFile = ZipFile(input)//, password)
+        zipFile.use { zip ->
+            if (!zip.isValidZipFile)
+                throw RuntimeException("Zip is not valid")
+            zip.isRunInThread = true
+            val progressMonitor = zip.progressMonitor
+            zip.extractFile("notes.pq", destination)
             return progressMonitor
-        } catch (e: Exception) {
-            zipFile.close()
-            Timber.e("Got error during zipping process: ", e)
-            throw e
         }
     }
 }

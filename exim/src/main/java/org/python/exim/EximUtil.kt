@@ -4,8 +4,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.progress.ProgressMonitor
-import timber.log.Timber
 
 object EximUtil {
     data class FieldInfo(val value: Any?, val name: String)
@@ -47,5 +47,10 @@ object EximUtil {
                 }
             }
         }
+    }
+
+    fun verifyZip(location: String): Boolean {
+        val zipFile = ZipFile(location)
+        return zipFile.isValidZipFile
     }
 }
