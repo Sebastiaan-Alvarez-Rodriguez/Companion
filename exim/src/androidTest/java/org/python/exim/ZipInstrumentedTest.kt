@@ -85,16 +85,18 @@ class ZipInstrumentedTest {
     @Test
     fun ourUnzipWorks() {
         var progress = 0f
+        val nameIn = "notes.pq"
         val password = "password"
         val fileIn = prepareFile()
         fileIn.writeText("This is a test. Do not be alarmed.")
         val dirOut = prepareDir()
 
-        val zipFile = prepareOurZip(fileIn, password = password)
+        val zipFile = prepareOurZip(fileIn, nameIn = nameIn, password = password)
 
         runBlocking {
             Import.unzip(
                 input = zipFile,
+                inZipName = nameIn,
                 password = password.toCharArray(),
                 destination = dirOut.path,
                 pollTimeMS = 100

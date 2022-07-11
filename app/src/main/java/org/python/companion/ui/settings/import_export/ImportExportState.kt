@@ -387,41 +387,41 @@ class ImportExportState(
                     progressZipNotes.value = progress
                     detailsDescription.value = "Archiving notes..."
                 }
+                zippingJob.start()
                 Timber.e("joining zip job")
                 zippingJob.join()
                 val zippingState = zippingJob.await()
                 if (zippingState.state != EximUtil.FinishState.SUCCESS)
                     return Result(ResultType.FAILED, zippingState.error)
 
+//                Timber.e("launching copy job")
+//                val copyJob = FileUtil.copyStream(
+//                    size = tmpZipFile.length(),
+//                    inStream = tmpZipFile.inputStream(),
+//                    outStream = contentResolver.openOutputStream(location, "w")!!
+//                ) { progress ->
+//                    progressCopyZip.value = progress
+//                    detailsDescription.value = "Moving archive"
+//                }
                 Timber.e("launching copy job")
+//                val tmpTxt = (1..1000).map { "0123456789" }.joinToString(separator = "\n")
+//                val tmpTxtFile = File.createTempFile("testcase", ".zip")
+//                tmpTxtFile.writeText(tmpTxt)
+
                 val copyJob = FileUtil.copyStream(
                     size = tmpZipFile.length(),
                     inStream = tmpZipFile.inputStream(),
                     outStream = contentResolver.openOutputStream(location, "w")!!
                 ) { progress ->
                     progressCopyZip.value = progress
-                    detailsDescription.value = "Moving archive"
+                    detailsDescription.value = "Moving zip"
                 }
                 copyJob.start()
                 Timber.e("joining copy job")
                 copyJob.join()
                 detailsDescription.value = "Done"
-
                 assert(EximUtil.verifyZip(zipFilePath))
-
-                Timber.e("starting reverse job")
-                val tmpReverseZipFile = File.createTempFile("companion", ".$ZIP_EXTENSION", cacheDir)
-                val reverseJob = FileUtil.copyStream(
-                    size = tmpZipFile.length(),
-                    inStream = contentResolver.openInputStream(location)!!,
-                    outStream =tmpReverseZipFile.outputStream()
-                ) { }
-                reverseJob.start()
-                Timber.e("joining reverse job")
-                reverseJob.join()
-                detailsDescription.value = "Done"
-                assert(FileUtil.compareByMemoryMappedFiles(tmpZipFile.toPath(), tmpReverseZipFile.toPath()))
-                assert(EximUtil.verifyZip(tmpReverseZipFile.path))
+                assert(EximUtil.verifyZip(contentResolver.openInputStream(location)!!))
                 Timber.e("All jobs completed - success")
 
                 return Result.DEFAULT_SUCCESS
@@ -445,10 +445,12 @@ class ImportExportState(
             val tmpZipExtractDir = Files.createTempDirectory("companion")
 
             try {
-                // TODO: Check if picked file is a zip
+                // Check if picked file is a correct zip
+                assert(EximUtil.verifyZip(contentResolver.openInputStream(location)!!))
+
                 Timber.e("launching copy job")
                 val copyJob = FileUtil.copyStream(
-                    size = tmpZipFile.length(),
+                    size = 100, // TODO: Determine size from file pointed to by location
                     inStream = contentResolver.openInputStream(location)!!,
                     outStream = tmpZipFile.outputStream()
                 ) { progress ->
@@ -459,13 +461,13 @@ class ImportExportState(
                 Timber.e("joining copy job")
                 copyJob.join()
 
-                Timber.e("launching zip job")
-                val zippingJob = doUnzip(input = tmpZipFile, password = password.toCharArray(), destination = tmpZipExtractDir.toString()) { progress ->
+                Timber.e("launching note-unzip job")
+                val zippingJob = doUnzip(input = tmpZipFile, inZipName = NOTEFILE_NAME, password = password.toCharArray(), destination = tmpZipExtractDir.toString()) { progress ->
                     progressExtractZip.value = progress
                     detailsDescription.value = "Extracting archive..."
                 }
                 zippingJob.start()
-                Timber.e("joining zip job")
+                Timber.e("joining note-unzip job")
                 zippingJob.join()
                 val zippingState = zippingJob.await()
                 if (zippingState.state != EximUtil.FinishState.SUCCESS)
@@ -555,23 +557,13 @@ class ImportExportState(
             }
         }
 
-        private suspend fun doZip(
-            input: File,
-            inZipName: String,
-            password: CharArray,
-            destination: String,
-            onProgress: (Float) -> Unit
-        ): Deferred<EximUtil.ZippingState> {
+        private suspend fun doZip(input: File, inZipName: String, password: CharArray, destination: String, onProgress: (Float) -> Unit): Deferred<EximUtil.ZippingState> {
             //TODO: When also writing categories: write lock?
             return Export.zip(input = input, inZipName = inZipName, password = password, pollTimeMS = 100, destination = destination, onProgress = onProgress)
         }
 
-        private suspend fun doUnzip(
-            input: File,
-            password: CharArray,
-            destination: String,
-            onProgress: (Float) -> Unit
-        ): Deferred<EximUtil.ZippingState> = Import.unzip(input = input, password = password, destination = destination, pollTimeMS = 100, onProgress = onProgress)
+        private suspend fun doUnzip(input: File, inZipName: String, password: CharArray, destination: String, onProgress: (Float) -> Unit): Deferred<EximUtil.ZippingState> =
+            Import.unzip(input = input, inZipName = inZipName, password = password, destination = destination, pollTimeMS = 100, onProgress = onProgress)
 
         private fun navigateToStop(navController: NavHostController, isExport: Boolean = true, onStopClick: () -> Unit) =
             UiUtil.UIUtilState.navigateToBinary(

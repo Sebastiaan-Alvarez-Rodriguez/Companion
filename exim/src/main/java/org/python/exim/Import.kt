@@ -66,8 +66,7 @@ object Import {
             return@withContext launch {
                 val dataStream = ParquetReader.streamContent(file, HydratorSupplier.constantly(hydrator))
 
-//                blue.strategic.parquet.ParquetReader().estimateSize()
-                dataStream.use { stream ->
+                dataStream.use { stream -> //TODO: Early closing?
                     var count = 0L
                     val dataSeq = stream.collect(Collectors.toList())//.asSequence()
                     while (true) {
@@ -101,28 +100,31 @@ object Import {
 
     suspend fun unzip(
         input: File,
+        inZipName: String,
         password: CharArray,
         destination: String,
         pollTimeMS: Long,
         onProgress: (Float) -> Unit
     ): Deferred<EximUtil.ZippingState> = withContext(Dispatchers.IO) {
-        return@withContext pollForZipFunc(func = { unzip(input, password, destination) }, pollTimeMS = pollTimeMS, onProgress = onProgress)
+        return@withContext pollForZipFunc(
+            func = { unzip(input, inZipName, password, destination) },
+            pollTimeMS = pollTimeMS,
+            onProgress = onProgress
+        )
     }
     
-    private fun unzip(input: File, password: CharArray, destination: String): ProgressMonitor {
+    private fun unzip(input: File, inZipName: String, password: CharArray, destination: String): ProgressMonitor {
 //        val zipParameters = UnzipParameters()
 //        zipParameters = true
 //        zipParameters.encryptionMethod = EncryptionMethod.AES
 //        zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
 
         val zipFile = ZipFile(input)//, password)
-        zipFile.use { zip ->
-            if (!zip.isValidZipFile)
-                throw RuntimeException("Zip is not valid")
-            zip.isRunInThread = true
-            val progressMonitor = zip.progressMonitor
-            zip.extractFile("notes.pq", destination)
-            return progressMonitor
-        }
+        val progressMonitor = zipFile.progressMonitor
+        if (!zipFile.isValidZipFile)
+            throw RuntimeException("Zip is not valid")
+        zipFile.isRunInThread = true
+        zipFile.extractFile(inZipName, destination)
+        return progressMonitor
     }
 }

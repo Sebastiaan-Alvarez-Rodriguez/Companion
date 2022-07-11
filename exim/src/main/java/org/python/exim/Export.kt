@@ -90,11 +90,9 @@ object Export {
         zipParameters.fileNameInZip = inZipName
 
         val zipFile = ZipFile(destination)//, password)
-        zipFile.use { zip ->
-            zip.isRunInThread = true
-            val progressMonitor = zipFile.progressMonitor
-            zip.addFile(file, zipParameters)
-            return progressMonitor
-        }
+        val progressMonitor = zipFile.progressMonitor
+        zipFile.isRunInThread = true
+        zipFile.addFile(file, zipParameters)
+        return progressMonitor
     }
 }

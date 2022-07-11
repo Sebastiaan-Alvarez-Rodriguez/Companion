@@ -4,7 +4,6 @@ import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,13 +29,13 @@ class FileInstrumentedTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val cacheDir = context.cacheDir
         val contentResolver = context.contentResolver
-
+        val textIn = (1..100).asSequence().map { "This is a test. Do not be alarmed." }.joinToString(separator = "\n")
         var progress = 0f
 
         val fileIn = File.createTempFile("test", "in", cacheDir)
         val fileOut = File.createTempFile("test", "out", cacheDir)
 
-        fileIn.writeText("This is a test. Do not be alarmed.")
+        fileIn.writeText(textIn)
 
         runBlocking {
             val copyJob = FileUtil.copyStream(
@@ -47,7 +46,8 @@ class FileInstrumentedTest {
             copyJob.start()
             copyJob.join()
             assert(FileUtil.compareByMemoryMappedFiles(fileIn.toPath(), fileOut.toPath()))
-            Assert.assertEquals(progress, 1f)
+            assertEquals(1f, progress)
+            assertEquals(textIn, fileOut.readText())
         }
     }
 }

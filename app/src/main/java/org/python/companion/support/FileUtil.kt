@@ -31,21 +31,21 @@ object FileUtil {
         return@withContext launch {
             val bufferSize = 4096
             val bytes = ByteArray(bufferSize)
-            var count = 0
+            var count: Int
             var prog = 0L
             try {
-                while (count != -1) {
+                do {
                     count = inStream.read(bytes)
-                    if (count != -1) {
+                    if (count > 0) {
                         outStream.write(bytes, 0, count)
                         prog += count
                         onProgress(prog.toFloat() / size)
                     }
-                }
+                } while (count > 0)
             } finally {
                 outStream.flush()
-                inStream.close()
                 outStream.close()
+                inStream.close()
             }
         }
     }
