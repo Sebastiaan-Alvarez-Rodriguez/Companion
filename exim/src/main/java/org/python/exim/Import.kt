@@ -94,12 +94,7 @@ object Import {
     }
     
     private fun unzip(input: File, inZipName: String, password: CharArray, destination: String): ProgressMonitor {
-//        val zipParameters = UnzipParameters()
-//        zipParameters = true
-//        zipParameters.encryptionMethod = EncryptionMethod.AES
-//        zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
-
-        val zipFile = ZipFile(input)//, password)
+        val zipFile = ZipFile(input, password)
         val progressMonitor = zipFile.progressMonitor
         if (!zipFile.isValidZipFile)
             throw RuntimeException("Zip is not valid")
