@@ -10,6 +10,7 @@ import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
 import java.util.stream.Collectors
+import kotlin.streams.asSequence
 
 /**
  * Interface for importable data.
@@ -21,14 +22,13 @@ interface Importable<T> {
     fun fromValues(values: List<Any?>): T
 
     companion object {
-        fun <T: Importable<T>> amountValues(cls: Class<T>) =
-            classToInstance(cls).amountValues
+        fun <T: Importable<T>> amountValues(cls: Class<T>) = amountValues(classToInstance(cls))
+        fun <T: Importable<T>> amountValues(accessor: T) = accessor.amountValues
 
-        fun <T: Importable<T>> fromValues(values: List<Any?>, cls: Class<T>): T =
-            classToInstance(cls).fromValues(values)
+        fun <T: Importable<T>> fromValues(values: List<Any?>, cls: Class<T>): T = fromValues(values, classToInstance(cls))
+        fun <T: Importable<T>> fromValues(values: List<Any?>, accessor: T): T = accessor.fromValues(values)
 
-        private fun <T: Importable<T>> classToInstance(cls: Class<T>) =
-            cls.getDeclaredConstructor().newInstance()
+        fun <T: Importable<T>> classToInstance(cls: Class<T>) = cls.getDeclaredConstructor().newInstance()
     }
 }
 
@@ -47,56 +47,36 @@ object Import {
     }
 
     private suspend fun <T: Importable<T>> readFromParquet(file: File, batchSize: Int, cls: Class<T>, onProgress: (T, Long) -> Unit): Job {
-        val elementsPerRow = Importable.amountValues(cls)
-        val hydrator = object : Hydrator<MutableList<EximUtil.FieldInfo>, List<EximUtil.FieldInfo>> {
-            override fun start(): MutableList<EximUtil.FieldInfo> = ArrayList() // TODO: compute likely arraylist size
+        val accessor = Importable.classToInstance(cls)
 
-            override fun add(
-                target: MutableList<EximUtil.FieldInfo>?,
-                heading: String?,
-                value: Any?
-            ): MutableList<EximUtil.FieldInfo> {
-                target!!.add(EximUtil.FieldInfo(value, heading!!))
+        val elementsPerRow = Importable.amountValues(accessor)
+        val hydrator = object : Hydrator<MutableList<Any>, T> {
+            override fun start(): MutableList<Any> = ArrayList(elementsPerRow)
+
+            override fun add(target: MutableList<Any>?, heading: String?, value: Any?): MutableList<Any> {
+                target!!.add(value!!)
                 return target
             }
 
-            override fun finish(target: MutableList<EximUtil.FieldInfo>?): MutableList<EximUtil.FieldInfo> = target ?: start()
+            override fun finish(target: MutableList<Any>?): T = target?.let { accessor.fromValues(it) } ?: throw IllegalStateException("Import failed: Could not finish import for null data row. Is the parquet file correct?")
         }
         return withContext(Dispatchers.IO) {
             return@withContext launch {
-                val dataStream = ParquetReader.streamContent(file, HydratorSupplier.constantly(hydrator))
-
-                dataStream.use { stream -> //TODO: Early closing?
+                ParquetReader.streamContent(file, HydratorSupplier.constantly(hydrator)).use { dataStream ->
                     var count = 0L
-                    val dataSeq = stream.collect(Collectors.toList())//.asSequence()
-                    while (true) {
-                        Timber.e("Taking batch (cur: $count): ${batchSize * elementsPerRow} items")
-//                        val batches = dataSeq.chunked(batchSize * elementsPerRow)
-//
-//                        batches.forEach {
-//
-//                        }
-                        val batch = dataSeq.take(batchSize * elementsPerRow).toList()
-                        Timber.e("Took batch (${batch.size})")
-
-                        if (batch.isEmpty())
-                            break
-                        count += batch.size / elementsPerRow
-
-                        val items = (0..batch.size step elementsPerRow).asSequence().map {
-                            val rowData = batch.subList(it, elementsPerRow)
-                            val item: T = Importable.fromValues(rowData, cls)
+                    for (batch in dataStream.asSequence().chunked(batchSize)) {
+                        Timber.e("Took batch (${batch.size}, max=$batchSize)")
+                        count += batch.size
+                        batch.forEach { item ->
                             onProgress(item, count)
-                            item
+                            Timber.e("    $item")
+                            //TODO: Store items one by one, or rather as a batch?
                         }
-                        items.forEach { Timber.e("Read item: $it") }
-                        //TODO: Store items
                     }
                 }
             }
         }
     }
-
 
     suspend fun unzip(
         input: File,

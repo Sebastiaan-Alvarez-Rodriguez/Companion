@@ -1,11 +1,13 @@
 package org.python.exim
 
+import blue.strategic.parquet.CompressionCodecName
 import blue.strategic.parquet.Dehydrator
 import blue.strategic.parquet.ParquetWriter
 import kotlinx.coroutines.*
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.progress.ProgressMonitor
+import org.apache.hadoop.io.compress.CompressionCodec
 import org.apache.parquet.schema.*
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
@@ -55,7 +57,8 @@ object Export {
                 val parquetWriter = ParquetWriter.writeFile(
                     schema,
                     file,
-                    dehydrator
+                    dehydrator,
+                    CompressionCodecName.UNCOMPRESSED
                 )
 
                 parquetWriter.use { writer ->
