@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.SnackbarDuration
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.lifecycle.viewModelScope
@@ -92,33 +95,31 @@ class NoteCategoryState(
             ) {
                 NoteCategoryScreenEditNew(
                     onDeleteClick = { navController.navigateUp() }, // new category, just return without saving
-                    onSaveClick = { toSaveNoteCategory ->
-                        Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
-                        noteCategoryViewModel.viewModelScope.launch {
-                            val conflict = noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
-                            Timber.d("New noteCategory: conflict: ${conflict!=null}")
-                            when {
-                                conflict == null -> {
-                                    noteCategoryViewModel.add(toSaveNoteCategory)
-                                    navController.navigateUp()
-                                }
-                                conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
-                                    scaffoldState.snackbarHostState.showSnackbar(
-                                        message = "Cannot override the default category",
-                                        duration = SnackbarDuration.Short
-                                    )
-                                }
-                                else ->
-                                UiUtil.UIUtilState.navigateToOverride(navController) {
-                                    Timber.d("New noteCategory: Overriding ${toSaveNoteCategory.name}...")
-                                    noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.upsert(toSaveNoteCategory) }
-                                    navController.navigateUp()
-                                }
+                    onBackClick = { noteChanged -> if (noteChanged) UiUtil.UIUtilState.navigateToGoBackConfirm(navController) { navController.navigateUp() } else navController.navigateUp() }
+                ) { toSaveNoteCategory ->
+                    Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
+                    noteCategoryViewModel.viewModelScope.launch {
+                        val conflict = noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
+                        Timber.d("New noteCategory: conflict: ${conflict!=null}")
+                        when {
+                            conflict == null -> {
+                                noteCategoryViewModel.add(toSaveNoteCategory)
+                                navController.navigateUp()
+                            }
+                            conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
+                                scaffoldState.snackbarHostState.showSnackbar(
+                                    message = "Cannot override the default category",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                            else -> UiUtil.UIUtilState.navigateToOverride(navController) {
+                                Timber.d("New noteCategory: Overriding ${toSaveNoteCategory.name}...")
+                                noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.upsert(toSaveNoteCategory) }
+                                navController.navigateUp()
                             }
                         }
-                    },
-                    navController = navController
-                )
+                    }
+                }
             }
 
             composable(
@@ -130,6 +131,7 @@ class NoteCategoryState(
                 NoteCategoryScreenEdit(
                     noteCategoryViewModel = noteCategoryViewModel,
                     id = categoryId,
+                    onBackClick = { noteChanged -> if (noteChanged) UiUtil.UIUtilState.navigateToGoBackConfirm(navController) { navController.navigateUp() } else navController.navigateUp() },
                     onDeleteClick = when (categoryId) {
                             NoteCategory.DEFAULT.categoryId -> null
                             else -> { category ->
@@ -137,38 +139,36 @@ class NoteCategoryState(
                                     noteCategoryViewModel.viewModelScope.launch { noteCategoryViewModel.delete(category) }
                                 navController.navigateUp()
                             }
-                        },
-                    onSaveClick = { toSaveNoteCategory, existingNoteCategory ->
-                        Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
-                        noteCategoryViewModel.viewModelScope.launch {
-                            // If category name == same as before, there is no conflict. Otherwise, we must check.
-                            val conflict: NoteCategory? = if (toSaveNoteCategory.name == existingNoteCategory!!.name) null else noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
-                            Timber.d("Edit noteCategory: edited category has changed name=${toSaveNoteCategory.name != existingNoteCategory.name}, now conflict: ${conflict != null}")
-                            when {
-                                conflict == null -> { // no conflict
-                                    noteCategoryViewModel.update(toSaveNoteCategory)
-                                    navController.navigateUp()
+                        }
+                ) { toSaveNoteCategory, existingNoteCategory ->
+                    Timber.d("Found new noteCategory: ${toSaveNoteCategory.name}, ${toSaveNoteCategory.color}, ${toSaveNoteCategory.categoryId}, ${toSaveNoteCategory.favorite}")
+                    noteCategoryViewModel.viewModelScope.launch {
+                        // If category name == same as before, there is no conflict. Otherwise, we must check.
+                        val conflict: NoteCategory? = if (toSaveNoteCategory.name == existingNoteCategory!!.name) null else noteCategoryViewModel.getbyName(toSaveNoteCategory.name)
+                        Timber.d("Edit noteCategory: edited category has changed name=${toSaveNoteCategory.name != existingNoteCategory.name}, now conflict: ${conflict != null}")
+                        when {
+                            conflict == null -> { // no conflict
+                                noteCategoryViewModel.update(toSaveNoteCategory)
+                                navController.navigateUp()
+                            }
+                            conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
+                                scaffoldState.snackbarHostState.showSnackbar(
+                                    message = "Cannot override the default category",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                            else -> // conflict on non-default category
+                            UiUtil.UIUtilState.navigateToOverride(navController) {
+                                Timber.d("Edit noteCategory: Overriding category (new name=${toSaveNoteCategory.name})")
+                                noteCategoryViewModel.viewModelScope.launch {
+                                    noteCategoryViewModel.delete(existingNoteCategory)
+                                    noteCategoryViewModel.upsert(toSaveNoteCategory)
                                 }
-                                conflict.categoryId == NoteCategory.DEFAULT.categoryId -> { // conflict with default category
-                                    scaffoldState.snackbarHostState.showSnackbar(
-                                        message = "Cannot override the default category",
-                                        duration = SnackbarDuration.Short
-                                    )
-                                }
-                                else -> // conflict on non-default category
-                                UiUtil.UIUtilState.navigateToOverride(navController) {
-                                    Timber.d("Edit noteCategory: Overriding category (new name=${toSaveNoteCategory.name})")
-                                    noteCategoryViewModel.viewModelScope.launch {
-                                        noteCategoryViewModel.delete(existingNoteCategory)
-                                        noteCategoryViewModel.upsert(toSaveNoteCategory)
-                                    }
-                                    navController.navigateUp()
-                                }
+                                navController.navigateUp()
                             }
                         }
-                    },
-                    navController = navController
-                )
+                    }
+                }
             }
         }
     }

@@ -155,7 +155,9 @@ class NoteState(
             ) {
                 val clearance by noteViewModel.clearance.collectAsState()
 
-                NoteScreenEditNew(navController = navController) { toSaveNote ->
+                NoteScreenEditNew(
+                    onBackClick = { noteChanged -> if (noteChanged) UiUtil.UIUtilState.navigateToGoBackConfirm(navController) { navController.navigateUp() } else navController.navigateUp() }
+                ) { toSaveNote ->
                     Timber.d("Found new note: id=${toSaveNote.noteId}, cat=${toSaveNote.categoryKey}, lvl=${toSaveNote.securityLevel}, ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.favorite}")
                     noteViewModel.viewModelScope.launch {
                         if (clearance == 0 && toSaveNote.securityLevel > 0)
@@ -218,7 +220,7 @@ class NoteState(
                     noteViewModel = noteViewModel,
                     id = noteId,
                     offset = offset,
-                    navController = navController,
+                    onBackClick = { noteChanged -> if (noteChanged) UiUtil.UIUtilState.navigateToGoBackConfirm(navController) { navController.navigateUp() } else navController.navigateUp() },
                     onSaveClick = { toSaveNote, existingNote ->
                         Timber.d("Found edited note: ${toSaveNote.name}, ${toSaveNote.content}, ${toSaveNote.noteId}, ${toSaveNote.favorite}")
                         noteViewModel.viewModelScope.launch {

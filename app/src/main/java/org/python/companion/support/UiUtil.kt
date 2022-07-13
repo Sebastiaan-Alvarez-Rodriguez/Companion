@@ -162,6 +162,37 @@ object UiUtil {
     }
 
     @Composable
+    fun SimpleDialogSingular(
+        title: String,
+        message: String? = null,
+        buttonText: String = "OK",
+        onDismiss: () -> Unit,
+        onClick: () -> Unit
+    ) {
+        val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+        Dialog(onDismissRequest = onDismiss) {
+            Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
+                Column(modifier = Modifier.padding(defaultPadding)) {
+                    Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
+                    Spacer(modifier = Modifier.height(defaultPadding))
+
+                    message?.let {
+                        Text(text = it, modifier = Modifier.padding(defaultPadding))
+                        Spacer(modifier = Modifier.height(defaultPadding))
+                    }
+                    Spacer(modifier = Modifier.height(defaultPadding))
+
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        Button(onClick = onClick) {
+                            Text(text = buttonText)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
     fun SimpleDialogBinary(
         title: String,
         message: String? = null,
@@ -170,28 +201,23 @@ object UiUtil {
         onDismiss: () -> Unit,
         onNegativeClick: () -> Unit,
         onPositiveClick: () -> Unit,
-        showableObjectFunc: @Composable () -> Unit = {}
     ) {
         val defaultPadding = dimensionResource(id = R.dimen.padding_default)
         Dialog(onDismissRequest = onDismiss) {
             Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
                 Column(modifier = Modifier.padding(defaultPadding)) {
-                    message?.let {
-                        Text(text = it, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
-                        Spacer(modifier = Modifier.height(defaultPadding))
-                    }
-
-                    Text(text = title, modifier = Modifier.padding())
+                    Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
                     Spacer(modifier = Modifier.height(defaultPadding))
 
-
-                    showableObjectFunc()
+                    message?.let {
+                        Text(text = it, modifier = Modifier.padding(defaultPadding))
+                        Spacer(modifier = Modifier.height(defaultPadding))
+                    }
 
                     Row(
                         horizontalArrangement = Arrangement.End,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-
                         TextButton(onClick = onNegativeClick) {
                             Text(text = negativeText.uppercase())
                         }
@@ -577,27 +603,37 @@ object UiUtil {
             navigation(startDestination = uiutilDestination, route = "uiutil") {
                 composable(uiutilDestination) {}
 
+                dialog(route = "${uiutilDestination}/singular/{title}?message={message}&buttonText={buttonText}") { entry ->
+                    SimpleDialogSingular(
+                        title = entry.arguments?.getString("title") ?: "Default title",
+                        message = entry.arguments?.getString("message") ?: "Default message",
+                        buttonText = entry.arguments?.getString("buttonText") ?: "OK",
+                        onDismiss = { navController.navigateUp() },
+                        onClick = { navController.navigateUp() }
+                    )
+                }
+
                 dialog(route = "${uiutilDestination}/binary/{title}?message={message}&negativeText={negativeText}&positiveText={positiveText}") { entry ->
                     SimpleDialogBinary(
                         title = entry.arguments?.getString("title") ?: "Default title",
-                        message = entry.arguments?.getString("message") ?: "Accept?",
+                        message = entry.arguments?.getString("message") ?: "Default message",
                         negativeText = entry.arguments?.getString("negativeText") ?: "CANCEL",
                         positiveText = entry.arguments?.getString("positiveText") ?: "OK",
                         onDismiss = {
-                            navController.setNavigationResult(result = false, key = resultKeyOverride)
+                            navController.setNavigationResult(result = false, key = resultKeyBinary)
                             navController.navigateUp()
                         },
                         onNegativeClick = {
-                            navController.setNavigationResult(result = false, key = resultKeyOverride)
+                            navController.setNavigationResult(result = false, key = resultKeyBinary)
                             navController.navigateUp()
                         },
                         onPositiveClick = {
-                            navController.setNavigationResult(result = true, key = resultKeyOverride)
+                            navController.setNavigationResult(result = true, key = resultKeyBinary)
                             navController.navigateUp()
                         },
                     )
                     BackHandler(enabled = true) {
-                        navController.setNavigationResult(result = false, key = resultKeyOverride)
+                        navController.setNavigationResult(result = false, key = resultKeyBinary)
                         navController.navigateUp()
                     }
                 }
@@ -605,7 +641,29 @@ object UiUtil {
         }
         companion object {
             const val uiutilDestination: String = "UiUtil"
-            private const val resultKeyOverride = "uiutil|binary"
+            private const val resultKeyBinary = "uiutil|binary"
+
+            fun navigateToGoBackConfirm(navController: NavController, onGoBackClick: () -> Unit) = navigateToBinary(
+                navController = navController,
+                title = "Unsaved changes",
+                message = "Found unsaved changes. Are you sure you want to go back?",
+                positiveText = "GO BACK"
+            ) {
+                if (it) onGoBackClick()
+            }
+
+            fun navigateToSingular(navController: NavController, title: String, message: String = "Accept?", buttonText: String = "OK", onClick: () -> Unit) =
+                navController.navigateForResult<Unit>(
+                    route = createRoute("$uiutilDestination/singular",
+                        args = listOf(title),
+                        optionals = mapOf(
+                            "message" to message,
+                            "buttonText" to buttonText,
+                        )
+                    ),
+                    key = resultKeyBinary,
+                    onResult = { onClick() }
+                )
 
             fun navigateToOverride(navController: NavController, onOverrideClick: () -> Unit) = navigateToBinary(
                 navController = navController,
@@ -626,18 +684,19 @@ object UiUtil {
                 if (it) onDeleteClick()
             }
 
-            fun navigateToBinary(navController: NavController, title: String, message: String = "Accept?", negativeText: String = "CANCEL", positiveText: String = "OK", onPositiveClick: (Boolean) -> Unit) = navController.navigateForResult<Boolean>(
-                route = createRoute("$uiutilDestination/binary",
-                    args = listOf(title),
-                    optionals = mapOf(
-                        "message" to message,
-                        "negativeText" to negativeText,
-                        "positiveText" to positiveText
-                    )
-                ),
-                key = resultKeyOverride,
-                onResult = onPositiveClick
-            )
+            fun navigateToBinary(navController: NavController, title: String, message: String = "Accept?", negativeText: String = "CANCEL", positiveText: String = "OK", onOptionClick: (Boolean) -> Unit) =
+                navController.navigateForResult<Boolean>(
+                    route = createRoute("$uiutilDestination/binary",
+                        args = listOf(title),
+                        optionals = mapOf(
+                            "message" to message,
+                            "negativeText" to negativeText,
+                            "positiveText" to positiveText
+                        )
+                    ),
+                    key = resultKeyBinary,
+                    onResult = onOptionClick
+                )
 
 
             @Composable

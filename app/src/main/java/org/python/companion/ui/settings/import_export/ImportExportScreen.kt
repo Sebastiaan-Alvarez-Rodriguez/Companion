@@ -180,9 +180,7 @@ fun ImportMergeStrategyCard(mergeStrategy: EximUtil.MergeStrategy, onMergeStrate
 }
 
 @Composable
-fun DetailsCard(
-    detailsDescription: String? = null
-) {
+fun DetailsCard(detailsDescription: String? = null) {
     var detailsExpanded by rememberSaveable { mutableStateOf(false) }
 
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
@@ -210,26 +208,37 @@ fun DetailsCard(
     }
 }
 
+/**
+ * Creates a series of circular progress bars inside each other.
+ * @param progresses Progresses to create progress bars for. Any negative value creates an indeterminate progress bar.
+ * @param func Extra layout function.
+ */
 @Composable
-fun NestedCircularProgressIndicator(progresses: List<Float>) {
+fun NestedCircularProgressIndicator(progresses: List<Float>, func: (@Composable BoxScope.() -> Unit)? = null) {
     val scaleDecrease = 0.1f
     val scales = (1..progresses.size).map { idx -> 1f-(idx * scaleDecrease) }
-    Box(modifier = Modifier.aspectRatio(1f)) {// had .weight(1f) once
+    Box(modifier = Modifier.aspectRatio(1f)) {
         for ((progress, scale) in progresses.zip(scales)) {
-            val animatedProgress = animateFloatAsState(
-                targetValue = progress,
-                animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
-            ).value
+            if (progress >= 0f) {
+                val animatedProgress = animateFloatAsState(
+                    targetValue = progress,
+                    animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
+                ).value
 
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .scale(scale)
-                    .align(Alignment.Center),
-                color = DarkColorPalette.primary,
-                progress = animatedProgress
-            )
+                CircularProgressIndicator(
+                    modifier = Modifier.aspectRatio(1f).scale(scale).align(Alignment.Center),
+                    color = DarkColorPalette.primary,
+                    progress = animatedProgress
+                )
+            } else {
+                CircularProgressIndicator(
+                    modifier = Modifier.aspectRatio(1f).scale(scale).align(Alignment.Center),
+                    color = DarkColorPalette.primary
+                )
+            }
         }
+        if (func != null)
+            func()
     }
 }
 

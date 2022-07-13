@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
@@ -33,7 +32,13 @@ import java.time.Instant
 
 /** Loads note to edit, then shows edit screen. */
 @Composable
-fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, navController: NavController, onSaveClick: (Note, Note?) -> Unit) {
+fun NoteScreenEdit(
+    noteViewModel: NoteViewModel,
+    id: Long,
+    offset: Int?,
+    onBackClick: (Boolean) -> Unit,
+    onSaveClick: (Note, Note?) -> Unit
+) {
     var state by rememberSaveable { mutableStateOf(LoadingState.LOADING) }
     var existingData by rememberSaveable { mutableStateOf<NoteWithCategory?>(null) }
 
@@ -49,7 +54,7 @@ fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, navCont
             note = existingData?.note,
             noteCategory = existingData?.noteCategory,
             offset = offset,
-            navController = navController,
+            onBackClick = onBackClick,
             onSaveClick = { toSaveNote -> onSaveClick(toSaveNote, existingData?.note) },
         )
         else -> {
@@ -61,14 +66,15 @@ fun NoteScreenEdit(noteViewModel: NoteViewModel, id: Long, offset: Int?, navCont
 
 /** Edits a new note directly. */
 @Composable
-fun NoteScreenEditNew(navController: NavController, onSaveClick: (Note) -> Unit) = NoteScreenEditReady(null, null, null, navController, onSaveClick)
+fun NoteScreenEditNew(onBackClick: (Boolean) -> Unit, onSaveClick: (Note) -> Unit) =
+    NoteScreenEditReady(null, null, null, onBackClick, onSaveClick)
 
 /**
  * Detail screen for editing a single note.
  * @param note Note to edit.
  * @param noteCategory Optional category assigned to passed note.
  * @param offset Optional initial scroll offset in px. Passing `null` prevents scrolling.
- * @param navController Used to handle back events.
+ * @param onBackClick Lambda executed when the user intends to go back. Parameter indicates whether the note has been edited.
  * @param onSaveClick Lambda executed when the user hits the save button.
  */
 @Composable
@@ -76,8 +82,8 @@ fun NoteScreenEditReady(
     note: Note?,
     noteCategory: NoteCategory?,
     offset: Int? = null,
-    navController: NavController,
-    onSaveClick: (Note) -> Unit,
+    onBackClick: (Boolean) -> Unit,
+    onSaveClick: (Note) -> Unit
 ) {
     var title by rememberSaveable { mutableStateOf(note?.name ?: "") }
     var content by rememberSaveable { mutableStateOf(note?.content ?: "") }
@@ -156,19 +162,10 @@ fun NoteScreenEditReady(
             }
         }
     }
-
-    val showGoBack = rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = noteChanged.value) {
-        showGoBack.value = !showGoBack.value
+    BackHandler(enabled = true) {
+        onBackClick(noteChanged.value)
     }
-    if (showGoBack.value)
-        UiUtil.SimpleDialogBinary(
-            title = "Unsaved changes",
-            message = "Found unsaved changes. Are you sure you want to go back?",
-            onDismiss = { showGoBack.value = false },
-            onNegativeClick = { showGoBack.value = false },
-            onPositiveClick = { navController.navigateUp() },
-        )
+
     offset?.let {
         UiUtil.LaunchedEffectSaveable(Unit) {
             scrollState.animateScrollTo(it)

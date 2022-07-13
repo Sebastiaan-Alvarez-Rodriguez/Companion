@@ -6,18 +6,19 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
-import androidx.compose.material.ScaffoldState
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Done
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -35,6 +36,7 @@ import org.python.companion.support.FileUtil
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
+import org.python.companion.ui.theme.DarkColorPalette
 import org.python.companion.viewmodels.NoteViewModel
 import org.python.datacomm.Result
 import org.python.datacomm.ResultType
@@ -180,39 +182,67 @@ class ImportExportState(
 
         val detailsDescription = remember { mutableStateOf("") }
 
-        ImportExportScreenSettings(
-            progressContent = {
-                NestedCircularProgressIndicator(progresses = listOf(progressExportNotes.value, progressZipNotes.value, progressCopyZip.value))
-            },
-            subContent = {
-                DetailsCard(detailsDescription = detailsDescription.value)
-            },
-            onBackClick = {
-                // TODO: Sure you want to go back? -> delete export file & go back.
-                navigateToStop(navController, isExport = true) {
-                    navController.navigateUp()
-                }
-            }
-        )
+        var exportResult by remember { mutableStateOf<Result?>(null) }
 
         val context = LocalContext.current
         val cacheDir = context.cacheDir
 
         val contentResolver = LocalContext.current.contentResolver
 
-        LaunchedEffect(true) {
-            val exportResult = export(
+        ImportExportScreenSettings(
+            progressContent = {
+                NestedCircularProgressIndicator(progresses = listOf(progressExportNotes.value, progressZipNotes.value, progressCopyZip.value)) {
+                    exportResult?.let {
+                        if (it.type == ResultType.SUCCESS) {
+                            Icon(
+                                imageVector = Icons.Rounded.Done,
+                                contentDescription = "Export success",
+                                modifier = Modifier.size(32.dp).align(Alignment.Center), tint = DarkColorPalette.primary
+                            )
+                        } else if (it.type == ResultType.FAILED) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Export failure",
+                                modifier = Modifier.size(32.dp).align(Alignment.Center), tint = Color.Red
+                            )
+                        }
+                    }
+                }
+            },
+            subContent = {
+                DetailsCard(detailsDescription = detailsDescription.value)
+            },
+            onBackClick = {
+                if (exportResult == null) {
+                    navigateToStop(navController, isExport = true) {
+                        cacheDir.walkBottomUp().onLeave { it.delete() }
+                        navController.navigateUp()
+                    }
+                } else {
+                    cacheDir.walkBottomUp().onLeave { it.delete() }
+                    navController.navigateUp()
+                }
+            }
+        )
+
+        var exportTrigger by remember { mutableStateOf(false) }
+        LaunchedEffect(exportTrigger) {
+            exportResult = null
+            exportResult = export(
                 noteViewModel, cacheDir, contentResolver, location, password,
                 progressExportNotes, progressZipNotes, progressCopyZip,
                 detailsDescription
             )
-            if (exportResult.type == ResultType.FAILED) {
-                scaffoldState.snackbarHostState.showSnackbar(
-                    message = exportResult.message ?: "Error during exporting"
+            if (exportResult!!.type == ResultType.FAILED) {
+                val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
+                    message = exportResult!!.message ?: "Error during exporting",
+                    duration = SnackbarDuration.Indefinite,
+                    actionLabel = "Retry"
                 )
-                // TODO: Do something here?
-            } else {
-                // TODO: Indicate up, maybe go back up
+                when (snackbarResult) {
+                    SnackbarResult.ActionPerformed -> exportTrigger = !exportTrigger // trigger retry
+                    else -> {}
+                }
             }
         }
     }
@@ -241,9 +271,16 @@ class ImportExportState(
             if (isGranted) {
                 fileLauncher.launch(arrayOf("application/zip"))
             } else {
-                // TODO Snackbar: 'need permission'
+                // TODO: Only ask for permission as per https://developer.android.com/training/permissions/requesting
+                UiUtil.UIUtilState.navigateToSingular(
+                    navController = navController,
+                    title = "Permission needed, really",
+                    message = "We need file access permission to import data from a file. We solely access files for importing/exporting.",
+                    onClick = {}
+                )
             }
         }
+
         ImportExportScreenSettings(
             progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f, 1f)) },
             subContent = {
@@ -254,8 +291,10 @@ class ImportExportState(
                 ) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
                         fileLauncher.launch(arrayOf("application/zip"))
-                    else
+                    else {
+
                         requestLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    }
                     pathError = null
                 }
                 Spacer(Modifier.height(defaultPadding))
@@ -394,20 +433,7 @@ class ImportExportState(
                 if (zippingState.state != EximUtil.FinishState.SUCCESS)
                     return Result(ResultType.FAILED, zippingState.error)
 
-//                Timber.e("launching copy job")
-//                val copyJob = FileUtil.copyStream(
-//                    size = tmpZipFile.length(),
-//                    inStream = tmpZipFile.inputStream(),
-//                    outStream = contentResolver.openOutputStream(location, "w")!!
-//                ) { progress ->
-//                    progressCopyZip.value = progress
-//                    detailsDescription.value = "Moving archive"
-//                }
                 Timber.e("launching copy job")
-//                val tmpTxt = (1..1000).map { "0123456789" }.joinToString(separator = "\n")
-//                val tmpTxtFile = File.createTempFile("testcase", ".zip")
-//                tmpTxtFile.writeText(tmpTxt)
-
                 val copyJob = FileUtil.copyStream(
                     size = tmpZipFile.length(),
                     inStream = tmpZipFile.inputStream(),
@@ -571,7 +597,7 @@ class ImportExportState(
                 title = "${if (isExport) "Exporting" else "Importing"} unfinished",
                 message = "Are you sure you want to go back? ${if (isExport) "Export" else "Import"} process will be cancelled.",
                 positiveText = "Stop ${if (isExport) "exporting" else "importing"}",
-                onPositiveClick = { if (it) onStopClick() }
+                onOptionClick = { if (it) onStopClick() }
             )
 
         @Composable
