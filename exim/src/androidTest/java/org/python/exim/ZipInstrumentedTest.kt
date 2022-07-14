@@ -8,6 +8,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.nio.file.Files
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -16,10 +17,9 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class ZipInstrumentedTest {
-    private fun prepareFile(): File {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val cacheDir = context.cacheDir
-        return File.createTempFile("test", "in", cacheDir)
+    private fun prepareFile(nameIn: String): File {
+        val tmpDir = Files.createTempDirectory("companion")
+        return File(tmpDir.toFile(), nameIn)
     }
 
     private fun prepareDir(): File {
@@ -31,14 +31,13 @@ class ZipInstrumentedTest {
         var progress = 0f
         val passwordArray = password.toCharArray()
 
-        val fileOut = prepareFile()
+        val fileOut = prepareFile(nameIn)
         val fileOutPath = fileOut.path
         fileOut.delete()
 
         runBlocking {
             Export.zip(
-                input = fileIn,
-                inZipName = nameIn,
+                inputs = listOf(fileIn),
                 password = passwordArray,
                 destination = fileOutPath,
                 pollTimeMS = 100L,
@@ -53,9 +52,10 @@ class ZipInstrumentedTest {
 
     @Test
     fun basicZipWorks() {
-        val fileIn = prepareFile()
+        val nameIn = "test.in"
+        val fileIn = prepareFile(nameIn)
         fileIn.writeText("This is a test. Do not be alarmed.")
-        val fileOut = prepareFile()
+        val fileOut = prepareFile(nameIn)
         val fileOutPath = fileOut.path
         fileOut.delete()
 
@@ -72,7 +72,8 @@ class ZipInstrumentedTest {
 
     @Test
     fun ourZipWorks() {
-        val fileIn = prepareFile()
+        val nameIn = "test.in"
+        val fileIn = prepareFile(nameIn)
         fileIn.writeText("This is a test. Do not be alarmed.")
 
         val zipFile = prepareOurZip(fileIn)
@@ -87,7 +88,7 @@ class ZipInstrumentedTest {
         var progress = 0f
         val nameIn = "notes.pq"
         val password = "password"
-        val fileIn = prepareFile()
+        val fileIn = prepareFile(nameIn)
         fileIn.writeText("This is a test. Do not be alarmed.")
         val dirOut = prepareDir()
 
@@ -96,7 +97,6 @@ class ZipInstrumentedTest {
         runBlocking {
             Import.unzip(
                 input = zipFile,
-                inZipName = nameIn,
                 password = password.toCharArray(),
                 destination = dirOut.path,
                 pollTimeMS = 100
@@ -106,6 +106,6 @@ class ZipInstrumentedTest {
         }
         Assert.assertEquals(1f, progress)
         Assert.assertEquals(1, ZipFile(zipFile).fileHeaders.size)
-
+        assert(dirOut.resolve(nameIn).isFile)
     }
 }

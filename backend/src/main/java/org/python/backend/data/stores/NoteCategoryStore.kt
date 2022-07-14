@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.map
 import org.python.backend.data.datatype.NoteCategory
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNoteCategory
-import org.python.db.entities.note.RoomNoteWithCategory
 
 class NoteCategoryStore(database: CompanionDatabase) {
     private val noteCategoryDao = database.noteCategoryDao
@@ -20,6 +19,7 @@ class NoteCategoryStore(database: CompanionDatabase) {
      * @return Found category if present, null otherwise
      */
     suspend fun get(id: Long): NoteCategory? = noteCategoryDao.get(id)?.toUI()
+    suspend fun getAll(): List<NoteCategory> = noteCategoryDao.getAll().map { it.toUI() }
 
     /**
      * Searches note by name.

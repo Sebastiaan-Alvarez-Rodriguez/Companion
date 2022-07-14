@@ -50,6 +50,7 @@ class MainActivity : FragmentActivity() {
                 val settingsState = SettingsState.rememberState(
                     navController = navController,
                     noteViewModel = noteViewModel,
+                    noteCategoryViewModel = noteCategoryViewModel,
                     scaffoldState = scaffoldState
                 )
                 val noteState = NoteState.rememberState(

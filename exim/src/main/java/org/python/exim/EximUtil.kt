@@ -70,7 +70,7 @@ object EximUtil {
         inStream: InputStream,
         outStream: OutputStream,
     ) {
-        val bufferSize = 4096
+        val bufferSize = 64*1024
         val bytes = ByteArray(bufferSize)
         var count: Int
         try {

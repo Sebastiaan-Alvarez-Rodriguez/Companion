@@ -2,6 +2,7 @@ package org.python.backend.data.datatype
 
 import android.graphics.Color
 import org.python.db.entities.note.RoomNoteCategory
+import org.python.db.typeconverters.ColorConverter
 import org.python.db.typeconverters.InstantConverter
 import org.python.exim.EximUtil
 import org.python.exim.Exportable
@@ -78,7 +79,31 @@ data class NoteCategory(
     val color: Color,
     val favorite: Boolean,
     val categoryDate: Instant
-) {
+) : Exportable, Importable<NoteCategory> {
+    constructor() : this(categoryId = 0L, name = "", color = Color.valueOf(0L), favorite = false, categoryDate = Instant.MIN)
+
+    override fun values(): Array<EximUtil.FieldInfo> {
+        return arrayOf(
+            EximUtil.FieldInfo(categoryId, "categoryId"),
+            EximUtil.FieldInfo(name, "name"),
+            EximUtil.FieldInfo(ColorConverter.colorToLong(color), "color"),
+            EximUtil.FieldInfo(favorite, "favorite"),
+            EximUtil.FieldInfo(InstantConverter.dateToTimestamp(categoryDate), "categoryData")
+        )
+    }
+
+    override val amountValues: Int = values().size
+
+    override fun fromValues(values: List<Any?>): NoteCategory {
+        return NoteCategory(
+            categoryId = values[0] as Long,
+            name = values[1] as String,
+            color = ColorConverter.longToColor(values[2] as Long),
+            favorite = values[3] as Boolean,
+            categoryDate = InstantConverter.dateFromTimestamp(values[4] as Long)!!
+        )
+    }
+
     override fun equals(other: Any?): Boolean {
         if (other !is NoteCategory)
             return false
@@ -88,6 +113,8 @@ data class NoteCategory(
     override fun hashCode(): Int = this.categoryId.toInt()
 
     companion object {
+        val EMPTY = NoteCategory()
+
         val DEFAULT: NoteCategory = NoteCategory(
             categoryId = RoomNoteCategory.DEFAULT.categoryId,
             name = RoomNoteCategory.DEFAULT.categoryName,

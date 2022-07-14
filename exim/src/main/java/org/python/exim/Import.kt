@@ -9,7 +9,6 @@ import net.lingala.zip4j.progress.ProgressMonitor
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
-import java.util.stream.Collectors
 import kotlin.streams.asSequence
 
 /**
@@ -80,26 +79,25 @@ object Import {
 
     suspend fun unzip(
         input: File,
-        inZipName: String,
         password: CharArray,
         destination: String,
         pollTimeMS: Long,
         onProgress: (Float) -> Unit
     ): Deferred<EximUtil.ZippingState> = withContext(Dispatchers.IO) {
         return@withContext pollForZipFunc(
-            func = { unzip(input, inZipName, password, destination) },
+            func = { unzip(input, password, destination) },
             pollTimeMS = pollTimeMS,
             onProgress = onProgress
         )
     }
     
-    private fun unzip(input: File, inZipName: String, password: CharArray, destination: String): ProgressMonitor {
+    private fun unzip(input: File, password: CharArray, destination: String): ProgressMonitor {
         val zipFile = ZipFile(input, password)
         val progressMonitor = zipFile.progressMonitor
         if (!zipFile.isValidZipFile)
             throw RuntimeException("Zip is not valid")
         zipFile.isRunInThread = true
-        zipFile.extractFile(inZipName, destination)
+        zipFile.extractAll(destination)
         return progressMonitor
     }
 }

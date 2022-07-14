@@ -9,7 +9,6 @@ import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.AesKeyStrength
 import net.lingala.zip4j.model.enums.EncryptionMethod
 import net.lingala.zip4j.progress.ProgressMonitor
-import org.apache.hadoop.io.compress.CompressionCodec
 import org.apache.parquet.schema.*
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
@@ -76,28 +75,26 @@ object Export {
     }
 
     suspend fun zip(
-        input: File,
-        inZipName: String,
+        inputs: List<File>,
         password: CharArray,
         destination: String,
         pollTimeMS: Long,
         onProgress: (Float) -> Unit
     ): Deferred<EximUtil.ZippingState> = withContext(Dispatchers.IO) {
-        pollForZipFunc(func = { zip(input, inZipName, password, destination) }, pollTimeMS = pollTimeMS, onProgress = onProgress)
+        pollForZipFunc(func = { zip(inputs, password, destination) }, pollTimeMS = pollTimeMS, onProgress = onProgress)
     }
 
-    private fun zip(file: File, inZipName: String, password: CharArray, destination: String): ProgressMonitor {
+    private fun zip(inputs: List<File>, password: CharArray, destination: String): ProgressMonitor {
         val zipParameters = ZipParameters()
 
         zipParameters.isEncryptFiles = true
         zipParameters.encryptionMethod = EncryptionMethod.AES
         zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
-        zipParameters.fileNameInZip = inZipName
 
         val zipFile = ZipFile(destination, password)
         val progressMonitor = zipFile.progressMonitor
         zipFile.isRunInThread = true
-        zipFile.addFile(file, zipParameters)
+        zipFile.addFiles(inputs, zipParameters)
         return progressMonitor
     }
 }

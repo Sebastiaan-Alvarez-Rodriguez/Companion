@@ -1,5 +1,6 @@
 package org.python.companion.support
 
+import android.content.res.AssetFileDescriptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -50,6 +51,8 @@ object FileUtil {
         }
     }
 
+    fun determineSize(fd: AssetFileDescriptor): Long = fd.use { x -> return x.length }
+
     suspend fun deleteDirectory(path: Path?) = withContext(Dispatchers.IO) {
         Files.walk(path)
             .sorted(Comparator.reverseOrder())
@@ -62,9 +65,8 @@ object FileUtil {
             RandomAccessFile(path2.toFile(), "r").use { randomAccessFile2 ->
                 val ch1: FileChannel = randomAccessFile1.channel
                 val ch2: FileChannel = randomAccessFile2.channel
-                if (ch1.size() != ch2.size()) {
+                if (ch1.size() != ch2.size())
                     return@use false
-                }
                 val size: Long = ch1.size()
                 val m1: MappedByteBuffer = ch1.map(FileChannel.MapMode.READ_ONLY, 0L, size)
                 val m2: MappedByteBuffer = ch2.map(FileChannel.MapMode.READ_ONLY, 0L, size)

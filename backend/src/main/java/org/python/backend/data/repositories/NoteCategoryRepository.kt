@@ -4,10 +4,9 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.stores.NoteCategoryStore
-import org.python.security.SecurityActor
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNoteCategory
-import org.python.db.entities.note.RoomNoteWithCategory
+import org.python.security.SecurityActor
 
 class NoteCategoryRepository(private val securityActor: SecurityActor, private val noteCategoryStore: NoteCategoryStore) {
     constructor(securityActor: SecurityActor, companionDatabase: CompanionDatabase) :
@@ -58,4 +57,6 @@ class NoteCategoryRepository(private val securityActor: SecurityActor, private v
     }
 
     suspend fun delete(category: NoteCategory): Unit = noteCategoryStore.delete(category)
+
+    suspend fun getAll(): List<NoteCategory> = noteCategoryStore.getAll()
 }

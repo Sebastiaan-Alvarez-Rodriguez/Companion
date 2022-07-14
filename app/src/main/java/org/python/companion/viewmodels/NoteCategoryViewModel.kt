@@ -53,6 +53,8 @@ class NoteCategoryViewModel(application: Application) : AndroidViewModel(applica
 
     suspend fun delete(noteCategory: NoteCategory): Unit = noteCategoryRepository.delete(noteCategory)
 
+    suspend fun getAll(): List<NoteCategory> = noteCategoryRepository.getAll()
+
     suspend fun get(id: Long): NoteCategory? = noteCategoryRepository.get(id)
 
     suspend fun getbyName(noteCategory: NoteCategory): NoteCategory? = noteCategoryRepository.getByName(noteCategory.name)

@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.settings.import_export.ImportExportState
+import org.python.companion.viewmodels.NoteCategoryViewModel
 import org.python.companion.viewmodels.NoteViewModel
 
 class SettingsState(
@@ -68,8 +69,17 @@ class SettingsState(
             navController.navigate(navigationStart)
 
         @Composable
-        fun rememberState(navController: NavHostController = rememberNavController(), noteViewModel: NoteViewModel, scaffoldState: ScaffoldState): SettingsState {
-            val importExportState = ImportExportState.rememberState(navController = navController, noteViewModel = noteViewModel, scaffoldState = scaffoldState)
+        fun rememberState(
+            navController: NavHostController = rememberNavController(),
+            noteViewModel: NoteViewModel,
+            noteCategoryViewModel: NoteCategoryViewModel,
+            scaffoldState: ScaffoldState): SettingsState {
+            val importExportState = ImportExportState.rememberState(
+                navController = navController,
+                noteViewModel = noteViewModel,
+                noteCategoryViewModel = noteCategoryViewModel,
+                scaffoldState = scaffoldState
+            )
             return remember(navController) { SettingsState(navController, noteViewModel, scaffoldState, importExportState) }
         }
     }
