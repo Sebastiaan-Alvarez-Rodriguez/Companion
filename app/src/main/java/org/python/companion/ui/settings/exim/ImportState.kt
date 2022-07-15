@@ -109,7 +109,7 @@ class ImportState(
         val requestLauncher = PermissionUtil.requestExternalStoragePermission(navController, onGranted = { fileLauncher.launch(arrayOf("application/zip")) })
 
         ImportExportScreenSettings(
-            progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f, 1f)) },
+            progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f, 1f, 1f)) },
             subContent = {
                 PickFileCard(
                     path = location.value?.path,
@@ -329,13 +329,23 @@ class ImportState(
                 input = notePath.toFile(),
                 batchSize = 100,
                 cls = Note::class.java,
-                onProgress = onProgressNotes
+                onStoreBatch = { batch ->
+                    batch.forEach { item ->
+                        onProgressNotes(0.6f, item)
+                        Timber.e("    $item")
+                    }
+                },
             )
             val importCategoriesJob = doImport( // TODO: Do something with data, and apply mergeStrategy
                 input = categoriesPath.toFile(),
                 batchSize = 100,
                 cls = NoteCategory::class.java,
-                onProgress = onProgressCategories
+                onStoreBatch = { batch ->
+                    batch.forEach { item ->
+                        onProgressCategories(0.6f, item)
+                        Timber.e("    $item")
+                    }
+                },
             )
 
             importNotesJob.start()
@@ -350,7 +360,6 @@ class ImportState(
          * Handles Parquet importing.
          * @param input input file location.
          * @param batchSize amount of items to process at once.
-         * @param onProgress progress lambda.
          * Progress ranges from 0f to 1f. Secondary parameter is the most recently processed item.
          * @return executable job.
          */
@@ -358,7 +367,7 @@ class ImportState(
             input: File,
             batchSize: Int,
             cls: Class<T>,
-            onProgress: (Float, T?) -> Unit
+            onStoreBatch: (List<T>) -> Unit
         ): Job {
             val parquetImport = Imports.parquet
 
@@ -366,11 +375,9 @@ class ImportState(
                 type = parquetImport,
                 source = input,
                 batchSize = batchSize,
-                cls = cls
-            ) { item: T, amountProcessed: Long ->
-                //TODO: get total rows, compute progress
-                onProgress(0.6f, item)
-            }
+                cls = cls,
+                onStoreBatch = onStoreBatch
+            )
         }
 
         private suspend fun doUnzip(input: File, password: CharArray, destination: String, onProgress: (Float) -> Unit): Deferred<EximUtil.ZippingState> =

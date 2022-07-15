@@ -39,13 +39,24 @@ sealed class Imports {
 object Import {
 
     /** Import data from given source to given importable type, processing `batchSize` rows at a time */
-    suspend fun <T: Importable<T>> import(type: Imports, source: File, batchSize: Int, cls: Class<T>, onProgress: (T, Long) -> Unit): Job {
+    suspend fun <T: Importable<T>> import(
+        type: Imports,
+        source: File,
+        batchSize: Int,
+        cls: Class<T>,
+        onStoreBatch: (List<T>) -> Unit
+    ): Job {
         return when (type) {
-            is Imports.parquet -> readFromParquet(source, batchSize, cls, onProgress)
+            is Imports.parquet -> readFromParquet(source, batchSize, cls, onStoreBatch)
         }
     }
 
-    private suspend fun <T: Importable<T>> readFromParquet(file: File, batchSize: Int, cls: Class<T>, onProgress: (T, Long) -> Unit): Job {
+    private suspend fun <T: Importable<T>> readFromParquet(
+        file: File,
+        batchSize: Int,
+        cls: Class<T>,
+        onStoreBatch: (List<T>) -> Unit
+    ): Job {
         val accessor = Importable.classToInstance(cls)
 
         val elementsPerRow = Importable.amountValues(accessor)
@@ -62,15 +73,8 @@ object Import {
         return withContext(Dispatchers.IO) {
             return@withContext launch {
                 ParquetReader.streamContent(file, HydratorSupplier.constantly(hydrator)).use { dataStream ->
-                    var count = 0L
                     for (batch in dataStream.asSequence().chunked(batchSize)) {
-                        Timber.e("Took batch (${batch.size}, max=$batchSize)")
-                        count += batch.size
-                        batch.forEach { item ->
-                            onProgress(item, count)
-                            Timber.e("    $item")
-                            //TODO: Store items one by one, or rather as a batch?
-                        }
+                        onStoreBatch(batch)
                     }
                 }
             }
