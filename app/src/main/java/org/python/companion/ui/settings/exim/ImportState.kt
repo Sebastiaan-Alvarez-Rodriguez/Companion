@@ -157,8 +157,7 @@ class ImportState(
 
     @Composable
     private fun ImportExecuteScreen(location: Uri, password: String, mergeStrategy: EximUtil.MergeStrategy) {
-        // TODO: Export categories as well
-        // metrics for exporting
+        // metrics for importing
         val progressCopyZip = remember { mutableStateOf(0f) }
         val progressExtractZip = remember { mutableStateOf(0f) }
         val progressImportNotes = remember { mutableStateOf(0f) }
@@ -185,7 +184,7 @@ class ImportState(
             },
             onBackClick = {
                 if (importResult == null) {
-                    Shared.navigateToStop(navController, isExport = true) {
+                    Shared.navigateToStop(navController, isExport = false) {
                         cacheDir.walkBottomUp().onLeave { it.delete() }
                         navController.navigateUp()
                     }
@@ -205,7 +204,7 @@ class ImportState(
             )
             if (importResult!!.type == ResultType.FAILED) {
                 val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
-                    message = importResult!!.message ?: "Error during exporting",
+                    message = importResult!!.message ?: "Error during importing",
                     duration = SnackbarDuration.Indefinite,
                     actionLabel = "Retry"
                 )
@@ -220,8 +219,7 @@ class ImportState(
     companion object {
         const val navigationStart: String = "${SettingsState.navigationStart}/import"
 
-        fun navigateToImport(navController: NavController) =
-            navController.navigate("$navigationStart/import")
+        fun navigateToImport(navController: NavController) = navController.navigate(navigationStart)
 
         /**
          * Imports all data from 2 parquet files: one for notes, the other for note categories.
@@ -246,7 +244,7 @@ class ImportState(
                     progressCopyZip.value = progress
                     detailsDescription.value = "Moving archive"
                 }.pipe {
-                    doZip(tmpZipFile, password.toCharArray(), tmpZipExtractDir) { progress ->
+                    doUnzip(tmpZipFile, password.toCharArray(), tmpZipExtractDir) { progress ->
                         progressExtractZip.value = progress
                         detailsDescription.value = "Extracting archive..."
                     }
@@ -273,12 +271,7 @@ class ImportState(
             }
         }
 
-        private suspend fun doCopy(
-            contentResolver: ContentResolver,
-            location: Uri,
-            output: OutputStream,
-            onProgress: (Float) -> Unit
-        ): Result {
+        private suspend fun doCopy(contentResolver: ContentResolver, location: Uri, output: OutputStream, onProgress: (Float) -> Unit): Result {
             Timber.e("launching copy job")
             val zipSize = FileUtil.determineSize(contentResolver.openAssetFile(location, "r", null)!!)
             val copyJob = FileUtil.copyStream(
@@ -294,7 +287,7 @@ class ImportState(
             return Result.DEFAULT_SUCCESS
         }
 
-        private suspend fun doZip(
+        private suspend fun doUnzip(
             zipFile: File,
             password: CharArray,
             outputLocation: Path,
@@ -302,7 +295,7 @@ class ImportState(
         ): Result {
             // Check if picked file is a correct zip
             if (!EximUtil.verifyZip(zipFile))
-                return Result(ResultType.FAILED, "Message is not a valid zip file")
+                return Result(ResultType.FAILED, "Object is not a valid zip file")
 
             Timber.e("launching unzip job")
             val zippingJob = doUnzip(input = zipFile, password = password,

@@ -46,6 +46,7 @@ import org.python.exim.Exportable
 import org.python.exim.Exports
 import timber.log.Timber
 import java.io.File
+import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
@@ -213,11 +214,9 @@ class ExportState(
     companion object {
         const val navigationStart: String = "${NoteState.noteDestination}/exim"
 
-        private const val PARQUET_EXTENSION = "pq"
         private const val ZIP_EXTENSION = "zip"
 
-        fun navigateToExport(navController: NavController) =
-            navController.navigate(navigationStart)
+        fun navigateToExport(navController: NavController) = navController.navigate(navigationStart)
 
         private fun zipName() = "companion-${Instant.now()}"
 
@@ -242,7 +241,7 @@ class ExportState(
 
             val tmpZipFile = File.createTempFile("companion", ".$ZIP_EXTENSION", cacheDir)
             try {
-                doExport(
+                val result = doExport(
                     noteViewModel, noteCategoryViewModel, tmpNotesFile, tmpNoteCategoriesFile,
                     onProgressNotes = { progress, item ->
                         progressExportNotes.value = progress
@@ -262,32 +261,24 @@ class ExportState(
                         detailsDescription.value = "Creating archive..."
                     }
                 }.pipe {
-
+                    doCopy(
+                        input = tmpZipFile,
+                        outputStream = contentResolver.openOutputStream(location, "w")!!
+                    ) { progress ->
+                        progressCopyZip.value = progress
+                        detailsDescription.value = "Moving zip"
+                    }
                 }
 
-                // TODO: Remove old content before launching job (solves 11KB zip bug)
-                Timber.e("launching copy job")
-                val copyJob = FileUtil.copyStream(
-                    size = tmpZipFile.length(),
-                    inStream = tmpZipFile.inputStream(),
-                    outStream = contentResolver.openOutputStream(location, "w")!!
-                ) { progress ->
-                    progressCopyZip.value = progress
-                    detailsDescription.value = "Moving zip"
-                }
-                copyJob.start()
-                Timber.e("joining copy job")
-                copyJob.join()
-                detailsDescription.value = "Done"
-                Timber.e("All jobs completed - success")
-
-                return Result.DEFAULT_SUCCESS
+                detailsDescription.value = if (result.type == ResultType.SUCCESS) "Done" else "Failure"
+                Timber.e("All jobs completed - ${if(result.type == ResultType.SUCCESS) "success" else "failed"}: ${result.message}")
+                return result
             } finally {
                 Timber.e("Cleaning up")
                 tmpNotesFile.delete()
                 tmpNoteCategoriesFile.delete()
                 tmpZipFile.delete()
-                tmpDir.toFile().deleteRecursively()
+                FileUtil.deleteDirectory(tmpDir)
             }
         }
 
@@ -320,12 +311,7 @@ class ExportState(
             return Result.DEFAULT_SUCCESS
         }
 
-        private suspend fun doZip(
-            files: List<File>,
-            destination: Path,
-            password: CharArray,
-            onProgress: (Float) -> Unit
-        ): Result {
+        private suspend fun doZip(files: List<File>, destination: Path, password: CharArray, onProgress: (Float) -> Unit): Result {
             Timber.e("launching zip job")
             destination.deleteExisting() // Otherwise zip library thinks our empty tmp file is a zip and crashes.
             val zippingJob = doZip(
@@ -344,6 +330,22 @@ class ExportState(
                 return Result(ResultType.FAILED, "Internal error: Created an incorrect zip.")
             return Result.DEFAULT_SUCCESS
         }
+
+        private suspend fun doCopy(input: File, outputStream: OutputStream, onProgress: (Float) -> Unit): Result {
+            // TODO: Remove old content before launching job (solves 11KB zip bug)
+            Timber.e("launching copy job")
+            val copyJob = FileUtil.copyStream(
+                size = input.length(),
+                inStream = input.inputStream(),
+                outStream = outputStream,
+                onProgress = onProgress
+            )
+            copyJob.start()
+            Timber.e("joining copy job")
+            copyJob.join()
+            return Result.DEFAULT_SUCCESS
+        }
+
         /**
          * Handles Parquet exporting.
          * @param data Data to export.
