@@ -1,4 +1,4 @@
-package org.python.companion.ui.settings.import_export
+package org.python.companion.ui.settings.exim
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
@@ -10,6 +10,8 @@ import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Done
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import org.python.companion.R
 import org.python.companion.support.UiUtil
 import org.python.companion.ui.theme.DarkColorPalette
+import org.python.datacomm.Result
+import org.python.datacomm.ResultType
 import org.python.exim.EximUtil
 
 
@@ -210,6 +214,37 @@ fun DetailsCard(detailsDescription: String? = null) {
 
 /**
  * Creates a series of circular progress bars inside each other.
+ * When a final result has been determined, provides visual feedback to users.
+ * @see NestedCircularProgressIndicator
+ */
+@Composable
+fun FinishingNestedCircularProgressIndicator(result: Result?, progresses: List<Float>) {
+    NestedCircularProgressIndicator(progresses = progresses) {
+        result?.let {
+            if (it.type == ResultType.SUCCESS) {
+                Icon(
+                    imageVector = Icons.Rounded.Done,
+                    contentDescription = "Success",
+                    modifier = Modifier
+                        .size(32.dp)
+                        .align(Alignment.Center), tint = DarkColorPalette.primary
+                )
+            } else if (it.type == ResultType.FAILED) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Failure",
+                    modifier = Modifier
+                        .size(32.dp)
+                        .align(Alignment.Center), tint = Color.Red
+                )
+            }
+        }
+    }
+}
+
+
+/**
+ * Creates a series of circular progress bars inside each other.
  * @param progresses Progresses to create progress bars for. Any negative value creates an indeterminate progress bar.
  * @param func Extra layout function.
  */
@@ -226,13 +261,19 @@ fun NestedCircularProgressIndicator(progresses: List<Float>, func: (@Composable 
                 ).value
 
                 CircularProgressIndicator(
-                    modifier = Modifier.aspectRatio(1f).scale(scale).align(Alignment.Center),
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .scale(scale)
+                        .align(Alignment.Center),
                     color = DarkColorPalette.primary,
                     progress = animatedProgress
                 )
             } else {
                 CircularProgressIndicator(
-                    modifier = Modifier.aspectRatio(1f).scale(scale).align(Alignment.Center),
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .scale(scale)
+                        .align(Alignment.Center),
                     color = DarkColorPalette.primary
                 )
             }

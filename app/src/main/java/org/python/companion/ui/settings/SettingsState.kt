@@ -8,7 +8,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
-import org.python.companion.ui.settings.import_export.ImportExportState
+import org.python.companion.ui.settings.exim.ExportState
+import org.python.companion.ui.settings.exim.ImportState
 import org.python.companion.viewmodels.NoteCategoryViewModel
 import org.python.companion.viewmodels.NoteViewModel
 
@@ -16,11 +17,13 @@ class SettingsState(
     private val navController: NavHostController,
     private val noteViewModel: NoteViewModel,
     private val scaffoldState: ScaffoldState,
-    private val importExportState: ImportExportState
+    private val exportState: ExportState,
+    private val importState: ImportState
 ) {
 
     fun NavGraphBuilder.settingsGraph() {
-        with(importExportState) { importExportGraph() }
+        with(exportState) { exportGraph() }
+        with(importState) { importGraph() }
 
         navigation(startDestination = navigationStart, route = "settings") {
             composable(
@@ -52,8 +55,8 @@ class SettingsState(
                             onPicked = { type -> SecurityState.navigateToReset(type, navController) }
                         )
                     },
-                    onExportClick = { ImportExportState.navigateToExport(navController) },
-                    onImportClick = { ImportExportState.navigateToImport(navController) },
+                    onExportClick = { ExportState.navigateToExport(navController) },
+                    onImportClick = { ImportState.navigateToImport(navController) },
                     onBackClick = { navController.navigateUp() }
                 )
             }
@@ -74,13 +77,21 @@ class SettingsState(
             noteViewModel: NoteViewModel,
             noteCategoryViewModel: NoteCategoryViewModel,
             scaffoldState: ScaffoldState): SettingsState {
-            val importExportState = ImportExportState.rememberState(
+            val exportState = ExportState.rememberState(
                 navController = navController,
                 noteViewModel = noteViewModel,
                 noteCategoryViewModel = noteCategoryViewModel,
                 scaffoldState = scaffoldState
             )
-            return remember(navController) { SettingsState(navController, noteViewModel, scaffoldState, importExportState) }
+            val importState = ImportState.rememberState(
+                navController = navController,
+                noteViewModel = noteViewModel,
+                noteCategoryViewModel = noteCategoryViewModel,
+                scaffoldState = scaffoldState
+            )
+            return remember(navController) {
+                SettingsState(navController, noteViewModel, scaffoldState, exportState, importState)
+            }
         }
     }
 }

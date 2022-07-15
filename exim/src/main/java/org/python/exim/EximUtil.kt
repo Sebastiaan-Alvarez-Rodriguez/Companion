@@ -6,6 +6,7 @@ import net.lingala.zip4j.progress.ProgressMonitor
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.file.Path
 
 object EximUtil {
     data class FieldInfo(val value: Any?, val name: String)
@@ -50,6 +51,8 @@ object EximUtil {
             }
         }
     }
+
+    fun verifyZip(location: Path) = verifyZip(location.toString())
 
     fun verifyZip(location: String): Boolean {
         val zipFile = ZipFile(location)
