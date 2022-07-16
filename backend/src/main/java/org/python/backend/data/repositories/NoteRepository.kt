@@ -16,6 +16,7 @@ import org.python.datacomm.DataResult
 import org.python.datacomm.Result
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNoteWithCategory
+import org.python.exim.EximUtil
 import org.python.security.Securer
 import org.python.security.SecurityActor
 
@@ -89,6 +90,7 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
             }
     }
     suspend fun delete(note: Note): Result = noteStore.delete(note, securityActor.clearance.value).apply { secureDelete(note) }
+    suspend fun deleteAll(): Unit = noteStore.deleteAll()
 
     suspend fun deleteAllSecure(): Unit = noteStore.deleteAllSecure { name -> secureDelete(name) }
 
@@ -112,6 +114,12 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
      * @return [DataResult]<[Long]> Inserted id on success, failure result otherwise.
      */
     suspend fun add(note: Note): Result = secureToStorage(note).pipeData<Note> { noteStore.add(it) }
+
+    /**
+     * Adds all notes, using given merge strategy.
+     * @return [Result] success.
+     */
+    suspend fun addAll(items: Collection<Note>, mergeStrategy: EximUtil.MergeStrategy): Result = noteStore.addAll(items.map { secureToStorage(it).toDataResult<Note>().data }, mergeStrategy)
 
     ////////////////////////////////
     // Utility section;
@@ -146,7 +154,5 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
             secureDelete(note.name)
         return note
     }
-    private fun secureDelete(name: String) {
-        Securer.deleteAlias(name)
-    }
+    private fun secureDelete(name: String) = Securer.deleteAlias(name)
 }

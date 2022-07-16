@@ -47,6 +47,14 @@ open class Result(val type: ResultType, val message: String? = null) {
         }
 
         inline fun fromBoolean(failMessage: String? = null, func: () -> Boolean) = if (func()) DEFAULT_SUCCESS else Result(ResultType.FAILED, failMessage)
+
+        /**
+         * Creates new Result.
+         * @param failMessage Message used for failure result if object function produces `null`
+         * @param func Object-creating function
+         * @return failure result when `func` produces `null`, dataresult for object otherwise.
+         *
+         */
         inline fun <T> fromObject(failMessage: String? = null, func: () -> T?): Result {
             val obj = func()
             return if (obj != null)

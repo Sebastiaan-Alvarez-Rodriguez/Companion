@@ -52,6 +52,12 @@ interface NoteCategoryDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun add(item: RoomNoteCategory)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addAllIgnoring(items: List<RoomNoteCategory>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addAllOverriding(items: List<RoomNoteCategory>)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(item: RoomNoteCategory)
 
@@ -62,11 +68,25 @@ interface NoteCategoryDao {
     suspend fun delete(item: RoomNoteCategory) {
         resetCategory(item.categoryId, RoomNoteCategory.DEFAULT.categoryId)
         __delete(item.categoryId)
+        add(RoomNoteCategory.DEFAULT)
     }
+
+    @Transaction
+    suspend fun deleteAll() {
+        resetCategoryAll(RoomNoteCategory.DEFAULT.categoryId)
+        __deleteAll()
+        add(RoomNoteCategory.DEFAULT)
+    }
+
+    @Query("update RoomNote set categoryKey = :newCategoryId where categoryKey == :oldCategoryId")
+    fun resetCategory(oldCategoryId: Long, newCategoryId: Long)
+
+    @Query("update RoomNote set categoryKey = :defaultCategoryId")
+    fun resetCategoryAll(defaultCategoryId: Long)
 
     @Query("delete from RoomNoteCategory where categoryId == :categoryId")
     fun __delete(categoryId: Long)
 
-    @Query("update RoomNote set categoryKey = :newCategoryId where categoryKey == :oldCategoryId")
-    fun resetCategory(oldCategoryId: Long, newCategoryId: Long)
+    @Query("delete from RoomNoteCategory")
+    fun __deleteAll()
 }

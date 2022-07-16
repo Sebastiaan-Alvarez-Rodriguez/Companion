@@ -249,7 +249,7 @@ class ImportState(
                         detailsDescription.value = "Extracting archive..."
                     }
                 }.pipe {
-                    doImport(tmpZipExtractDir,
+                    doImport(noteViewModel, noteCategoryViewModel, mergeStrategy, tmpZipExtractDir,
                         onProgressNotes = { progress, item ->
                             progressImportNotes.value = progress
                             detailsDescription.value = item?.name?.let { "Processing note '${it}'" } ?: "Processing notes"
@@ -313,6 +313,9 @@ class ImportState(
         }
 
         private suspend fun doImport(
+            noteViewModel: NoteViewModel,
+            noteCategoryViewModel: NoteCategoryViewModel,
+            mergeStrategy: EximUtil.MergeStrategy,
             outputLocation: Path,
             onProgressNotes: (Float, Note?) -> Unit,
             onProgressCategories: (Float, NoteCategory?) -> Unit
@@ -324,12 +327,18 @@ class ImportState(
             if (!categoriesPath.isRegularFile())
                 return Result(ResultType.FAILED, "Could not find extracted note categories file")
 
+            if (mergeStrategy == EximUtil.MergeStrategy.DELETE_ALL_BEFORE) {
+                noteViewModel.deleteAll()
+                noteCategoryViewModel.deleteAll()
+            }
+
             Timber.e("launching import jobs")
             val importNotesJob = doImport( // TODO: Do something with data, and apply mergeStrategy
                 input = notePath.toFile(),
                 batchSize = 100,
                 cls = Note::class.java,
                 onStoreBatch = { batch ->
+                    noteViewModel.addAll(batch, mergeStrategy)
                     batch.forEach { item ->
                         onProgressNotes(0.6f, item)
                         Timber.e("    $item")
@@ -341,6 +350,7 @@ class ImportState(
                 batchSize = 100,
                 cls = NoteCategory::class.java,
                 onStoreBatch = { batch ->
+                    noteCategoryViewModel.addAll(batch, mergeStrategy)
                     batch.forEach { item ->
                         onProgressCategories(0.6f, item)
                         Timber.e("    $item")
@@ -367,7 +377,7 @@ class ImportState(
             input: File,
             batchSize: Int,
             cls: Class<T>,
-            onStoreBatch: (List<T>) -> Unit
+            onStoreBatch: suspend (List<T>) -> Unit
         ): Job {
             val parquetImport = Imports.parquet
 

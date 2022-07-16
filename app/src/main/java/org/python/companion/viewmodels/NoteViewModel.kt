@@ -19,6 +19,7 @@ import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.NoteSearchParameters
 import org.python.companion.ui.note.NoteSortParameters
 import org.python.datacomm.Result
+import org.python.exim.EximUtil
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
@@ -58,6 +59,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun add(note: Note): Result = noteRepository.add(note)
+    suspend fun addAll(items: Collection<Note>, mergeStrategy: EximUtil.MergeStrategy): Result = noteRepository.addAll(items, mergeStrategy)
 
     /** Inserts-or-updates [Note]. [Result] contains [Long], the updated id, on success. */
     suspend fun upsert(note: Note): Result = noteRepository.upsert(note)
@@ -67,6 +69,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     /** Delete notes by id */
     suspend fun delete(items: Collection<Note>): Unit = noteRepository.delete(items)
     suspend fun delete(note: Note): Result = noteRepository.delete(note)
+
+    suspend fun deleteAll(): Unit = noteRepository.deleteAll()
     suspend fun deleteAllSecure(): Unit = noteRepository.deleteAllSecure()
 
     suspend fun getAll(): List<Note> = noteRepository.getAll()

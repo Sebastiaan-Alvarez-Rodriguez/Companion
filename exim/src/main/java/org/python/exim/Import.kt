@@ -44,7 +44,7 @@ object Import {
         source: File,
         batchSize: Int,
         cls: Class<T>,
-        onStoreBatch: (List<T>) -> Unit
+        onStoreBatch: suspend (List<T>) -> Unit
     ): Job {
         return when (type) {
             is Imports.parquet -> readFromParquet(source, batchSize, cls, onStoreBatch)
@@ -55,7 +55,7 @@ object Import {
         file: File,
         batchSize: Int,
         cls: Class<T>,
-        onStoreBatch: (List<T>) -> Unit
+        onStoreBatch: suspend (List<T>) -> Unit
     ): Job {
         val accessor = Importable.classToInstance(cls)
 

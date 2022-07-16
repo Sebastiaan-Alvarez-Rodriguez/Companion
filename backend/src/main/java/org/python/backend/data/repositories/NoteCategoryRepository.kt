@@ -4,8 +4,10 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.stores.NoteCategoryStore
+import org.python.datacomm.Result
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNoteCategory
+import org.python.exim.EximUtil
 import org.python.security.SecurityActor
 
 class NoteCategoryRepository(private val securityActor: SecurityActor, private val noteCategoryStore: NoteCategoryStore) {
@@ -45,6 +47,12 @@ class NoteCategoryRepository(private val securityActor: SecurityActor, private v
      */
     suspend fun add(category: NoteCategory): Boolean = noteCategoryStore.add(category)
 
+    /**
+     * Adds all notes, using given merge strategy.
+     * @return [Result] success.
+     */
+    suspend fun addAll(items: Collection<NoteCategory>, mergeStrategy: EximUtil.MergeStrategy): Result = noteCategoryStore.addAll(items, mergeStrategy)
+
     /** Insert-or-update (upsert) inserts the item if no such item exists, updates otherwise. */
     suspend fun upsert(category: NoteCategory): Boolean {
         noteCategoryStore.upsert(category)
@@ -57,6 +65,7 @@ class NoteCategoryRepository(private val securityActor: SecurityActor, private v
     }
 
     suspend fun delete(category: NoteCategory): Unit = noteCategoryStore.delete(category)
+    suspend fun deleteAll(): Unit = noteCategoryStore.deleteAll()
 
     suspend fun getAll(): List<NoteCategory> = noteCategoryStore.getAll()
 }

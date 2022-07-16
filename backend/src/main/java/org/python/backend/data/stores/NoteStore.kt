@@ -16,6 +16,7 @@ import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNote
 import org.python.db.entities.note.RoomNoteCategory
 import org.python.db.entities.note.RoomNoteWithCategory
+import org.python.exim.EximUtil
 
 class NoteStore(database: CompanionDatabase) {
     private val noteDao = database.noteDao
@@ -71,6 +72,9 @@ class NoteStore(database: CompanionDatabase) {
         else -> Result.DEFAULT_SUCCESS
     }
 
+    suspend fun deleteAll(): Unit = noteDao.deleteAll()
+
+
     suspend fun deleteAllSecure(foreach: ((String) -> Unit)? = null) = noteDao.deleteAllSecure(foreach)
 
     ////////////////////////////////
@@ -91,6 +95,14 @@ class NoteStore(database: CompanionDatabase) {
         } catch (e: android.database.sqlite.SQLiteConstraintException) {
             Result(message = "Could not insert note due to conflict", type = ResultType.FAILED)
         }
+    }
+
+    suspend fun addAll(items: Collection<Note>, mergeStrategy: EximUtil.MergeStrategy): Result = items.map { it.toRoom() }.let {
+        when (mergeStrategy) {
+            EximUtil.MergeStrategy.OVERRIDE_ON_CONFLICT -> noteDao.addAllOverriding(it)
+            else -> noteDao.addAllIgnoring(it)
+        }
+        return Result.DEFAULT_SUCCESS
     }
 }
 

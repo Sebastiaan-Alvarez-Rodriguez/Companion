@@ -127,12 +127,21 @@ interface NoteDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun add(item: RoomNote): Long
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addAllIgnoring(items: List<RoomNote>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addAllOverriding(items: List<RoomNote>)
+
+
     @Query("select exists(select 1 from RoomNote where name == :name)")
     suspend fun hasConflict(name: String): Boolean
 
     @Query("select securityLevel from RoomNote where name = :name")
     suspend fun clearanceLevelForName(name: String): Int?
 
+    @Query("delete from RoomNote")
+    suspend fun deleteAll()
 
     @Query("delete from RoomNote where securityLevel > 0")
     suspend fun deleteAllSecure()

@@ -15,6 +15,8 @@ import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.stateInViewModel
 import org.python.companion.ui.note.category.NoteCategorySearchParameters
 import org.python.companion.ui.note.category.NoteCategorySortParameters
+import org.python.datacomm.Result
+import org.python.exim.EximUtil
 
 class NoteCategoryViewModel(application: Application) : AndroidViewModel(application) {
     private val noteCategoryRepository = (application as CompanionApplication).noteCategoryRepository
@@ -48,10 +50,13 @@ class NoteCategoryViewModel(application: Application) : AndroidViewModel(applica
         }
     }
     suspend fun add(noteCategory: NoteCategory): Boolean = noteCategoryRepository.add(noteCategory)
+    suspend fun addAll(items: Collection<NoteCategory>, mergeStrategy: EximUtil.MergeStrategy): Result = noteCategoryRepository.addAll(items, mergeStrategy)
+
     suspend fun upsert(noteCategory: NoteCategory): Boolean = noteCategoryRepository.upsert(noteCategory)
     suspend fun update(updateCategory: NoteCategory): Boolean = noteCategoryRepository.update(updateCategory)
 
     suspend fun delete(noteCategory: NoteCategory): Unit = noteCategoryRepository.delete(noteCategory)
+    suspend fun deleteAll(): Unit = noteCategoryRepository.deleteAll()
 
     suspend fun getAll(): List<NoteCategory> = noteCategoryRepository.getAll()
 
