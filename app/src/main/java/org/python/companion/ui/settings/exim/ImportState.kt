@@ -333,7 +333,7 @@ class ImportState(
             }
 
             Timber.e("launching import jobs")
-            val importNotesJob = doImport( // TODO: Do something with data, and apply mergeStrategy
+            val importNotesJob = doImport(
                 input = notePath.toFile(),
                 batchSize = 100,
                 cls = Note::class.java,
@@ -345,7 +345,7 @@ class ImportState(
                     }
                 },
             )
-            val importCategoriesJob = doImport( // TODO: Do something with data, and apply mergeStrategy
+            val importCategoriesJob = doImport(
                 input = categoriesPath.toFile(),
                 batchSize = 100,
                 cls = NoteCategory::class.java,
