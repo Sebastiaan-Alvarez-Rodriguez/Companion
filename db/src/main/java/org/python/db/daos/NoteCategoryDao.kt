@@ -66,16 +66,16 @@ interface NoteCategoryDao {
 
     @Transaction
     suspend fun delete(item: RoomNoteCategory) {
+        if (item.categoryId == RoomNoteCategory.DEFAULT.categoryId)
+            return
         resetCategory(item.categoryId, RoomNoteCategory.DEFAULT.categoryId)
         __delete(item.categoryId)
-        add(RoomNoteCategory.DEFAULT)
     }
 
     @Transaction
     suspend fun deleteAll() {
         resetCategoryAll(RoomNoteCategory.DEFAULT.categoryId)
-        __deleteAll()
-        add(RoomNoteCategory.DEFAULT)
+        __deleteAll(RoomNoteCategory.DEFAULT.categoryId)
     }
 
     @Query("update RoomNote set categoryKey = :newCategoryId where categoryKey == :oldCategoryId")
@@ -84,9 +84,10 @@ interface NoteCategoryDao {
     @Query("update RoomNote set categoryKey = :defaultCategoryId")
     fun resetCategoryAll(defaultCategoryId: Long)
 
+//    @Query("insert into RoomNoteCategory ")
     @Query("delete from RoomNoteCategory where categoryId == :categoryId")
     fun __delete(categoryId: Long)
 
-    @Query("delete from RoomNoteCategory")
-    fun __deleteAll()
+    @Query("delete from RoomNoteCategory where categoryId != :defaultCategoryId")
+    fun __deleteAll(defaultCategoryId: Long)
 }

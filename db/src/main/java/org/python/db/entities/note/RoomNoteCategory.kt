@@ -8,7 +8,7 @@ import java.time.Instant
 
 @Entity(indices = [Index("categoryName", unique = true)])
 data class RoomNoteCategory(
-    @PrimaryKey(autoGenerate = true) val categoryId: Long = 0,
+    @PrimaryKey(autoGenerate = true) val categoryId: Long = 0L,
     val categoryName: String,
     val color: Color,
     val favorite: Boolean,
@@ -26,7 +26,7 @@ data class RoomNoteCategory(
 
     companion object {
         val DEFAULT: RoomNoteCategory = RoomNoteCategory(
-            categoryId = 0,
+            categoryId = 0L,
             categoryName = "default",
             color = Color.valueOf(Color.WHITE),
             favorite = false,

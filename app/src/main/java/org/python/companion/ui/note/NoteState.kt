@@ -123,7 +123,6 @@ class NoteState(
             composable(
                 route = "$noteDestination/view/{noteId}",
                 arguments = listOf(navArgument("noteId") { type = NavType.LongType }),
-                deepLinks = listOf(navDeepLink { uriPattern = "companion://$noteDestination/view/{noteId}" }),
             ) { entry ->
                 val noteId = entry.arguments?.getLong("noteId")!!
                 Timber.d("Viewing note with id: $noteId")
@@ -197,7 +196,9 @@ class NoteState(
                                     }
                                 }
                                 if (conflict)
-                                    UiUtil.UIUtilState.navigateToOverride(navController) { noteViewModel.viewModelScope.launch {func(noteViewModel.upsert(toSaveNote)) } }
+                                    UiUtil.UIUtilState.navigateToOverride(navController) { noteViewModel.viewModelScope.launch { func(
+                                        noteViewModel.upsert(toSaveNote)
+                                    ) } }
                                 else
                                     func(noteViewModel.add(toSaveNote))
                             }
