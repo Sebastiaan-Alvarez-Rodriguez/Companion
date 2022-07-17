@@ -36,13 +36,16 @@ class NoteState(
     fun NavGraphBuilder.noteGraph() {
         navigation(startDestination = noteDestination, route = "note") {
             composable(noteDestination) {
-                val notes by noteViewModel.notes.collectAsState()
                 val isLoading by noteViewModel.isLoading.collectAsState()
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val clearance by noteViewModel.clearance.collectAsState()
 
                 val sortParameters by noteViewModel.sortParameters.collectAsState()
-                val searchParameters by noteViewModel.searchParameters.collectAsState()
+                val searchParameters by noteViewModel.search.searchParameters.collectAsState()
+
+                val notes by noteViewModel.notes.collectAsState()
+
+
 
                 val selectedItems = remember { mutableStateListOf<Note>() }
                 val securityItem: @Composable (LazyItemScope.() -> Unit)? = if (hasSecureNotes) {
@@ -76,26 +79,29 @@ class NoteState(
                                 sortParameters = sortParameters,
                                 onSettingsClick = { SettingsState.navigateToSettings(navController = navController) },
                                 onSortClick = { params -> noteViewModel.updateSortParameters(params) },
-                                onSearchClick = { noteViewModel.toggleSearch() }
+                                onSearchClick = { noteViewModel.search.toggleSearch() }
                             )
                         else
                             NoteScreenContextListHeader(
                                 sortParameters = sortParameters,
                                 onDeleteClick = {
                                     UiUtil.UIUtilState.navigateToDelete(navController) {
-                                        noteViewModel.viewModelScope.launch { noteViewModel.delete(selectedItems) }
+                                        noteViewModel.viewModelScope.launch {
+                                            noteViewModel.delete(selectedItems)
+                                            selectedItems.clear()
+                                        }
                                     }
                                 },
                                 onSortClick = { params -> noteViewModel.updateSortParameters(params) },
-                                onSearchClick = {  noteViewModel.toggleSearch() },
+                                onSearchClick = {  noteViewModel.search.toggleSearch() },
                             )
 
                         searchParameters?.let {
                             Spacer(modifier = Modifier.height(defaultPadding))
                             NoteScreenSearchListHeader(
                                 searchParameters = it,
-                                onBack = { noteViewModel.toggleSearch() },
-                                onUpdate = { params -> noteViewModel.updateSearchParameters(params) }
+                                onBack = { noteViewModel.search.toggleSearch() },
+                                onUpdate = { params -> noteViewModel.search.updateSearchParameters(params) }
                             )
                         }
                     },

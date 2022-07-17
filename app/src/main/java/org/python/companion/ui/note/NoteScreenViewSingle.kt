@@ -31,6 +31,7 @@ import org.python.backend.data.datatype.NoteCategory
 import org.python.backend.data.datatype.NoteWithCategory
 import org.python.backend.data.datatype.RenderType
 import org.python.companion.R
+import org.python.companion.search.FindResult
 import org.python.companion.support.ItemDrawCache
 import org.python.companion.support.RenderUtil
 import org.python.companion.support.UiUtil
@@ -75,19 +76,26 @@ private fun NoteScreenViewSingleReady(
 ) {
     val scrollState = rememberScrollState()
 
-    val isSearching by noteViewModel.isSearching.collectAsState()
-    val searchParameters by noteViewModel.searchParameters.collectAsState()
-    var searchResultIndex by rememberSaveable { mutableStateOf(0) } // Index of search result the user currently is interested in.
+    val isSearching by noteViewModel.search.isSearching.collectAsState(false)
+    val searchParameters by noteViewModel.search.searchParameters.collectAsState()
+    var searchResultIndex by remember { mutableStateOf(0) } // Index of search result the user currently is interested in.
 
-    val highlightIfSearching: (text: String, enable: Boolean?, matches: List<NoteViewModel.FindResult>) -> SpannableString = { text, enable, matches ->
+    val highlightIfSearching: (text: String, enable: Boolean?, matches: List<FindResult>) -> SpannableString = { text, enable, matches ->
         when {
             isSearching && enable != null && enable -> highlightText(text, matches)
             else -> SpannableString(text)
         }
     }
 
-    val titleMatches = rememberSaveable(searchParameters, isSearching, noteWithCategory) { searchParameters.let { if (!isSearching || it == null || !it.inTitle) emptyList() else noteViewModel.findMatches(noteWithCategory.note.name) } }
-    val contentMatches = rememberSaveable(searchParameters, isSearching, noteWithCategory) {  searchParameters.let { if (!isSearching || it == null || !it.inContent) emptyList() else noteViewModel.findMatches(noteWithCategory.note.content) } }
+
+    val titleMatches = remember(searchParameters, isSearching, noteWithCategory) { searchParameters.let { if (!isSearching || it == null || !it.inTitle) emptyList() else noteViewModel.search.findMatches(noteWithCategory.note.name) } }
+    val contentMatches = remember(searchParameters, isSearching, noteWithCategory) {
+         searchParameters.let {
+             if (!isSearching || it == null || !it.inContent) emptyList() else noteViewModel.search.findMatches(
+                noteWithCategory.note.content
+             )
+        }
+    }
     val searchMatchAmount = titleMatches.size + contentMatches.size
 
     val title = highlightSelection(
@@ -207,7 +215,7 @@ private fun ViewHeader(noteWithCategory: NoteWithCategory, onDeleteClick: (Note)
 
 private fun highlightSelection(
     input: SpannableString,
-    matches: List<NoteViewModel.FindResult>,
+    matches: List<FindResult>,
     selectedHighlightIndex: Int,
     selectedStyles: List<CharacterStyle> = listOf(ForegroundColorSpan(DarkColorPalette.primary.toArgb()), StyleSpan(Typeface.BOLD_ITALIC), BackgroundColorSpan(Purple500.toArgb()))
 ): SpannableString {
@@ -220,7 +228,7 @@ private fun highlightSelection(
 
 private fun highlightText(
     input: String,
-    matches: List<NoteViewModel.FindResult>
+    matches: List<FindResult>
 ): SpannableString {
     val spannableString = SpannableString(input)
     for (match in matches) {

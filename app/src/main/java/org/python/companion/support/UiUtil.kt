@@ -361,14 +361,14 @@ object UiUtil {
 
         GenericListHeader(
             listOf(
-                { Text(modifier = Modifier.padding(defaultPadding), text = "${currentItem+1}/$numItems") },
+                { Text(modifier = Modifier.padding(defaultPadding), text = "${if (numItems == 0) 0 else currentItem+1}/$numItems") },
                 {
                     Row(modifier = Modifier.padding(defaultPadding)) {
-                        IconButton(onClick = { onUpdate(((currentItem + numItems) - 1) % numItems) }) {
+                        IconButton(onClick = { if (numItems > 0) onUpdate(((currentItem + numItems) - 1) % numItems) }) {
                             Icon(imageVector = Icons.Outlined.ArrowLeft, contentDescription = "Previous result")
                         }
                         Spacer(modifier = Modifier.width(tinyPadding))
-                        IconButton(onClick = { onUpdate((currentItem + 1) % numItems) }) {
+                        IconButton(onClick = { if (numItems > 0) onUpdate((currentItem + 1) % numItems) }) {
                             Icon(imageVector = Icons.Outlined.ArrowRight, contentDescription = "Next result")
                         }
                     }

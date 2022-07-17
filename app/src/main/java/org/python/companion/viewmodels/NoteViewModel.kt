@@ -23,13 +23,13 @@ import org.python.exim.EximUtil
 
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val noteRepository = (application as CompanionApplication).noteRepository
+    val search = (application as CompanionApplication).noteSearchContext
     val securityActor = (application as CompanionApplication).securityActor
 
     val hasSecureNotes: StateFlow<Boolean> by lazy { noteRepository.hasSecureNotes().stateInViewModel(viewModelScope, false) }
     var clearance = securityActor.clearance.stateInViewModel(viewModelScope, 0)
 
     private val _sortParameters = MutableStateFlow(NoteSortParameters.fromPreferences(application.baseContext))
-    private val _searchParameters = MutableStateFlow<NoteSearchParameters?>(null)
     private val _isLoading = MutableStateFlow(true)
 
     val rendererCache: RendererCache = RendererCache()
@@ -37,12 +37,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Sort parameters to sort [notes] with. */
     val sortParameters: StateFlow<NoteSortParameters> = _sortParameters
-    /**
-     * Search parameters to filter [notes] with.
-     * This data is also used inside note views to highlight matches.
-     */
-    val searchParameters: StateFlow<NoteSearchParameters?> = _searchParameters
-    val isSearching: StateFlow<Boolean> = _searchParameters.map { it != null && it.text.isNotEmpty() }.stateInViewModel(viewModelScope, false)
 
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -94,13 +88,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         _sortParameters.value = sortParameters
         sortParameters.toPreferences((getApplication() as CompanionApplication).baseContext)
     }
-    fun updateSearchParameters(searchParameters: NoteSearchParameters?) {
-        _searchParameters.value = searchParameters
-    }
-    fun toggleSearch() {
-        _searchParameters.value = if (_searchParameters.value == null) NoteSearchParameters() else null
-    }
-
 
     private fun filterNote(note: Note, params: NoteSearchParameters) =
         (params.inTitle && note.name.contains(params.text, ignoreCase = !params.caseSensitive)) ||
@@ -108,37 +95,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private fun filterNote(note: Note, params: NoteSearchParameters, re: Regex) =
         (params.inTitle && note.name.contains(re)) || (params.inContent && note.content.contains(re))
 
-    /** Given a text, finds all matches for [searchParameters] */
-    fun findMatches(text: String): List<FindResult> =
-        when {
-            !isSearching.value -> emptyList()
-            else -> searchParameters.value.let { params ->
-                if (params == null)
-                    return emptyList()
-
-                if (params.regex) {
-                    val re = Regex(params.text, options = when {
-                        params.caseSensitive -> setOf(RegexOption.IGNORE_CASE)
-                        else -> emptySet()
-                    })
-                    return re.findAll(text).map { FindResult(it.range.first, it.range.last+1) }.toList()
-                } else {
-                    var x = text.indexOf(params.text, ignoreCase = !params.caseSensitive)
-                    val data: ArrayList<FindResult> = ArrayList()
-
-                    while (x != -1) {
-                        data.add(FindResult(x, x + params.text.length))
-                        x = text.indexOf(params.text, startIndex = x+1, ignoreCase = !params.caseSensitive)
-                    }
-                    return data
-                }
-            }
-        }
-
-
-    @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
-        searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
+        search.searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 
     private fun notes(params: NoteSearchParameters?) = when (params) {
         null -> allNotes
@@ -151,6 +109,4 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             } } }
         }
     }
-
-    data class FindResult(val start: Int, val end: Int)
 }

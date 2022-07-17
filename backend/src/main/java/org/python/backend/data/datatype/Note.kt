@@ -128,4 +128,15 @@ data class NoteCategory(
 data class NoteWithCategory(
     val note: Note,
     val noteCategory: NoteCategory
-)
+) {
+    override fun equals(other: Any?): Boolean = when {
+        (other !is NoteWithCategory) -> false
+        else -> note == other.note && noteCategory == other.noteCategory
+    }
+
+    override fun hashCode(): Int {
+        var result = note.hashCode()
+        result = 31 * result + noteCategory.hashCode()
+        return result
+    }
+}
