@@ -169,6 +169,12 @@ private fun NoteScreenViewSingleReady(
                     }
                 }
             }
+            LaunchedEffect(true) { // moves user automatically to fist search hit when searching
+                when {
+                    titleMatches.isNotEmpty() -> titleScrollFunction(0)
+                    else -> contentScrollFunction(0)
+                }
+            }
         }
     }
 }
