@@ -59,7 +59,7 @@ object Export {
                     schema,
                     file,
                     dehydrator,
-                    CompressionCodecName.UNCOMPRESSED
+                    CompressionCodecName.SNAPPY
                 )
 
                 parquetWriter.use { writer ->

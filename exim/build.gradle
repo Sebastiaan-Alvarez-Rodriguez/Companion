@@ -16,7 +16,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -34,7 +34,9 @@ android {
 
 dependencies {
     implementation "androidx.core:core-ktx:$android_kt_core_version"
-    api("org.sebastiaan.parquet-android:parquet-android:1.0.0")
+    api("org.sebastiaan.parquet-android:parquet-android:1.0.1") {
+        transitive = true
+    }
 
     implementation "net.lingala.zip4j:zip4j:2.11.1"
 
