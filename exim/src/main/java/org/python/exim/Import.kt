@@ -9,6 +9,7 @@ import net.lingala.zip4j.progress.ProgressMonitor
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
+import java.util.*
 import kotlin.streams.asSequence
 
 /**
@@ -44,7 +45,7 @@ object Import {
         source: File,
         batchSize: Int,
         cls: Class<T>,
-        onStoreBatch: suspend (List<T>) -> Unit
+        onStoreBatch: suspend (Long, Long, List<T>) -> Unit
     ): Job {
         return when (type) {
             is Imports.parquet -> readFromParquet(source, batchSize, cls, onStoreBatch)
@@ -55,7 +56,7 @@ object Import {
         file: File,
         batchSize: Int,
         cls: Class<T>,
-        onStoreBatch: suspend (List<T>) -> Unit
+        onStoreBatch: suspend (Long, Long, List<T>) -> Unit
     ): Job {
         val accessor = Importable.classToInstance(cls)
 
@@ -72,9 +73,19 @@ object Import {
         }
         return withContext(Dispatchers.IO) {
             return@withContext launch {
+                val metadata = ParquetReader.readMetadata(file)
+                val totalRows: Long = metadata.blocks.stream().unordered().parallel().mapToLong { blockMetaData -> blockMetaData.rowCount }.sum()
+                Timber.d("Found $totalRows rows in ${metadata.blocks.size} metadata blocks.")
+
+                if (totalRows == 0L) {
+                    onStoreBatch(0, 0, Collections.emptyList())
+                    return@launch
+                }
                 ParquetReader.streamContent(file, HydratorSupplier.constantly(hydrator)).use { dataStream ->
+                    var amountProcessed: Long = 0L
                     for (batch in dataStream.asSequence().chunked(batchSize)) {
-                        onStoreBatch(batch)
+                        onStoreBatch(amountProcessed, totalRows, batch)
+                        amountProcessed += batch.size
                     }
                 }
             }

@@ -176,7 +176,7 @@ class ImportState(
             progressContent = {
                 FinishingNestedCircularProgressIndicator(
                     result = importResult,
-                    progresses = listOf(progressCopyZip.value, progressExtractZip.value, progressImportNotes.value)
+                    progresses = listOf(progressCopyZip.value, progressExtractZip.value, progressImportNotes.value, progressImportNoteCategories.value)
                 )
             },
             subContent = {
@@ -337,11 +337,17 @@ class ImportState(
                 input = notePath.toFile(),
                 batchSize = 100,
                 cls = Note::class.java,
-                onStoreBatch = { batch ->
-                    noteViewModel.addAll(batch, mergeStrategy)
-                    batch.forEach { item ->
-                        onProgressNotes(0.6f, item)
-                        Timber.e("    $item")
+                onStoreBatch = { processed, total, batch ->
+                    if (batch.isEmpty()) {
+                        onProgressNotes(1f, null)
+                    } else {
+                        noteViewModel.addAll(batch, mergeStrategy)
+                        var counter = 1L
+                        batch.forEach { item ->
+                            onProgressNotes((processed + counter).toFloat() / total, item)
+                            counter += 1L
+                            Timber.e("    $item")
+                        }
                     }
                 },
             )
@@ -349,11 +355,18 @@ class ImportState(
                 input = categoriesPath.toFile(),
                 batchSize = 100,
                 cls = NoteCategory::class.java,
-                onStoreBatch = { batch ->
-                    noteCategoryViewModel.addAll(batch, mergeStrategy)
-                    batch.forEach { item ->
-                        onProgressCategories(0.6f, item)
-                        Timber.e("    $item")
+                onStoreBatch = { processed, total, batch ->
+                    Timber.e("Got batch: $batch")
+                    if (batch.isEmpty()) {
+                        onProgressCategories(1f, null)
+                    } else {
+                        var counter = 1L
+                        noteCategoryViewModel.addAll(batch, mergeStrategy)
+                        batch.forEach { item ->
+                            onProgressCategories((processed + counter).toFloat() / total, item)
+                            counter += 1L
+                            Timber.e("    $item")
+                        }
                     }
                 },
             )
@@ -370,14 +383,16 @@ class ImportState(
          * Handles Parquet importing.
          * @param input input file location.
          * @param batchSize amount of items to process at once.
-         * Progress ranges from 0f to 1f. Secondary parameter is the most recently processed item.
+         * @param cls Class type to import to.
+         * @param onStoreBatch(processed, total, batchToStore) Returns the batch of at most `batchSize` items (arg 2).
+         * Also provides the amount of processed notes (arg 0), and the total amount of notes (arg 1).
          * @return executable job.
          */
         private suspend fun <T: Importable<T>> doImport(
             input: File,
             batchSize: Int,
             cls: Class<T>,
-            onStoreBatch: suspend (List<T>) -> Unit
+            onStoreBatch: suspend (Long, Long, List<T>) -> Unit
         ): Job {
             val parquetImport = Imports.parquet
 

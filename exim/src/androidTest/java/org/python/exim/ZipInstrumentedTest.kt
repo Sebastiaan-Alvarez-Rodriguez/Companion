@@ -10,11 +10,7 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.nio.file.Files
 
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
+/** Testsuite for zips */
 @RunWith(AndroidJUnit4::class)
 class ZipInstrumentedTest {
     private fun prepareFile(nameIn: String): File {
