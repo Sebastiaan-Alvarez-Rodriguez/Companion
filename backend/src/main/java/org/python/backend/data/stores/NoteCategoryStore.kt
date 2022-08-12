@@ -3,7 +3,6 @@ package org.python.backend.data.stores
 import androidx.paging.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
 import org.python.datacomm.Result
 import org.python.db.CompanionDatabase
@@ -72,15 +71,15 @@ private fun pagingNoteCategory(block: () -> PagingSource<Int, RoomNoteCategory>)
 private fun NoteCategory.toRoom() = RoomNoteCategory(
     categoryId = categoryId,
     categoryName = name,
-    color = color,
-    favorite = favorite,
-    categoryDate = categoryDate
+    categoryColor = color,
+    categoryFavorite = favorite,
+    categoryDate = date
 )
 
 private fun RoomNoteCategory.toUI() = NoteCategory(
     categoryId = categoryId,
     name = categoryName,
-    color = color,
-    favorite = favorite,
-    categoryDate = categoryDate
+    color = categoryColor,
+    favorite = categoryFavorite,
+    date = categoryDate
 )

@@ -32,37 +32,7 @@ buildscript {
 // configure repositories for all projects
 allprojects {
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url "https://maven.pkg.github.com/Sebastiaan-Alvarez-Rodriguez/parquet-android"
-            credentials {
-                String _user = null
-                String _token = null
-                File propertiesFile = project.rootProject.file('local.properties')
-                if (propertiesFile.isFile()) {
-                    Properties properties = new Properties()
-                    properties.load(propertiesFile.newDataInputStream())
-                    _user = properties.getProperty("gpr.user")
-                    _token = properties.getProperty("gpr.token")
-                }
-                username = _user ?: System.getenv("USERNAME")
-                password = _token ?: System.getenv("TOKEN")
-
-                if (username == null || password == null)
-                    throw RuntimeException("""
-username="$username", token="$password"
-Did you provide a github token? This is (sadly) required. Please see the docs.
-""")
-                // Github presents packages using a maven interface.
-                // Sadly, they force us to provide a stupid token to download a package from this interface,
-                // even when repo is publicly available.
-                // The token requires only the read:package permission.
-                // NEVER publish tokens online.
-                // Always place these tokens in environment variables (which are not accidentally pushed),
-                // or in files that are explicitly not published (e.g. /local.properties).
-                // Once Github fixes this needless token access for public repo packages, we will remove this.
-            }
-        }
+        maven { url "https://jitpack.io" }
         google()
         mavenCentral()
     }

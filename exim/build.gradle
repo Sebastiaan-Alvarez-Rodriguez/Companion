@@ -12,6 +12,15 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        externalNativeBuild {
+            ndk {
+                // Specifies the ABI configurations of your native
+                // libraries Gradle should build and package with your app.
+                abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'arm64-v8a', 'android-arm'
+//                abiFilters "armeabi", "armeabi-v7a", "x86", "mips" // only allow 32-bit native libraries
+            }
+        }
     }
 
     buildTypes {
@@ -34,7 +43,7 @@ android {
 
 dependencies {
     implementation "androidx.core:core-ktx:$android_kt_core_version"
-    api("org.sebastiaan.parquet-android:parquet-android:1.0.1") {
+    api("com.github.Sebastiaan-Alvarez-Rodriguez:parquet-android:1.12.3") {
         transitive = true
     }
 

@@ -64,27 +64,6 @@ class ExportState(
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
 
-
-                ///TODO Remove below
-                val context = LocalContext.current
-                val contentResolver = LocalContext.current.contentResolver
-
-                val resource = context.resources.getIdentifier("libsnappyjava", "raw", context.packageName);
-                if (resource == 0)
-                    Timber.e("Could not find res")
-                val x = javaClass.getResource("/org/xerial/snappy/native/Windows/x86/snappyjava.dll")
-                Timber.e("Path: $x")
-                val altX = context.classLoader.getResource("/org/xerial/snappy/native/Linux/android-arm/libsnappyjava.so")
-                Timber.e("Path: $altX")
-
-//                val hello = contentResolver.openInputStream(x)!!
-//                val copyJob = FileUtil.copyStream(
-//                    size = 1,
-//                    inStream = x.toURI(),
-//                    outStream = contentResolver.openOutputStream(location, "w")!!,
-//                    onProgress = { }
-//                )
-                ////
                 if (hasSecureNotes && isAuthorized <= 0) {
                     SecurityState.navigateToSecurityPick(
                         navController = navController,

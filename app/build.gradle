@@ -6,34 +6,26 @@ plugins {
 android {
     compileSdk 32
 
-    // Specifies one flavor dimension.
-    flavorDimensions += "version"
-
-    productFlavors {
-        x86 {
-            ndk {
-                abiFilter "x86"
-            }
-        }
-        arm {
-            ndk {
-                abiFilters "armeabi-v7a", "armeabi", "android-arm"
-            }
-        }
-    }
-
     defaultConfig {
         applicationId "org.python.companion"
         minSdk 29
         targetSdk 31
         versionCode 1
         versionName app_version
-        dimension = "version"
         archivesBaseName = "${rootProject.name.toLowerCase()}-$versionName"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
+        }
+
+        externalNativeBuild {
+            ndk {
+                // Specifies the ABI configurations of your native
+                // libraries Gradle should build and package with your app.
+                abiFilters "armeabi", "armeabi-v7a", "x86", "mips" // only allow 32-bit native libraries
+
+            }
         }
     }
 

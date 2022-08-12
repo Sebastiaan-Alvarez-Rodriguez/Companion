@@ -98,13 +98,13 @@ fun NoteCategoryScreenEditReady(
             name = name,
             color = color,
             favorite = favorite,
-            categoryDate = Instant.now()
+            date = Instant.now()
         ) ?:
         NoteCategory(
             name = name,
             color = color,
             favorite = favorite,
-            categoryDate = Instant.now()
+            date = Instant.now()
         )
     }
 

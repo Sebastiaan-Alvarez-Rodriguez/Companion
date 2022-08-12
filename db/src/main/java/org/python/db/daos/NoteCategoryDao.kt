@@ -8,13 +8,13 @@ import org.python.db.entities.note.RoomNoteCategory
 @Dao
 interface NoteCategoryDao {
     @Transaction
-    @Query("select * from RoomNoteCategory order by favorite desc, " +
+    @Query("select * from RoomNoteCategory order by categoryFavorite desc, " +
             "(case when :ascending == 0 then categoryName end) desc, " +
             "(case when :ascending != 0 then categoryName end) asc")
     fun getAll_sortName(ascending: Boolean): PagingSource<Int, RoomNoteCategory>
 
     @Transaction
-    @Query("select * from RoomNoteCategory order by favorite desc, " +
+    @Query("select * from RoomNoteCategory order by categoryFavorite desc, " +
             "(case when :ascending == 0 then categoryDate end) desc, " +
             "(case when :ascending != 0 then categoryDate end) asc")
     fun getAll_sortDate(ascending: Boolean): PagingSource<Int, RoomNoteCategory>
@@ -33,7 +33,7 @@ interface NoteCategoryDao {
     @Query("select * from RoomNoteCategory where categoryName = :name")
     suspend fun getByName(name: String): RoomNoteCategory?
 
-    @Query("update RoomNoteCategory set favorite = :favorite where categoryId == :categoryId")
+    @Query("update RoomNoteCategory set categoryFavorite = :favorite where categoryId == :categoryId")
     suspend fun setFavorite(categoryId: Long, favorite: Boolean)
     suspend fun setFavorite(category: RoomNoteCategory, favorite: Boolean) = setFavorite(category.categoryId, favorite)
 

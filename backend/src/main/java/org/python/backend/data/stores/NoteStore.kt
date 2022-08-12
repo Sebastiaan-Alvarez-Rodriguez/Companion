@@ -137,17 +137,17 @@ private fun RoomNote.toUI() = Note(
 private fun NoteCategory.toRoom() = RoomNoteCategory(
     categoryId = categoryId,
     categoryName = name,
-    color = color,
-    favorite = favorite,
-    categoryDate = categoryDate
+    categoryColor = color,
+    categoryFavorite = favorite,
+    categoryDate = date
 )
 
 private fun RoomNoteCategory.toUI() = NoteCategory(
     categoryId = categoryId,
     name = categoryName,
-    color = color,
-    favorite = favorite,
-    categoryDate = categoryDate
+    color = categoryColor,
+    favorite = categoryFavorite,
+    date = categoryDate
 )
 
 private fun NoteWithCategory.toRoom() = RoomNoteWithCategory(note = note.toRoom(), noteCategory = noteCategory.toRoom())

@@ -10,8 +10,8 @@ import java.time.Instant
 data class RoomNoteCategory(
     @PrimaryKey(autoGenerate = true) val categoryId: Long = 0L,
     val categoryName: String,
-    val color: Color,
-    val favorite: Boolean,
+    val categoryColor: Color,
+    val categoryFavorite: Boolean,
     val categoryDate: Instant
 ) {
     override fun equals(other: Any?): Boolean {
@@ -28,8 +28,8 @@ data class RoomNoteCategory(
         val DEFAULT: RoomNoteCategory = RoomNoteCategory(
             categoryId = 0L,
             categoryName = "default",
-            color = Color.valueOf(Color.WHITE),
-            favorite = false,
+            categoryColor = Color.valueOf(Color.WHITE),
+            categoryFavorite = false,
             categoryDate = Instant.EPOCH
         )
 

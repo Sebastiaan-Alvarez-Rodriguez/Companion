@@ -78,9 +78,9 @@ data class NoteCategory(
     val name: String,
     val color: Color,
     val favorite: Boolean,
-    val categoryDate: Instant
+    val date: Instant
 ) : Exportable, Importable<NoteCategory> {
-    constructor() : this(categoryId = 0L, name = "", color = Color.valueOf(0L), favorite = false, categoryDate = Instant.MIN)
+    constructor() : this(categoryId = 0L, name = "", color = Color.valueOf(0L), favorite = false, date = Instant.MIN)
 
     override fun values(): Array<EximUtil.FieldInfo> {
         return arrayOf(
@@ -88,7 +88,7 @@ data class NoteCategory(
             EximUtil.FieldInfo(name, "name"),
             EximUtil.FieldInfo(ColorConverter.colorToLong(color), "color"),
             EximUtil.FieldInfo(favorite, "favorite"),
-            EximUtil.FieldInfo(InstantConverter.dateToTimestamp(categoryDate), "categoryData")
+            EximUtil.FieldInfo(InstantConverter.dateToTimestamp(date), "date")
         )
     }
 
@@ -100,7 +100,7 @@ data class NoteCategory(
             name = values[1] as String,
             color = ColorConverter.longToColor(values[2] as Long),
             favorite = values[3] as Boolean,
-            categoryDate = InstantConverter.dateFromTimestamp(values[4] as Long)!!
+            date = InstantConverter.dateFromTimestamp(values[4] as Long)!!
         )
     }
 
@@ -118,9 +118,9 @@ data class NoteCategory(
         val DEFAULT: NoteCategory = NoteCategory(
             categoryId = RoomNoteCategory.DEFAULT.categoryId,
             name = RoomNoteCategory.DEFAULT.categoryName,
-            color = RoomNoteCategory.DEFAULT.color,
-            favorite = RoomNoteCategory.DEFAULT.favorite,
-            categoryDate = RoomNoteCategory.DEFAULT.categoryDate
+            color = RoomNoteCategory.DEFAULT.categoryColor,
+            favorite = RoomNoteCategory.DEFAULT.categoryFavorite,
+            date = RoomNoteCategory.DEFAULT.categoryDate
         )
     }
 }
