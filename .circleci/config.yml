@@ -1,0 +1,102 @@
+# From: https://github.com/CircleCI-Public/android-testing-circleci-examples/blob/main/.circleci/config.yml
+version: 2.1
+
+orbs:
+  android: circleci/android@2.1.2
+  gcp-cli: circleci/gcp-cli@2.2.0
+
+jobs:
+  unit-test:
+    parameters:
+      subproject:
+        type: string
+        default: app
+    executor:
+      name: android/android-machine
+      tag: 2022.07.1 # pick image tag from https://circleci.com/developer/images/image/cimg/android#image-tags
+    steps:
+      - checkout
+      - android/restore-gradle-cache
+      - android/restore-build-cache
+      - android/run-tests:
+          test-command: ./gradlew :<< parameters.subproject >>:testDebug
+      - android/save-gradle-cache
+      - android/save-build-cache
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/<< parameters.subproject >>/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+
+  android-test:
+    parameters:
+      system-image:
+        type: string
+        default: system-images;android-30;google_apis;x86
+      subproject:
+        type: string
+        default: app
+    executor:
+      name: android/android-machine
+      tag: 2022.07.1 # pick image tag from https://circleci.com/developer/images/image/cimg/android#image-tags
+    steps:
+      - checkout
+      - android/start-emulator-and-run-tests:
+          test-command: ./gradlew :<< parameters.subproject >>:connectedDebugAndroidTest
+          system-image: << parameters.system-image >>
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/<< parameters.subproject >>/build/outputs/androidTest-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+
+workflows:
+  test-and-build:
+    jobs:
+      - unit-test:
+          matrix:
+            alias: unit-test-all
+            parameters:
+              subproject:
+                - app
+                - backend
+                - datacomm
+                - db
+                - exim
+                - security
+          name: unit-test<<matrix.subproject>>
+          filters: # Execute for all tags, and for commits to branches.
+            tags: # Re-adds tags, which are ignored by default.
+              only: /.*/
+      - android-test:
+          matrix:
+            alias: android-test-all
+            parameters:
+              system-image:
+                - system-images;android-30;google_apis;x86
+                - system-images;android-29;google_apis;x86
+              subproject:
+                - app
+                - backend
+                - datacomm
+                - db
+                - exim
+                - security
+          name: android-test-<<matrix.system-image>>
+          requires:
+            - unit-test-<<matrix.system-image>>
+          filters: # Only execute for tags, ignore commits to branches.
+            tags:
+              only: /^.*/
+            branches:
+              only: master
