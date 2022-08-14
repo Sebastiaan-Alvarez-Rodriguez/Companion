@@ -317,7 +317,7 @@ class ExportState(
             val zippingJob = doZip(
                 inputs = files,
                 password = password,
-                destination = destination.toString(),
+                destination = destination,
                 onProgress = onProgress
             )
             zippingJob.start()
@@ -378,10 +378,9 @@ class ExportState(
         private suspend fun doZip(
             inputs: List<File>,
             password: CharArray,
-            destination: String,
+            destination: Path,
             onProgress: (Float) -> Unit
         ): Deferred<EximUtil.ZippingState> {
-            //TODO: When also writing categories: write lock?
             return Export.zip(inputs = inputs, password = password, pollTimeMS = 100, destination = destination, onProgress = onProgress)
         }
 

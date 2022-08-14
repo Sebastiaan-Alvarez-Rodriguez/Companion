@@ -23,7 +23,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import org.python.backend.data.datatype.Note
 import org.python.backend.data.datatype.NoteCategory
@@ -244,7 +243,7 @@ class ImportState(
                     progressCopyZip.value = progress
                     detailsDescription.value = "Moving archive"
                 }.pipe {
-                    doUnzip(tmpZipFile, password.toCharArray(), tmpZipExtractDir) { progress ->
+                    doUnzip(tmpZipFile.toPath(), password.toCharArray(), tmpZipExtractDir) { progress ->
                         progressExtractZip.value = progress
                         detailsDescription.value = "Extracting archive..."
                     }
@@ -262,17 +261,17 @@ class ImportState(
                 }
 
                 detailsDescription.value = if (result.type == ResultType.SUCCESS) "Done" else "Failure"
-                Timber.e("All jobs completed - ${if(result.type == ResultType.SUCCESS) "success" else "failed"}: ${result.message}")
+                Timber.d("All jobs completed - ${if(result.type == ResultType.SUCCESS) "success" else "failed"}: ${result.message}")
                 return result
             } finally {
-                Timber.e("Cleaning up")
+                Timber.d("Cleaning up")
                 tmpZipFile.delete()
                 FileUtil.deleteDirectory(tmpZipExtractDir)
             }
         }
 
         private suspend fun doCopy(contentResolver: ContentResolver, location: Uri, output: OutputStream, onProgress: (Float) -> Unit): Result {
-            Timber.e("launching copy job")
+            Timber.d("launching copy job")
             val zipSize = FileUtil.determineSize(contentResolver.openAssetFile(location, "r", null)!!)
             val copyJob = FileUtil.copyStream(
                 size = zipSize,
@@ -282,29 +281,27 @@ class ImportState(
             )
 
             copyJob.start()
-            Timber.e("joining copy job")
+            Timber.d("joining copy job")
             copyJob.join()
             return Result.DEFAULT_SUCCESS
         }
 
         private suspend fun doUnzip(
-            zipFile: File,
+            zipPath: Path,
             password: CharArray,
             outputLocation: Path,
             onProgress: (Float) -> Unit
         ): Result {
+            val zipFile = zipPath.toFile()
             // Check if picked file is a correct zip
             if (!EximUtil.verifyZip(zipFile))
                 return Result(ResultType.FAILED, "Object is not a valid zip file")
 
-            Timber.e("launching unzip job")
-            val zippingJob = doUnzip(input = zipFile, password = password,
-                destination = outputLocation.toString(),//tmpZipExtractDir.toString()
-                onProgress = onProgress
-            )
+            Timber.d("launching unzip job")
+            val zippingJob = Import.unzip(input = zipPath, password = password, destination = outputLocation, pollTimeMS = 100, onProgress = onProgress)
 
             zippingJob.start()
-            Timber.e("joining unzip job")
+            Timber.d("joining unzip job")
             zippingJob.join()
             val zippingState = zippingJob.await()
             if (zippingState.state != EximUtil.FinishState.SUCCESS)
@@ -332,7 +329,7 @@ class ImportState(
                 noteCategoryViewModel.deleteAll()
             }
 
-            Timber.e("launching import jobs")
+            Timber.d("launching import jobs")
             val importNotesJob = doImport(
                 input = notePath.toFile(),
                 batchSize = 100,
@@ -346,7 +343,6 @@ class ImportState(
                         batch.forEach { item ->
                             onProgressNotes((processed + counter).toFloat() / total, item)
                             counter += 1L
-                            Timber.e("    $item")
                         }
                     }
                 },
@@ -356,7 +352,7 @@ class ImportState(
                 batchSize = 100,
                 cls = NoteCategory::class.java,
                 onStoreBatch = { processed, total, batch ->
-                    Timber.e("Got batch: $batch")
+                    Timber.d("Got batch: $batch")
                     if (batch.isEmpty()) {
                         onProgressCategories(1f, null)
                     } else {
@@ -365,7 +361,6 @@ class ImportState(
                         batch.forEach { item ->
                             onProgressCategories((processed + counter).toFloat() / total, item)
                             counter += 1L
-                            Timber.e("    $item")
                         }
                     }
                 },
@@ -373,7 +368,7 @@ class ImportState(
 
             importNotesJob.start()
             importCategoriesJob.start()
-            Timber.e("joining import jobs")
+            Timber.d("joining import jobs")
             importNotesJob.join()
             importCategoriesJob.join()
             return Result.DEFAULT_SUCCESS
@@ -404,9 +399,6 @@ class ImportState(
                 onStoreBatch = onStoreBatch
             )
         }
-
-        private suspend fun doUnzip(input: File, password: CharArray, destination: String, onProgress: (Float) -> Unit): Deferred<EximUtil.ZippingState> =
-            Import.unzip(input = input, password = password, destination = destination, pollTimeMS = 100, onProgress = onProgress)
 
         @Composable
         fun rememberState(

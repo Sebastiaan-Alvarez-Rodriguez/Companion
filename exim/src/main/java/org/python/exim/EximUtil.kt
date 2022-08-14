@@ -69,10 +69,7 @@ object EximUtil {
         return returnValue
     }
 
-    private fun copyStream(
-        inStream: InputStream,
-        outStream: OutputStream,
-    ) {
+    private fun copyStream(inStream: InputStream,outStream: OutputStream) {
         val bufferSize = 64*1024
         val bytes = ByteArray(bufferSize)
         var count: Int

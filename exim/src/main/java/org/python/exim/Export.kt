@@ -13,6 +13,7 @@ import org.apache.parquet.schema.*
 import org.python.exim.EximUtil.pollForZipFunc
 import timber.log.Timber
 import java.io.File
+import java.nio.file.Path
 
 
 interface Exportable {
@@ -77,21 +78,21 @@ object Export {
     suspend fun zip(
         inputs: List<File>,
         password: CharArray,
-        destination: String,
+        destination: Path,
         pollTimeMS: Long,
         onProgress: (Float) -> Unit
     ): Deferred<EximUtil.ZippingState> = withContext(Dispatchers.IO) {
         pollForZipFunc(func = { zip(inputs, password, destination) }, pollTimeMS = pollTimeMS, onProgress = onProgress)
     }
 
-    private fun zip(inputs: List<File>, password: CharArray, destination: String): ProgressMonitor {
+    private fun zip(inputs: List<File>, password: CharArray, destination: Path): ProgressMonitor {
         val zipParameters = ZipParameters()
 
         zipParameters.isEncryptFiles = true
         zipParameters.encryptionMethod = EncryptionMethod.AES
         zipParameters.aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
 
-        val zipFile = ZipFile(destination, password)
+        val zipFile = ZipFile(destination.toString(), password)
         val progressMonitor = zipFile.progressMonitor
         zipFile.isRunInThread = true
         zipFile.addFiles(inputs, zipParameters)

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+    id 'de.mannodermaus.android-junit5'
 }
 
 android {
@@ -10,7 +11,9 @@ android {
         minSdk 29
         targetSdk 31
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder"
+
         consumerProguardFiles "consumer-rules.pro"
 
         externalNativeBuild {
@@ -35,10 +38,21 @@ android {
         targetCompatibility android_java_version_target
     }
 
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
+
     kotlinOptions {
         jvmTarget = kotlin_jvm_target
         freeCompilerArgs += kotlin_performance_args
     }
+}
+
+configurations {
+    testImplementation.extendsFrom(implementation)
+    androidTestImplementation.extendsFrom(testImplementation)
 }
 
 dependencies {
@@ -53,7 +67,12 @@ dependencies {
 
     implementation "com.jakewharton.timber:timber:$timber_version"
 
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    // Test dependencies
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
+
+    androidTestImplementation("androidx.test:runner:1.4.0")
+    androidTestImplementation("de.mannodermaus.junit5:android-test-core:1.3.0")
+    androidTestRuntimeOnly("de.mannodermaus.junit5:android-test-runner:1.3.0")
 }
