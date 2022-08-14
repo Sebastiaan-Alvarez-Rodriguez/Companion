@@ -74,7 +74,7 @@ workflows:
                 - db
                 - exim
                 - security
-          name: unit-test<<matrix.subproject>>
+          name: unit-test-<<matrix.subproject>>
           filters: # Execute for all tags, and for commits to branches.
             tags: # Re-adds tags, which are ignored by default.
               only: /.*/
@@ -92,7 +92,7 @@ workflows:
                 - db
                 - exim
                 - security
-          name: android-test-<<matrix.system-image>>
+          name: android-test-<<matrix.subproject>>-<<matrix.system-image>>
           requires:
             - unit-test-<<matrix.subproject>>
           filters: # Only execute for tags, ignore commits to branches.
