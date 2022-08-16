@@ -41,6 +41,15 @@ sealed class Exports {
 }
 
 object Export {
+    /**
+     * Handles exporting.
+     * @param type Export type, see `Exports`.
+     * @param destination Output file location.
+     * @param content Data to export.
+     * @param onProgress progress lambda.
+     * First parameter is most recently processed item. Secondary parameter is the amount of processed items.
+     * @return executable job.
+     */
     suspend fun <T: Exportable> export(type: Exports, destination: File, content: List<T>, onProgress: (T, Long) -> Unit): Job =
         when (type) {
             is Exports.parquet -> writeToParquet(type.schema, destination, content, onProgress)

@@ -95,6 +95,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private fun filterNote(note: Note, params: NoteSearchParameters, re: Regex) =
         (params.inTitle && note.name.contains(re)) || (params.inContent && note.content.contains(re))
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val notes: StateFlow<Flow<PagingData<NoteWithCategory>>> =
         search.searchParameters.flatMapLatest { params -> notes(params) }.stateInViewModel(viewModelScope, initialValue = emptyFlow())
 

@@ -62,15 +62,15 @@ object FileUtil {
 
     suspend fun compareByMemoryMappedFiles(path1: Path, path2: Path): Boolean = withContext(Dispatchers.IO) {
         RandomAccessFile(path1.toFile(), "r").use { randomAccessFile1 ->
-            RandomAccessFile(path2.toFile(), "r").use { randomAccessFile2 ->
+            RandomAccessFile(path2.toFile(), "r").use inner@ { randomAccessFile2 ->
                 val ch1: FileChannel = randomAccessFile1.channel
                 val ch2: FileChannel = randomAccessFile2.channel
                 if (ch1.size() != ch2.size())
-                    return@use false
+                    return@inner false
                 val size: Long = ch1.size()
                 val m1: MappedByteBuffer = ch1.map(FileChannel.MapMode.READ_ONLY, 0L, size)
                 val m2: MappedByteBuffer = ch2.map(FileChannel.MapMode.READ_ONLY, 0L, size)
-                return@use m1 == m2
+                return@inner m1 == m2
             }
         }
     }

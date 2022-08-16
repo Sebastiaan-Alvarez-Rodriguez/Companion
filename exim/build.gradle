@@ -57,7 +57,7 @@ configurations {
 
 dependencies {
     implementation "androidx.core:core-ktx:$android_kt_core_version"
-    api("com.github.Sebastiaan-Alvarez-Rodriguez:parquet-android:1.12.3") {
+    api("com.github.Sebastiaan-Alvarez-Rodriguez:parquet-android:release~v1.12.3-SNAPSHOT") {
         transitive = true
     }
 

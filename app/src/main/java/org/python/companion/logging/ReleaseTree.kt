@@ -13,7 +13,7 @@ class ReleaseTree : Timber.Tree() {
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
         if (!isLoggable(tag, priority))
             return
-        when (priority) { // TODO: find library to send crash logs by mail or something?
+        when (priority) { // TODO: use firebase?
             Log.WARN -> Log.w(tag, message, t)
             Log.ERROR -> Log.e(tag, message, t)
             Log.ASSERT -> Log.wtf(tag, message, t)

@@ -18,15 +18,6 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
-
-        externalNativeBuild {
-            ndk {
-                // Specifies the ABI configurations of your native
-                // libraries Gradle should build and package with your app.
-                abiFilters "armeabi", "armeabi-v7a", "x86", "mips" // only allow 32-bit native libraries
-
-            }
-        }
     }
 
     buildTypes {
@@ -35,6 +26,7 @@ android {
         }
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             versionNameSuffix ""
         }

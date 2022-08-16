@@ -246,6 +246,7 @@ object RenderUtil {
     private fun createMarkdownEditor(renderType: RenderType, context: Context, textSize: TextUnit, onError: (String, String?) -> Unit) = MarkwonEditor
         .builder(createMarkdownRender(renderType, context, textSize, onError))
         .useEditHandler(object : AbstractEditHandler<StrongEmphasisSpan>() {
+            @Suppress("UNCHECKED_CAST")
             override fun configurePersistedSpans(builder: PersistedSpans.Builder) {
                 // Here we define which span is _persisted_ in EditText, it is not removed
                 //  from EditText between text changes, but instead - reused (by changing
