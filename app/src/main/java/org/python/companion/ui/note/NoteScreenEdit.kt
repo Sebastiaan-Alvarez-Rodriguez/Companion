@@ -40,7 +40,7 @@ fun NoteScreenEdit(
     onSaveClick: (Note, Note?) -> Unit
 ) {
     var state by rememberSaveable { mutableStateOf(LoadingState.LOADING) }
-    var existingData by rememberSaveable { mutableStateOf<NoteWithCategory?>(null) }
+    var existingData by remember { mutableStateOf<NoteWithCategory?>(null) }
 
     when (state) {
         LoadingState.LOADING -> if (existingData == null) {
