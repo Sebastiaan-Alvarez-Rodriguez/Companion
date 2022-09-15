@@ -119,7 +119,8 @@ class NoteRepository(private val securityActor: SecurityActor, private val noteS
      * Adds all notes, using given merge strategy.
      * @return [Result] success.
      */
-    suspend fun addAll(items: Collection<Note>, mergeStrategy: EximUtil.MergeStrategy): Result = noteStore.addAll(items.map { secureToStorage(it).toDataResult<Note>().data }, mergeStrategy)
+    suspend fun addAll(items: Collection<Note>, mergeStrategy: EximUtil.MergeStrategy): Result =
+        noteStore.addAll(items.map { secureToStorage(it).toDataResult<Note>().data }, mergeStrategy, securityActor.clearance.value)
 
     ////////////////////////////////
     // Utility section;

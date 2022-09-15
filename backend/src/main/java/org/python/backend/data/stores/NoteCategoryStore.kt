@@ -8,6 +8,7 @@ import org.python.datacomm.Result
 import org.python.db.CompanionDatabase
 import org.python.db.entities.note.RoomNoteCategory
 import org.python.exim.EximUtil
+import timber.log.Timber
 
 class NoteCategoryStore(database: CompanionDatabase) {
     private val noteCategoryDao = database.noteCategoryDao
@@ -49,13 +50,18 @@ class NoteCategoryStore(database: CompanionDatabase) {
 
     suspend fun addAll(items: Collection<NoteCategory>, mergeStrategy: EximUtil.MergeStrategy): Result = items.map { it.toRoom() }.let {
         when (mergeStrategy) {
-            EximUtil.MergeStrategy.OVERRIDE_ON_CONFLICT -> noteCategoryDao.addAllOverriding(it)
-            else -> noteCategoryDao.addAllIgnoring(it)
+            EximUtil.MergeStrategy.OVERRIDE_ON_CONFLICT -> noteCategoryDao.upsertAll(it, useNewIds = true)
+            EximUtil.MergeStrategy.SKIP_ON_CONFLICT -> noteCategoryDao.addAllIgnoring(it)
+            EximUtil.MergeStrategy.DELETE_ALL_BEFORE -> noteCategoryDao.addAllIgnoring(it)
         }
+        Timber.e("Inserted categories:")
+        items.forEach { c -> Timber.e("\t${c.name}, id: ${c.categoryId}") }
+        Timber.e("Got categories: ")
+        noteCategoryDao.getAll().forEach { c -> Timber.e("\t${c.categoryName}, id: ${c.categoryId}")}
         return Result.DEFAULT_SUCCESS
     }
 
-    suspend fun upsert(category: NoteCategory): Unit = noteCategoryDao.upsert(category.toRoom())
+    suspend fun upsert(category: NoteCategory): Result = noteCategoryDao.upsert(category.toRoom())
 
     suspend fun update(category: NoteCategory) = noteCategoryDao.update(category.toRoom())
 

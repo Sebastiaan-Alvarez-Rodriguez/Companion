@@ -11,7 +11,7 @@ Currently supports:
    + Secure notes hidden until authenticated
    + Password authentication (Argon hashed)
    + Biometrics authentication
- + Secure export-import functionality
+ + Secure export-import functionality (password-based `AES-256/MACPKCS5`)
 
 ## Building
 To compile source code:
@@ -24,7 +24,7 @@ To test source code:
 ./gradlew test
 ```
 
-To create deployable (debug) application:
+To create deployable debug/release application:
 ```bash
 ./gradlew assembleDebug 
 ./gradlew assembleRelease

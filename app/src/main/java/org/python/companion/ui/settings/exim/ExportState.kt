@@ -263,7 +263,7 @@ class ExportState(
                 }.pipe {
                     doCopy(
                         input = tmpZipFile,
-                        outputStream = contentResolver.openOutputStream(location, "w")!!
+                        outputStream = contentResolver.openOutputStream(location, "wt")!!
                     ) { progress ->
                         progressCopyZip.value = progress
                         detailsDescription.value = "Moving zip"
@@ -290,13 +290,13 @@ class ExportState(
             onProgressNotes: (Float, Note?) -> Unit,
             onProgressNoteCategories: (Float, NoteCategory?) -> Unit
         ): Result {
-            val exportNotesJob = doExport(
+            val exportNotesJob = doExportParquet(
                 data = noteViewModel.getAll(),
                 outputFile = noteOutputFile,
                 onProgress = onProgressNotes
             ) ?: return Result(ResultType.FAILED, "No notes to process")
 
-            val exportNoteCategoriesJob = doExport(
+            val exportNoteCategoriesJob = doExportParquet(
                 data = noteCategoryViewModel.getAll(),
                 outputFile = noteCategoryOutputFile,
                 onProgress = onProgressNoteCategories
@@ -354,7 +354,7 @@ class ExportState(
          * Progress ranges from 0f to 1f. Secondary parameter is the most recently processed item.
          * @return executable job.
          */
-        private suspend fun <T: Exportable> doExport(
+        private suspend fun <T: Exportable> doExportParquet(
             data: List<T>,
             outputFile: File,
             onProgress: (Float, T?) -> Unit,

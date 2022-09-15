@@ -4,9 +4,11 @@ import androidx.paging.PagingSource
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import org.python.datacomm.DataResult
+import org.python.datacomm.Result
 import org.python.datacomm.ResultType
 import org.python.db.entities.note.RoomNote
 import org.python.db.entities.note.RoomNoteWithCategory
+import timber.log.Timber
 
 @Dao
 interface NoteDao {
@@ -86,34 +88,55 @@ interface NoteDao {
 
     @Query("update RoomNote set favorite = :favorite where noteId = :noteId and securityLevel <= :clearance")
     suspend fun setFavorite(noteId: Long, favorite: Boolean, clearance: Int)
+    @Transaction
     suspend fun setFavorite(note: RoomNote, favorite: Boolean, clearance: Int) = setFavorite(note.noteId, favorite, clearance)
 
     @Query("update RoomNote set renderType = :renderType where noteId = :noteId and securityLevel <= :clearance")
     suspend fun setRenderType(noteId: Long, renderType: Int, clearance: Int)
 
     @Transaction
-    suspend fun upsert(item: RoomNote, clearance: Int): org.python.datacomm.Result {
-        if (!hasConflict(item.name))
+    suspend fun upsert(item: RoomNote, clearance: Int): Result {
+        if (!hasConflict(item.name)) {
+            Timber.e("upsert item - add: ${item.name}")
             return DataResult.from(add(item))
-
-        if (clearanceLevelForName(item.name)!! > clearance)
-            return org.python.datacomm.Result(ResultType.FAILED,  message = "Could not update note: Clearance level insufficient.")
-
-        val id = getIdForName(item.name, clearance) ?: return org.python.datacomm.Result(ResultType.FAILED,  message = "Could not update note: Could not find old note.")
-        return when (update(item.copy(noteId = id), clearance)) {
-            0 -> org.python.datacomm.Result(ResultType.FAILED,  message = "Could not update note: Could not find old note.")
-            else -> DataResult.from(id)
         }
+        if (clearanceLevelForName(item.name)!! > clearance) {
+            Timber.e("upsert item - failure (clearance insufficient): ${item.name} (have $clearance, need ${clearanceLevelForName(item.name)!!})")
+            return Result(ResultType.FAILED,  message = "Could not update note: Clearance level insufficient.")
+        }
+
+        val id = getIdForName(item.name, clearance)
+        if (id == null) {
+            Timber.e("upsert item - failure (clearance insufficient): ${item.name}")
+            return Result(ResultType.FAILED, message = "Could not update note: Could not find old note.")
+        }
+
+        return when (update(item.copy(noteId = id), clearance)) {
+            0 -> {
+                Timber.e("upsert item - failure (update): ${item.name}")
+                Result(ResultType.FAILED,  message = "Could not update note: Could not find old note.")
+            }
+            else -> {
+                Timber.e("upsert item - success: ${item.name}, ${id}, ${item.securityLevel}")
+                DataResult.from(id)
+            }
+        }
+    }
+    @Transaction
+    suspend fun upsertAll(items: List<RoomNote>, clearance: Int) {
+        items.forEach { upsert(it, clearance) }
     }
 
     /** Updates existing note. Returns number of changed rows. Can be either 0 (no such note) or 1 (updated entry). */
     @Query("update RoomNote set name = :name, content = :content, favorite = :favorite, securityLevel = :securityLevel, iv = :iv, categoryKey = :categoryKey, renderType = :renderType where noteId = :noteId and securityLevel <= :clearance")
     suspend fun update(noteId: Long, name: String, content: String, favorite: Boolean, securityLevel: Int, iv: ByteArray, categoryKey: Long, renderType: Int, clearance: Int): Int
+    @Transaction
     suspend fun update(item: RoomNote, clearance: Int) = update(item.noteId, item.name, item.content, item.favorite, item.securityLevel, item.iv, item.categoryKey, item.renderType, clearance)
 
     /** Deletes note. Returns number of changed rows. Can be either 0 (no such note) or 1 (deleted entry). */
     @Query("delete from RoomNote where noteId = :noteId and securityLevel <= :clearance")
     suspend fun delete(noteId: Long, clearance: Int): Int
+    @Transaction
     suspend fun delete(item: RoomNote, clearance: Int) = delete(item.noteId, clearance)
 
     ////////////////////////////////
@@ -127,12 +150,11 @@ interface NoteDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun add(item: RoomNote): Long
 
+    @Insert
+    suspend fun addAll(items: List<RoomNote>)
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addAllIgnoring(items: List<RoomNote>)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addAllOverriding(items: List<RoomNote>)
-
 
     @Query("select exists(select 1 from RoomNote where name == :name)")
     suspend fun hasConflict(name: String): Boolean

@@ -325,12 +325,13 @@ class ImportState(
                 return Result(ResultType.FAILED, "Could not find extracted note categories file")
 
             if (mergeStrategy == EximUtil.MergeStrategy.DELETE_ALL_BEFORE) {
+                // TODO: Require clearance for deleting secure notes?
                 noteViewModel.deleteAll()
                 noteCategoryViewModel.deleteAll()
             }
 
             Timber.d("launching import jobs")
-            val importNotesJob = doImport(
+            val importNotesJob = doParquetImport(
                 input = notePath.toFile(),
                 batchSize = 100,
                 cls = Note::class.java,
@@ -347,7 +348,7 @@ class ImportState(
                     }
                 },
             )
-            val importCategoriesJob = doImport(
+            val importCategoriesJob = doParquetImport(
                 input = categoriesPath.toFile(),
                 batchSize = 100,
                 cls = NoteCategory::class.java,
@@ -383,7 +384,7 @@ class ImportState(
          * Also provides the amount of processed notes (arg 0), and the total amount of notes (arg 1).
          * @return executable job.
          */
-        private suspend fun <T: Importable<T>> doImport(
+        private suspend fun <T: Importable<T>> doParquetImport(
             input: File,
             batchSize: Int,
             cls: Class<T>,

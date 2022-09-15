@@ -17,6 +17,7 @@ import org.python.db.entities.note.RoomNote
 import org.python.db.entities.note.RoomNoteCategory
 import org.python.db.entities.note.RoomNoteWithCategory
 import org.python.exim.EximUtil
+import timber.log.Timber
 
 class NoteStore(database: CompanionDatabase) {
     private val noteDao = database.noteDao
@@ -97,11 +98,15 @@ class NoteStore(database: CompanionDatabase) {
         }
     }
 
-    suspend fun addAll(items: Collection<Note>, mergeStrategy: EximUtil.MergeStrategy): Result = items.map { it.toRoom() }.let {
+    suspend fun addAll(items: Collection<Note>, mergeStrategy: EximUtil.MergeStrategy, clearance: Int): Result = items.map { it.toRoom() }.let {
         when (mergeStrategy) {
-            EximUtil.MergeStrategy.OVERRIDE_ON_CONFLICT -> noteDao.addAllOverriding(it)
-            else -> noteDao.addAllIgnoring(it)
+            EximUtil.MergeStrategy.OVERRIDE_ON_CONFLICT -> noteDao.upsertAll(it, clearance)
+            EximUtil.MergeStrategy.SKIP_ON_CONFLICT -> noteDao.addAllIgnoring(it)
+            EximUtil.MergeStrategy.DELETE_ALL_BEFORE -> noteDao.addAllIgnoring(it)
         }
+        val got = noteDao.getAll(0)
+        Timber.e("Got notes:")
+        got.forEach { n -> Timber.e("\t${n.name}, id: ${n.noteId}, sec: ${n.securityLevel}, cat: ${n.categoryKey}") }
         return Result.DEFAULT_SUCCESS
     }
 }
