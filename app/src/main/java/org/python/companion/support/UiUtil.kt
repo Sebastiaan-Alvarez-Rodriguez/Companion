@@ -162,34 +162,44 @@ object UiUtil {
     }
 
     @Composable
-    fun SimpleDialogSingular(
+    fun SimpleActionSingular(
         title: String,
+        modifier: Modifier = Modifier,
         message: String? = null,
         buttonText: String = "OK",
-        onDismiss: () -> Unit,
         onClick: () -> Unit
     ) {
         val defaultPadding = dimensionResource(id = R.dimen.padding_default)
-        Dialog(onDismissRequest = onDismiss) {
-            Card(elevation = 8.dp, shape = RoundedCornerShape(12.dp)) {
-                Column(modifier = Modifier.padding(defaultPadding)) {
-                    Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
-                    Spacer(modifier = Modifier.height(defaultPadding))
+        Card(elevation = 8.dp, modifier = modifier) {
+            Column(modifier = Modifier.padding(defaultPadding)) {
+                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(defaultPadding))
+                Spacer(modifier = Modifier.height(defaultPadding))
 
-                    message?.let {
-                        Text(text = it, modifier = Modifier.padding(defaultPadding))
-                        Spacer(modifier = Modifier.height(defaultPadding))
-                    }
+                message?.let {
+                    Text(text = it, modifier = Modifier.padding(defaultPadding))
                     Spacer(modifier = Modifier.height(defaultPadding))
+                }
+                Spacer(modifier = Modifier.height(defaultPadding))
 
-                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                        Button(onClick = onClick) {
-                            Text(text = buttonText)
-                        }
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = onClick) {
+                        Text(text = buttonText)
                     }
                 }
             }
         }
+    }
+
+    @Composable
+    fun SimpleDialogSingular(
+        title: String,
+        modifier: Modifier = Modifier,
+        message: String? = null,
+        buttonText: String = "OK",
+        onDismiss: () -> Unit,
+        onClick: () -> Unit
+    ) = Dialog(onDismissRequest = onDismiss) {
+        SimpleActionSingular(title, modifier, message, buttonText, onClick)
     }
 
     @Composable

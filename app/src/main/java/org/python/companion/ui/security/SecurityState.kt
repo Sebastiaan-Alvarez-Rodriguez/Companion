@@ -14,6 +14,7 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
+import org.python.companion.support.UiUtil
 import org.python.companion.support.UiUtil.createRoute
 import org.python.companion.support.UiUtil.navigateForResult
 import org.python.companion.support.UiUtil.setNavigationResult
@@ -25,6 +26,7 @@ import org.python.security.CompactSecurityTypeArray
 import org.python.security.SecurityActor
 import org.python.security.SecurityType
 import org.python.security.SecurityTypes
+import timber.log.Timber
 
 
 class SecurityState(
@@ -101,12 +103,14 @@ class SecurityState(
                 val allowResetCalls: Boolean = entry.arguments?.getBoolean("allowResetCalls") ?: true
                 require(switchActor(noteViewModel.securityActor, method))
 
-                val canLogin by noteViewModel.securityActor.canLoginLive().collectAsState(true)
+                // if `null`, we are looking at the initial value and should present a loading screen.
+                val canLogin: Boolean? by noteViewModel.securityActor.canLoginLive().collectAsState(null)
+                Timber.w("Login dialog: canLogin=$canLogin, method=$method")
 
-                if (canLogin) {
-                    SecurityDialogLoginSpecific(method = method, bioState = securityBioState, passState = securityPassState, allowResetCalls = allowResetCalls)
-                } else {
-                    SecurityDialogLoginOptions(onNegativeClick = { navController.navigateUp() }, onSetupClick = { navigateToSetup(method, navController) })
+                when (canLogin) {
+                    null -> UiUtil.SimpleLoading()
+                    true -> SecurityDialogLoginSpecific(method = method, bioState = securityBioState, passState = securityPassState, allowResetCalls = allowResetCalls)
+                    false -> SecurityDialogLoginOptions(onNegativeClick = { navController.navigateUp() }, onSetupClick = { navigateToSetup(method, navController) })
                 }
             }
 
@@ -118,11 +122,12 @@ class SecurityState(
                 val method: @SecurityType Int = entry.arguments?.getInt("securityMethod") ?: SecurityActor.TYPE_UNDEFINED
                 require(switchActor(noteViewModel.securityActor, method))
 
-                val canSetup by noteViewModel.securityActor.canSetup.collectAsState(false)
-                if (canSetup) {
-                    SecurityDialogSetupSpecific(method = method, bioState = securityBioState, passState = securityPassState)
-                } else {
-                    SecurityDialogSetupOptions(
+                // if `null`, we are looking at the initial value and should present a loading screen.
+                val canSetup: Boolean? by noteViewModel.securityActor.canSetup.collectAsState(null)
+                when (canSetup) {
+                    null -> UiUtil.SimpleLoading()
+                    true -> SecurityDialogSetupSpecific(method = method, bioState = securityBioState, passState = securityPassState)
+                    false -> SecurityDialogSetupOptions(
                         onNegativeClick = { navController.navigateUp() },
                         onLoginClick = {
                             navigateToSecurityPick(
@@ -145,21 +150,22 @@ class SecurityState(
                 val method: @SecurityType Int = entry.arguments?.getInt("securityMethod") ?: SecurityActor.TYPE_UNDEFINED
                 require(switchActor(noteViewModel.securityActor, method))
 
-                val canReset by noteViewModel.securityActor.canReset.collectAsState(false)
-                if (canReset) {
-                    SecurityDialogResetSpecific(
+                // if `null`, we are looking at the initial value and should present a loading screen.
+                val canReset: Boolean? by noteViewModel.securityActor.canReset.collectAsState(null)
+                when(canReset) {
+                    null -> UiUtil.SimpleLoading()
+                    true -> SecurityDialogResetSpecific(
                         method = method,
                         bioState = securityBioState,
                         passState = securityPassState
                     )
-                } else {
-                    SecurityDialogReset(
+                    false -> SecurityDialogReset(
                         onNegativeClick = { navController.navigateUp() },
                         onDestroyClick = {
-                            /* TODO: Are you sure? */
-                            noteViewModel.viewModelScope.launch {
-                                noteViewModel.deleteAllSecure()
-                                // TODO: Do reset of auth-method!
+                            UiUtil.UIUtilState.navigateToDelete(navController) {
+                                noteViewModel.viewModelScope.launch {
+                                    noteViewModel.deleteAllSecure()
+                                }
                             }
                         },
                         onLoginClick = {

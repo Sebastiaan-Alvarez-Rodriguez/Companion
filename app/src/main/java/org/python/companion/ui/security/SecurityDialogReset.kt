@@ -66,7 +66,7 @@ Alternatively, if you forgot all ways to login, you can reset the security syste
     }
 }
 
-/** Shows specific reset UI for setting up given security type. */
+/** Shows specific reset UI for resetting given security type. */
 @Composable
 fun SecurityDialogResetSpecific(
     @SecurityType method: Int,

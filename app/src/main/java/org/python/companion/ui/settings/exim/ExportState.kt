@@ -6,10 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,6 +29,7 @@ import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
 import org.python.companion.support.FileUtil
 import org.python.companion.support.PermissionUtil
+import org.python.companion.support.UiUtil
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.settings.exim.Shared.NOTECATEGORYFILE_NAME
@@ -64,21 +62,30 @@ class ExportState(
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
 
-                if (hasSecureNotes && isAuthorized <= 0) {
-                    SecurityState.navigateToSecurityPick(
-                        navController = navController,
-                        onPicked = { type -> SecurityState.navigateToLogin(type, navController = navController)}
-                    )
-                    return@composable
-                }
-
+                // TODO: Remove flag and split to multiple composables!
                 val isExporting = rememberSaveable { mutableStateOf(false) }
 
                 // settings for exporting
                 val location = rememberSaveable { mutableStateOf<Uri?>(null) }
                 val password = rememberSaveable { mutableStateOf("") }
 
-                if (!isExporting.value) {
+                if (hasSecureNotes && isAuthorized <= 0) {
+                    ImportExportScreenSettings(
+                        progressContent = { NestedCircularProgressIndicator(progresses = listOf(1f, 1f, 1f, 1f)) },
+                        subContent = {
+                            val defaultPadding = dimensionResource(id = R.dimen.padding_default)
+                            UiUtil.SimpleActionSingular(
+                                title = "Login",
+                                message = "It seems there are some secured notes.\nLogin first to export them.",
+                                buttonText = "Login",
+                                modifier = Modifier.fillMaxSize().padding(defaultPadding)
+                            ) {
+                                SecurityState.navigateToSecurityPick(navController, onPicked = { type -> SecurityState.navigateToLogin(type, navController = navController)})
+                            }
+                        },
+                        onBackClick = { navController.navigateUp() }
+                    )
+                } else if (!isExporting.value) {
                     ExportSettingsScreen(location, password, isExporting)
                 } else {
                     ExportExecuteScreen(location.value!!, password.value)
@@ -134,7 +141,7 @@ class ExportState(
                         pathError = "Path has not been set"
                         hasErrors = true
                     }
-                    if (password.value.length < 1) { //todo make 12 again
+                    if (password.value.length < 12) {
                         passwordError = "Password length is too short (must be > 12, was ${password.value.length})"
                         hasErrors = true
                     }
@@ -332,7 +339,6 @@ class ExportState(
         }
 
         private suspend fun doCopy(input: File, outputStream: OutputStream, onProgress: (Float) -> Unit): Result {
-            // TODO: Remove old content before launching job (solves 11KB zip bug)
             Timber.e("launching copy job")
             val copyJob = FileUtil.copyStream(
                 size = input.length(),

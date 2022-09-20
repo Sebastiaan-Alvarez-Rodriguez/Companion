@@ -319,7 +319,9 @@ internal class PassActor(private val sharedPreferences: SharedPreferences) : Sec
 
     override fun actorAvailable(): Result = Result.DEFAULT_SUCCESS
 
-    override fun hasCredentials(): Boolean = sharedPreferences.contains(hash_security_key)
+    override fun hasCredentials(): Boolean {
+        return sharedPreferences.contains(hash_security_key)
+    }
 
     private val _hasCredentials: MutableStateFlow<Boolean> = MutableStateFlow(sharedPreferences.contains(hash_security_key))
     override fun hasCredentialsLive(): Flow<Boolean> = _hasCredentials.asStateFlow()

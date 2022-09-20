@@ -325,7 +325,6 @@ class ImportState(
                 return Result(ResultType.FAILED, "Could not find extracted note categories file")
 
             if (mergeStrategy == EximUtil.MergeStrategy.DELETE_ALL_BEFORE) {
-                // TODO: Require clearance for deleting secure notes?
                 noteViewModel.deleteAll()
                 noteCategoryViewModel.deleteAll()
             }
