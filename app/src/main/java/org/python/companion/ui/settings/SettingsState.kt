@@ -1,11 +1,18 @@
 package org.python.companion.ui.settings
 
 import androidx.compose.material.ScaffoldState
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.*
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
+import org.python.companion.BuildConfig
 import org.python.companion.ui.note.NoteState
 import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.settings.exim.ExportState
@@ -34,6 +41,7 @@ class SettingsState(
                     }
                 )
             ) {
+                val clipboardManager: ClipboardManager = LocalClipboardManager.current
                 NoteScreenSettings(
                     onSecuritySetupClick = {
                         SecurityState.navigateToSecurityPick(
@@ -57,6 +65,15 @@ class SettingsState(
                     },
                     onExportClick = { ExportState.navigateToExport(navController) },
                     onImportClick = { ImportState.navigateToImport(navController) },
+                    onBuildVersionClick = {
+                        clipboardManager.setText(AnnotatedString(BuildConfig.VERSION_NAME))
+                        noteViewModel.viewModelScope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar(
+                                message = "Copied build version",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    },
                     onBackClick = { navController.navigateUp() }
                 )
             }

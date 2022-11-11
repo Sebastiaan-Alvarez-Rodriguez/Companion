@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import org.python.companion.BuildConfig
 import org.python.companion.R
 
 
@@ -26,6 +28,7 @@ fun NoteScreenSettings(
     onSecurityResetClick: () -> Unit,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
+    onBuildVersionClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     val defaultPadding = dimensionResource(id = R.dimen.padding_default)
@@ -62,6 +65,12 @@ fun NoteScreenSettings(
                     }
                 }
             }
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        TextButton(modifier = Modifier.align(Alignment.End), onClick = onBuildVersionClick) {
+            Text(BuildConfig.VERSION_NAME, modifier = Modifier.padding(defaultPadding), fontSize = 10.sp)
         }
     }
 }
