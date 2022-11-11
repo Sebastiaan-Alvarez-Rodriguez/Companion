@@ -62,7 +62,6 @@ class ExportState(
                 val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
                 val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
 
-                // TODO: Remove flag and split to multiple composables!
                 val isExporting = rememberSaveable { mutableStateOf(false) }
 
                 // settings for exporting

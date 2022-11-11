@@ -29,7 +29,6 @@ import org.python.backend.data.datatype.NoteCategory
 import org.python.companion.R
 import org.python.companion.support.FileUtil
 import org.python.companion.support.PermissionUtil
-import org.python.companion.ui.security.SecurityState
 import org.python.companion.ui.settings.SettingsState
 import org.python.companion.ui.settings.exim.Shared.NOTECATEGORYFILE_NAME
 import org.python.companion.ui.settings.exim.Shared.NOTEFILE_NAME
@@ -58,17 +57,6 @@ class ImportState(
     fun NavGraphBuilder.importGraph() {
         navigation(startDestination = navigationStart, route = "import") {
             composable(route = navigationStart) {
-                val hasSecureNotes by noteViewModel.hasSecureNotes.collectAsState()
-                val isAuthorized by noteViewModel.securityActor.clearance.collectAsState()
-
-                if (hasSecureNotes && isAuthorized <= 0) {
-                    SecurityState.navigateToSecurityPick(
-                        navController = navController,
-                        onPicked = { type -> SecurityState.navigateToLogin(type, navController = navController)}
-                    )
-                    return@composable
-                }
-
                 val isImporting = rememberSaveable { mutableStateOf(false) }
 
                 // settings for importing
